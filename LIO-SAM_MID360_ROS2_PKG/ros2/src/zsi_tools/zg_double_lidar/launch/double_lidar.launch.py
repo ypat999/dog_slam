@@ -107,9 +107,9 @@ def generate_launch_description():
         parameters=[
             rear_config_yaml,
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
-            # {'lio.output.tf_base_footprint_frame': ns_base_frame},
-            # {'lio.output.world_frame': ns_world_frame},
-            # {'lio.output.imu_frame': ns_imu_frame},
+            {'lio.output.tf_base_footprint_frame': ns_base_frame},
+            {'lio.output.world_frame': ns_world_frame},
+            {'lio.output.imu_frame': ns_imu_frame},
         ],
         prefix=['taskset -c 7'],
         arguments=['--ros-args', '--log-level', 'info'],
@@ -124,27 +124,27 @@ def generate_launch_description():
             ('/tf_static', '/tf_static'),
         ]
     )
-    # ld.add_action(rear_lidar_node)
+    ld.add_action(rear_lidar_node)
 
     front_pointcloud_to_laserscan = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
         name='front_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', '/front_lidar/cloud_world'),
-            ('scan', '/rkbot/scan'),
+            ('cloud_in', '/front_lidar/body/cloud'),
+            ('scan', '/rkbot/scan_front'),
         ],
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
             {'target_frame': ns_base_frame},
-            {'transform_tolerance': 0.01},
-            {'min_height': -0.5},
-            {'max_height': 0.5},
+            {'transform_tolerance': 0.03},
+            {'min_height': -0.3},
+            {'max_height': 1.0},
             {'angle_min': -3.14159},
             {'angle_max': 3.14159},
             {'angle_increment': 0.00872},
             {'scan_time': 0.1},
-            {'range_min': 0.5},
+            {'range_min': 0.1},
             {'range_max': 100.0},
             {'use_inf': True},
             {'inf_epsilon': 1.0},
@@ -158,26 +158,27 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='rear_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', '/rear_lidar/cloud_world'),
+            ('cloud_in', '/rear_lidar/body/cloud'),
+            ('scan', '/rkbot/scan_rear'),
         ],
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
-            {'target_frame': ns_world_frame},
-            {'transform_tolerance': 0.01},
-            {'min_height': -0.5},
-            {'max_height': 0.5},
+            {'target_frame': ns_base_frame},
+            {'transform_tolerance': 0.03},
+            {'min_height': -0.3},
+            {'max_height': 1.0},
             {'angle_min': -3.14159},
             {'angle_max': 3.14159},
             {'angle_increment': 0.00872},
             {'scan_time': 0.1},
-            {'range_min': 0.5},
+            {'range_min': 0.2},
             {'range_max': 100.0},
             {'use_inf': True},
             {'inf_epsilon': 1.0},
         ],
         prefix=['taskset -c 5'],
     )
-    # ld.add_action(rear_pointcloud_to_laserscan)
+    ld.add_action(rear_pointcloud_to_laserscan)
 
     scan_merger = Node(
         package='zg_double_lidar',
@@ -187,7 +188,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         prefix=['taskset -c 4,5'],
     )
-    # ld.add_action(scan_merger)
+    ld.add_action(scan_merger)
 
     static_transform_map_to_odom = Node(
         package='tf2_ros',

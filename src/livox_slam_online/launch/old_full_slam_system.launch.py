@@ -8,13 +8,13 @@ from launch.substitutions import LaunchConfiguration
 
 def generate_launch_description():
     # 获取包目录
-    pkg_livox_slam_system = get_package_share_directory('livox_slam_system')
+    pkg_livox_slam_online = get_package_share_directory('livox_slam_online')
     pkg_livox_ros_driver2 = get_package_share_directory('livox_ros_driver2')
-    pkg_my_cartographer_launch = get_package_share_directory('my_cartographer_launch')
+    pkg_slam_offline = get_package_share_directory('slam_offline')
     
     # 配置文件路径
-    mid360_config_path = os.path.join(pkg_livox_slam_system, 'config', 'mid360_config.json')
-    cartographer_config_dir = os.path.join(pkg_livox_slam_system, 'config')
+    mid360_config_path = os.path.join(pkg_livox_slam_online, 'config', 'mid360_config.json')
+    cartographer_config_dir = os.path.join(pkg_livox_slam_online, 'config')
     cartographer_config_basename = 'livox_mid360_cartographer.lua'
     
     # 声明launch参数
@@ -34,7 +34,7 @@ def generate_launch_description():
     # Cartographer节点
     cartographer_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_my_cartographer_launch, 'launch', 'cartographer_3d.launch.py')
+            os.path.join(pkg_slam_offline, 'launch', 'cartographer_3d.launch.py')
         ),
         launch_arguments={
             'configuration_directory': cartographer_config_dir,

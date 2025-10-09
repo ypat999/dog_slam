@@ -19,7 +19,7 @@ source install/setup.bash
 
 ### 2. 启动完整SLAM系统
 ```bash
-ros2 launch livox_slam_system full_slam_system.launch.py
+ros2 launch livox_slam_online full_slam_system.launch.py
 ```
 
 这将同时启动：
@@ -51,7 +51,7 @@ ros2 launch livox_slam_system full_slam_system.launch.py
 
 ### 实时可视化
 ```bash
-ros2 run rviz2 rviz2 -d /public/github/livox_ws/src/livox_slam_system/config/livox_slam.rviz
+ros2 run rviz2 rviz2 -d /public/github/dog_slam/src/livox_slam_online/config/livox_slam.rviz
 ```
 
 ### 查看录制数据

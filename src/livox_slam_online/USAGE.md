@@ -21,7 +21,7 @@ source install/setup.bash
 ### 2. 启动完整系统
 
 ```bash
-ros2 launch livox_slam_system livox_slam_system.launch.py
+ros2 launch livox_slam_online livox_slam_online.launch.py
 ```
 
 该命令将启动：
@@ -33,8 +33,8 @@ ros2 launch livox_slam_system livox_slam_system.launch.py
 由于之前构建时遇到了一些依赖问题，Cartographer部分需要手动启动：
 
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py \
-  configuration_directory:=/public/github/livox_ws/src/livox_slam_system/config \
+ros2 launch slam_offline cartographer_3d.launch.py \
+  configuration_directory:=/public/github/dog_slam/src/livox_slam_online/config \
   configuration_basename:=livox_mid360_cartographer.lua
 ```
 
@@ -74,7 +74,7 @@ ros2 bag play /tmp/livox_slam_data
 
 启动RViz查看建图结果：
 ```bash
-rviz2 -d /public/github/livox_ws/src/my_cartographer_launch/config/cartographer.rviz
+rviz2 -d /public/github/dog_slam/src/slam_offline/config/cartographer.rviz
 ```
 
 ## 故障排除

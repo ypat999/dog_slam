@@ -1,0 +1,8 @@
+digraph G {
+"map" -> "base_link"[label=" Broadcaster: default_authority\nAverage rate: 291.11\nBuffer length: 5.022\nMost recent transform: 1759200098.675374\nOldest transform: 1759200093.653221\n"];
+"base_link" -> "livox_frame"[label=" Broadcaster: default_authority\nAverage rate: 10000.0\nBuffer length: 0.0\nMost recent transform: 0.0\nOldest transform: 0.0\n"];
+edge [style=invis];
+ subgraph cluster_legend { style=bold; color=black; label ="view_frames Result";
+"Recorded at time: 1759225365.220312"[ shape=plaintext ] ;
+}->"map";
+}

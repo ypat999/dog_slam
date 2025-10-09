@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'my_cartographer_launch'
+package_name = 'slam_offline'
 
 setup(
     name=package_name,
@@ -12,9 +12,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', ['launch/cartographer_3d.launch.py']),
         ('share/' + package_name + '/config', [
-            'config/cartographer_3d.lua',
-            'config/cartographer_3d_no_imu.lua',
-            'config/cartographer_3d_optimized.lua',
             'config/cartographer_3d_with_imu.lua',
             'config/cartographer.rviz'
         ]),

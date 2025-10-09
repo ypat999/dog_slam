@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'livox_slam_system'
+package_name = 'livox_slam_online'
 
 setup(
     name=package_name,
@@ -11,8 +11,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', [
-            'launch/simple_launch.py',
-            'launch/livox_slam_system.launch.py',
+            'livox_cartographer_launch.py',
             'launch/full_slam_system.launch.py'
         ]),
         ('share/' + package_name + '/config', [
@@ -29,9 +28,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'data_recorder = livox_slam_system.scripts.data_recorder:main',
-            'slam_manager = livox_slam_system.scripts.slam_manager:main',
-            'test_system = livox_slam_system.scripts.test_system:main',
+            'data_recorder = livox_slam_online.scripts.data_recorder:main',
+            'slam_manager = livox_slam_online.scripts.slam_manager:main',
+            'test_system = livox_slam_online.scripts.test_system:main',
         ],
     },
 )

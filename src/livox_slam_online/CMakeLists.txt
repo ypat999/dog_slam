@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(livox_slam_system)
+project(livox_slam_online)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)

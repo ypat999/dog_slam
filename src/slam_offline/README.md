@@ -14,19 +14,19 @@
 ### 基本使用
 
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py
+ros2 launch slam_offline cartographer_3d.launch.py
 ```
 
 ### 指定bag文件路径
 
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py bag_path:=/path/to/your/bag/file
+ros2 launch slam_offline cartographer_3d.launch.py bag_path:=/path/to/your/bag/file
 ```
 
 ### 使用仿真时间
 
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py use_sim_time:=true
+ros2 launch slam_offline cartographer_3d.launch.py use_sim_time:=true
 ```
 
 ## 参数说明
@@ -50,5 +50,5 @@ ros2 launch my_cartographer_launch cartographer_3d.launch.py use_sim_time:=true
 
 例如：
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py bag_path:=/home/user/my_data.bag
+ros2 launch slam_offline cartographer_3d.launch.py bag_path:=/home/user/my_data.bag
 ```

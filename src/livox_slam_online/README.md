@@ -23,7 +23,7 @@
 
 1. 克隆仓库到ROS 2工作空间：
 ```bash
-cd /public/github/livox_ws/src
+cd /public/github/dog_slam/src
 git clone <repository_url>
 ```
 
@@ -58,12 +58,12 @@ source install/setup.bash
 
 2. 启动完整SLAM系统：
 ```bash
-ros2 launch livox_slam_system full_slam_system.launch.py
+ros2 launch livox_slam_online full_slam_system.launch.py
 ```
 
 3. 查看建图结果：
 ```bash
-ros2 run rviz2 rviz2 -d /public/github/livox_ws/src/livox_slam_system/config/livox_slam.rviz
+ros2 run rviz2 rviz2 -d /public/github/dog_slam/src/livox_slam_online/config/livox_slam.rviz
 ```
 
 ### 单独启动组件
@@ -75,8 +75,8 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 2. 启动Cartographer SLAM：
 ```bash
-ros2 launch my_cartographer_launch cartographer_3d.launch.py \
-  configuration_directory:=/public/github/livox_ws/src/livox_slam_system/config \
+ros2 launch slam_offline cartographer_3d.launch.py \
+  configuration_directory:=/public/github/dog_slam/src/livox_slam_online/config \
   configuration_basename:=livox_mid360_cartographer.lua
 ```
 
@@ -97,7 +97,7 @@ ros2 launch my_cartographer_launch cartographer_3d.launch.py \
 
 1. 实时查看：
 ```bash
-ros2 run rviz2 rviz2 -d /public/github/livox_ws/src/livox_slam_system/config/livox_slam.rviz
+ros2 run rviz2 rviz2 -d /public/github/dog_slam/src/livox_slam_online/config/livox_slam.rviz
 ```
 
 2. 查看录制数据：
@@ -109,7 +109,7 @@ ros2 bag play .
 ## 项目结构
 
 ```
-livox_slam_system/
+livox_slam_online/
 ├── CMakeLists.txt
 ├── package.xml
 ├── setup.cfg
@@ -123,16 +123,16 @@ livox_slam_system/
 │   └── livox_slam.rviz
 ├── launch/
 │   ├── simple_launch.py
-│   ├── livox_slam_system.launch.py
+│   ├── livox_slam_online.launch.py
 │   └── full_slam_system.launch.py
 ├── resource/
-│   └── livox_slam_system
+│   └── livox_slam_online
 ├── scripts/
 │   ├── data_recorder.py
 │   ├── slam_manager.py
 │   └── test_system.py
 ├── include/
-│   └── livox_slam_system/
+│   └── livox_slam_online/
 └── src/
 ```
 

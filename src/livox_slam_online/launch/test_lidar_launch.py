@@ -15,7 +15,7 @@ from launch.actions import DeclareLaunchArgument
 
 def generate_launch_description():
     # 获取包的共享目录
-    livox_slam_system_dir = get_package_share_directory('livox_slam_system')
+    livox_slam_online_dir = get_package_share_directory('livox_slam_online')
     
     ################### user configure parameters for ros2 start ###################
     xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -27,7 +27,7 @@ def generate_launch_description():
     lvx_file_path = '/home/livox/livox_test.lvx'
     cmdline_bd_code = 'livox0000000001'
 
-    default_user_config_path = os.path.join(livox_slam_system_dir, 'config', 'mid360_config.json')
+    default_user_config_path = os.path.join(livox_slam_online_dir, 'config', 'mid360_config.json')
     user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
     ################### user configure parameters for ros2 end #####################
 
@@ -69,7 +69,7 @@ def generate_launch_description():
     #     executable='rviz2',
     #     name='rviz2',
     #     output='screen',
-    #     arguments=['-d', os.path.join(livox_slam_system_dir, 'config', 'livox_slam.rviz')]
+    #     arguments=['-d', os.path.join(livox_slam_online_dir, 'config', 'livox_slam.rviz')]
     # )
     
     # 创建静态变换节点，将livox_frame连接到base_link

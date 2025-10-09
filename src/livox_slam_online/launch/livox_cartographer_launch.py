@@ -14,8 +14,8 @@ import os
 
 def generate_launch_description():
     # 获取包的共享目录
-    livox_slam_system_dir = get_package_share_directory('livox_slam_system')
-    # my_cartographer_launch_dir = get_package_share_directory('my_cartographer_launch') 
+    livox_slam_online_dir = get_package_share_directory('livox_slam_online')
+    # slam_offline_dir = get_package_share_directory('slam_offline') 
     
     ################### Livox LiDAR配置参数 ###################
     xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -27,12 +27,12 @@ def generate_launch_description():
     lvx_file_path = '/home/livox/livox_test.lvx'
     cmdline_bd_code = 'livox0000000001'
     
-    default_user_config_path = os.path.join(livox_slam_system_dir, 'config', 'mid360_config.json')
+    default_user_config_path = os.path.join(livox_slam_online_dir, 'config', 'mid360_config.json')
     user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
     
     # Cartographer配置参数
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-    cartographer_config_dir = os.path.join(livox_slam_system_dir, 'config')
+    cartographer_config_dir = os.path.join(livox_slam_online_dir, 'config')
     configuration_basename = LaunchConfiguration('configuration_basename', default='cartographer_3d_with_imu.lua')
     resolution = LaunchConfiguration('resolution', default='0.05')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
@@ -47,7 +47,8 @@ def generate_launch_description():
         {"frame_id": frame_id},
         {"lvx_file_path": lvx_file_path},
         {"user_config_path": user_config_path},
-        {"cmdline_input_bd_code": cmdline_bd_code}
+        {"cmdline_input_bd_code": cmdline_bd_code},
+        {"enable_imu_sync_time": True},
     ]
     
     print(f"Livox配置文件路径: {default_user_config_path}")
@@ -62,14 +63,48 @@ def generate_launch_description():
         parameters=livox_ros2_params
     )
     
-    # 创建静态变换节点，将livox_frame连接到base_link
-    static_transform_publisher = Node(
+    # # 创建静态变换节点，将livox_frame连接到base_link
+    # static_transform_publisher = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='static_transform_publisher',
+    #     output='screen',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'livox_frame']
+    # )
+
+    # 静态变换：map-> odom 
+    static_transform_publisher_map_odom = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_publisher',
+        name='static_transform_publisher_map_odom',
         output='screen',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'livox_frame']
-    )
+        arguments=['0', '0', '0', '0',  '0', '0','map', 'odom'],
+        parameters=[{'use_sim_time': use_sim_time}]
+    ),
+
+    # # 静态变换：odom -> base_link (机器人初始位置，无旋转)
+    static_transform_publisher_odom_base = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_publisher_odom_base',
+        output='screen',
+        arguments=['0', '0', '0', '0',  '-0.4236', '0','odom', 'base_link'],
+        # arguments=['0', '0', '0', '0',  '0', '0','odom', 'base_link'],
+        parameters=[{'use_sim_time': use_sim_time}]
+    ),
+
+    # 静态变换：base_link -> livox_frame (LiDAR倾斜补偿)
+    # 补偿LiDAR 30度前倾：绕X轴旋转-30度（弧度约为-0.5236）
+    # 参数顺序：x y z yaw pitch roll
+    static_transform_publisher_lidar_tilt = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_publisher_lidar_tilt',
+        output='screen',
+        arguments=['0', '0', '0', '0',  '-0.4236', '0','base_link', 'livox_frame'],
+        # arguments=['0', '0', '0', '0',  '0', '0','base_link', 'livox_frame'],
+        parameters=[{'use_sim_time': use_sim_time}]
+    ),
     
     # 创建RViz2节点
     rviz_node = Node(
@@ -77,7 +112,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='screen',
-        arguments=['-d', os.path.join(livox_slam_system_dir, 'config', 'cartographer.rviz')]
+        arguments=['-d', os.path.join(livox_slam_online_dir, 'config', 'cartographer.rviz')]
     )
     
     # Cartographer 3D SLAM 节点
@@ -143,9 +178,15 @@ def generate_launch_description():
         declare_configuration_basename,
         declare_resolution,
         declare_publish_period_sec,
+
+        # 启动可视化
+        # rviz_node,
         
         # 启动静态变换
-        static_transform_publisher,
+        # static_transform_publisher,
+        static_transform_publisher_map_odom,
+        static_transform_publisher_odom_base,
+        static_transform_publisher_lidar_tilt,
         
         # 启动LiDAR驱动
         livox_driver_node,
@@ -154,7 +195,6 @@ def generate_launch_description():
         cartographer_node,
         occupancy_grid_node,
         
-        # 启动可视化
-        # rviz_node,
+        # 启动rosbag记录
         rosbag_record
     ])

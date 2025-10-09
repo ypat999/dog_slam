@@ -50,7 +50,7 @@ class SystemTester(Node):
         
     def test_packages_installed(self):
         """测试必要的包是否已安装"""
-        required_packages = ['livox_ros_driver2', 'my_cartographer_launch']
+        required_packages = ['livox_ros_driver2', 'slam_offline']
         
         try:
             from ament_index_python.packages import get_package_share_directory
@@ -71,7 +71,7 @@ class SystemTester(Node):
         ]
         
         for config_file in config_files:
-            file_path = os.path.join('/public/github/livox_ws/src/livox_slam_system', config_file)
+            file_path = os.path.join('/public/github/dog_slam/src/livox_slam_online', config_file)
             if os.path.exists(file_path):
                 self.get_logger().info(f'配置文件 {config_file} 存在')
             else:
@@ -80,12 +80,12 @@ class SystemTester(Node):
     def test_launch_files(self):
         """测试launch文件是否存在"""
         launch_files = [
-            'launch/livox_slam_system.launch.py',
+            'launch/livox_slam_online.launch.py',
             'launch/simple_launch.py'
         ]
         
         for launch_file in launch_files:
-            file_path = os.path.join('/public/github/livox_ws/src/livox_slam_system', launch_file)
+            file_path = os.path.join('/public/github/dog_slam/src/livox_slam_online', launch_file)
             if os.path.exists(file_path):
                 self.get_logger().info(f'Launch文件 {launch_file} 存在')
             else:

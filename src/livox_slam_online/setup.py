@@ -11,12 +11,13 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', [
-            'livox_cartographer_launch.py',
+            'launch/livox_cartographer_launch.py',
             'launch/full_slam_system.launch.py'
         ]),
         ('share/' + package_name + '/config', [
             'config/mid360_config.json',
-            'config/livox_mid360_cartographer.lua'
+            'config/livox_mid360_cartographer.lua',
+            'config/livox_slam.rviz'
         ]),
     ],
     install_requires=['setuptools'],
@@ -31,6 +32,7 @@ setup(
             'data_recorder = livox_slam_online.scripts.data_recorder:main',
             'slam_manager = livox_slam_online.scripts.slam_manager:main',
             'test_system = livox_slam_online.scripts.test_system:main',
+            'simple_imu_filter = livox_slam_online.scripts.simple_imu_filter:main'
         ],
     },
 )

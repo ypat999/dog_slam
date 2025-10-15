@@ -38,5 +38,9 @@
         "z": 0
       }
     }
-  ]
+  ],
+  "time_sync_config": {
+    "enable": true,
+    "time_source": "host"
+  }
 }

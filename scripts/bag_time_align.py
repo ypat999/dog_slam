@@ -74,12 +74,11 @@ while reader.has_next():
     if t < remove_threshold_ns:
         continue
 
-    # 若首次处理非 IMU 数据，将队列中的 IMU 数据写入
+    # 每次只写入一个IMU数据
     if topic == imu_topic:
         if 'imu_queue' in locals() and len(imu_queue) > 0:
-            for imu_data in imu_queue:
-                writer.write(*imu_data)
-            imu_queue = []
+            imu_data = imu_queue.pop(0)  # 每次只取第一个
+            writer.write(*imu_data)
     else:
         writer.write(topic, data, t)
 

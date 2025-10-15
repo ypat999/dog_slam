@@ -19,7 +19,7 @@ options = {
   map_builder = MAP_BUILDER,
   trajectory_builder = TRAJECTORY_BUILDER,
   map_frame = "map",
-  tracking_frame = "base_link",  -- IMU坐标系
+  tracking_frame = "livox_frame",  -- 使用LiDAR坐标系作为跟踪帧
   published_frame = "base_link",
   odom_frame = "odom",
   provide_odom_frame = false,
@@ -107,6 +107,7 @@ TRAJECTORY_BUILDER_3D.submaps = {
 
 -- IMU配置
 TRAJECTORY_BUILDER_3D.imu_gravity_time_constant = 10.0
+
 
 -- 使用3D轨迹构建器
 MAP_BUILDER.use_trajectory_builder_3d = true

@@ -33,7 +33,7 @@ def generate_launch_description():
     # Cartographer配置参数
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     cartographer_config_dir = os.path.join(livox_slam_online_dir, 'config')
-    configuration_basename = LaunchConfiguration('configuration_basename', default='cartographer_3d_with_imu.lua')
+    configuration_basename = LaunchConfiguration('configuration_basename', default='livox_mid360_cartographer.lua')
     resolution = LaunchConfiguration('resolution', default='0.05')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
     
@@ -80,7 +80,7 @@ def generate_launch_description():
         output='screen',
         arguments=['0', '0', '0', '0',  '0', '0','map', 'odom'],
         parameters=[{'use_sim_time': use_sim_time}]
-    ),
+    )
 
     # # 静态变换：odom -> base_link (机器人初始位置，无旋转)
     static_transform_publisher_odom_base = Node(
@@ -88,10 +88,10 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_publisher_odom_base',
         output='screen',
-        arguments=['0', '0', '0', '0',  '-0.4236', '0','odom', 'base_link'],
-        # arguments=['0', '0', '0', '0',  '0', '0','odom', 'base_link'],
+        # arguments=['0', '0', '0', '0',  '-0.4236', '0','odom', 'base_link'],
+        arguments=['0', '0', '0', '0',  '0', '0','odom', 'base_link'],
         parameters=[{'use_sim_time': use_sim_time}]
-    ),
+    )
 
     # 静态变换：base_link -> livox_frame (LiDAR倾斜补偿)
     # 补偿LiDAR 30度前倾：绕X轴旋转-30度（弧度约为-0.5236）
@@ -101,10 +101,20 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_publisher_lidar_tilt',
         output='screen',
-        arguments=['0', '0', '0', '0',  '-0.4236', '0','base_link', 'livox_frame'],
-        # arguments=['0', '0', '0', '0',  '0', '0','base_link', 'livox_frame'],
+        # arguments=['0', '0', '0', '0',  '-0.4236', '0','base_link', 'livox_frame'],
+        arguments=['0', '0', '0', '0',  '0', '0','base_link', 'livox_frame'],
         parameters=[{'use_sim_time': use_sim_time}]
-    ),
+    )
+    
+    # # 创建IMU数据监听节点
+    # imu_listener_node = Node(
+    #     package='tf2_ros',
+    #     executable='tf2_echo',
+    #     name='imu_data_listener',
+    #     output='screen',
+    #     arguments=['map', 'livox_frame']
+    # )
+
     
     # 创建RViz2节点
     rviz_node = Node(
@@ -113,6 +123,14 @@ def generate_launch_description():
         name='rviz2',
         output='screen',
         arguments=['-d', os.path.join(livox_slam_online_dir, 'config', 'cartographer.rviz')]
+    )
+    
+    # 简单的IMU滤波器节点
+    imu_filter_node = Node(
+        package='livox_slam_online',
+        executable='simple_imu_filter',
+        name='simple_imu_filter',
+        output='screen'
     )
     
     # Cartographer 3D SLAM 节点
@@ -126,7 +144,7 @@ def generate_launch_description():
                    '-configuration_basename', configuration_basename], 
         remappings=[
             ('/points2', '/livox/lidar'),  # 重映射到Livox LiDAR的点云话题
-            ('/imu', '/livox/imu'),  # 使用实际的IMU话题
+            ('/imu', '/livox/imu_filtered'),  # 使用滤波后的IMU话题
         ],
     )
     
@@ -156,7 +174,7 @@ def generate_launch_description():
     
     declare_configuration_basename = DeclareLaunchArgument(
         'configuration_basename',
-        default_value='cartographer_3d_with_imu.lua',
+        default_value='livox_mid360_cartographer.lua',
         description='Cartographer configuration file basename'
     )
     
@@ -181,6 +199,7 @@ def generate_launch_description():
 
         # 启动可视化
         # rviz_node,
+        # imu_listener_node,
         
         # 启动静态变换
         # static_transform_publisher,
@@ -190,11 +209,14 @@ def generate_launch_description():
         
         # 启动LiDAR驱动
         livox_driver_node,
+
+        # 启动IMU过滤器（在Cartographer之前启动）
+        imu_filter_node,
         
         # 启动Cartographer建图
         cartographer_node,
         occupancy_grid_node,
         
         # 启动rosbag记录
-        rosbag_record
+        # rosbag_record
     ])

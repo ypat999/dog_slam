@@ -2,15 +2,17 @@
 
 ## 项目概述
 
-本项目是一个基于Livox Mid-360 LiDAR和Google Cartographer的SLAM（同时定位与地图构建）系统。该系统能够实时构建环境的3D地图，并提供定位功能。
+本项目提供了一个基于ROS2的Livox Mid-360 LiDAR SLAM系统，集成了**Cartographer**激光SLAM算法，专为机器人导航和建图应用设计。
 
 ## 功能特性
 
+- **Cartographer集成**: 完整的Google Cartographer算法实现
 - 实时3D点云数据采集
-- 高精度SLAM算法
+- 激光雷达-惯性融合
 - 数据录制与回放
 - 实时可视化界面
 - 完整的系统集成
+- 回环检测和地图优化
 
 ## 前置要求
 
@@ -73,11 +75,12 @@ ros2 run rviz2 rviz2 -d /public/github/dog_slam/src/livox_slam_online/config/liv
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 ```
 
-2. 启动Cartographer SLAM：
+2. 启动Cartographer SLAM（经典算法）：
 ```bash
-ros2 launch slam_offline cartographer_3d.launch.py \
-  configuration_directory:=/public/github/dog_slam/src/livox_slam_online/config \
-  configuration_basename:=livox_mid360_cartographer.lua
+ros2 launch livox_slam_online livox_cartographer_launch.py
+
+# 或者使用完整系统启动脚本
+./run.sh
 ```
 
 ## 配置文件
@@ -119,8 +122,7 @@ livox_slam_online/
 ├── FULL_SYSTEM_USAGE.md
 ├── config/
 │   ├── mid360_config.json
-│   ├── livox_mid360_cartographer.lua
-│   └── livox_slam.rviz
+│   └── livox_mid360_cartographer.lua
 ├── launch/
 │   ├── simple_launch.py
 │   ├── livox_slam_online.launch.py

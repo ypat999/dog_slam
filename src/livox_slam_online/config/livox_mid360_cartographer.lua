@@ -56,13 +56,15 @@ TRAJECTORY_BUILDER_3D.ceres_scan_matcher.rotation_weight = 10.0
 TRAJECTORY_BUILDER_3D.imu_gravity_time_constant = 10.0
 
 
+TRAJECTORY_BUILDER_3D.voxel_filter_size = 0.1
+
 -- 运动滤波器配置 - 抑制平移漂移
 TRAJECTORY_BUILDER_3D.motion_filter.max_time_seconds = 0.1
-TRAJECTORY_BUILDER_3D.motion_filter.max_distance_meters = 0.01
-TRAJECTORY_BUILDER_3D.motion_filter.max_angle_radians = math.rad(2.0)
+TRAJECTORY_BUILDER_3D.motion_filter.max_distance_meters = 10000
+TRAJECTORY_BUILDER_3D.motion_filter.max_angle_radians = math.rad(1.0)
 
 -- 子地图配置
-TRAJECTORY_BUILDER_3D.submaps.num_range_data = 100
+TRAJECTORY_BUILDER_3D.submaps.num_range_data = 30
 
 -- 位姿图优化配置 - 抑制漂移
 POSE_GRAPH.optimize_every_n_nodes = 30
@@ -72,10 +74,9 @@ POSE_GRAPH.constraint_builder.min_score = 0.7
 POSE_GRAPH.constraint_builder.global_localization_min_score = 0.75
 POSE_GRAPH.matcher_translation_weight = 10.0
 POSE_GRAPH.matcher_rotation_weight = 10.0
-POSE_GRAPH.global_sampling_ratio = 0.005
+POSE_GRAPH.global_sampling_ratio = 0.05
 
 -- 地图构建器配置
 MAP_BUILDER.use_trajectory_builder_3d = true
-MAP_BUILDER.num_background_threads = 7
-
+MAP_BUILDER.num_background_threads = 4
 return options

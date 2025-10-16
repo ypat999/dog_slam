@@ -1,0 +1,15 @@
+cmake 
+git clone git@github.com:Livox-SDK/Livox-SDK2.git  (sudo make install)(livox驱动依赖)
+git clone git@github.com:Livox-SDK/livox_ros_driver2.git
+
+
+apt源：deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] https://mirrors.aliyun.com/ros2/ubuntu/ focal main
+sudo apt install -y curl gnupg lsb-release
+sudo mkdir -p /etc/apt/keyrings
+curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key | sudo gpg --dearmour -o /etc/apt/keyrings/ros-archive-keyring.gpg
+sudo apt update
+
+apt： ros-humble-cartographer-ros  ros-humble-cartographer-ros-msgs
+script下的py文件需要chmod +x，launch中的excutable需要带.py
+
+apt： ros-humble-rqt-plot 

@@ -35,6 +35,7 @@ install(DIRECTORY
 install(PROGRAMS
   scripts/data_recorder.py
   scripts/slam_manager.py
+  scripts/simple_imu_filter.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

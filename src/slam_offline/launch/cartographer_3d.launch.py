@@ -14,9 +14,9 @@ def generate_launch_description():
     # 配置参数
     use_sim_time = LaunchConfiguration('use_sim_time')
     bag_path = LaunchConfiguration('bag_path')
-    cartographer_config_dir = "/public/github/dog_slam/src/slam_offline/config/"  # 使用我们自己的配置文件目录
+    cartographer_config_dir = "/home/ywj/projects/git/dog_slam/src/slam_offline/config"  # 使用我们自己的配置文件目录
     configuration_basename =  "cartographer_3d_with_imu.lua" # 使用启用IMU的配置文件
-    rviz_config_dir = "/public/github/dog_slam/src/slam_offline/config/"
+    rviz_config_dir = "/home/ywj/projects/git/dog_slam/src/slam_offline/config"
 
     # 地图的分辨率
     resolution = LaunchConfiguration('resolution', default='0.05')
@@ -33,7 +33,7 @@ def generate_launch_description():
         
         DeclareLaunchArgument(
             'bag_path',
-            default_value='/public/dataset/robot/livox_record/_cropped_sync/', # 使用裁切后的数据作为默认路径
+            default_value='/home/ywj/projects/dataset/_cropped_sync/', # 使用裁切后的数据作为默认路径
             description='Path to the bag file to play (can be cropped data)'
         ),
 
@@ -42,7 +42,7 @@ def generate_launch_description():
         #     package='rviz2',
         #     executable='rviz2',
         #     name='rviz2',
-        #     arguments=['-d', '/public/github/dog_slam/src/slam_offline/config/cartographer.rviz'],
+        #     arguments=['-d', '/home/ywj/projects/git/dog_slam/src/slam_offline/config/cartographer.rviz'],
         #     output='screen'
         # ),
         # 静态变换：map-> odom 
@@ -129,7 +129,7 @@ def generate_launch_description():
 
         # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数，慢放100倍
         ExecuteProcess(
-            cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/public/dataset/robot/reliability_override.yaml', '--clock', '--rate', '1.0'],
+            cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/home/ywj/projects/dataset/reliability_override.yaml', '--clock', '--rate', '1.0'],
             name='rosbag_player',
             output='screen'
         ),

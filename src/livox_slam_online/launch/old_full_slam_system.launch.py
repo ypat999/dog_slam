@@ -45,7 +45,7 @@ def generate_launch_description():
     
     # 数据录制节点
     rosbag_record = ExecuteProcess(
-        cmd=['ros2', 'bag', 'record', '-o', '/public/dataset/robot/livox_record/', 
+        cmd=['ros2', 'bag', 'record', '-o', '/home/ywj/projects/dataset/robot/livox_record/', 
              '/livox/lidar', '/livox/imu', '/tf', '/tf_static',
              '/scan_matched_points2', '/submap_list', '/trajectory_node_list'],
         output='screen'

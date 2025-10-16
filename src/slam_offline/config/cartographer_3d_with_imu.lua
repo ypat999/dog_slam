@@ -49,10 +49,10 @@ TRAJECTORY_BUILDER_3D.min_range = 0.3  -- 增加最小距离，过滤近处噪�
 TRAJECTORY_BUILDER_3D.max_range = 5.0  -- 增加最大距离，利用更多远距信息
 TRAJECTORY_BUILDER_3D.voxel_filter_size = 0.08  -- 减小体素滤波器大小，保留更多细节
 
+
 -- 高度过滤配置 - 忽略一定高度以上的点云
-TRAJECTORY_BUILDER_2D.min_z = -0.3  -- 最小高度（米），低于此值的点云将被忽略
-TRAJECTORY_BUILDER_2D.max_z = 1.5   -- 最大高度（米），高于此值的点云将被忽略
--- 可以根据需要调整这些值，例如忽略2米以上的点云：max_z = 2.0
+-- TRAJECTORY_BUILDER_2D.min_z = -0.3  -- 最小高度（米），低于此值的点云将被忽略
+-- TRAJECTORY_BUILDER_2D.max_z = 1.5   -- 最大高度（米），高于此值的点云将被忽略
 
 -- 高分辨率自适应体素滤波器 - 优化以减少噪声
 TRAJECTORY_BUILDER_3D.high_resolution_adaptive_voxel_filter = {
@@ -84,6 +84,11 @@ TRAJECTORY_BUILDER_3D.ceres_scan_matcher = {
   translation_weight = 8.0,         -- 增加平移权重，提高位置精度
   rotation_weight = 3e2,            -- 降低旋转权重，避免过度旋转
   only_optimize_yaw = false,
+  intensity_cost_function_options_0 = {
+    weight = 0.5,
+    huber_scale = 0.3,
+    intensity_threshold = 0.5,      -- 强度阈值，过滤低强度点云（Humble版本新增参数）
+  },
   ceres_solver_options = {
     use_nonmonotonic_steps = false,
     max_num_iterations = 15,        -- 增加迭代次数以提高收敛性
@@ -108,6 +113,7 @@ TRAJECTORY_BUILDER_3D.submaps = {
     hit_probability = 0.55,         -- 保持标准命中概率
     miss_probability = 0.49,        -- 保持标准未命中概率
     num_free_space_voxels = 2,      -- 保持标准的自由空间体素数量
+    intensity_threshold = 0.5,      -- 强度阈值，过滤低强度点云（Humble版本新增参数）
   },
 }
 

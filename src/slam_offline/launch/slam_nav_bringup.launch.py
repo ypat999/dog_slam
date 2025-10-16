@@ -36,7 +36,7 @@ def generate_launch_description():
         
         DeclareLaunchArgument(
             'bag_path',
-            default_value='/public/dataset/robot/livox_record/_cropped/',
+            default_value='/home/ywj/projects/dataset/_cropped/',
             description='Bag文件路径（在线和离线模式使用）'
         ),
         

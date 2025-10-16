@@ -6,7 +6,7 @@ Livox LiDAR与Cartographer 3D建图集成启动文件
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import os
@@ -21,7 +21,7 @@ def generate_launch_description():
     xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 50.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     lvx_file_path = '/home/livox/livox_test.lvx'
@@ -34,7 +34,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     cartographer_config_dir = os.path.join(livox_slam_online_dir, 'config')
     configuration_basename = LaunchConfiguration('configuration_basename', default='livox_mid360_cartographer.lua')
-    resolution = LaunchConfiguration('resolution', default='0.05')
+    resolution = LaunchConfiguration('resolution', default='0.1')
     publish_period_sec = LaunchConfiguration('publish_period_sec', default='1.0')
     
     # Livox LiDAR驱动参数
@@ -128,10 +128,19 @@ def generate_launch_description():
     # 简单的IMU滤波器节点
     imu_filter_node = Node(
         package='livox_slam_online',
-        executable='simple_imu_filter',
+        executable='simple_imu_filter.py',
         name='simple_imu_filter',
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+        # 添加启动延迟，确保IMU滤波器在Cartographer之前稳定运行
+        # 添加重映射，确保使用正确的话题
+        remappings=[
+            ('/livox/imu', '/livox/imu'),
+            ('/livox/imu_filtered', '/livox/imu_filtered'),
+        ]
     )
+
+    
     
     # Cartographer 3D SLAM 节点
     cartographer_node = Node(
@@ -139,7 +148,14 @@ def generate_launch_description():
         executable='cartographer_node',
         name='cartographer_node',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
+        parameters=[{
+            'qos_profile': 'sensor_data',
+            'sensor_data_qos': {
+                'reliability': 'reliable',   # 修改为 RELIABLE
+                'history': 'keep_last',
+                'depth': 50000                   # 根据需要设置缓存深度
+            }
+        }],
         arguments=['-configuration_directory', cartographer_config_dir,
                    '-configuration_basename', configuration_basename], 
         remappings=[
@@ -151,19 +167,18 @@ def generate_launch_description():
     # Cartographer占用网格发布器
     occupancy_grid_node = Node(
         package='cartographer_ros',
-        executable='occupancy_grid_node',
+        executable='cartographer_occupancy_grid_node',
         name='cartographer_occupancy_grid_node',
         output='screen',
-        parameters=[{'use_sim_time': use_sim_time}],
+        parameters=[{'qos_profile': 'sensor_data'}],
         arguments=['-resolution', resolution, '-publish_period_sec', publish_period_sec]
     )
 
-    rosbag_record = ExecuteProcess(
-        cmd=['ros2', 'bag', 'record', '-o', '/public/dataset/robot/livox_record/', 
-             '/livox/lidar', '/livox/imu', '/tf', '/tf_static',
-             '/scan_matched_points2', '/submap_list', '/trajectory_node_list'],
-        output='screen'
-    )
+    # rosbag_record = ExecuteProcess(
+    #     cmd=['ros2', 'bag', 'record', '-o', '/home/ywj/projects/dataset/robot/livox_record/', 
+    #          '/livox/lidar', '/livox/imu',],
+    #     output='screen'
+    # )
     
     # 创建DeclareLaunchArgument
     declare_user_config_path = DeclareLaunchArgument(
@@ -180,7 +195,7 @@ def generate_launch_description():
     
     declare_resolution = DeclareLaunchArgument(
         'resolution',
-        default_value='0.05',
+        default_value='0.1',
         description='Resolution of the occupancy grid map'
     )
     
@@ -213,9 +228,14 @@ def generate_launch_description():
         # 启动IMU过滤器（在Cartographer之前启动）
         imu_filter_node,
         
-        # 启动Cartographer建图
-        cartographer_node,
-        occupancy_grid_node,
+        # 延迟启动Cartographer建图，确保IMU滤波器有足够时间稳定
+        TimerAction(
+            period=2.0,  # 2秒延迟
+            actions=[
+                cartographer_node,
+                occupancy_grid_node,
+            ]
+        ),
         
         # 启动rosbag记录
         # rosbag_record

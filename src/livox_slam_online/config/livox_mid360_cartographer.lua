@@ -60,8 +60,8 @@ TRAJECTORY_BUILDER_3D.voxel_filter_size = 0.1
 
 -- 运动滤波器配置 - 抑制平移漂移
 TRAJECTORY_BUILDER_3D.motion_filter.max_time_seconds = 0.1
-TRAJECTORY_BUILDER_3D.motion_filter.max_distance_meters = 10000
-TRAJECTORY_BUILDER_3D.motion_filter.max_angle_radians = math.rad(1.0)
+TRAJECTORY_BUILDER_3D.motion_filter.max_distance_meters = 100
+TRAJECTORY_BUILDER_3D.motion_filter.max_angle_radians = math.rad(10.0)
 
 -- 子地图配置
 TRAJECTORY_BUILDER_3D.submaps.num_range_data = 30

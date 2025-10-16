@@ -19,9 +19,10 @@ class BufferedImuFilter(Node):
         super().__init__('buffered_imu_filter')
         
         # 参数设置
-        self.window_size = 10  # 移动平均窗口大小
-        self.jump_threshold = 2.0  # 跳变检测阈值（标准差的倍数）
-        self.buffer_size = 50  # 内部缓冲长度，防止丢包
+        self.window_size = 100  # 移动平均窗口大小
+        self.jump_threshold = 0.01 # 跳变检测阈值（标准差的倍数）
+        self.buffer_size = 5000  # 内部缓冲长度，防止丢包
+        self.calibration_duration = 5.0  # 校准持续时间（秒）
         
         # 统计变量
         self.stats_interval = 10.0  # 统计间隔（秒）
@@ -30,6 +31,14 @@ class BufferedImuFilter(Node):
         self.last_stats_time = time.time()
         self.raw_timestamps = deque()
         self.filtered_timestamps = deque()
+        
+        # 校准相关变量
+        self.is_calibrating = True
+        self.calibration_start_time = time.time()
+        self.angular_velocity_calibration_data = {'x': [], 'y': [], 'z': []}
+        self.linear_acceleration_calibration_data = {'x': [], 'y': [], 'z': []}
+        self.angular_velocity_bias = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+        self.linear_acceleration_bias = {'x': 0.0, 'y': 0.0, 'z': 0.0}
         
         # 初始化缓冲区
         self.angular_velocity_buffers = {axis: deque(maxlen=self.window_size) for axis in ['x', 'y', 'z']}
@@ -60,6 +69,7 @@ class BufferedImuFilter(Node):
         self.stats_timer = self.create_timer(self.stats_interval, self.publish_statistics)
         
         self.get_logger().info('增强型IMU滤波器已启动')
+        self.get_logger().info(f'开始校准阶段，将持续 {self.calibration_duration} 秒，请保持传感器静止...')
 
     def detect_and_handle_jump(self, new_value, buffer, axis_name, data_type):
         if len(buffer) < 3:
@@ -85,18 +95,38 @@ class BufferedImuFilter(Node):
         current_time = time.time()
         self.raw_timestamps.append(current_time)
         
+        # 检查是否还在校准期间
+        if self.is_calibrating:
+            elapsed_time = current_time - self.calibration_start_time
+            if elapsed_time >= self.calibration_duration:
+                # 校准结束，计算平均值
+                self.calculate_calibration_bias()
+                self.is_calibrating = False
+                self.get_logger().info(f'校准完成！用时 {elapsed_time:.1f} 秒')
+                self.get_logger().info(f'角速度偏差: X={self.angular_velocity_bias["x"]:.4f}, Y={self.angular_velocity_bias["y"]:.4f}, Z={self.angular_velocity_bias["z"]:.4f}')
+                self.get_logger().info(f'线加速度偏差: X={self.linear_acceleration_bias["x"]:.4f}, Y={self.linear_acceleration_bias["y"]:.4f}, Z={self.linear_acceleration_bias["z"]:.4f}')
+            else:
+                # 收集校准数据
+                self.collect_calibration_data(msg)
+                return  # 校准期间不发布数据
+        
         filtered_msg = Imu()
         filtered_msg.header = msg.header
         filtered_msg.header.frame_id = msg.header.frame_id if msg.header.frame_id else 'livox_frame'
 
-        # 角速度与线加速度滤波
+        # 角速度与线加速度滤波（减去偏差）
         for axis in ['x', 'y', 'z']:
-            ang_val = self.detect_and_handle_jump(msg.angular_velocity.__getattribute__(axis),
+            # 获取原始数据并减去偏差
+            raw_ang_val = msg.angular_velocity.__getattribute__(axis) - self.angular_velocity_bias[axis]
+            raw_lin_val = msg.linear_acceleration.__getattribute__(axis) - self.linear_acceleration_bias[axis]
+            
+            # 跳变检测和移动平均滤波
+            ang_val = self.detect_and_handle_jump(raw_ang_val,
                                                   self.angular_velocity_buffers[axis], axis, '角速度')
             ang_val = self.moving_average_filter(ang_val, self.angular_velocity_buffers[axis])
             setattr(filtered_msg.angular_velocity, axis, ang_val)
 
-            lin_val = self.detect_and_handle_jump(msg.linear_acceleration.__getattribute__(axis),
+            lin_val = self.detect_and_handle_jump(raw_lin_val,
                                                   self.linear_acceleration_buffers[axis], axis, '线加速度')
             lin_val = self.moving_average_filter(lin_val, self.linear_acceleration_buffers[axis])
             setattr(filtered_msg.linear_acceleration, axis, lin_val)
@@ -191,6 +221,20 @@ class BufferedImuFilter(Node):
         # 重置计数器
         self.raw_count = 0
         self.filtered_count = 0
+
+    def collect_calibration_data(self, msg: Imu):
+        """收集校准数据"""
+        for axis in ['x', 'y', 'z']:
+            self.angular_velocity_calibration_data[axis].append(msg.angular_velocity.__getattribute__(axis))
+            self.linear_acceleration_calibration_data[axis].append(msg.linear_acceleration.__getattribute__(axis))
+    
+    def calculate_calibration_bias(self):
+        """计算校准偏差"""
+        for axis in ['x', 'y', 'z']:
+            if len(self.angular_velocity_calibration_data[axis]) > 0:
+                self.angular_velocity_bias[axis] = np.mean(self.angular_velocity_calibration_data[axis])
+            if len(self.linear_acceleration_calibration_data[axis]) > 0:
+                self.linear_acceleration_bias[axis] = np.mean(self.linear_acceleration_calibration_data[axis])
 
 
 def main(args=None):

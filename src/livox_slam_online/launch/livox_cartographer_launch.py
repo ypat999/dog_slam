@@ -21,7 +21,7 @@ def generate_launch_description():
     xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 50.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     lvx_file_path = '/home/livox/livox_test.lvx'
@@ -167,7 +167,8 @@ def generate_launch_description():
     # Cartographer占用网格发布器
     occupancy_grid_node = Node(
         package='cartographer_ros',
-        executable='cartographer_occupancy_grid_node',
+        # executable='cartographer_occupancy_grid_node',
+        executable='occupancy_grid_node',
         name='cartographer_occupancy_grid_node',
         output='screen',
         parameters=[{'qos_profile': 'sensor_data'}],
@@ -230,7 +231,7 @@ def generate_launch_description():
         
         # 延迟启动Cartographer建图，确保IMU滤波器有足够时间稳定
         TimerAction(
-            period=2.0,  # 2秒延迟
+            period=10.0,  # 2秒延迟
             actions=[
                 cartographer_node,
                 occupancy_grid_node,

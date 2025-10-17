@@ -34,6 +34,9 @@ find_package(OpenMP REQUIRED)
 find_package(livox_ros_driver2 REQUIRED)
 find_package(autorccar_interfaces REQUIRED)
 
+# Nav2 related dependencies - these are runtime dependencies and not needed for compilation
+# They are listed here for completeness and to ensure proper dependency tracking
+
 include_directories(
   include/lio_sam
 )

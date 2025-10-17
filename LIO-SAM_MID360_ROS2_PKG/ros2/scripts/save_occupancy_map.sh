@@ -1,0 +1,1 @@
+ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ywj/projects/map_grid/map --fmt png

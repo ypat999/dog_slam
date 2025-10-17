@@ -1,0 +1,14 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from autorccar_interfaces/msg/ControlCommand.msg
+// generated code does not contain a copyright notice
+
+
+module autorccar_interfaces {
+  module msg {
+    struct ControlCommand {
+      double speed;
+
+      double steering_angle;
+    };
+  };
+};

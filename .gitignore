@@ -213,4 +213,9 @@ build/*
 install/*
 log/*
 
+dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/
+dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install/
+dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/log/
+
+
 

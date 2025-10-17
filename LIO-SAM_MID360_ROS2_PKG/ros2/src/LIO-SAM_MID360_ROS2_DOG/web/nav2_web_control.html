@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>ROS2 Web导航控制</title>
+  <!-- 使用简化的依赖，只保留必要的roslib -->
+  <script src="libs/roslib.min.js"></script>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #eee;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 10px;
+    }
+    #map-container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      border: 2px solid #555;
+      background-color: #2a2a2a;
+      overflow: hidden;
+    }
+    #map-canvas {
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+    }
+    #robot-marker {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #ff0000;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 10;
+    }
+    #goal-marker {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #00ff00;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 5;
+    }
+    #status {
+      margin: 10px;
+      font-size: 14px;
+    }
+    #map-info {
+      margin: 10px 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+    button {
+      background: #3a7bd5;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #2a5fb0;
+    }
+  </style>
+</head>
+<body>
+  <h2>ROS2 网页导航控制</h2>
+  <div id="status">连接状态：<span id="conn-status">未连接</span></div>
+  <div id="map-info">地图信息：等待连接...</div>
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+    <div id="robot-marker"></div>
+    <div id="goal-marker"></div>
+  </div>
+  <div>
+    <button onclick="clearGoal()">清除目标</button>
+    <button onclick="resetZoom()">重置缩放</button>
+  </div>
+
+  <script type="text/javascript">
+    // === 配置部分 ===
+    const ROSBRIDGE_SERVER_IP = location.hostname; // 自动用当前域名/IP
+    const ROSBRIDGE_SERVER_PORT = 9090;
+    const MAP_TOPIC = "/map";
+    const ROBOT_FRAME = "base_link";
+    const ODOM_TOPIC = "/odom";
+    const CMD_TOPIC = "/cmd_vel";
+    const GOAL_TOPIC = "/goal_pose";
+    
+    // 地图渲染相关变量
+    let canvas, ctx;
+    let currentMap = null;
+    let robotPosition = { x: 0, y: 0 };
+    let goalPosition = null;
+    let scale = 1.0; // 缩放比例
+    let offsetX = 0; // 偏移量X
+    let offsetY = 0; // 偏移量Y
+    let isDragging = false;
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    
+    // 初始化Canvas
+    function initCanvas() {
+      canvas = document.getElementById('map-canvas');
+      ctx = canvas.getContext('2d');
+      
+      // 设置Canvas大小
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      
+      // 添加鼠标事件处理
+      canvas.addEventListener('wheel', handleWheel);
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleMouseMove);
+      canvas.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('mouseleave', handleMouseUp);
+      canvas.addEventListener('click', handleCanvasClick);
+    }
+    
+    // 处理鼠标滚轮缩放
+    function handleWheel(event) {
+      event.preventDefault();
+      
+      // 获取鼠标在Canvas中的位置
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      
+      // 缩放前的鼠标世界坐标
+      const worldX = (mouseX - offsetX) / scale;
+      const worldY = (mouseY - offsetY) / scale;
+      
+      // 调整缩放比例
+      const delta = event.deltaY > 0 ? 0.9 : 1.1;
+      scale *= delta;
+      scale = Math.max(0.1, Math.min(scale, 10)); // 限制缩放范围
+      
+      // 调整偏移量，使鼠标指向的点保持不变
+      offsetX = mouseX - worldX * scale;
+      offsetY = mouseY - worldY * scale;
+      
+      // 重新绘制地图
+      drawMap();
+    }
+    
+    // 处理鼠标按下
+    function handleMouseDown(event) {
+      isDragging = true;
+      lastMouseX = event.clientX;
+      lastMouseY = event.clientY;
+      canvas.style.cursor = 'grabbing';
+    }
+    
+    // 处理鼠标移动（拖动）
+    function handleMouseMove(event) {
+      if (isDragging) {
+        const deltaX = event.clientX - lastMouseX;
+        const deltaY = event.clientY - lastMouseY;
+        
+        offsetX += deltaX;
+        offsetY += deltaY;
+        
+        lastMouseX = event.clientX;
+        lastMouseY = event.clientY;
+        
+        drawMap();
+      }
+    }
+    
+    // 处理鼠标释放
+    function handleMouseUp() {
+      isDragging = false;
+      canvas.style.cursor = 'default';
+    }
+    
+    // 处理Canvas点击事件（设置目标点）
+    function handleCanvasClick(event) {
+      if (isDragging) return; // 如果正在拖动，则不处理点击
+      
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      
+      // 转换为地图坐标
+      const worldX = (mouseX - offsetX) / scale;
+      const worldY = (mouseY - offsetY) / scale;
+      
+      // 发布目标点
+      publishGoal(worldX, worldY);
+    }
+    
+    // 重置缩放和偏移
+    function resetZoom() {
+      scale = 1.0;
+      offsetX = canvas.width / 2;
+      offsetY = canvas.height / 2;
+      drawMap();
+    }
+    
+    // 绘制地图
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      if (!currentMap) {
+        // 如果没有地图数据，显示提示信息
+        ctx.fillStyle = '#999';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('等待地图数据...', canvas.width / 2, canvas.height / 2);
+        return;
+      }
+      
+      const info = currentMap.info;
+      const data = currentMap.data;
+      
+      // 计算每个格子的大小（像素）
+      const cellSize = info.resolution * scale;
+      
+      // 找到地图中心点（世界坐标）
+      const mapCenterX = info.width * info.resolution / 2;
+      const mapCenterY = info.height * info.resolution / 2;
+      
+      // 计算地图绘制的起始位置（Canvas坐标）
+      const startX = offsetX - mapCenterX * scale;
+      const startY = offsetY - mapCenterY * scale;
+      
+      // 只绘制可见区域内的格子，提高性能
+      const visibleStartCol = Math.max(0, Math.floor(-startX / cellSize));
+      const visibleEndCol = Math.min(info.width, Math.ceil((canvas.width - startX) / cellSize) + 1);
+      const visibleStartRow = Math.max(0, Math.floor(-startY / cellSize));
+      const visibleEndRow = Math.min(info.height, Math.ceil((canvas.height - startY) / cellSize) + 1);
+      
+      // 绘制可见区域的格子
+      for (let row = visibleStartRow; row < visibleEndRow; row++) {
+        for (let col = visibleStartCol; col < visibleEndCol; col++) {
+          const index = row * info.width + col;
+          const value = data[index];
+          
+          // 根据占用值设置颜色
+          if (value === -1) { // 未知
+            ctx.fillStyle = '#cccccc';
+          } else if (value > 50) { // 障碍物
+            ctx.fillStyle = '#ff0000';
+          } else if (value > 0) { // 可能障碍物
+            ctx.fillStyle = '#ffaaaa';
+          } else { // 自由空间
+            ctx.fillStyle = '#ffffff';
+          }
+          
+          // 绘制格子
+          const x = startX + col * cellSize;
+          const y = startY + row * cellSize;
+          ctx.fillRect(x, y, cellSize, cellSize);
+          
+          // 绘制网格线（仅在缩放级别足够大时）
+          if (cellSize > 2) {
+            ctx.strokeStyle = '#dddddd';
+            ctx.strokeRect(x, y, cellSize, cellSize);
+          }
+        }
+      }
+      
+      // 绘制原点
+      ctx.strokeStyle = '#0000ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(offsetX, offsetY, 5, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // 绘制机器人位置
+      updateRobotMarker();
+      
+      // 绘制目标位置
+      updateGoalMarker();
+    }
+    
+    // 更新机器人标记位置
+    function updateRobotMarker() {
+      const marker = document.getElementById('robot-marker');
+      
+      if (currentMap) {
+        // 转换世界坐标到Canvas坐标
+        const canvasX = offsetX + robotPosition.x * scale;
+        const canvasY = offsetY + robotPosition.y * scale;
+        
+        // 设置标记位置
+        marker.style.left = canvasX + 'px';
+        marker.style.top = canvasY + 'px';
+        marker.style.display = 'block';
+      } else {
+        marker.style.display = 'none';
+      }
+    }
+    
+    // 更新目标标记位置
+    function updateGoalMarker() {
+      const marker = document.getElementById('goal-marker');
+      
+      if (goalPosition && currentMap) {
+        // 转换世界坐标到Canvas坐标
+        const canvasX = offsetX + goalPosition.x * scale;
+        const canvasY = offsetY + goalPosition.y * scale;
+        
+        // 设置标记位置
+        marker.style.left = canvasX + 'px';
+        marker.style.top = canvasY + 'px';
+        marker.style.display = 'block';
+      } else {
+        marker.style.display = 'none';
+      }
+    }
+    
+    // === 连接 ROS ===
+    function connectROS() {
+      var ros = new ROSLIB.Ros({
+        url: "ws://" + ROSBRIDGE_SERVER_IP + ":" + ROSBRIDGE_SERVER_PORT
+      });
+
+      ros.on("connection", function () {
+        document.getElementById("conn-status").innerHTML = "✅ 已连接";
+        document.getElementById("conn-status").style.color = "#00ff7f";
+        console.log('已连接到ROS Bridge服务器');
+      });
+
+      ros.on("error", function (error) {
+        document.getElementById("conn-status").innerHTML = "❌ 连接错误";
+        document.getElementById("conn-status").style.color = "red";
+        console.error('ROS Bridge连接错误:', error);
+      });
+
+      ros.on("close", function () {
+        document.getElementById("conn-status").innerHTML = "⚠️ 已断开";
+        document.getElementById("conn-status").style.color = "orange";
+        console.log('ROS Bridge连接已关闭');
+      });
+      
+      // 订阅地图主题
+      var mapTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: MAP_TOPIC,
+        messageType: 'nav_msgs/OccupancyGrid'
+      });
+      
+      mapTopic.subscribe(function(mapMsg) {
+        console.log('收到地图数据:', mapMsg.info.width, 'x', mapMsg.info.height, '分辨率:', mapMsg.info.resolution);
+        
+        // 更新地图信息显示
+        document.getElementById('map-info').innerHTML = `地图信息：${mapMsg.info.width}x${mapMsg.info.height}，分辨率：${mapMsg.info.resolution}m`;
+        
+        // 保存地图数据
+        currentMap = mapMsg;
+        
+        // 初始调整缩放和偏移，使地图居中
+        const mapWidthMeters = mapMsg.info.width * mapMsg.info.resolution;
+        const mapHeightMeters = mapMsg.info.height * mapMsg.info.resolution;
+        
+        // 计算合适的初始缩放比例
+        const scaleX = canvas.width / mapWidthMeters * 0.8;
+        const scaleY = canvas.height / mapHeightMeters * 0.8;
+        scale = Math.min(scaleX, scaleY);
+        
+        // 居中显示
+        offsetX = canvas.width / 2;
+        offsetY = canvas.height / 2;
+        
+        // 绘制地图
+        drawMap();
+      });
+      
+      // 订阅里程计主题，获取机器人位置
+      var odomTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: ODOM_TOPIC,
+        messageType: 'nav_msgs/Odometry'
+      });
+      
+      odomTopic.subscribe(function(odomMsg) {
+        // 更新机器人位置
+        robotPosition.x = odomMsg.pose.pose.position.x;
+        robotPosition.y = odomMsg.pose.pose.position.y;
+        
+        // 重绘地图以更新机器人位置
+        drawMap();
+      });
+      
+      return ros;
+    }
+    
+    // 发布目标点
+    function publishGoal(x, y) {
+      if (!window.ros || !currentMap) {
+        alert('请先确保ROS连接正常且已收到地图数据');
+        return;
+      }
+      
+      // 保存目标位置用于显示
+      goalPosition = { x: x, y: y };
+      
+      // 创建目标发布器（如果还没有）
+      if (!window.goalPublisher) {
+        window.goalPublisher = new ROSLIB.Topic({
+          ros: window.ros,
+          name: GOAL_TOPIC,
+          messageType: "geometry_msgs/PoseStamped"
+        });
+      }
+      
+      // 创建目标消息
+      const now = Date.now() / 1000.0;
+      var goal = new ROSLIB.Message({
+        header: {
+          stamp: { sec: Math.floor(now), nanosec: (now % 1) * 1e9 },
+          frame_id: "map"
+        },
+        pose: {
+          position: { x: x, y: y, z: 0 },
+          orientation: { x: 0, y: 0, z: 0, w: 1 } // 默认朝向
+        }
+      });
+      
+      // 发布目标
+      window.goalPublisher.publish(goal);
+      console.log('发布目标点:', goal);
+      
+      // 更新目标标记
+      updateGoalMarker();
+    }
+    
+    // 清除目标点
+    function clearGoal() {
+      if (window.goalPublisher) {
+        // 发布空消息作为清除信号
+        window.goalPublisher.publish(new ROSLIB.Message({
+          header: {
+            frame_id: "map"
+          },
+          pose: {
+            position: { x: 0, y: 0, z: 0 },
+            orientation: { x: 0, y: 0, z: 0, w: 1 }
+          }
+        }));
+      }
+      
+      // 隐藏目标标记
+      goalPosition = null;
+      updateGoalMarker();
+      
+      alert('已清除目标点');
+    }
+    
+    // 页面加载完成后初始化
+    window.onload = function() {
+      initCanvas();
+      window.ros = connectROS();
+      
+      // 窗口大小改变时重新设置Canvas大小
+      window.addEventListener('resize', function() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        drawMap();
+      });
+    };
+  </script>
+</body>
+</html>

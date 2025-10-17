@@ -1,0 +1,18 @@
+ndt_omp:
+  # 地图坐标系（需与LIO-SAM的map坐标系一致）
+  output_frame: map
+  # 输入实时点云话题（LIO-SAM输出的去畸变点云）
+  input_cloud: /lio_sam/deskewed/cloud_deskewed
+  # 配准精度阈值（单位：米）
+  trans_epsilon: 0.01
+  # 迭代最大次数
+  max_iterations: 30
+  # 体素网格大小（影响精度和速度，0.5~1.0较常用）
+  voxel_leaf_size: 0.5
+  # 初始位姿猜测（如果已知大致位置，可预设，否则留空）
+  init_pose_x: 0.0
+  init_pose_y: 0.0
+  init_pose_z: 0.0
+  init_pose_roll: 0.0
+  init_pose_pitch: 0.0
+  init_pose_yaw: 0.0

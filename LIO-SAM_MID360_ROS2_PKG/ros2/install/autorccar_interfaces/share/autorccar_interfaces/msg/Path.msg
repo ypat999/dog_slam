@@ -1,1 +1,0 @@
-PathPoint[] path_points

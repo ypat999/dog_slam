@@ -1,3 +1,0 @@
-builtin_interfaces/Time timestamp
-geometry_msgs/Vector3 position_ecef
-geometry_msgs/Vector3 velocity_ecef

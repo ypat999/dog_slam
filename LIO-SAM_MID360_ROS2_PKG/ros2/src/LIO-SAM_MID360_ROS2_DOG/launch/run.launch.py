@@ -111,13 +111,13 @@ def generate_launch_description():
 
 
     
-    # rviz2_node = Node(
-    #     package='rviz2',
-    #     executable='rviz2',
-    #     name='rviz2',
-    #     arguments=['-d', rviz_config_file],
-    #     output='screen'
-    # )
+    rviz2_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_file],
+        output='screen'
+    )
 
     
     if ONLINE_LIDAR:
@@ -136,7 +136,7 @@ def generate_launch_description():
             lio_sam_featureExtraction_node,
             lio_sam_mapOptimization_node,
             octomap_server_node,
-            # rviz2_node
+            rviz2_node
         ])
     else:
         return LaunchDescription([
@@ -155,7 +155,7 @@ def generate_launch_description():
             lio_sam_featureExtraction_node,
             lio_sam_mapOptimization_node,
             octomap_server_node,
-            # rviz2_node,
+            rviz2_node,
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
             ExecuteProcess(
                 cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/home/ywj/projects/dataset/reliability_override.yaml', '--clock', '--rate', '1.0'],

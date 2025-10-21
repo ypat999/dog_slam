@@ -1,11 +1,13 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
 
 ONLINE_LIDAR = False
+CREATING_MAP = False
 
 def generate_launch_description():
 
@@ -19,7 +21,7 @@ def generate_launch_description():
     params_declare = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(
-            share_dir, 'config', 'params.yaml'),
+            share_dir, 'config', 'liosam_params.yaml'),
         description='FPath to the ROS2 parameters file to use.')
 
     print("urdf_file_name : {}".format(xacro_path))
@@ -36,13 +38,44 @@ def generate_launch_description():
         description='Path to the bag file to play (can be cropped data)'
     )
 
-    # 移除静态TF发布器，让LIO-SAM发布动态map->odom变换
-    # static_transform_publisher_node = Node(
-    #         package='tf2_ros',
-    #         executable='static_transform_publisher',
-    #         arguments='0.0 0.0 0.0 0.0 0.0 0.0 map odom'.split(' '),
-    #         output='screen'
-    #         )
+    # 添加必要的静态变换发布器，建立坐标系变换树：map -> odom -> base_link -> livox_frame
+    # map -> odom (地图到里程计的静态变换)
+    static_transform_map_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_map_to_odom',
+        parameters=[{            'use_sim_time': use_sim_time        }],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        output='screen'
+    )
+    # odom -> base_link (里程计到机器人基坐标系的静态变换)
+    static_transform_odom_to_base_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_odom_to_base_link',
+        parameters=[{            'use_sim_time': use_sim_time        }],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        output='screen'
+    )
+    # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
+    static_transform_base_to_livox = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_to_livox',
+        parameters=[{            'use_sim_time': use_sim_time        }],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+    # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
+    static_transform_base_link_to_lidar_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_lidar_link',
+        parameters=[{            'use_sim_time': use_sim_time        }],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
+        output='screen'
+    )
+
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -95,7 +128,7 @@ def generate_launch_description():
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
             'occupancy_min_z': -1.0,             # 投影高度下限
             'occupancy_max_z': 1.5,              # 投影高度上限
-            'publish_2d_map': True,               # 输出2D occupancy grid
+            'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': use_sim_time
         }],
         remappings=[
@@ -105,55 +138,126 @@ def generate_launch_description():
 
 
     
+        # 包含pointcloud_to_laserscan.launch.py
+    pointcloud_to_laserscan_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(share_dir, 'launch', 'pointcloud_to_laserscan.launch.py')
+        )
+    )
+    
     rviz2_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
+        parameters=[{            'use_sim_time': use_sim_time        }],
         arguments=['-d', rviz_config_file],
         output='screen'
     )
 
-    
-    if ONLINE_LIDAR:
-        return LaunchDescription([
-            params_declare,
-            DeclareLaunchArgument(
-                'use_sim_time',
-                default_value='false',
-                description='Use simulation (bag) time'
-            ),
-            # rosbag_record,
-            # static_transform_publisher_node,  # 移除静态TF
-            robot_state_publisher_node,
-            lio_sam_imuPreintegration_node,
-            lio_sam_imageProjection_node,
-            lio_sam_featureExtraction_node,
-            lio_sam_mapOptimization_node,
-            octomap_server_node,
-            rviz2_node
-        ])
-    else:
-        return LaunchDescription([
-            params_declare,
-            DeclareLaunchArgument(
-                'use_sim_time',
-                default_value='true',
-                description='Use simulation (bag) time'
-            ),
-            bag_path_declare,
-            # 静态变换发布节点
-            # static_transform_publisher_node,  # 移除静态TF，让LIO-SAM发布动态map->odom
-            robot_state_publisher_node,
-            lio_sam_imuPreintegration_node,
-            lio_sam_imageProjection_node,
-            lio_sam_featureExtraction_node,
-            lio_sam_mapOptimization_node,
-            octomap_server_node,
-            rviz2_node,
+
+
+    launch_nodes = [params_declare]
+
+    if not ONLINE_LIDAR:
+        launch_nodes.extend([
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
+            bag_path_declare,
             ExecuteProcess(
                 cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/home/ywj/projects/dataset/reliability_override.yaml', '--clock', '--rate', '1.0'],
                 name='rosbag_player',
                 output='screen'
             )
         ])
+
+    if ONLINE_LIDAR:
+        launch_nodes.extend([
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='False',
+                description='Use simulation (bag) time'
+            ),
+            # rosbag_record,
+            ])
+    else:
+        launch_nodes.extend([
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='True',
+                description='Use simulation (bag) time'
+            )
+            ])
+
+    launch_nodes.extend([
+        static_transform_map_to_odom,  # 添加地图到里程计的静态变换
+        static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
+        static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
+        static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
+        robot_state_publisher_node,
+        lio_sam_imuPreintegration_node,
+        lio_sam_imageProjection_node,
+        lio_sam_featureExtraction_node,
+        lio_sam_mapOptimization_node,
+        rviz2_node
+    ])
+
+    # 如果需要创建地图，可以在这里添加相关节点
+    if CREATING_MAP:
+        launch_nodes.extend([
+            
+            octomap_server_node,
+        ])
+    else:
+        launch_nodes.append(
+            pointcloud_to_laserscan_launch,
+        )
+    
+    return LaunchDescription(launch_nodes)
+
+
+
+    
+    # if ONLINE_LIDAR:
+    #     return LaunchDescription([
+    #         params_declare,
+    #         DeclareLaunchArgument(
+    #             'use_sim_time',
+    #             default_value='false',
+    #             description='Use simulation (bag) time'
+    #         ),
+    #         # rosbag_record,
+    #         # static_transform_publisher_node,  # 移除静态TF
+    #         robot_state_publisher_node,
+    #         lio_sam_imuPreintegration_node,
+    #         lio_sam_imageProjection_node,
+    #         lio_sam_featureExtraction_node,
+    #         lio_sam_mapOptimization_node,
+    #         octomap_server_node,
+    #         pointcloud_to_laserscan_launch,
+    #         rviz2_node
+    #     ])
+    # else:
+    #     return LaunchDescription([
+    #         params_declare,
+    #         DeclareLaunchArgument(
+    #             'use_sim_time',
+    #             default_value='true',
+    #             description='Use simulation (bag) time'
+    #         ),
+    #         bag_path_declare,
+    #         # 静态变换发布节点
+    #         # static_transform_publisher_node,  # 移除静态TF，让LIO-SAM发布动态map->odom
+    #         robot_state_publisher_node,
+    #         lio_sam_imuPreintegration_node,
+    #         lio_sam_imageProjection_node,
+    #         lio_sam_featureExtraction_node,
+    #         lio_sam_mapOptimization_node,
+    #         octomap_server_node,
+    #         pointcloud_to_laserscan_launch,
+    #         rviz2_node,
+    #         # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
+    #         ExecuteProcess(
+    #             cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/home/ywj/projects/dataset/reliability_override.yaml', '--clock', '--rate', '1.0'],
+    #             name='rosbag_player',
+    #             output='screen'
+    #         )
+    #     ])

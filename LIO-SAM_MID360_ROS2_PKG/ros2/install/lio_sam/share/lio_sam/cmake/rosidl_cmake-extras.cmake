@@ -1,4 +1,1 @@
-# generated from rosidl_cmake/cmake/rosidl_cmake-extras.cmake.in
-
-set(lio_sam_IDL_FILES "msg/CloudInfo.idl;srv/SaveMap.idl")
-set(lio_sam_INTERFACE_FILES "msg/CloudInfo.msg;srv/SaveMap.srv;srv/SaveMap_Request.msg;srv/SaveMap_Response.msg")
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/rosidl_cmake/rosidl_cmake-extras.cmake

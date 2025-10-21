@@ -1,4 +1,1 @@
-source;share/lio_sam/environment/ament_prefix_path.sh
-source;share/lio_sam/environment/library_path.sh
-source;share/lio_sam/environment/path.sh
-source;share/lio_sam/environment/pythonpath.sh
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/ament_cmake_environment_hooks/local_setup.dsv

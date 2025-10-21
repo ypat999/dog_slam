@@ -1,2 +1,1 @@
-float32 resolution
-string destination
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/rosidl_cmake/srv/SaveMap_Request.msg

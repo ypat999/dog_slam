@@ -1,17 +1,1 @@
-// generated from rosidl_adapter/resource/srv.idl.em
-// with input from lio_sam/srv/SaveMap.srv
-// generated code does not contain a copyright notice
-
-
-module lio_sam {
-  module srv {
-    struct SaveMap_Request {
-      float resolution;
-
-      string destination;
-    };
-    struct SaveMap_Response {
-      boolean success;
-    };
-  };
-};
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/rosidl_adapter/lio_sam/srv/SaveMap.idl

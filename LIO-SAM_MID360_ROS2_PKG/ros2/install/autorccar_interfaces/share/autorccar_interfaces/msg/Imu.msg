@@ -1,3 +1,1 @@
-builtin_interfaces/Time timestamp
-geometry_msgs/Vector3 angular_velocity
-geometry_msgs/Vector3 linear_acceleration
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/autorccar_interfaces/msg/Imu.msg

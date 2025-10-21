@@ -1,17 +1,135 @@
+# 添加lifecycle_manager配置
+lifecycle_manager:
+  ros__parameters:
+    use_sim_time: true
+    autostart: false
+    node_names: 
+      - map_server
+      - amcl
+      - controller_server
+      - planner_server
+      - behavior_server
+      - bt_navigator
+      - waypoint_follower
+      - velocity_smoother
+      
+    bond_timeout_ms: 4000
+    attempt_respawn_reconnection: false
+    respawn_reconnection_delay_s: 0.0  # ⛔ 禁止延时重连机制
+    update_rate: 2.0               # 定期状态检查频率，可略低一点减负载
+    shutdown_on_error: true        # 🚨 节点异常则全局安全停机
+
+amcl:
+  ros__parameters:
+    use_sim_time: true
+
+    # 里程计话题
+    odom_topic: /lio_sam/mapping/odometry
+    base_frame_id: base_link
+    odom_frame_id: odom
+    scan_topic: /lio_sam/scan
+
+    # 粒子滤波器参数 - 优化定位稳定性和计算效率
+    min_particles: 1000       # 减少最少粒子数，提高计算效率
+    max_particles: 8000      # 显著减少最大粒子数，防止过度分散到地图外
+    kld_err: 0.01            # 适当提高KLD-sampling误差，平衡精度和效率
+    kld_z: 0.99              # 适当降低KLD置信度，减少粒子数量爆炸
+    
+    # 粒子分布约束参数
+    pf_dist_threshold: 0.3   # 适当提高粒子距离阈值，避免过度拥挤
+    pf_straight_threshold: 0.2  # 适当提高直线运动阈值，减少频繁更新
+    pf_turn_threshold: 0.1     # 适当提高旋转运动阈值，减少抖动
+
+    # 里程计运动模型噪声参数 - 基于实际机器人运动特性优化
+    alpha1: 0.02            # 进一步降低旋转-旋转噪声，提高旋转精度
+    alpha2: 0.005           # 进一步降低平移-旋转噪声，提高直线运动精度
+    alpha3: 0.02            # 降低平移-平移噪声，减少位置漂移
+    alpha4: 0.005           # 进一步降低旋转-平移噪声，提高整体稳定性
+    alpha5: 0.01            # 添加额外噪声参数，提高模型鲁棒性
+
+    # 激光传感器噪声参数 - 优化定位精度和稳定性
+    laser_lambda_short: 0.1
+    laser_sigma_hit: 0.1         # 进一步降低激光击中噪声，提高匹配精度
+    laser_z_hit: 0.85            # 增加击中概率，提高定位稳定性
+    laser_z_rand: 0.1            # 降低随机测量概率，减少异常匹配
+    laser_z_max: 0.05            # 保持最大距离测量概率
+    laser_max_beams: 80          # 适当减少光束数量，提高计算效率并减少异常数据影响
+
+    # 位姿更新参数 - 平衡更新频率和计算负载
+    do_beamskip: true            # 启用光束跳跃，提高计算效率
+    global_frame_id: map
+    update_min_d: 0.1          # 适当提高最小平移更新阈值，减少不必要更新
+    update_min_a: 0.1            # 适当提高最小角度更新阈值，减少抖动
+    update_min_d_squared: 0.01   # 添加平方距离阈值，更精确控制更新频率
+    
+    # 收敛判断参数 - 解决定位后无法移动问题
+    selective_resampling: true   # 启用选择性重采样，避免粒子贫化
+    recovery_alpha_slow: 0.001   # 慢恢复权重（保持较小值）
+    recovery_alpha_fast: 0.05    # 降低快恢复权重，避免过度发散
+
+    # 自动全局初始化
+    save_pose_rate: 0.5
+    resample_interval: 2  # 使用较大的重采样间隔，减少计算负担
+    
+    # 自动全局定位配置
+    set_initial_pose: false          # 不设置初始姿态，让AMCL自动全局定位
+    always_reset_initial_pose: false  # 不总是重置初始姿态
+    first_map_only: false           # 不只在第一个地图时运行
+    
+    # 初始姿态参数（用于全局定位）- 优化地图边界约束
+    initial_pose:
+      x: 0.0
+      y: 0.0 
+      theta: 0.0
+    initial_covariance:
+      x: 10.0      # X方向大方差，允许在整个地图范围搜索
+      y: 10.0      # Y方向大方差
+      yaw: 3.14    # 角度大方差，允许任意朝向
+    # 全局定位相关参数 - 优化全局定位性能
+    global_localization: true
+    use_global_localization: true
+    
+    # 关键全局定位优化参数 - 防止定位到地图外
+    force_update_on_initial_pose: true    # 强制在初始位姿时更新
+    use_clustering: true                  # 启用聚类，提高多假设处理能力
+    cluster_dist: 1.5                     # 增加聚类距离，更好地处理多假设
+    max_clusters: 2                       # 减少最大聚类数，进一步集中粒子分布
+    
+    # 激光雷达相关参数
+    laser_likelihood_max_dist: 5.0  # 激光最大似然距离
+    laser_model_type: "likelihood_field"  # 激光模型类型
+    
+    # 地图边界和约束参数 - 防止定位到地图外
+    map_check_ratio: 0.9                  # 提高地图边界检查比例
+    use_map_bounds: true                   # 启用地图边界约束
+    constrain_particles_in_map: true      # 强制粒子在地图范围内
+    map_padding: 0.8                       # 增加地图边界内边距，避免粒子靠近边界
+    
+    # 全局定位搜索策略 - 严格限制搜索范围
+    global_localization_search_size: 2.0   # 进一步限制全局搜索范围（米）
+    restrict_global_search: true           # 启用搜索范围限制
+    search_center_x: 0.0                  # 搜索中心X
+    search_center_y: 0.0                  # 搜索中心Y
+    
+    # 自动全局定位服务
+    # 启用全局定位服务，允许通过服务调用来初始化全局定位
+    # 可以通过命令: ros2 service call /reinitialize_global_localization std_srvs/srv/Empty
+    # 或者等待AMCL自动进行全局定位
+
+
 bt_navigator:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /lio_sam/mapping/odometry
     bt_loop_duration: 10
     default_server_timeout: 20
-    wait_for_service_timeout: 1000
-    # 'default_nav_through_poses_bt_xml' and 'default_nav_to_pose_bt_xml' are use defaults:
-    # nav2_bt_navigator/navigate_to_pose_w_replanning_and_recovery.xml
-    # nav2_bt_navigator/navigate_through_poses_w_replanning_and_recovery.xml
-    # They can be set here or via a RewrittenYaml remap from a parent launch file to Nav2.
-    plugin_lib_names:
+    wait_for_service_timeout: 10
+    # 使用相对路径，让系统自动查找行为树文件
+    default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    plugin_lib_names: 
       - nav2_compute_path_to_pose_action_bt_node
       - nav2_compute_path_through_poses_action_bt_node
       - nav2_smooth_path_action_bt_node
@@ -62,16 +180,29 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
 
 
 controller_server:
   ros__parameters:
+    use_sim_time: true
     controller_frequency: 20.0
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.5
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"] 
+    controller_plugins: ["FollowPath"]
+    general_goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.25
+      yaw_goal_tolerance: 0.25
+      stateful: true
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 45
@@ -134,7 +265,6 @@ controller_server:
         collision_cost: 1000000.0
         near_goal_distance: 1.0
       PathAlignCritic:
-      PathAlignCritic:
         enabled: true
         cost_power: 1
         cost_weight: 14.0
@@ -174,78 +304,43 @@ local_costmap:
       publish_frequency: 2.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
-      use_sim_time: False
+      use_sim_time: true
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
       width: 6 # 局部地图大小
       height: 6
       resolution: 0.05 # 分辨率
-      robot_radius: 0.5 # 机器人半径，这个会更小相比于全局地图的来说
+      robot_radius: 0.3 # 机器人半径，调整为合理值
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer: # 膨胀层
         plugin: "nav2_costmap_2d::InflationLayer" # 膨胀层插件
         cost_scaling_factor: 3.0 # 膨胀层权重分布的因子
-        inflation_radius: 0.55 # 膨胀半径
+        inflation_radius: 0.5 # 膨胀半径，略微减小
       voxel_layer: # 体素层，和障碍物层类似，主要是用于三维障碍物的检测
         plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
-        publish_voxel_map: True 
+        enabled: true
+        publish_voxel_map: false # 禁用发布以提高性能
         origin_z: -0.3 # z轴的原点，0默认z轴原点在机器人平面上
         z_resolution: 0.05 # z轴方向体素分辨率
         z_voxels: 16 # z轴上体素的个数
-        max_obstacle_height: 3.0 # 最大障碍物高度
-        mark_threshold: 0 # 标记为障碍物的体素个数阈值(0表示该z轴体素上只要有一个体素有障碍物，此点上有障碍物)
-        observation_sources: pointcloud camera_left camera_right
-        # observation_sources: camera_left camera_right
-        pointcloud:  # no frame set, uses frame from message
-          # topic: /lio_sam/mapping/cloud_registered_raw  # produce error msg: can not compute xxxx, it is fine, just ignore it
-          topic: /lio_sam/deskew/cloud_deskewed
-          max_obstacle_height: 2.0
-          min_obstacle_height: 0.0
+        max_obstacle_height: 1.5 # 降低最大障碍物高度以减少噪声
+        mark_threshold: 1 # 增加标记阈值以减少误报
+        observation_sources: scan # 简化为只使用激光扫描数据
+        scan: # 激光传感器数据的详细配置
+          topic: /lio_sam/scan
+          max_obstacle_height: 1.5
+          min_obstacle_height: -1.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 8.0
+          raytrace_min_range: 0.0
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.2
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.2
-          clearing: True
-          marking: True
-          data_type: "PointCloud2"
-        camera_left:
-          topic: /camera_left/depth/color/points
-          max_obstacle_height: 2.0
-          min_obstacle_height: 0.05
-          obstacle_max_range: 2.5
-          obstacle_min_range: 0.2
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.2
-          clearing: True
-          marking: True
-          data_type: "PointCloud2"
-        camera_right:
-          topic: /camera_right/depth/color/points
-          max_obstacle_height: 2.0
-          min_obstacle_height: 0.05
-          obstacle_max_range: 2.5
-          obstacle_min_range: 0.2
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.2
-          clearing: True
-          marking: True
-          data_type: "PointCloud2"
-
-        # observation_sources: scan # 障碍物观测数据来源
-        # scan:
-          # topic: /scan
-          # max_obstacle_height: 2.0
-          # clearing: True
-          # marking: True
-          # data_type: "LaserScan"
-          # raytrace_max_range: 3.0
-          # raytrace_min_range: 0.0
-          # obstacle_max_range: 2.5
-          # obstacle_min_range: 0.0
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        map_subscribe_transient_local: True
-      always_send_full_costmap: True
+          obstacle_min_range: 0.0
+      always_send_full_costmap: false # 优化性能
+      # 添加额外的安全配置以避免机器人越界
+      track_unknown_space: true
+      unknown_cost_value: 255
+      lethal_cost_threshold: 100
 
 global_costmap:
   global_costmap:
@@ -254,7 +349,7 @@ global_costmap:
       publish_frequency: 1.0 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
-      use_sim_time: False # 是否使用仿真时间，在真机时设为false
+      use_sim_time: true # 是否使用仿真时间，在真机时设为false
       robot_radius: 0.3 # 机器人半径
       resolution: 0.05 # 地图分辨率，一般和slam建的图保持一致
       track_unknown_space: true
@@ -262,7 +357,7 @@ global_costmap:
       plugins: ["static_layer", "inflation_layer"] # 插件，采用了哪些地图层
       # obstacle_layer:  # 障碍物层
         # plugin: "nav2_costmap_2d::ObstacleLayer" # 障碍物层插件
-        # enabled: True
+        # enabled: true
         # max_obstacle_intensity: 2.0
         # min_obstacle_intensity: 0.2
         # observation_sources: pointcloud
@@ -275,15 +370,15 @@ global_costmap:
           # obstacle_min_range: 0.2
           # raytrace_max_range: 3.0
           # raytrace_min_range: 0.2
-          # clearing: True
-          # marking: True
+          # clearing: true
+          # marking: true
           # data_type: "PointCloud2"
         # observation_sources: scan  # 障碍物层数据来源，从哪些传感器获得
         # scan: # 激光传感器数据的一些详细配置
           # topic: /scan # 传感器话题
           # max_obstacle_height: 2.0 # 障碍物最大的观测高度
-          # clearing: True # 障碍物观测数据是否用于射线清除，一般为true(动态障碍物)
-          # marking: True # 是否将观测到的数据标记为障碍物
+          # clearing: true # 障碍物观测数据是否用于射线清除，一般为true(动态障碍物)
+          # marking: true # 是否将观测到的数据标记为障碍物
           # data_type: "LaserScan" # 数据类型，nav2实现的障碍物层只能接收LaserScan和PointCloud2类型的数据
           # raytrace_max_range: 3.0 # 射线清除的最大距离
           # raytrace_min_range: 0.0 # 射线清除的最小距离
@@ -291,32 +386,37 @@ global_costmap:
           # obstacle_min_range: 0.0 # 障碍物标记的最小距离
       static_layer: # 静态地图层
         plugin: "nav2_costmap_2d::StaticLayer" # 静态地图层插件
-        map_subscribe_transient_local: True
+        map_subscribe_transient_local: true
       inflation_layer: # 膨胀层，它的实现是直接操纵在静态地图层上的，没有独立地图层
         plugin: "nav2_costmap_2d::InflationLayer" # 膨胀层插件
         cost_scaling_factor: 3.0 # 膨胀因子，控制膨胀层权重衰减因子
         inflation_radius: 0.55 # 膨胀层半径
-      always_send_full_costmap: True # 是否发送整张地图
+      always_send_full_costmap: true # 是否发送整张地图
 
 map_server:
   ros__parameters:
-    use_sim_time: False
-    # Overridden in launch by the "map" launch configuration or provided default value.
-    # To use in yaml, remove the default "map" value in the tb3_simulation_launch.py file & provide full path to map below.
+    use_sim_time: true
+    # 使用项目根目录中的地图文件
     yaml_filename: /home/ywj/projects/map_grid/map.yaml
+    # 设置地图发布频率为每10秒一次（0.1Hz）
+    publish_frequency: 1.0
+    topic_name: "map"
+    frame_id: "map"
+    # 如果存在，确保启用周期性发布
+    use_composition: true
 
 map_saver:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
     save_map_timeout: 5.0
     free_thresh_default: 0.49
     occupied_thresh_default: 0.55
-    map_subscribe_transient_local: True
+    map_subscribe_transient_local: true
 
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
-    use_sim_time: False
+    use_sim_time: true
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
     GridBased: # 对应上面规划器id，下面为此规划器内的一些参数设置
       plugin: "nav2_navfn_planner/NavfnPlanner" # 此id规划器具体指代的规划器插件
@@ -326,13 +426,13 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
       tolerance: 1.0e-10
       max_its: 1000
-      do_refinement: True
+      do_refinement: true
 
 behavior_server:
   ros__parameters:
@@ -353,7 +453,7 @@ behavior_server:
     global_frame: map
     robot_base_frame: base_link
     transform_tolerance: 0.1
-    use_sim_time: False
+    use_sim_time: true
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
@@ -361,24 +461,24 @@ behavior_server:
 
 robot_state_publisher:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
 
 waypoint_follower:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: True
+      enabled: true
       waypoint_pause_duration: 200
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: true
     smoothing_frequency: 20.0
-    scale_velocities: False
+    scale_velocities: false
     feedback: "OPEN_LOOP"
     max_velocity: [0.26, 0.0, 1.0]
     min_velocity: [-0.26, 0.0, -1.0]
@@ -388,3 +488,4 @@ velocity_smoother:
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+

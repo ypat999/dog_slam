@@ -1,4 +1,1 @@
-source;share/autorccar_interfaces/environment/ament_prefix_path.sh
-source;share/autorccar_interfaces/environment/library_path.sh
-source;share/autorccar_interfaces/environment/path.sh
-source;share/autorccar_interfaces/environment/pythonpath.sh
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/autorccar_interfaces/ament_cmake_environment_hooks/local_setup.dsv

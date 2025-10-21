@@ -1,2 +1,1 @@
-int64 num
-vision_msgs/BoundingBox2D[] bounding_boxes
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/autorccar_interfaces/msg/BoundingBoxes.msg

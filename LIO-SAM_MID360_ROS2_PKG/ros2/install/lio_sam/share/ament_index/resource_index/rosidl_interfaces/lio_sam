@@ -1,6 +1,1 @@
-msg/CloudInfo.idl
-msg/CloudInfo.msg
-srv/SaveMap.idl
-srv/SaveMap.srv
-srv/SaveMap_Request.msg
-srv/SaveMap_Response.msg
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/ament_cmake_index/share/ament_index/resource_index/rosidl_interfaces/lio_sam

@@ -1,12 +1,1 @@
-// generated from rosidl_generator_cpp/resource/idl.hpp.em
-// generated code does not contain a copyright notice
-
-#ifndef LIO_SAM__SRV__SAVE_MAP_HPP_
-#define LIO_SAM__SRV__SAVE_MAP_HPP_
-
-#include "lio_sam/srv/detail/save_map__struct.hpp"
-#include "lio_sam/srv/detail/save_map__builder.hpp"
-#include "lio_sam/srv/detail/save_map__traits.hpp"
-#include "lio_sam/srv/detail/save_map__type_support.hpp"
-
-#endif  // LIO_SAM__SRV__SAVE_MAP_HPP_
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/rosidl_generator_cpp/lio_sam/srv/save_map.hpp

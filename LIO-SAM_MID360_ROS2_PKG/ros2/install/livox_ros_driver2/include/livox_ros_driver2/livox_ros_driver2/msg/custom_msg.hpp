@@ -1,12 +1,1 @@
-// generated from rosidl_generator_cpp/resource/idl.hpp.em
-// generated code does not contain a copyright notice
-
-#ifndef LIVOX_ROS_DRIVER2__MSG__CUSTOM_MSG_HPP_
-#define LIVOX_ROS_DRIVER2__MSG__CUSTOM_MSG_HPP_
-
-#include "livox_ros_driver2/msg/detail/custom_msg__struct.hpp"
-#include "livox_ros_driver2/msg/detail/custom_msg__builder.hpp"
-#include "livox_ros_driver2/msg/detail/custom_msg__traits.hpp"
-#include "livox_ros_driver2/msg/detail/custom_msg__type_support.hpp"
-
-#endif  // LIVOX_ROS_DRIVER2__MSG__CUSTOM_MSG_HPP_
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/livox_ros_driver2/rosidl_generator_cpp/livox_ros_driver2/msg/custom_msg.hpp

@@ -1,7 +1,1 @@
-builtin_interfaces/Time timestamp
-geometry_msgs/Vector3 origin
-geometry_msgs/Vector3 position
-geometry_msgs/Vector3 velocity
-geometry_msgs/Quaternion quaternion
-geometry_msgs/Vector3 acceleration
-geometry_msgs/Vector3 angular_velocity
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/autorccar_interfaces/msg/NavState.msg

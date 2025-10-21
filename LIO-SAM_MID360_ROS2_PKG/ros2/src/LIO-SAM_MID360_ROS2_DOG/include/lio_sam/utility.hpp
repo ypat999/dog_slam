@@ -81,6 +81,9 @@ public:
     string baselinkFrame;
     string odometryFrame;
     string mapFrame;
+    
+    // TF publish control
+    bool publishMapToOdomTF;
 
     // GPS Settings
     bool useImuHeadingInitialization;
@@ -172,6 +175,9 @@ public:
         get_parameter("odometryFrame", odometryFrame);
         declare_parameter("mapFrame", "map");
         get_parameter("mapFrame", mapFrame);
+        
+        declare_parameter("publishMapToOdomTF", true);
+        get_parameter("publishMapToOdomTF", publishMapToOdomTF);
 
         declare_parameter("useImuHeadingInitialization", false);
         get_parameter("useImuHeadingInitialization", useImuHeadingInitialization);

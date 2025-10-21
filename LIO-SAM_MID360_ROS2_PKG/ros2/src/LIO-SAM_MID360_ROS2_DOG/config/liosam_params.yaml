@@ -12,6 +12,10 @@
     baselinkFrame: "base_link"
     odometryFrame: "odom"
     mapFrame: "map"
+    
+    # TF Publishing Control
+    # Set to false to disable publishing of map->odom transform
+    publishMapToOdomTF: false
 
     # GPS Settings
     useImuHeadingInitialization: false           # if using GPS data, set to "true"
@@ -29,7 +33,7 @@
     Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
     downsampleRate: 1                            # default: 1. Downsample your data if too many
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
-    lidarMinRange: 0.5                           # default: 1.0, minimum lidar range to be used
+    lidarMinRange: 0.8                           # default: 1.0, minimum lidar range to be used
     lidarMaxRange: 40.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
@@ -40,6 +44,9 @@
 
     imuGravity: 9.80511
     imuRPYWeight: 0.01
+    # 添加IMU初始化参数
+    imuInitializationTimeout: 2.0  # IMU初始化超时时间（秒）
+    useImuInitialization: true        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
     extrinsicRot:    [1.0,  0.0,  0.0,

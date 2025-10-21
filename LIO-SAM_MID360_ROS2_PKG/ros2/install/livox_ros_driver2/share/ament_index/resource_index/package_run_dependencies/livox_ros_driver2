@@ -1,1 +1,1 @@
-rclcpp;rclcpp_components;std_msgs;sensor_msgs;rcutils;pcl_conversions;rcl_interfaces;libpcl-all-dev;git;apr;rosbag2;rosidl_default_runtime;ament_lint_auto;ament_lint_common
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/livox_ros_driver2/ament_cmake_index/share/ament_index/resource_index/package_run_dependencies/livox_ros_driver2

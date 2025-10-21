@@ -102,6 +102,12 @@ install(
   DESTINATION include
 )
 
+install(
+  PROGRAMS
+    scripts/send_goal.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 ament_export_include_directories(include)
 
 if(BUILD_TESTING)

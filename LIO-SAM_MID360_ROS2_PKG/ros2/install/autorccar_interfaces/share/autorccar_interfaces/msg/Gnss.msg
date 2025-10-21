@@ -1,3 +1,1 @@
-builtin_interfaces/Time timestamp
-geometry_msgs/Vector3 position_ecef
-geometry_msgs/Vector3 velocity_ecef
+/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/autorccar_interfaces/msg/Gnss.msg

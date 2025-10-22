@@ -213,7 +213,7 @@ cd /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG
 当SLAM系统运行并完成建图后，可保存点云地图：
 ```bash
 # 保存OctoMap点云地图
-ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: '/projects/LOAM/'}"
+ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.05, destination: '/projects/LOAM/'}"
 ```
 
 #### 转换为占用网格地图

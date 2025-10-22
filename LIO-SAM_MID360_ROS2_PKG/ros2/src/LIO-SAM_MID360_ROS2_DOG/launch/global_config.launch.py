@@ -9,7 +9,7 @@ def generate_launch_description():
     # 定义use_sim_time参数
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='True',
+        default_value='False',
         description='Use simulation (bag) time')
 
     bag_path_declare = DeclareLaunchArgument(
@@ -25,7 +25,8 @@ def generate_launch_description():
 
     declare_loam_save_dir_cmd = DeclareLaunchArgument(
         'loam_save_dir',
-        default_value='/home/ywj/projects/dataset/loam/',
+        # default_value='/home/ywj/projects/dataset/loam/',
+        default_value='/home/ztl/slam_data/loam/',
         description='Full path to loam save directory')
     
     # 创建并返回launch description

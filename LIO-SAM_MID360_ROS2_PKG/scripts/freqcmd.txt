@@ -12,6 +12,10 @@ colcon build --packages-select lio_sam && source install/setup.bash && ros2 laun
 
 
 
+ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_grid/map --fmt png
+
+
+
 
 ros2 topic list
 ros2 node list

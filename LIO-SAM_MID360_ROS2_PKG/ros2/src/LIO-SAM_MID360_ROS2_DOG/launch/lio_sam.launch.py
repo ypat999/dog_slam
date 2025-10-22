@@ -6,8 +6,8 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
 
-ONLINE_LIDAR = False
-CREATING_MAP = False
+ONLINE_LIDAR = True
+CREATING_MAP = True
 
 def generate_launch_description():
 
@@ -58,12 +58,13 @@ def generate_launch_description():
         output='screen'
     )
     # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
+    # 激光雷达前倾30度 (转换为弧度约为0.5236)
     static_transform_base_to_livox = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_transform_base_to_livox',
         parameters=[{            'use_sim_time': use_sim_time        }],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.0', '0.0', '0.0', '0.5236', '0.0', '0.0', 'base_link', 'livox_frame'],
         output='screen'
     )
     # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)

@@ -15,7 +15,7 @@
   <joint name="lidar_joint" type="fixed">
     <parent link="base_link" />
     <child link="livox_frame" />
-    <origin xyz="0 0 0" rpy="0 0 0" />
+    <origin xyz="0 0 0" rpy="0 ${PI/6} 0" /> <!-- 激光雷达前倾30度 -->
   </joint>
 
   <link name="imu_link"> </link>

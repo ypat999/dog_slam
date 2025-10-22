@@ -9,5 +9,5 @@ else
 fi
 
 cd ros2
-colcon build
+colcon build --symlink-install
 source install/setup.bash

@@ -40,10 +40,6 @@ def generate_launch_description():
         default_value='True',
         description='Whether to use lifecycle manager to manage nav2 nodes')
 
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='True',
-        description='Use simulation (bag) time')
 
     #缺少 map → odom 或 odom → base_link，在此发布
     static_transform_map_to_odom = Node(
@@ -188,7 +184,6 @@ def generate_launch_description():
     return LaunchDescription([
         declare_map_cmd,
         declare_params_file_cmd,
-        declare_use_sim_time_cmd,
         declare_use_lifecycle_manager_cmd,
         # static_transform_map_to_odom,  # 发布 map → odom 变换
         # static_transform_odom_to_base_link,  # 发布 odom → base_link 变换

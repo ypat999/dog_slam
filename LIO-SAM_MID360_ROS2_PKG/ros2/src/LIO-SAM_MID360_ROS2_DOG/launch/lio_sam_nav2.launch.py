@@ -17,12 +17,6 @@ def generate_launch_description():
     map_file = LaunchConfiguration('map_file')
     nav2_params_file = LaunchConfiguration('nav2_params_file')
     
-    # 声明启动参数
-    declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value='True',
-        description='Use simulation (bag) time')
-    
     declare_map_file_cmd = DeclareLaunchArgument(
         'map_file',
         default_value=os.path.expanduser('/home/ywj/projects/map_grid/map.yaml'),
@@ -44,7 +38,7 @@ def generate_launch_description():
     
     # 延迟启动Nav2的launch文件，确保LIO-SAM先完全启动
     delayed_nav2_launch = TimerAction(
-        period=10.0,  # 延迟10秒启动Nav2，确保LIO-SAM已初始化
+        period=5.0,  # 延迟5秒启动Nav2，确保LIO-SAM已初始化
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([os.path.join(
@@ -79,7 +73,6 @@ def generate_launch_description():
     # 注意: 启动参数声明必须在使用它们的操作之前
     return LaunchDescription([
         # 1. 声明所有启动参数
-        declare_use_sim_time_cmd,
         declare_map_file_cmd,
         declare_nav2_params_file_cmd,
         # 2. 启动主要组件

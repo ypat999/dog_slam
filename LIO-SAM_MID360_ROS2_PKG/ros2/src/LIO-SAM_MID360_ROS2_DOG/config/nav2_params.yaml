@@ -1,7 +1,7 @@
 # 添加lifecycle_manager配置
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     autostart: false
     node_names: 
       - map_server
@@ -21,7 +21,7 @@ lifecycle_manager:
 
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
 
     # 里程计话题
     odom_topic: /lio_sam/mapping/odometry
@@ -119,7 +119,7 @@ amcl:
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /lio_sam/mapping/odometry
@@ -180,16 +180,16 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
 
 
 controller_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
@@ -304,7 +304,7 @@ local_costmap:
       publish_frequency: 2.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
-      use_sim_time: true
+      use_sim_time: use_sim_time
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
       width: 6 # 局部地图大小
       height: 6
@@ -349,7 +349,7 @@ global_costmap:
       publish_frequency: 1.0 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
-      use_sim_time: true # 是否使用仿真时间，在真机时设为false
+      use_sim_time: use_sim_time # 是否使用仿真时间，在真机时设为false
       robot_radius: 0.3 # 机器人半径
       resolution: 0.05 # 地图分辨率，一般和slam建的图保持一致
       track_unknown_space: true
@@ -395,7 +395,7 @@ global_costmap:
 
 map_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     # 使用项目根目录中的地图文件
     yaml_filename: /home/ywj/projects/map_grid/map.yaml
     # 设置地图发布频率为每10秒一次（0.1Hz）
@@ -407,7 +407,7 @@ map_server:
 
 map_saver:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     save_map_timeout: 5.0
     free_thresh_default: 0.49
     occupied_thresh_default: 0.55
@@ -416,7 +416,7 @@ map_saver:
 planner_server:
   ros__parameters:
     expected_planner_frequency: 20.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
-    use_sim_time: true
+    use_sim_time: use_sim_time
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
     GridBased: # 对应上面规划器id，下面为此规划器内的一些参数设置
       plugin: "nav2_navfn_planner/NavfnPlanner" # 此id规划器具体指代的规划器插件
@@ -426,7 +426,7 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -453,7 +453,7 @@ behavior_server:
     global_frame: map
     robot_base_frame: base_link
     transform_tolerance: 0.1
-    use_sim_time: true
+    use_sim_time: use_sim_time
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
@@ -461,11 +461,11 @@ behavior_server:
 
 robot_state_publisher:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
 
 waypoint_follower:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -476,7 +476,7 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: use_sim_time
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"

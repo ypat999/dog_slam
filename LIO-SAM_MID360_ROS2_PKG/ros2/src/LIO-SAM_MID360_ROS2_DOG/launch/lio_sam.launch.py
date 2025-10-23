@@ -5,11 +5,25 @@ from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchD
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
+from global_config import ONLINE_LIDAR
 
-ONLINE_LIDAR = True
-CREATING_MAP = True
+if ONLINE_LIDAR is None:
+    print("ONLINE_LIDAR is None, set to True")
+    ONLINE_LIDAR = True
 
 def generate_launch_description():
+    ################### Livox LiDAR配置参数 ###################
+    xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
+    multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
+    data_src      = 0    # 0-lidar, others-Invalid data src
+    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    output_type   = 0    # 0-PointCloud2格式输出
+    frame_id      = 'livox_frame'  # LiDAR坐标系名称
+    # lvx_file_path = '/home/livox/livox_test.lvx'
+    cmdline_bd_code = 'livox0000000001'
+
+    default_user_config_path = os.path.join(get_package_share_directory('livox_ros_driver2'), 'config', 'mid360_config.json')
+    user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
 
     share_dir = get_package_share_directory('lio_sam')
     parameter_file = LaunchConfiguration('params_file')
@@ -31,11 +45,33 @@ def generate_launch_description():
     #              '/livox/lidar', '/livox/imu',],
     #         output='screen'
     #     )
-        
+
     bag_path_declare = DeclareLaunchArgument(
         'bag_path',
         default_value='/home/ywj/projects/dataset/robot/livox_record_new/', # 使用裁切后的数据作为默认路径
         description='Path to the bag file to play (can be cropped data)'
+    )
+
+
+    # Livox LiDAR驱动参数
+    livox_ros2_params = [
+        {"xfer_format": xfer_format},
+        {"multi_topic": multi_topic},
+        {"data_src": data_src},
+        {"publish_freq": publish_freq},
+        {"output_data_type": output_type},
+        {"frame_id": frame_id},
+        # {"lvx_file_path": lvx_file_path},
+        {"user_config_path": user_config_path},
+        {"cmdline_input_bd_code": cmdline_bd_code},
+        {"enable_imu_sync_time": True},
+    ]
+    livox_driver_node = Node(
+        package='livox_ros_driver2',
+        executable='livox_ros_driver2_node',
+        name='livox_lidar_publisher',
+        output='screen',
+        parameters=livox_ros2_params
     )
 
     # 添加必要的静态变换发布器，建立坐标系变换树：map -> odom -> base_link -> livox_frame
@@ -155,14 +191,26 @@ def generate_launch_description():
         output='screen'
     )
 
-
-
     launch_nodes = [params_declare]
 
-    if not ONLINE_LIDAR:
+    if ONLINE_LIDAR:
+        launch_nodes.extend([
+            livox_driver_node,
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='False',
+                description='Use simulation (bag) time'
+            ),
+        ])
+    else:
         launch_nodes.extend([
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
             bag_path_declare,
+            DeclareLaunchArgument(
+                'use_sim_time',
+                default_value='True',
+                description='Use simulation (bag) time'
+            ),
             ExecuteProcess(
                 cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', '/home/ywj/projects/dataset/reliability_override.yaml', '--clock', '--rate', '1.0'],
                 name='rosbag_player',
@@ -170,23 +218,6 @@ def generate_launch_description():
             )
         ])
 
-    if ONLINE_LIDAR:
-        launch_nodes.extend([
-            DeclareLaunchArgument(
-                'use_sim_time',
-                default_value='False',
-                description='Use simulation (bag) time'
-            ),
-            # rosbag_record,
-            ])
-    else:
-        launch_nodes.extend([
-            DeclareLaunchArgument(
-                'use_sim_time',
-                default_value='True',
-                description='Use simulation (bag) time'
-            )
-            ])
 
     launch_nodes.extend([
         static_transform_map_to_odom,  # 添加地图到里程计的静态变换
@@ -198,19 +229,10 @@ def generate_launch_description():
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
         lio_sam_mapOptimization_node,
+        octomap_server_node,
+        pointcloud_to_laserscan_launch,
         rviz2_node
     ])
-
-    # 如果需要创建地图，可以在这里添加相关节点
-    if CREATING_MAP:
-        launch_nodes.extend([
-            
-            octomap_server_node,
-        ])
-    else:
-        launch_nodes.append(
-            pointcloud_to_laserscan_launch,
-        )
     
     return LaunchDescription(launch_nodes)
 

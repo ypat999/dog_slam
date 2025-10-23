@@ -72,6 +72,7 @@ sudo apt update
 
 ## 转换为占用网格 （PNG 地图输出）
 sudo apt install ros-humble-octomap ros-humble-octomap-msgs
+sudo apt install ros-humble-octomap-server
 #### 当 lio-sam 运行且地图构建完成后，保存地图
 ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ywj/projects/map_grid/map --fmt png
 

@@ -2,6 +2,8 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 
+ONLINE_LIDAR = True
+
 def generate_launch_description():
     """统一管理use_sim_time参数的launch文件"""
 

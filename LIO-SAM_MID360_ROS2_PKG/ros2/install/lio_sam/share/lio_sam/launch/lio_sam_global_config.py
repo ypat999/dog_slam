@@ -1,0 +1,1 @@
+/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/launch/lio_sam_global_config.py

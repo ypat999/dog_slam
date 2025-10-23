@@ -9,8 +9,10 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch import LaunchDescription
 
 # 尝试从标准Python包导入配置参数
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))   # 让解释器能找到同级模块
 try:
-    from ..config.global_config import (
+    from lio_sam_global_config import (
         DEFAULT_USE_SIM_TIME,
         DEFAULT_MAP_FILE
     )

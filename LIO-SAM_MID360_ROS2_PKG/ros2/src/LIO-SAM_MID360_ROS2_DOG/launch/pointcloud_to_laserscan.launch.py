@@ -6,29 +6,19 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 # 尝试从标准Python包导入配置参数
+import sys, os
+sys.path.insert(0, os.path.dirname(__file__))   # 让解释器能找到同级模块
 try:
-    from ..config.global_config import (
-        DEFAULT_USE_SIM_TIME
-    )
-    CONFIG_IMPORTED = True
+    from lio_sam_global_config import *
 except ImportError:
     # 如果导入失败，设置默认值
-    CONFIG_IMPORTED = False
-    DEFAULT_USE_SIM_TIME = 'True'
+    DEFAULT_USE_SIM_TIME = True
 
 def generate_launch_description():
     # 获取包的share目录
     share_dir = get_package_share_directory('lio_sam')
     
-    # 声明参数
-    use_sim_time = LaunchConfiguration('use_sim_time')
     
-    # 参数声明
-    params_declare = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value=DEFAULT_USE_SIM_TIME,
-        description='Use simulation (bag) time'
-    )
     
     # PointCloud to LaserScan 节点
     pointcloud_to_laserscan_node = Node(
@@ -60,7 +50,7 @@ def generate_launch_description():
             # 'qos_overrides./scan.publisher.depth': 10,
             
             # 其他参数
-            'use_sim_time': use_sim_time,
+            'use_sim_time': DEFAULT_USE_SIM_TIME,
             # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
             # 'use_latest_timestamp': 'True',
             # 设置目标坐标系为base_link，确保与静态变换匹配
@@ -70,6 +60,5 @@ def generate_launch_description():
     )
     
     return LaunchDescription([
-        params_declare,
         pointcloud_to_laserscan_node,
     ])

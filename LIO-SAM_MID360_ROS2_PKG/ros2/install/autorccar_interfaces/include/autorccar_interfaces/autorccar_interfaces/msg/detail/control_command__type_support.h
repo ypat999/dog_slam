@@ -1,1 +1,0 @@
-/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/autorccar_interfaces/rosidl_generator_c/autorccar_interfaces/msg/detail/control_command__type_support.h

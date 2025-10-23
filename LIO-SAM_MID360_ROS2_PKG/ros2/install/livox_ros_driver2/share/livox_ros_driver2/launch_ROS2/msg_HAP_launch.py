@@ -1,1 +1,0 @@
-/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/launch_ROS2/msg_HAP_launch.py

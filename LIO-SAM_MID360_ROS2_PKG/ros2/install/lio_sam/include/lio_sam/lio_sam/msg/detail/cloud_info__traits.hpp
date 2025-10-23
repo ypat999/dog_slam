@@ -1,1 +1,0 @@
-/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/build/lio_sam/rosidl_generator_cpp/lio_sam/msg/detail/cloud_info__traits.hpp

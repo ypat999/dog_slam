@@ -1,5 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription, ExecuteProcess
+from launch_ros.actions import PushRosNamespace
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from ament_index_python.packages import get_package_share_directory
@@ -24,6 +25,9 @@ except ImportError:
 
 
 def generate_launch_description():
+
+    ns = LaunchConfiguration('ns', default='/')   # 默认 robot1
+
     # 获取包的共享目录
     package_dir = get_package_share_directory('lio_sam')
     # 获取当前launch文件所在目录
@@ -89,6 +93,7 @@ def generate_launch_description():
     # 创建并返回完整的launch description
     # 注意: 启动参数声明必须在使用它们的操作之前
     return LaunchDescription([
+        PushRosNamespace(ns),
         # 1. 声明所有启动参数
         declare_map_file_cmd,
         declare_nav2_params_file_cmd,

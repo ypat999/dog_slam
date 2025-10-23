@@ -49,15 +49,13 @@
     useImuInitialization: true        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
-    extrinsicRot:    [1.0,  0.0,  0.0,
-                       0.0,  1.0,  0.0,
-                       0.0,  0.0, 1.0 ]
-    # extrinsicRPY: [1.0, 0.0, 0.0,
-    #               0.0, 0.8660, 0.5,
-    #               0.0, -0.5, 0.8660]  # 激光雷达前倾30度的旋转矩阵
-    extrinsicRPY: [1.0, 0.0, 0.0,
-                  0.0, 1.0, 0.0,
-                  0.0, 0.0, 1.0]  # 激光雷达前倾30度的旋转矩阵
+    # extrinsicRot: [1.0, 0.0, 0.0,
+    #                0.0, 0.8660, 0.5,
+    #                0.0, -0.5, 0.8660]
+    extrinsicRot: [1.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0]
+
 
     # LOAM feature threshold
     edgeThreshold: 1.0

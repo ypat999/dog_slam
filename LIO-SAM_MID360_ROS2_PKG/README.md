@@ -87,6 +87,10 @@ sudo apt install ros-humble-pointcloud-to-laserscan
 ## ros2topic
 sudo apt install ros-humble-ros2topic=0.18.14-1jammy.20251008.030
 
+## rqt
+sudo apt install ros-humble-rqt  
+
+
 ## 项目说明
 
 ### 项目提供了多种启动脚本和配置：

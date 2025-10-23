@@ -12,8 +12,6 @@ config_by_machine = {
     'RK3588': {
         # RK3588主机配置
         'ONLINE_LIDAR': True,  # 通常RK3588是开发板，可能连接实际的激光雷达
-        'DEFAULT_USE_SIM_TIME': False,
-        'DEFAULT_USE_SIM_TIME_STRING': 'False',
         'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
@@ -23,8 +21,6 @@ config_by_machine = {
     'jqr001': {
         # jqr001主机配置
         'ONLINE_LIDAR': False,  # jqr001可能主要用于离线数据处理
-        'DEFAULT_USE_SIM_TIME': True,
-        'DEFAULT_USE_SIM_TIME_STRING': 'True',
         'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
@@ -36,8 +32,6 @@ config_by_machine = {
 # 默认配置（当主机名不在配置字典中时使用）
 default_config = {
     'ONLINE_LIDAR': False,
-    'DEFAULT_USE_SIM_TIME': True,
-    'DEFAULT_USE_SIM_TIME_STRING': 'True',
     'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
     'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
     'DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
@@ -50,8 +44,13 @@ selected_config = config_by_machine.get(current_machine, default_config)
 
 # 将配置参数导出为模块变量
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
-DEFAULT_USE_SIM_TIME = selected_config['DEFAULT_USE_SIM_TIME']
-DEFAULT_USE_SIM_TIME_STRING = selected_config['DEFAULT_USE_SIM_TIME_STRING']
+
+DEFAULT_USE_SIM_TIME = True
+DEFAULT_USE_SIM_TIME_STRING = 'True'
+if not ONLINE_LIDAR:
+    DEFAULT_USE_SIM_TIME = False
+    DEFAULT_USE_SIM_TIME_STRING = 'False'
+
 DEFAULT_BAG_PATH = selected_config['DEFAULT_BAG_PATH']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
 DEFAULT_LOAM_SAVE_DIR = selected_config['DEFAULT_LOAM_SAVE_DIR']

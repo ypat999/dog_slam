@@ -7,13 +7,13 @@ from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
 # 从标准Python包导入全局配置参数
 try:
-    from LIO_SAM_MID360_ROS2_DOG.config.global_config import ONLINE_LIDAR
+    from ..config.global_config import ONLINE_LIDAR
 except ImportError:
     # 如果导入失败，使用默认值
+    print("ONLINE_LIDAR is None, set to True")
     ONLINE_LIDAR = True
 
 if ONLINE_LIDAR is None:
-    print("ONLINE_LIDAR is None, set to True")
     ONLINE_LIDAR = True
 
 def generate_launch_description():

@@ -7,7 +7,7 @@
 # since a plain shell script can't determine its own path when being sourced
 # either use the provided COLCON_CURRENT_PREFIX
 # or fall back to the build time prefix (if it exists)
-_colcon_prefix_chain_sh_COLCON_CURRENT_PREFIX=/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install
+_colcon_prefix_chain_sh_COLCON_CURRENT_PREFIX=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install
 if [ ! -z "$COLCON_CURRENT_PREFIX" ]; then
   _colcon_prefix_chain_sh_COLCON_CURRENT_PREFIX="$COLCON_CURRENT_PREFIX"
 elif [ ! -d "$_colcon_prefix_chain_sh_COLCON_CURRENT_PREFIX" ]; then

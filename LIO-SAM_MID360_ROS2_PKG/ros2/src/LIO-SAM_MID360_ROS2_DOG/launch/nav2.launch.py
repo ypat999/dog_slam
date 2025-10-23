@@ -10,7 +10,7 @@ from launch import LaunchDescription
 
 # 尝试从标准Python包导入配置参数
 try:
-    from LIO_SAM_MID360_ROS2_DOG.config.global_config import (
+    from ..config.global_config import (
         DEFAULT_USE_SIM_TIME,
         DEFAULT_MAP_FILE
     )

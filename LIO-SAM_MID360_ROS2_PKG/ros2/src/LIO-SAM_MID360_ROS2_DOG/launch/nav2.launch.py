@@ -8,6 +8,19 @@ from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch import LaunchDescription
 
+# 尝试从标准Python包导入配置参数
+try:
+    from LIO_SAM_MID360_ROS2_DOG.config.global_config import (
+        DEFAULT_USE_SIM_TIME,
+        DEFAULT_MAP_FILE
+    )
+    CONFIG_IMPORTED = True
+except ImportError:
+    # 如果导入失败，设置默认值
+    CONFIG_IMPORTED = False
+    DEFAULT_USE_SIM_TIME = 'True'
+    DEFAULT_MAP_FILE = os.path.expanduser('/home/ywj/projects/map_grid/map.yaml')
+
 def generate_launch_description():
     # 地图与参数文件路径
     map_dir = LaunchConfiguration('map')
@@ -16,7 +29,7 @@ def generate_launch_description():
     share_dir = get_package_share_directory('lio_sam')
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
     bringup_launch_file = os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     
     # PointCloud to LaserScan launch文件
     pointcloud_to_laserscan_launch = IncludeLaunchDescription(
@@ -26,7 +39,7 @@ def generate_launch_description():
 
     declare_map_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.expanduser('/home/ywj/projects/map_grid/map.yaml'),
+        default_value=DEFAULT_MAP_FILE,
         description='Full path to map file to load')
 
     declare_params_file_cmd = DeclareLaunchArgument(

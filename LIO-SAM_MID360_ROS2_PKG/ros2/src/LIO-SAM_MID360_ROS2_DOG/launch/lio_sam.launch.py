@@ -5,7 +5,12 @@ from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchD
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
-from global_config import ONLINE_LIDAR
+# 从标准Python包导入全局配置参数
+try:
+    from LIO_SAM_MID360_ROS2_DOG.config.global_config import ONLINE_LIDAR
+except ImportError:
+    # 如果导入失败，使用默认值
+    ONLINE_LIDAR = True
 
 if ONLINE_LIDAR is None:
     print("ONLINE_LIDAR is None, set to True")
@@ -22,7 +27,7 @@ def generate_launch_description():
     # lvx_file_path = '/home/livox/livox_test.lvx'
     cmdline_bd_code = 'livox0000000001'
 
-    default_user_config_path = os.path.join(get_package_share_directory('livox_ros_driver2'), 'config', 'mid360_config.json')
+    default_user_config_path = os.path.join(get_package_share_directory('livox_ros_driver2'), 'config', 'MID360_config.json')
     user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
 
     share_dir = get_package_share_directory('lio_sam')
@@ -93,25 +98,25 @@ def generate_launch_description():
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
         output='screen'
     )
-    # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
-    # 激光雷达前倾30度 (转换为弧度约为0.5236)
-    static_transform_base_to_livox = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_transform_base_to_livox',
-        parameters=[{            'use_sim_time': use_sim_time        }],
-        arguments=['0.0', '0.0', '0.0', '0.5236', '0.0', '0.0', 'base_link', 'livox_frame'],
-        output='screen'
-    )
-    # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
-    static_transform_base_link_to_lidar_link = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_transform_base_link_to_lidar_link',
-        parameters=[{            'use_sim_time': use_sim_time        }],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
-        output='screen'
-    )
+    # # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
+    # # 激光雷达前倾30度 (转换为弧度约为0.5236)
+    # static_transform_base_to_livox = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='static_transform_base_to_livox',
+    #     parameters=[{            'use_sim_time': use_sim_time        }],
+    #     arguments=['0.0', '0.0', '0.0', '0.5236', '0.0', '0.0', 'base_link', 'livox_frame'],
+    #     output='screen'
+    # )
+    # # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
+    # static_transform_base_link_to_lidar_link = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='static_transform_base_link_to_lidar_link',
+    #     parameters=[{            'use_sim_time': use_sim_time        }],
+    #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
+    #     output='screen'
+    # )
 
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
@@ -173,8 +178,6 @@ def generate_launch_description():
         ]
     )
 
-
-    
         # 包含pointcloud_to_laserscan.launch.py
     pointcloud_to_laserscan_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -222,8 +225,8 @@ def generate_launch_description():
     launch_nodes.extend([
         static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
-        static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
-        static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
+        # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
+        # static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
         robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,

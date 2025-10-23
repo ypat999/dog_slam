@@ -5,6 +5,17 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+# 尝试从标准Python包导入配置参数
+try:
+    from LIO_SAM_MID360_ROS2_DOG.config.global_config import (
+        DEFAULT_USE_SIM_TIME
+    )
+    CONFIG_IMPORTED = True
+except ImportError:
+    # 如果导入失败，设置默认值
+    CONFIG_IMPORTED = False
+    DEFAULT_USE_SIM_TIME = 'True'
+
 def generate_launch_description():
     # 获取包的share目录
     share_dir = get_package_share_directory('lio_sam')
@@ -15,7 +26,7 @@ def generate_launch_description():
     # 参数声明
     params_declare = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='True',
+        default_value=DEFAULT_USE_SIM_TIME,
         description='Use simulation (bag) time'
     )
     

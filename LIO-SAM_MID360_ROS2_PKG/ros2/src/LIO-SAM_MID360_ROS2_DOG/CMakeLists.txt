@@ -108,6 +108,14 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# 安装Python模块，使config包可以被导入
+install(
+  DIRECTORY config
+  DESTINATION lib/python3.10/dist-packages/LIO_SAM_MID360_ROS2_DOG
+  PATTERN "*.pyc" EXCLUDE
+  PATTERN "__pycache__" EXCLUDE
+)
+
 ament_export_include_directories(include)
 
 if(BUILD_TESTING)

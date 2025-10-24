@@ -224,7 +224,7 @@ def generate_launch_description():
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
         lio_sam_mapOptimization_node,
-        octomap_server_node,
+        # octomap_server_node,
         pointcloud_to_laserscan_launch,
         rviz2_node
     ])

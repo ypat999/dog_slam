@@ -12,15 +12,17 @@ config_by_machine = {
     'RK3588': {
         # RK3588主机配置
         'ONLINE_LIDAR': True,  # 通常RK3588是开发板，可能连接实际的激光雷达
+        'BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
-        'DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map_offline.yaml",
+        'DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web_150.sh'
     },
     'jqr001': {
         # jqr001主机配置
         'ONLINE_LIDAR': False,  # jqr001可能主要用于离线数据处理
+        'BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
         # 'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
@@ -33,10 +35,11 @@ config_by_machine = {
 # 默认配置（当主机名不在配置字典中时使用）
 default_config = {
     'ONLINE_LIDAR': False,
+    'BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
     'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
     'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
     'DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
-    'DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map_offline.yaml",
+    'DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
     'DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web.sh'
 }
 
@@ -45,17 +48,38 @@ selected_config = config_by_machine.get(current_machine, default_config)
 
 # 将配置参数导出为模块变量
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
+BASE_CODE_PATH = selected_config['BASE_CODE_PATH']
 
 DEFAULT_USE_SIM_TIME = True
-DEFAULT_USE_SIM_TIME_STRING = 'True'
+DEFAULT_USE_SIM_TIME_STRING = 'true'
 if not ONLINE_LIDAR:
     DEFAULT_USE_SIM_TIME = False
-    DEFAULT_USE_SIM_TIME_STRING = 'False'
+    DEFAULT_USE_SIM_TIME_STRING = 'false'
+
+DEFAULT_MAP_FILE = selected_config['DEFAULT_MAP_FILE']
+
+# config/nav2_params.yaml 中 use_sim_time 设为 False
+nav2_params_path = os.path.join(BASE_CODE_PATH, 'config/nav2_params.yaml')
+with open(nav2_params_path, 'r') as file:
+    lines = file.readlines()
+with open(nav2_params_path, 'w') as file:
+    for line in lines:
+        if '      use_sim_time' in line:
+            file.write(f'      use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
+        elif '    use_sim_time:' in line:
+            file.write(f'    use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
+        elif 'yaml_filename:' in line:
+            file.write(f'    yaml_filename: {DEFAULT_MAP_FILE}\n')
+        else:
+            file.write(line)
+    
+
+
 
 DEFAULT_BAG_PATH = selected_config['DEFAULT_BAG_PATH']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
 DEFAULT_LOAM_SAVE_DIR = selected_config['DEFAULT_LOAM_SAVE_DIR']
-DEFAULT_MAP_FILE = selected_config['DEFAULT_MAP_FILE']
+
 DEFAULT_WEB_SCRIPT_PATH = selected_config['DEFAULT_WEB_SCRIPT_PATH']
 
 # 坐标系名称配置

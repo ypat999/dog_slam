@@ -30,37 +30,40 @@ amcl:
     scan_topic: /lio_sam/scan
 
     # 粒子滤波器参数 - 优化定位稳定性和计算效率
-    min_particles: 1000       # 减少最少粒子数，提高计算效率
+    min_particles: 2000       # 减少最少粒子数，提高计算效率
     max_particles: 8000      # 显著减少最大粒子数，防止过度分散到地图外
     kld_err: 0.01            # 适当提高KLD-sampling误差，平衡精度和效率
     kld_z: 0.99              # 适当降低KLD置信度，减少粒子数量爆炸
+
+    transform_tolerance: 1.0
     
-    # 粒子分布约束参数
-    pf_dist_threshold: 0.3   # 适当提高粒子距离阈值，避免过度拥挤
-    pf_straight_threshold: 0.2  # 适当提高直线运动阈值，减少频繁更新
-    pf_turn_threshold: 0.1     # 适当提高旋转运动阈值，减少抖动
+    # 粒子分布约束参数 - 室内环境优化
+    pf_dist_threshold: 0.15   # 降低粒子距离阈值，室内环境需要更高精度
+    pf_straight_threshold: 0.1  # 降低直线运动阈值，室内环境需要更频繁更新
+    pf_turn_threshold: 0.05     # 降低旋转运动阈值，适应室内频繁转向场景
 
-    # 里程计运动模型噪声参数 - 基于实际机器人运动特性优化
-    alpha1: 0.02            # 进一步降低旋转-旋转噪声，提高旋转精度
-    alpha2: 0.005           # 进一步降低平移-旋转噪声，提高直线运动精度
-    alpha3: 0.02            # 降低平移-平移噪声，减少位置漂移
-    alpha4: 0.005           # 进一步降低旋转-平移噪声，提高整体稳定性
-    alpha5: 0.01            # 添加额外噪声参数，提高模型鲁棒性
+    # 里程计运动模型噪声参数 - 室内环境优化
+    alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.003           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.003           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
 
-    # 激光传感器噪声参数 - 优化定位精度和稳定性
-    laser_lambda_short: 0.1
-    laser_sigma_hit: 0.1         # 进一步降低激光击中噪声，提高匹配精度
-    laser_z_hit: 0.85            # 增加击中概率，提高定位稳定性
-    laser_z_rand: 0.1            # 降低随机测量概率，减少异常匹配
-    laser_z_max: 0.05            # 保持最大距离测量概率
-    laser_max_beams: 80          # 适当减少光束数量，提高计算效率并减少异常数据影响
+    # 激光传感器噪声参数 - 优化室内紧凑环境定位性能
+    laser_lambda_short: 0.05      # 降低短距离测量阈值，适应室内近距离环境
+    laser_sigma_hit: 0.05         # 进一步降低激光击中噪声，提高室内近距离匹配精度
+    laser_z_hit: 0.90            # 提高击中概率权重，更信任室内障碍物检测
+    laser_z_rand: 0.08            # 略微增加随机测量概率，适应室内复杂反射环境
+    laser_z_max: 0.2             # 降低最大距离测量概率，室内环境障碍物密集
+    laser_z_min: -0.2
+    laser_max_beams: 45           # 增加光束数量，室内环境需要更多特征点匹配
 
-    # 位姿更新参数 - 平衡更新频率和计算负载
-    do_beamskip: true            # 启用光束跳跃，提高计算效率
+    # 位姿更新参数 - 室内环境优化
+    do_beamskip: false           # 禁用光束跳跃，室内环境需要更密集的特征匹配
     global_frame_id: map
-    update_min_d: 0.1          # 适当提高最小平移更新阈值，减少不必要更新
-    update_min_a: 0.1            # 适当提高最小角度更新阈值，减少抖动
-    update_min_d_squared: 0.01   # 添加平方距离阈值，更精确控制更新频率
+    update_min_d: 0.03          # 降低最小平移更新阈值，室内环境需要更高更新频率
+    update_min_a: 0.05          # 降低最小角度更新阈值，适应室内频繁转向
+    update_min_d_squared: 0.0009 # 降低平方距离阈值，更精确控制室内环境更新频率
     
     # 收敛判断参数 - 解决定位后无法移动问题
     selective_resampling: true   # 启用选择性重采样，避免粒子贫化
@@ -78,12 +81,12 @@ amcl:
     
     # 初始姿态参数（用于全局定位）- 优化地图边界约束
     initial_pose:
-      x: 0.0
-      y: 0.0 
+      x: 16.0
+      y: 16.0 
       theta: 0.0
     initial_covariance:
-      x: 10.0      # X方向大方差，允许在整个地图范围搜索
-      y: 10.0      # Y方向大方差
+      x: 16.0      # X方向大方差，允许在整个地图范围搜索
+      y: 16.0      # Y方向大方差
       yaw: 3.14    # 角度大方差，允许任意朝向
     # 全局定位相关参数 - 优化全局定位性能
     global_localization: true
@@ -96,8 +99,10 @@ amcl:
     max_clusters: 2                       # 减少最大聚类数，进一步集中粒子分布
     
     # 激光雷达相关参数
-    laser_likelihood_max_dist: 5.0  # 激光最大似然距离
+    laser_likelihood_max_dist: 20.0  # 激光最大似然距离
     laser_model_type: "likelihood_field"  # 激光模型类型
+    laser_min_range: 0.5
+    laser_max_range: 20.0
     
     # 地图边界和约束参数 - 防止定位到地图外
     map_check_ratio: 0.9                  # 提高地图边界检查比例
@@ -139,8 +144,8 @@ bt_navigator:
     default_server_timeout: 20
     wait_for_service_timeout: 10
     # 使用包含重试和恢复机制的行为树
-    default_nav_to_pose_bt_xml: "navigate_to_pose_w_replanning_and_recovery.xml"
-    default_nav_through_poses_bt_xml: "navigate_through_poses_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
     # 添加状态重置和恢复配置
     goal_blackboard_id: "goal"
     path_blackboard_id: "path"
@@ -253,7 +258,7 @@ controller_server:
       wz_max: 0.5
       iteration_count: 1
       prune_distance: 1.7
-      transform_tolerance: 0.1
+      transform_tolerance: 1.0
       temperature: 0.3
       gamma: 0.015
       motion_model: "DiffDrive"
@@ -336,6 +341,7 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
+      transform_tolerance: 1.0
       update_frequency: 5.0 # 局部地图更新频率5hz
       publish_frequency: 2.0 # 发布频率
       global_frame: odom # 局部地图坐标系
@@ -388,11 +394,12 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
+      transform_tolerance: 1.0
       update_frequency: 5  # 全局地图更新的频率
       publish_frequency: 2 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
-      use_sim_time: false # 是否使用仿真时间，在真机时设为false
+      use_sim_time: false
       robot_radius: 0.3 # 机器人半径
       resolution: 0.05 # 地图分辨率，一般和slam建的图保持一致
       track_unknown_space: true
@@ -430,7 +437,7 @@ map_server:
   ros__parameters:
     use_sim_time: false
     # 使用项目根目录中的地图文件
-    yaml_filename: "/home/ztl/slam_data/grid_map/map.yaml"
+    yaml_filename: /home/ywj/projects/map_grid/map.yaml
     # 设置地图发布频率为每10秒一次（0.1Hz）
     publish_frequency: 1.0
     topic_name: "map"

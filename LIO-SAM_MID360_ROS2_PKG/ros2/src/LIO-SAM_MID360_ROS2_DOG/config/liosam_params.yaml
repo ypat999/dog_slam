@@ -17,7 +17,7 @@
     # TF Publishing Control
     # Set to false to disable publishing of map->odom transform
     publishMapToOdomTF: false
-    baseLinkProjection: true   # 有的分支叫 baseLinkProjection
+    # baseLinkProjection: true   # 有的分支叫 baseLinkProjection
 
     # GPS Settings
     useImuHeadingInitialization: false           # if using GPS data, set to "true"

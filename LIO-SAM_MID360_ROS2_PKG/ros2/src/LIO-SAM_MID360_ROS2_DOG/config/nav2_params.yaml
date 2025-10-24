@@ -1,7 +1,7 @@
 # 添加lifecycle_manager配置
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     autostart: false
     node_names: 
       - map_server
@@ -13,15 +13,15 @@ lifecycle_manager:
       - waypoint_follower
       - velocity_smoother
       
-    bond_timeout_ms: 4000
-    attempt_respawn_reconnection: false
-    respawn_reconnection_delay_s: 0.0  # ⛔ 禁止延时重连机制
-    update_rate: 2.0               # 定期状态检查频率，可略低一点减负载
-    shutdown_on_error: true        # 🚨 节点异常则全局安全停机
+    bond_timeout_ms: 10000         # 增加超时时间到10秒
+    attempt_respawn_reconnection: true  # ✅ 启用重连机制
+    respawn_reconnection_delay_s: 2.0   # 2秒重连延迟
+    update_rate: 2.0               # 定期状态检查频率
+    shutdown_on_error: false       # ✅ 禁用全局停机，允许容错
 
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
     # 里程计话题
     odom_topic: /lio_sam/mapping/odometry
@@ -116,19 +116,42 @@ amcl:
     # 可以通过命令: ros2 service call /reinitialize_global_localization std_srvs/srv/Empty
     # 或者等待AMCL自动进行全局定位
 
+    # # 添加AMCL状态管理
+    # recovery_on_error: true
+    # reset_on_global_localization: true
+    # # 添加粒子滤波器重置机制
+    # reset_particles_on_failure: true
+    # particle_reset_timeout: 30.0  # 粒子重置超时
+    # # 添加定位质量检查
+    # min_localization_score: 0.3
+    # localization_check_interval: 5.0  # 定位检查间隔
+
 
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
+    enable_timer_sampling: true          # 默认 false
+    default_tick_rate: 50  
+    use_sim_time: false
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /lio_sam/mapping/odometry
-    bt_loop_duration: 10
+    bt_loop_duration: 50
     default_server_timeout: 20
     wait_for_service_timeout: 10
-    # 使用相对路径，让系统自动查找行为树文件
+    # 使用包含重试和恢复机制的行为树
     default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
     default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    # 添加状态重置和恢复配置
+    goal_blackboard_id: "goal"
+    path_blackboard_id: "path"
+    goal_reached_tol: 0.25
+    # 启用行为树状态重置
+    enable_groot_monitoring: true
+    groot_zmq_publisher_port: 1666
+    groot_zmq_server_port: 1667
+    # 添加导航完成后的清理机制
+    clear_expired_goals: true
+    expired_goals_tolerance: 1.0
     plugin_lib_names: 
       - nav2_compute_path_to_pose_action_bt_node
       - nav2_compute_path_through_poses_action_bt_node
@@ -180,22 +203,29 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 
 controller_server:
   ros__parameters:
-    use_sim_time: true
-    controller_frequency: 20.0
+    use_sim_time: false
+    controller_frequency: 10.0
+    allow_multiple_goals: true   # 如果支持多点连续 Goal
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugin: "progress_checker"
+    # 添加控制器状态管理配置
+    reset_controller_state_on_goal_change: true
+    max_goal_tolerance: 0.5
+    # 添加导航完成后的状态清理
+    clear_goal_on_completion: true
+    goal_completion_timeout: 30.0  # 30秒完成超时
     goal_checker_plugins: ["general_goal_checker"] 
     controller_plugins: ["FollowPath"]
     general_goal_checker:
@@ -203,10 +233,16 @@ controller_server:
       xy_goal_tolerance: 0.25
       yaw_goal_tolerance: 0.25
       stateful: true
+      # 添加目标完成后的状态重置
+      reset_on_completion: true
+      # 添加超时机制
+      goal_timeout: 120.0  # 120秒目标超时
+      # 添加状态检查
+      check_state_validity: true
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 45
-      model_dt: 0.05
+      model_dt: 0.1 # 间隔
       batch_size: 1500
       vx_std: 0.2
       vy_std: 0.0
@@ -304,38 +340,45 @@ local_costmap:
       publish_frequency: 2.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
-      use_sim_time: true
+      use_sim_time: false
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
       width: 6 # 局部地图大小
       height: 6
-      resolution: 0.05 # 分辨率
-      robot_radius: 0.3 # 机器人半径，调整为合理值
+      resolution: 0.10 # 分辨率原0.05改0.1，减小计算量
+      robot_radius: 0.5 # 机器人半径，调整为合理值
       plugins: ["voxel_layer", "inflation_layer"]
+      # 添加代价地图状态管理
+      reset_costmap_on_new_goal: true
+      clear_costmap_on_completion: true
+      costmap_timeout: 30.0  # 代价地图超时
       inflation_layer: # 膨胀层
         plugin: "nav2_costmap_2d::InflationLayer" # 膨胀层插件
         cost_scaling_factor: 3.0 # 膨胀层权重分布的因子
-        inflation_radius: 0.5 # 膨胀半径，略微减小
+        inflation_radius: 0.55 # 膨胀半径，略微减小
       voxel_layer: # 体素层，和障碍物层类似，主要是用于三维障碍物的检测
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: true
-        publish_voxel_map: false # 禁用发布以提高性能
-        origin_z: -0.3 # z轴的原点，0默认z轴原点在机器人平面上
-        z_resolution: 0.05 # z轴方向体素分辨率
+        publish_voxel_map: true # 启用发布以支持状态管理
+        origin_z: 0.0 # z轴的原点，0默认z轴原点在机器人平面上
+        z_resolution: 0.1 # z轴方向体素分辨率
         z_voxels: 16 # z轴上体素的个数
-        max_obstacle_height: 1.5 # 降低最大障碍物高度以减少噪声
-        mark_threshold: 1 # 增加标记阈值以减少误报
+        max_obstacle_height: 2.0 # 降低最大障碍物高度以减少噪声
+        mark_threshold: 0 # 保持标记阈值
         observation_sources: scan # 简化为只使用激光扫描数据
         scan: # 激光传感器数据的详细配置
-          topic: /lio_sam/scan
-          max_obstacle_height: 1.5
-          min_obstacle_height: -1.0
+          topic: /scan
+          max_obstacle_height: 2.0
+          min_obstacle_height: 0.0
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 8.0
+          raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
           obstacle_min_range: 0.0
+          # 添加扫描状态管理
+          reset_on_new_goal: true
+          clear_on_completion: true
       always_send_full_costmap: false # 优化性能
       # 添加额外的安全配置以避免机器人越界
       track_unknown_space: true
@@ -345,45 +388,25 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0  # 全局地图更新的频率
-      publish_frequency: 1.0 # 发布频率，一般用于rviz显示
+      update_frequency: 5  # 全局地图更新的频率
+      publish_frequency: 2 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
-      use_sim_time: true # 是否使用仿真时间，在真机时设为false
+      use_sim_time: false # 是否使用仿真时间，在真机时设为false
       robot_radius: 0.3 # 机器人半径
       resolution: 0.05 # 地图分辨率，一般和slam建的图保持一致
       track_unknown_space: true
       # plugins: ["static_layer", "obstacle_layer", "inflation_layer"] # 插件，采用了哪些地图层
       plugins: ["static_layer", "inflation_layer"] # 插件，采用了哪些地图层
-      # obstacle_layer:  # 障碍物层
-        # plugin: "nav2_costmap_2d::ObstacleLayer" # 障碍物层插件
-        # enabled: true
-        # max_obstacle_intensity: 2.0
-        # min_obstacle_intensity: 0.2
-        # observation_sources: pointcloud
-        # pointcloud:  # no frame set, uses frame from message
-          # topic: /lio_sam/mapping/cloud_registered_raw  # produce error msg: can not compute xxxx, it is fine, just ignore it
-          # topic: /lio_sam/deskew/cloud_deskewed
-          # max_obstacle_height: 2.0
-          # min_obstacle_height: 0.0
-          # obstacle_max_range: 2.5
-          # obstacle_min_range: 0.2
-          # raytrace_max_range: 3.0
-          # raytrace_min_range: 0.2
-          # clearing: true
-          # marking: true
-          # data_type: "PointCloud2"
-        # observation_sources: scan  # 障碍物层数据来源，从哪些传感器获得
-        # scan: # 激光传感器数据的一些详细配置
-          # topic: /scan # 传感器话题
-          # max_obstacle_height: 2.0 # 障碍物最大的观测高度
-          # clearing: true # 障碍物观测数据是否用于射线清除，一般为true(动态障碍物)
-          # marking: true # 是否将观测到的数据标记为障碍物
-          # data_type: "LaserScan" # 数据类型，nav2实现的障碍物层只能接收LaserScan和PointCloud2类型的数据
-          # raytrace_max_range: 3.0 # 射线清除的最大距离
-          # raytrace_min_range: 0.0 # 射线清除的最小距离
-          # obstacle_max_range: 2.5 # 障碍物标记的最大距离
-          # obstacle_min_range: 0.0 # 障碍物标记的最小距离
+      # obstacle_layer:
+      #   max_obstacle_height: 0.8
+      #   observation_sources: scan
+      #   scan:
+      #     data_type: LaserScan
+      #     topic: /lio_sam/scan   # 不要直接投 livox 原始点云
+      #     clearing: true
+      #     marking: true
+
       static_layer: # 静态地图层
         plugin: "nav2_costmap_2d::StaticLayer" # 静态地图层插件
         map_subscribe_transient_local: true
@@ -392,12 +415,22 @@ global_costmap:
         cost_scaling_factor: 3.0 # 膨胀因子，控制膨胀层权重衰减因子
         inflation_radius: 0.55 # 膨胀层半径
       always_send_full_costmap: true # 是否发送整张地图
+      # 添加全局代价地图状态管理
+      reset_costmap_on_new_goal: true
+      clear_costmap_on_completion: true
+      costmap_timeout: 60.0  # 全局代价地图超时时间更长
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: true
+        # 添加静态层状态管理
+        reset_static_map_on_new_goal: true
+        clear_static_map_on_completion: true
 
 map_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     # 使用项目根目录中的地图文件
-    yaml_filename: /home/ywj/projects/map_grid/map.yaml
+    yaml_filename: "/home/ztl/slam_data/grid_map/map.yaml"
     # 设置地图发布频率为每10秒一次（0.1Hz）
     publish_frequency: 1.0
     topic_name: "map"
@@ -407,7 +440,7 @@ map_server:
 
 map_saver:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     save_map_timeout: 5.0
     free_thresh_default: 0.49
     occupied_thresh_default: 0.55
@@ -415,18 +448,25 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
-    use_sim_time: true
+    expected_planner_frequency: 10.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
+    use_sim_time: false
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
+    # 添加规划器状态管理
+    planner_state_reset_on_goal_change: true
+    max_planning_time: 10.0  # 最大规划时间
+    reset_planner_on_failure: true  # 规划失败时重置
     GridBased: # 对应上面规划器id，下面为此规划器内的一些参数设置
       plugin: "nav2_navfn_planner/NavfnPlanner" # 此id规划器具体指代的规划器插件
       tolerance: 0.5 # 公差
       use_astar: false
       allow_unknown: true
+      # 添加规划失败处理
+      max_iterations: 1000
+      planner_error_recovery: true
 
 smoother_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -439,7 +479,7 @@ behavior_server:
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"] # , "clear_costmap"]
     spin:
       plugin: "nav2_behaviors/Spin"
     backup:
@@ -450,41 +490,76 @@ behavior_server:
       plugin: "nav2_behaviors/Wait"
     assisted_teleop:
       plugin: "nav2_behaviors/AssistedTeleop"
+    # clear_costmap:
+    #   plugin: "nav2_behaviors/ClearCostmap"
     global_frame: map
     robot_base_frame: base_link
     transform_tolerance: 0.1
-    use_sim_time: true
+    use_sim_time: false
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
     rotational_acc_lim: 3.2
+    # 添加行为状态管理
+    reset_on_completion: true
+    behavior_timeout: 30.0  # 行为超时时间
+    # 添加代价地图清理配置
+    clear_costmap_on_init: true
+    clear_costmap_on_completion: true
+
+global_costmap:
+  ros__parameters:
+    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    always_send_full_costmap: true   # ✅ 启用后自动生成清图服务
+
+local_costmap:
+  ros__parameters:
+    always_send_full_costmap: true   # ✅ 启用清 local costmap 服务
+
 
 robot_state_publisher:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 waypoint_follower:
   ros__parameters:
-    use_sim_time: true
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
+    # 添加航点跟随状态管理
+    reset_state_on_new_goal: true
+    waypoint_timeout: 60.0  # 航点超时时间
+    retry_on_failure: true  # 失败时重试
+    max_retries: 3  # 最大重试次数
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: true
+      enabled: True
       waypoint_pause_duration: 200
+      # 添加等待状态管理
+      reset_wait_state: true
+      wait_timeout: 30.0  # 等待超时
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
-    min_velocity: [-0.26, 0.0, -1.0]
+    max_velocity: [0.5, 0.0, 0.5]
+    min_velocity: [-0.5, 0.0, -0.5]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
-    odom_topic: /lio_sam/mapping/odometry
+    odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
+    # 添加速度平滑器状态管理
+    reset_on_stop: true
+    smooth_stop_timeout: 2.0  # 平滑停止超时
+    # 添加异常处理
+    emergency_stop_on_error: true
+    error_recovery_timeout: 5.0  # 错误恢复超时
+

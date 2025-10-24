@@ -54,7 +54,7 @@ def generate_launch_description():
             # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
             # 'use_latest_timestamp': 'True',
             # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
-            'target_frame': 'odom',
+            'target_frame': 'base_link',
             
             # 确保laserscan投影到水平面，避免倾斜影响
             'concurrency_level': 1,       # 处理并发级别

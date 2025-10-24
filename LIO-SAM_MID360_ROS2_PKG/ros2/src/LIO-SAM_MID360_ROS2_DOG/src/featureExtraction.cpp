@@ -196,8 +196,8 @@ public:
             }
         }
         
-        RCLCPP_INFO(get_logger(), "Discrete noise filter: %ld points excluded, %ld points remain", 
-                   extractedCloud->points.size() - validPoints, validPoints);
+        // RCLCPP_INFO(get_logger(), "Discrete noise filter: %ld points excluded, %ld points remain", 
+        //            extractedCloud->points.size() - validPoints, validPoints);
     }
 
     void extractFeatures()

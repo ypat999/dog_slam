@@ -96,7 +96,7 @@ amcl:
     max_clusters: 2                       # 减少最大聚类数，进一步集中粒子分布
     
     # 激光雷达相关参数
-    laser_likelihood_max_dist: 5.0  # 激光最大似然距离
+    laser_likelihood_max_dist: 20.0  # 激光最大似然距离
     laser_model_type: "likelihood_field"  # 激光模型类型
     
     # 地图边界和约束参数 - 防止定位到地图外
@@ -106,7 +106,7 @@ amcl:
     map_padding: 0.8                       # 增加地图边界内边距，避免粒子靠近边界
     
     # 全局定位搜索策略 - 严格限制搜索范围
-    global_localization_search_size: 2.0   # 进一步限制全局搜索范围（米）
+    global_localization_search_size: 10.0   # 进一步限制全局搜索范围（米）
     restrict_global_search: true           # 启用搜索范围限制
     search_center_x: 0.0                  # 搜索中心X
     search_center_y: 0.0                  # 搜索中心Y
@@ -135,7 +135,7 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /lio_sam/mapping/odometry
-    bt_loop_duration: 10
+    bt_loop_duration: 50
     default_server_timeout: 20
     wait_for_service_timeout: 10
     # 使用包含重试和恢复机制的行为树
@@ -213,7 +213,8 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: false
-    controller_frequency: 20.0
+    controller_frequency: 10.0
+    allow_multiple_goals: true   # 如果支持多点连续 Goal
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -241,7 +242,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 45
-      model_dt: 0.05
+      model_dt: 0.1 # 间隔
       batch_size: 1500
       vx_std: 0.2
       vy_std: 0.0
@@ -343,8 +344,8 @@ local_costmap:
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
       width: 3 # 局部地图大小
       height: 3
-      resolution: 0.05 # 分辨率
-      robot_radius: 0.3 # 机器人半径，调整为合理值
+      resolution: 0.10 # 分辨率原0.05改0.1，减小计算量
+      robot_radius: 0.5 # 机器人半径，调整为合理值
       plugins: ["voxel_layer", "inflation_layer"]
       # 添加代价地图状态管理
       reset_costmap_on_new_goal: true
@@ -359,7 +360,7 @@ local_costmap:
         enabled: true
         publish_voxel_map: true # 启用发布以支持状态管理
         origin_z: 0.0 # z轴的原点，0默认z轴原点在机器人平面上
-        z_resolution: 0.05 # z轴方向体素分辨率
+        z_resolution: 0.1 # z轴方向体素分辨率
         z_voxels: 16 # z轴上体素的个数
         max_obstacle_height: 2.0 # 降低最大障碍物高度以减少噪声
         mark_threshold: 0 # 保持标记阈值
@@ -371,9 +372,9 @@ local_costmap:
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 3.0
+          raytrace_max_range: 5.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 4.0
           obstacle_min_range: 0.0
           # 添加扫描状态管理
           reset_on_new_goal: true
@@ -387,8 +388,8 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      update_frequency: 1.0  # 全局地图更新的频率
-      publish_frequency: 1.0 # 发布频率，一般用于rviz显示
+      update_frequency: 5  # 全局地图更新的频率
+      publish_frequency: 2 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
       use_sim_time: false # 是否使用仿真时间，在真机时设为false
@@ -397,35 +398,15 @@ global_costmap:
       track_unknown_space: true
       # plugins: ["static_layer", "obstacle_layer", "inflation_layer"] # 插件，采用了哪些地图层
       plugins: ["static_layer", "inflation_layer"] # 插件，采用了哪些地图层
-      # obstacle_layer:  # 障碍物层
-        # plugin: "nav2_costmap_2d::ObstacleLayer" # 障碍物层插件
-        # enabled: true
-        # max_obstacle_intensity: 2.0
-        # min_obstacle_intensity: 0.2
-        # observation_sources: pointcloud
-        # pointcloud:  # no frame set, uses frame from message
-          # topic: /lio_sam/mapping/cloud_registered_raw  # produce error msg: can not compute xxxx, it is fine, just ignore it
-          # topic: /lio_sam/deskew/cloud_deskewed
-          # max_obstacle_height: 2.0
-          # min_obstacle_height: 0.0
-          # obstacle_max_range: 2.5
-          # obstacle_min_range: 0.2
-          # raytrace_max_range: 3.0
-          # raytrace_min_range: 0.2
-          # clearing: true
-          # marking: true
-          # data_type: "PointCloud2"
-        # observation_sources: scan  # 障碍物层数据来源，从哪些传感器获得
-        # scan: # 激光传感器数据的一些详细配置
-          # topic: /scan # 传感器话题
-          # max_obstacle_height: 2.0 # 障碍物最大的观测高度
-          # clearing: true # 障碍物观测数据是否用于射线清除，一般为true(动态障碍物)
-          # marking: true # 是否将观测到的数据标记为障碍物
-          # data_type: "LaserScan" # 数据类型，nav2实现的障碍物层只能接收LaserScan和PointCloud2类型的数据
-          # raytrace_max_range: 3.0 # 射线清除的最大距离
-          # raytrace_min_range: 0.0 # 射线清除的最小距离
-          # obstacle_max_range: 2.5 # 障碍物标记的最大距离
-          # obstacle_min_range: 0.0 # 障碍物标记的最小距离
+      # obstacle_layer:
+      #   max_obstacle_height: 0.8
+      #   observation_sources: scan
+      #   scan:
+      #     data_type: LaserScan
+      #     topic: /lio_sam/scan   # 不要直接投 livox 原始点云
+      #     clearing: true
+      #     marking: true
+
       static_layer: # 静态地图层
         plugin: "nav2_costmap_2d::StaticLayer" # 静态地图层插件
         map_subscribe_transient_local: true
@@ -467,7 +448,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 20.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
+    expected_planner_frequency: 10.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
     use_sim_time: false
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
     # 添加规划器状态管理
@@ -498,7 +479,7 @@ behavior_server:
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
-    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait", "clear_costmap"]
+    behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"] # , "clear_costmap"]
     spin:
       plugin: "nav2_behaviors/Spin"
     backup:
@@ -509,8 +490,8 @@ behavior_server:
       plugin: "nav2_behaviors/Wait"
     assisted_teleop:
       plugin: "nav2_behaviors/AssistedTeleop"
-    clear_costmap:
-      plugin: "nav2_behaviors/ClearCostmap"
+    # clear_costmap:
+    #   plugin: "nav2_behaviors/ClearCostmap"
     global_frame: map
     robot_base_frame: base_link
     transform_tolerance: 0.1
@@ -525,6 +506,19 @@ behavior_server:
     # 添加代价地图清理配置
     clear_costmap_on_init: true
     clear_costmap_on_completion: true
+
+global_costmap:
+  ros__parameters:
+    plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+    use_sim_time: false
+    global_frame: map
+    robot_base_frame: base_link
+    always_send_full_costmap: true   # ✅ 启用后自动生成清图服务
+
+local_costmap:
+  ros__parameters:
+    always_send_full_costmap: true   # ✅ 启用清 local costmap 服务
+
 
 robot_state_publisher:
   ros__parameters:

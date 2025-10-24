@@ -31,7 +31,7 @@
       "cmd_data_ip": "192.168.168.150",
       "extrinsic_parameter" : {
         "roll": 0.0,
-        "pitch": 30.0,
+        "pitch": 0.0,
         "yaw": 0.0,
         "x": 0,
         "y": 0,

@@ -56,6 +56,17 @@
       display: none;
       z-index: 5;
     }
+    #initial-pose-marker {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background-color: #ff8800;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 6;
+      border: 2px solid #ffffff;
+    }
     #status {
       margin: 10px;
       font-size: 14px;
@@ -87,6 +98,11 @@
     <div>
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
+    </div>
+    <div style="margin-top: 10px;">
+      <button onclick="setInitialPose()">设置初始点</button>
+      <button onclick="clearInitialPose()">清除初始点</button>
+      <span id="initial-pose-status">未设置</span>
     </div>
     <div style="margin-top: 10px;">
       <select id="position-source-select" onchange="changePositionSource(this.value)">
@@ -121,6 +137,7 @@
     <canvas id="map-canvas"></canvas>
     <div id="robot-marker"></div>
     <div id="goal-marker"></div>
+    <div id="initial-pose-marker"></div>
   </div>
 
   <script type="text/javascript">
@@ -133,6 +150,7 @@
     const AMCL_POSE_TOPIC = "/amcl_pose"; // AMCL发布的定位话题
     const CMD_TOPIC = "/cmd_vel";
     const GOAL_TOPIC = "/goal_pose";
+    const INITIAL_POSE_TOPIC = "/initialpose";
     // 位置源选择：'lio_sam' 或 'amcl'
     let positionSource = 'amcl'; // 默认使用AMCL定位信息
     
@@ -149,6 +167,7 @@
     let currentMap = null;
     let robotPosition = { x: 0, y: 0 };
     let goalPosition = null;
+    let initialPosePosition = null;
     let scale = 1.0; // 缩放比例
     let offsetX = 0; // 偏移量X
     let offsetY = 0; // 偏移量Y
@@ -231,7 +250,7 @@
       canvas.style.cursor = 'default';
     }
     
-    // 处理Canvas点击事件（设置目标点）
+    // 处理Canvas点击事件（设置目标点或初始点）
      function handleCanvasClick(event) {
        if (isDragging) return; // 如果正在拖动，则不处理点击
        
@@ -244,8 +263,14 @@
        const worldX = (mouseX - offsetX) / scale;
        const worldY = (offsetY - mouseY) / scale;
        
-       // 发布目标点
-       publishGoal(worldX, worldY);
+       // 根据当前模式决定是设置目标点还是初始点
+       if (window.settingInitialPose) {
+         // 设置初始点模式
+         publishInitialPose(worldX, worldY);
+       } else {
+         // 正常模式 - 设置目标点
+         publishGoal(worldX, worldY);
+       }
      }
     
     // 重置缩放和偏移
@@ -354,6 +379,9 @@
        
        // 绘制目标位置
        updateGoalMarker();
+       
+       // 更新初始点标记
+       updateInitialPoseMarker();
      }
     
     // 更新机器人标记位置
@@ -492,6 +520,116 @@
       });
       
       return ros;
+    }
+    
+    // 发布初始点
+    function publishInitialPose(x, y, theta = 0) {
+      if (!window.ros || !currentMap) {
+        alert('请先确保ROS连接正常且已收到地图数据');
+        return;
+      }
+      
+      // 保存初始点位置用于显示
+      initialPosePosition = { x: x, y: y, theta: theta };
+      console.log('设置初始点位置:', initialPosePosition);
+      
+      // 创建初始点发布器（如果还没有）
+      if (!window.initialPosePublisher) {
+        window.initialPosePublisher = new ROSLIB.Topic({
+          ros: window.ros,
+          name: INITIAL_POSE_TOPIC,
+          messageType: "geometry_msgs/PoseWithCovarianceStamped"
+        });
+      }
+      
+      // 创建初始点消息
+      const now = Date.now() / 1000.0;
+      var initialPose = new ROSLIB.Message({
+        header: {
+          stamp: { 
+            sec: Math.floor(now), 
+            nanosec: Math.floor((now % 1) * 1e9)
+          },
+          frame_id: "map"
+        },
+        pose: {
+          pose: {
+            position: { x: x, y: y, z: 0 },
+            orientation: { 
+              x: 0, 
+              y: 0, 
+              z: Math.sin(theta/2), 
+              w: Math.cos(theta/2) 
+            }
+          },
+          covariance: [
+            0.25, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.25, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.06853892326654787
+          ]
+        }
+      });
+      
+      // 发布初始点
+      window.initialPosePublisher.publish(initialPose);
+      console.log('发布初始点到话题', INITIAL_POSE_TOPIC, ':', initialPose);
+      
+      // 更新初始点标记
+      updateInitialPoseMarker();
+      
+      // 更新状态显示
+      document.getElementById('initial-pose-status').textContent = `已设置 (${x.toFixed(2)}, ${y.toFixed(2)})`;
+      
+      // 退出初始点设置模式
+      window.settingInitialPose = false;
+      
+      alert(`初始点已设置：(${x.toFixed(2)}, ${y.toFixed(2)})`);
+    }
+
+    // 设置初始点模式
+    function setInitialPose() {
+      if (!window.ros || !currentMap) {
+        alert('请先确保ROS连接正常且已收到地图数据');
+        return;
+      }
+      
+      window.settingInitialPose = true;
+      alert('请点击地图上的任意位置来设置初始点');
+    }
+    
+    // 清除初始点
+    function clearInitialPose() {
+      initialPosePosition = null;
+      updateInitialPoseMarker();
+      document.getElementById('initial-pose-status').textContent = '未设置';
+      console.log('初始点已清除');
+      alert('初始点已清除');
+    }
+    
+    // 更新初始点标记位置
+    function updateInitialPoseMarker() {
+      const marker = document.getElementById('initial-pose-marker');
+      if (!initialPosePosition || !currentMap) {
+        marker.style.display = 'none';
+        return;
+      }
+      
+      // 将世界坐标转换为Canvas坐标（原点左下角）
+      const canvasX = initialPosePosition.x * scale + offsetX;
+      const canvasY = offsetY - initialPosePosition.y * scale;
+      
+      // 检查坐标是否在Canvas范围内
+      if (canvasX < 0 || canvasX > canvas.width || canvasY < 0 || canvasY > canvas.height) {
+        marker.style.display = 'none';
+        return;
+      }
+      
+      marker.style.left = canvasX + 'px';
+      marker.style.top = canvasY + 'px';
+      marker.style.display = 'block';
     }
     
     // 发布目标点
@@ -684,6 +822,9 @@
     
     // 页面加载完成后初始化
     window.onload = function() {
+      // 初始化变量
+      window.settingInitialPose = false;
+      
       initCanvas();
       window.ros = connectROS();
       

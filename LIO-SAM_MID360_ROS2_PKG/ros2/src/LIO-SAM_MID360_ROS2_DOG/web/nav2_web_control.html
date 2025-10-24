@@ -503,6 +503,7 @@
       
       // 保存目标位置用于显示
       goalPosition = { x: x, y: y };
+      console.log('设置目标位置:', goalPosition);
       
       // 创建目标发布器（如果还没有）
       if (!window.goalPublisher) {
@@ -531,7 +532,7 @@
       
       // 发布目标
       window.goalPublisher.publish(goal);
-      console.log('发布目标点:', goal);
+      console.log('发布目标点到话题', GOAL_TOPIC, ':', goal);
       
       // 更新目标标记
       updateGoalMarker();
@@ -539,36 +540,16 @@
     
     // 清除目标点
     function clearGoal() {
-      // 在ROS2中，取消导航目标需要发布到取消话题
+      // 修复：使用更可靠的方法取消导航目标，避免发布(0,0)导致机器人回到原点
       if (!window.ros) {
         alert('请先确保ROS连接正常');
         return;
       }
       
       try {
-        // 方法1：发布到导航取消话题
-        // 创建取消发布器（如果还没有）
-        if (!window.cancelPublisher) {
-          window.cancelPublisher = new ROSLIB.Topic({
-            ros: window.ros,
-            name: "/navigate_to_pose/_action/cancel",
-            messageType: "action_msgs/GoalID"
-          });
-        }
+        console.log('开始清除导航目标...');
         
-        // 发布取消消息
-        const cancelMsg = new ROSLIB.Message({
-          stamp: { 
-            sec: Math.floor(Date.now() / 1000), 
-            nanosec: Math.floor((Date.now() % 1000) * 1e6)
-          },
-          id: "" // 空ID表示取消所有目标
-        });
-        
-        window.cancelPublisher.publish(cancelMsg);
-        console.log('已发送导航目标取消请求');
-        
-        // 方法2：发布零速度命令让机器人停止
+        // 方法1：发布零速度命令让机器人立即停止（最可靠的方法）
         if (!window.cmdVelPublisher) {
           window.cmdVelPublisher = new ROSLIB.Topic({
             ros: window.ros,
@@ -577,44 +558,101 @@
           });
         }
         
-        // 发送零速度命令
+        // 发送零速度命令 - 连续发送多次确保机器人停止
         const stopCmd = new ROSLIB.Message({
           linear: { x: 0, y: 0, z: 0 },
           angular: { x: 0, y: 0, z: 0 }
         });
         
-        window.cmdVelPublisher.publish(stopCmd);
-         console.log('已发送停止命令');
-         
-         // 方法3：尝试发布到行为树取消话题（备用方法）
-         try {
-           if (!window.btCancelPublisher) {
-             window.btCancelPublisher = new ROSLIB.Topic({
-               ros: window.ros,
-               name: "/behavior_tree/cancel",
-               messageType: "action_msgs/GoalID"
-             });
-           }
-           
-           const btCancelMsg = new ROSLIB.Message({
-             stamp: { 
-               sec: Math.floor(Date.now() / 1000), 
-               nanosec: Math.floor((Date.now() % 1000) * 1e6)
-             },
-             id: ""
-           });
-           
-           window.btCancelPublisher.publish(btCancelMsg);
-           console.log('已发送行为树取消请求');
-         } catch (btError) {
-           console.warn('行为树取消失败（可选方法）:', btError);
-         }
-         
-         // 隐藏目标标记
-         goalPosition = null;
-         updateGoalMarker();
+        // 连续发送3次停止命令以确保机器人停止
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            window.cmdVelPublisher.publish(stopCmd);
+          }, i * 100);
+        }
+        console.log('已发送停止命令到', CMD_TOPIC);
+        
+        // 方法2：发布到预抢占话题（如果系统支持）
+        try {
+          if (!window.preemptPublisher) {
+            window.preemptPublisher = new ROSLIB.Topic({
+              ros: window.ros,
+              name: "/preempt_teleop",
+              messageType: "std_msgs/Empty"
+            });
+          }
+          
+          const preemptMsg = new ROSLIB.Message({});
+          window.preemptPublisher.publish(preemptMsg);
+          console.log('已发送预抢占信号');
+        } catch (preemptError) {
+          console.warn('预抢占话题发布失败（这是可选的）:', preemptError);
+        }
+        
+        // 方法3：发布到速度限制话题（让导航栈减速停止）
+        try {
+          if (!window.speedLimitPublisher) {
+            window.speedLimitPublisher = new ROSLIB.Topic({
+              ros: window.ros,
+              name: "/speed_limit",
+              messageType: "nav2_msgs/SpeedLimit"
+            });
+          }
+          
+          const now = Date.now() / 1000.0;
+          const speedLimitMsg = new ROSLIB.Message({
+            header: {
+              stamp: { 
+                sec: Math.floor(now), 
+                nanosec: Math.floor((now % 1) * 1e9)
+              },
+              frame_id: "base_link"
+            },
+            speed_limit: 0.0,  // 设置速度限制为0
+            percentage: false  // 使用绝对速度值
+          });
+          
+          window.speedLimitPublisher.publish(speedLimitMsg);
+          console.log('已发送速度限制命令');
+        } catch (speedError) {
+          console.warn('速度限制话题发布失败（这是可选的）:', speedError);
+        }
+        
+        // 方法4：尝试发布空路径让导航栈停止跟随
+        try {
+          if (!window.planPublisher) {
+            window.planPublisher = new ROSLIB.Topic({
+              ros: window.ros,
+              name: "/plan",
+              messageType: "nav_msgs/Path"
+            });
+          }
+          
+          const now = Date.now() / 1000.0;
+          const emptyPathMsg = new ROSLIB.Message({
+            header: {
+              stamp: { 
+                sec: Math.floor(now), 
+                nanosec: Math.floor((now % 1) * 1e9)
+              },
+              frame_id: "map"
+            },
+            poses: [] // 空路径
+          });
+          
+          window.planPublisher.publish(emptyPathMsg);
+          console.log('已发送空路径');
+        } catch (planError) {
+          console.warn('路径话题发布失败（这是可选的）:', planError);
+        }
+        
+        // 隐藏目标标记 - 这是关键：不再发布(0,0)作为清除信号
+        goalPosition = null;
+        updateGoalMarker();
+        console.log('目标标记已隐藏，goalPosition 设置为 null');
         
         alert('已取消导航目标并停止机器人');
+        console.log('导航目标清除完成 - 机器人现在应该停止在当前位置');
         
       } catch (error) {
         console.error('取消目标时出错:', error);

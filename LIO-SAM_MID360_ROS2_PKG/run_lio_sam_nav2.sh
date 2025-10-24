@@ -1,5 +1,5 @@
 echo $DISPLAY
-export ROS_DOMAIN_ID=27
+export ROS_DOMAIN_ID=29
 #export DISPLAY=localhost:10.0
 cd ./ros2/
 colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/

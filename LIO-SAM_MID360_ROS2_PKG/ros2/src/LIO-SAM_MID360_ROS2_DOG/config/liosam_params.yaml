@@ -35,7 +35,7 @@
     Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
     downsampleRate: 1                            # default: 1. Downsample your data if too many
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
-    lidarMinRange: 0.2                           # default: 1.0, minimum lidar range to be used
+    lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
     lidarMaxRange: 40.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
@@ -97,13 +97,8 @@
     # submap for loop closure
     historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
 
-    # Statistical outlier removal (新增参数)
-    enableStatisticalOutlierRemoval: true         # 启用统计离群点移除
-    statisticalOutlierMeanK: 50                   # 用于统计分析的邻居点数量
-    statisticalOutlierStddevMulThresh: 1.0       # 标准差倍数阈值
-
     # Discrete noise filtering (新增参数)
-    enableDiscreteNoiseFilter: true               # 启用离散噪点过滤
+    enableDiscreteNoiseFilter: false               # 启用离散噪点过滤
     discreteNoiseMinNeighbors: 6                  # 有效点最小邻居数量（少于则被标记为噪点）
     discreteNoiseSearchRadius: 0.2                     # 邻居搜索半径（米）
     discreteNoiseMinRange: 0.2                 # 距离过滤最小范围（米）

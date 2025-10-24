@@ -156,6 +156,15 @@ public:
     float globalMapVisualizationPoseDensity;
     float globalMapVisualizationLeafSize;
 
+    // Discrete noise filtering parameters
+    bool enableDiscreteNoiseFilter;
+    int discreteNoiseMinNeighbors;
+    float discreteNoiseSearchRadius;
+    float discreteNoiseMinRange;
+    float discreteNoiseMaxRange;
+    float discreteNoiseMinIntensity;
+    float discreteNoiseMaxIntensity;
+
     ParamServer(std::string node_name, const rclcpp::NodeOptions & options) : Node(node_name, options)
     {
         declare_parameter("pointCloudTopic", "points");
@@ -314,6 +323,22 @@ public:
         get_parameter("globalMapVisualizationPoseDensity", globalMapVisualizationPoseDensity);
         declare_parameter("globalMapVisualizationLeafSize", 1.0);
         get_parameter("globalMapVisualizationLeafSize", globalMapVisualizationLeafSize);
+
+        // Discrete noise filtering parameters
+        declare_parameter("enableDiscreteNoiseFilter", true);
+        get_parameter("enableDiscreteNoiseFilter", enableDiscreteNoiseFilter);
+        declare_parameter("discreteNoiseMinNeighbors", 5);
+        get_parameter("discreteNoiseMinNeighbors", discreteNoiseMinNeighbors);
+        declare_parameter("discreteNoiseSearchRadius", 0.3);
+        get_parameter("discreteNoiseSearchRadius", discreteNoiseSearchRadius);
+        declare_parameter("discreteNoiseMinRange", 0.5);
+        get_parameter("discreteNoiseMinRange", discreteNoiseMinRange);
+        declare_parameter("discreteNoiseMaxRange", 35.0);
+        get_parameter("discreteNoiseMaxRange", discreteNoiseMaxRange);
+        declare_parameter("discreteNoiseMinIntensity", 0.01);
+        get_parameter("discreteNoiseMinIntensity", discreteNoiseMinIntensity);
+        declare_parameter("discreteNoiseMaxIntensity", 1000.0);
+        get_parameter("discreteNoiseMaxIntensity", discreteNoiseMaxIntensity);
 
         usleep(100);
     }

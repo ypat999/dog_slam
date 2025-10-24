@@ -102,11 +102,6 @@ install(
   DESTINATION include
 )
 
-install(
-  PROGRAMS
-    scripts/send_goal.py
-  DESTINATION lib/${PROJECT_NAME}
-)
 
 # 安装Python模块，使config包可以被导入
 install(

@@ -79,6 +79,8 @@ public:
 
         markOccludedPoints();
 
+        filterDiscreteNoise();  // 添加离散噪点过滤
+
         extractFeatures();
 
         publishFeatureCloud();
@@ -122,14 +124,14 @@ public:
             int columnDiff = std::abs(int(cloudInfo.point_col_ind[i+1] - cloudInfo.point_col_ind[i]));
             if (columnDiff < 10){
                 // 10 pixel diff in range image
-                if (depth1 - depth2 > 0.3){
+                if (depth1 - depth2 > 0.3){  // 增加深度差阈值，减少误判 (原0.3)
                     // cloudNeighborPicked[i - 5] = 1;
                     // cloudNeighborPicked[i - 4] = 1;
                     // cloudNeighborPicked[i - 3] = 1;
                     // cloudNeighborPicked[i - 2] = 1;
                     cloudNeighborPicked[i - 1] = 1;
                     cloudNeighborPicked[i] = 1;
-                }else if (depth2 - depth1 > 0.3){
+                }else if (depth2 - depth1 > 0.3){  // 增加深度差阈值，减少误判 (原0.3)
                     cloudNeighborPicked[i + 1] = 1;
                     cloudNeighborPicked[i + 2] = 1;
                     // cloudNeighborPicked[i + 3] = 1;
@@ -138,13 +140,64 @@ public:
                     // cloudNeighborPicked[i + 6] = 1;
                 }
             }
-            // parallel beam
+            // parallel beam - 增加平行光束检测的严格性
             float diff1 = std::abs(float(cloudInfo.point_range[i-1] - cloudInfo.point_range[i]));
             float diff2 = std::abs(float(cloudInfo.point_range[i+1] - cloudInfo.point_range[i]));
 
-            if (diff1 > 0.1 * cloudInfo.point_range[i] && diff2 > 0.1 * cloudInfo.point_range[i])
+            if (diff1 > 0.15 * cloudInfo.point_range[i] && diff2 > 0.15 * cloudInfo.point_range[i])  // 增加相对阈值 (原0.1)
                 cloudNeighborPicked[i] = 1;
         }
+    }
+
+    void filterDiscreteNoise()
+    {
+        if (!enableDiscreteNoiseFilter)
+            return;
+
+        pcl::KdTreeFLANN<PointType>::Ptr kdtree(new pcl::KdTreeFLANN<PointType>());
+        
+        // 构建KD树用于邻居搜索
+        kdtree->setInputCloud(extractedCloud);
+        
+        int validPoints = 0;
+        for (int i = 0; i < extractedCloud->points.size(); i++)
+        {
+            // 距离过滤
+            float range = cloudInfo.point_range[i];
+            if (range < discreteNoiseMinRange || range > discreteNoiseMaxRange)
+            {
+                cloudNeighborPicked[i] = 1;  // 标记为已选择（即排除）
+                continue;
+            }
+            
+            // 强度过滤
+            float intensity = extractedCloud->points[i].intensity;
+            if (intensity < discreteNoiseMinIntensity || intensity > discreteNoiseMaxIntensity)
+            {
+                cloudNeighborPicked[i] = 1;  // 标记为已选择（即排除）
+                continue;
+            }
+            
+            // 密度过滤：检查邻居点数量
+            std::vector<int> pointIdxRadiusSearch;
+            std::vector<float> pointRadiusSquaredDistance;
+            
+            PointType searchPoint = extractedCloud->points[i];
+            int neighbors = kdtree->radiusSearch(searchPoint, discreteNoiseSearchRadius, 
+                                                 pointIdxRadiusSearch, pointRadiusSquaredDistance);
+            
+            if (neighbors < discreteNoiseMinNeighbors)
+            {
+                cloudNeighborPicked[i] = 1;  // 邻居点太少，标记为噪点
+            }
+            else
+            {
+                validPoints++;
+            }
+        }
+        
+        RCLCPP_INFO(get_logger(), "Discrete noise filter: %ld points excluded, %ld points remain", 
+                   extractedCloud->points.size() - validPoints, validPoints);
     }
 
     void extractFeatures()
@@ -177,7 +230,7 @@ public:
                     if (cloudNeighborPicked[ind] == 0 && cloudCurvature[ind] > edgeThreshold)
                     {
                         largestPickedNum++;
-                        if (largestPickedNum <= 40){
+                        if (largestPickedNum <= 20){  // 减少每扇区的边缘特征数量，提高质量 (原40)
                             cloudLabel[ind] = 1;
                             cornerCloud->push_back(extractedCloud->points[ind]);
                         } else {

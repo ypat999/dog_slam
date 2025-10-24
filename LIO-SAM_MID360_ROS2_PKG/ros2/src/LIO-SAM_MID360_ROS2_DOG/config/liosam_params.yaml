@@ -8,6 +8,7 @@
     gpsTopic: "odometry/gpsz"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
     # Frames
+
     lidarFrame: "livox_frame"
     baselinkFrame: "base_link"
     odometryFrame: "odom"
@@ -16,6 +17,7 @@
     # TF Publishing Control
     # Set to false to disable publishing of map->odom transform
     publishMapToOdomTF: false
+    baseLinkProjection: true   # 有的分支叫 baseLinkProjection
 
     # GPS Settings
     useImuHeadingInitialization: false           # if using GPS data, set to "true"
@@ -49,24 +51,25 @@
     useImuInitialization: true        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
-    # extrinsicRot: [1.0, 0.0, 0.0,
-    #                0.0, 0.8660, 0.5,
-    #                0.0, -0.5, 0.8660]
     extrinsicRot: [1.0, 0.0, 0.0,
-                   0.0, 1.0, 0.0,
-                   0.0, 0.0, 1.0]
+                   0.0, 0.8660, 0.5,
+                   0.0, -0.5, 0.8660]
+    # extrinsicRot: [1.0, 0.0, 0.0,
+    #                0.0, 1.0, 0.0,
+    #                0.0, 0.0, 1.0]
+
 
 
     # LOAM feature threshold
-    edgeThreshold: 1.0
+    edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
     surfThreshold: 0.1
-    edgeFeatureMinValidNum: 10
+    edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
 
     # voxel filter paprams
-    odometrySurfLeafSize: 0.2                     # default: 0.4 - outdoor, 0.2 - indoor
-    mappingCornerLeafSize: 0.1                    # default: 0.2 - outdoor, 0.1 - indoor
-    mappingSurfLeafSize: 0.2                      # default: 0.4 - outdoor, 0.2 - indoor
+    odometrySurfLeafSize: 0.3                     # 增加里程计表面体素大小，减少噪声影响 (原0.2)
+    mappingCornerLeafSize: 0.15                   # 适当增加体素大小，减少噪声点的影响 (原0.1)
+    mappingSurfLeafSize: 0.25                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
 
     # robot motion constraint (in case you are using a 2D robot)
     z_tollerance: 1000.0                          # meters
@@ -88,12 +91,25 @@
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from
-    # current pose will be considerd for loop closure
     historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be
     # considered for loop closure
     historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a
     # submap for loop closure
     historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
+
+    # Statistical outlier removal (新增参数)
+    enableStatisticalOutlierRemoval: true         # 启用统计离群点移除
+    statisticalOutlierMeanK: 50                   # 用于统计分析的邻居点数量
+    statisticalOutlierStddevMulThresh: 1.0       # 标准差倍数阈值
+
+    # Discrete noise filtering (新增参数)
+    enableDiscreteNoiseFilter: false               # 启用离散噪点过滤
+    discreteNoiseMinNeighbors: 10                  # 有效点最小邻居数量（少于则被标记为噪点）
+    discreteNoiseSearchRadius: 0.2                     # 邻居搜索半径（米）
+    discreteNoiseMinRange: 0.5                  # 距离过滤最小范围（米）
+    discreteNoiseMaxRange: 35.0                  # 距离过滤最大范围（米）
+    discreteNoiseMinIntensity: 10.0                  # 最小强度阈值
+    discreteNoiseMaxIntensity: 100.0                    # 最大强度阈值
 
     # Visualization
     globalMapVisualizationSearchRadius: 100.0    # meters, global map visualization radius

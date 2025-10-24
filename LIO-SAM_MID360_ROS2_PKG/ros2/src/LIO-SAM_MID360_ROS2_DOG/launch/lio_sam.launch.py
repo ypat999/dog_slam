@@ -40,7 +40,6 @@ def generate_launch_description():
     xacro_path = os.path.join(share_dir, 'config', 'robot.urdf.xacro')
     rviz_config_file = os.path.join(share_dir, 'config', 'rviz2.rviz')
 
-    use_sim_time_string = DEFAULT_USE_SIM_TIME_STRING
     bag_path = DEFAULT_BAG_PATH
     reliability_file_path = DEFAULT_RELIABILITY_OVERRIDE
 
@@ -107,9 +106,10 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_to_livox',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.5235987756', '0.0', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
         output='screen'
     )
+
     # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
     static_transform_livox_to_lidar_link = Node(
         package='tf2_ros',
@@ -170,10 +170,10 @@ def generate_launch_description():
             'sensor_model/min_range': 0.8,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -1.0,             # 投影高度下限
-            'occupancy_max_z': 1.5,              # 投影高度上限
+            'occupancy_min_z': -0.5,             # 投影高度下限
+            'occupancy_max_z': 0.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
-            'use_sim_time': DEFAULT_USE_SIM_TIME
+            'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
         remappings=[
             ('/cloud_in', '/lio_sam/mapping/cloud_registered')  # 输入点云
@@ -217,7 +217,7 @@ def generate_launch_description():
     launch_nodes.extend([
         static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
-        # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
+        static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
         # static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
         robot_state_publisher_node,
         lio_sam_imuPreintegration_node,

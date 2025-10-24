@@ -1,6 +1,6 @@
 echo $DISPLAY
 
-export ROS_DOMAIN_ID=9
+export ROS_DOMAIN_ID=27
 cd ros2
 export DISPLAY=localhost:10.0
 

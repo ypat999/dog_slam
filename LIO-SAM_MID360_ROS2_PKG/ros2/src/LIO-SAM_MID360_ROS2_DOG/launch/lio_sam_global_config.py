@@ -7,6 +7,13 @@ import platform
 current_machine = platform.node()
 print(f"当前运行主机: {current_machine}")
 
+# 雷达倾斜配置开关
+USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
+
+# 建图模式开关
+BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+
+
 # 定义主机特定的配置字典
 config_by_machine = {
     'RK3588': {
@@ -49,12 +56,6 @@ selected_config = config_by_machine.get(current_machine, default_config)
 # 将配置参数导出为模块变量
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
 BASE_CODE_PATH = selected_config['BASE_CODE_PATH']
-
-# 雷达倾斜配置开关
-USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
-
-# 建图模式开关
-BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
 
 DEFAULT_USE_SIM_TIME = True
 DEFAULT_USE_SIM_TIME_STRING = 'true'

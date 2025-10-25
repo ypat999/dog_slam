@@ -514,10 +514,10 @@ class IMUPreintegration : public ParamServer {
         double velocityThreshold;
         double biasThreshold;
         
-        if (elapsedTime < 10.0) {
+        if (elapsedTime < 2.0) {
             // 前10秒机器人静止，使用最严格的阈值
-            velocityThreshold = 1.0;  // 1m/s，静止状态下允许的最大速度
-            biasThreshold = 0.1;      // 0.1，静止状态下允许的最大偏置
+            velocityThreshold = 3.0;  // 1m/s，静止状态下允许的最大速度
+            biasThreshold = 0.5;      // 0.1，静止状态下允许的最大偏置
         } else {
             // 10秒后使用配置值
             velocityThreshold = this->imuVelocityThreshold;

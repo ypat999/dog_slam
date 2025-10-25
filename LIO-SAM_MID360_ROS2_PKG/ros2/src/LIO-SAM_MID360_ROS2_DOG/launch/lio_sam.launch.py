@@ -20,6 +20,7 @@ except ImportError:
     DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
     DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
     DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+    BUILD_MAP = False  # 默认不使用建图模式
 
 def generate_launch_description():
     ################### Livox LiDAR配置参数 ###################
@@ -32,21 +33,36 @@ def generate_launch_description():
     # lvx_file_path = '/home/livox/livox_test.lvx'
     cmdline_bd_code = 'livox0000000001'
 
-    default_user_config_path = os.path.join(get_package_share_directory('livox_ros_driver2'), 'config', 'MID360_config.json')
-    user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
-
     share_dir = get_package_share_directory('lio_sam')
-    parameter_file = LaunchConfiguration('params_file')
-    xacro_path = os.path.join(share_dir, 'config', 'robot.urdf.xacro')
+    livox_share_dir = get_package_share_directory('livox_ros_driver2')
+    
+    # 根据USE_TILT_CONFIG选择配置文件
+    if 'USE_TILT_CONFIG' in globals() and USE_TILT_CONFIG:
+        print("使用雷达倾斜配置文件")
+        default_params_file = os.path.join(share_dir, 'config', 'liosam_params_tilt.yaml')
+        xacro_path = os.path.join(share_dir, 'config', 'robot.urdf_tilt.xacro')
+        # 选择MID360配置文件
+        default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
+    else:
+        print("使用默认配置文件")
+        default_params_file = os.path.join(share_dir, 'config', 'liosam_params.yaml')
+        xacro_path = os.path.join(share_dir, 'config', 'robot.urdf.xacro')
+        # 选择MID360配置文件
+        default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config.json')
+    
+    user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
+    
+    parameter_file = LaunchConfiguration('params_file', default=default_params_file)
     rviz_config_file = os.path.join(share_dir, 'config', 'rviz2.rviz')
 
     bag_path = DEFAULT_BAG_PATH
     reliability_file_path = DEFAULT_RELIABILITY_OVERRIDE
 
+    # 参数声明部分不再需要，因为我们已经在上面设置了默认值
+    # 保留声明但使用动态默认值
     params_declare = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(
-            share_dir, 'config', 'liosam_params.yaml'),
+        default_value=default_params_file,
         description='FPath to the ROS2 parameters file to use.')
 
     print("urdf_file_name : {}".format(xacro_path))
@@ -219,7 +235,7 @@ def generate_launch_description():
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
         # static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
-        robot_state_publisher_node,
+        # robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,

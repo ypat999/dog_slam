@@ -50,6 +50,12 @@ selected_config = config_by_machine.get(current_machine, default_config)
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
 BASE_CODE_PATH = selected_config['BASE_CODE_PATH']
 
+# 雷达倾斜配置开关
+USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
+
+# 建图模式开关
+BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+
 DEFAULT_USE_SIM_TIME = True
 DEFAULT_USE_SIM_TIME_STRING = 'true'
 if not ONLINE_LIDAR:

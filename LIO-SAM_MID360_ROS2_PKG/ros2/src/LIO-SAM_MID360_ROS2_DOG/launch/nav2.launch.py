@@ -14,7 +14,8 @@ sys.path.insert(0, os.path.dirname(__file__))   # 让解释器能找到同级模
 try:
     from lio_sam_global_config import (
         DEFAULT_USE_SIM_TIME,
-        DEFAULT_MAP_FILE
+        DEFAULT_MAP_FILE,
+        BUILD_MAP
     )
     CONFIG_IMPORTED = True
 except ImportError:
@@ -22,6 +23,7 @@ except ImportError:
     CONFIG_IMPORTED = False
     DEFAULT_USE_SIM_TIME = 'True'
     DEFAULT_MAP_FILE = os.path.expanduser('/home/ywj/projects/map_grid/map.yaml')
+    BUILD_MAP = False  # 默认不使用建图模式
 
 def generate_launch_description():
     # 地图与参数文件路径
@@ -44,11 +46,13 @@ def generate_launch_description():
         default_value=DEFAULT_MAP_FILE,
         description='Full path to map file to load')
 
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(
-            share_dir, 'config', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
+    # 只有在非建图模式下才声明和使用参数文件
+    if not BUILD_MAP:
+        declare_params_file_cmd = DeclareLaunchArgument(
+            'params_file',
+            default_value=os.path.join(
+                share_dir, 'config', 'nav2_params.yaml'),
+            description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_use_lifecycle_manager_cmd = DeclareLaunchArgument(
         'use_lifecycle_manager',
@@ -169,19 +173,16 @@ def generate_launch_description():
 
 
 
-    # 返回 launch description
-    return LaunchDescription([
+    # 创建启动描述
+    launch_actions = [
         declare_map_cmd,
-        declare_params_file_cmd,
         declare_use_lifecycle_manager_cmd,
-        # static_transform_map_to_odom,  # 发布 map → odom 变换
-        # static_transform_odom_to_base_link,  # 发布 odom → base_link 变换
-        # map_server,  # 单独启动的map_server
-        # delayed_amcl,  # 延迟启动的AMCL节点
-        # delayed_nav2_nodes,  # 延迟启动的其他nav2节点
-        # lifecycle_manager,  # 
-        # amcl_node,
-        nav2_nodes,
-        # initial_pose_pub,  # 发布初始位姿
-        rosbridge_websocket,
-    ])
+    ]
+    
+    # 只有在非建图模式下才添加nav2相关节点和参数
+    if not BUILD_MAP:
+        launch_actions.append(declare_params_file_cmd)
+        launch_actions.append(nav2_nodes)
+        launch_actions.append(rosbridge_websocket)
+    
+    return LaunchDescription(launch_actions)

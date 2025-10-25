@@ -45,7 +45,14 @@ class TransformFusion : public ParamServer {
     double lidarOdomTime = -1;
     deque<nav_msgs::msg::Odometry> imuOdomQueue;
 
+    // TF delay variables
+    rclcpp::Time systemStartTime;
+    bool tfPublishingStarted = false;
+
     TransformFusion(const rclcpp::NodeOptions& options) : ParamServer("lio_sam_transformFusion", options) {
+        systemStartTime = this->now();
+        tfPublishingStarted = false;
+        
         tfBuffer = std::make_shared<tf2_ros::Buffer>(get_clock());
         tfListener = std::make_shared<tf2_ros::TransformListener>(*tfBuffer);
 
@@ -113,21 +120,54 @@ class TransformFusion : public ParamServer {
         laserOdometry.pose.pose.orientation = t.transform.rotation;
         pubImuOdometry->publish(laserOdometry);
 
-        // publish tf
-        if (lidarFrame != baselinkFrame) {
-            try {
-                tf2::fromMsg(tfBuffer->lookupTransform(lidarFrame, baselinkFrame, rclcpp::Time(0)), lidar2Baselink);
-            } catch (tf2::TransformException ex) {
-                RCLCPP_ERROR(get_logger(), "%s", ex.what());
+        // publish tf with delay mechanism
+        if (this->tfDelayEnabled) {
+            rclcpp::Time currentTime = this->now();
+            double elapsedTime = (currentTime - systemStartTime).seconds();
+            
+            if (elapsedTime >= this->tfDelaySeconds) {
+                // Delay period has passed, start publishing TF
+                if (!tfPublishingStarted) {
+                    RCLCPP_INFO(this->get_logger(), "TF delay period of %.1f seconds completed. Starting TF publishing.", this->tfDelaySeconds);
+                    tfPublishingStarted = true;
+                }
+                
+                if (lidarFrame != baselinkFrame) {
+                    try {
+                        tf2::fromMsg(tfBuffer->lookupTransform(lidarFrame, baselinkFrame, rclcpp::Time(0)), lidar2Baselink);
+                    } catch (tf2::TransformException ex) {
+                        RCLCPP_ERROR(get_logger(), "%s", ex.what());
+                    }
+                    tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
+                                                    odometryFrame);
+                    tCur = tb;
+                }
+                geometry_msgs::msg::TransformStamped ts;
+                tf2::convert(tCur, ts);
+                ts.child_frame_id = baselinkFrame;
+                tfBroadcaster->sendTransform(ts);
+            } else {
+                // Still in delay period, skip TF publishing
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, 
+                    "TF publishing delayed: %.1f/%.1f seconds elapsed", elapsedTime, this->tfDelaySeconds);
             }
-            tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
-                                            odometryFrame);
-            tCur = tb;
+        } else {
+            // TF delay disabled, publish normally
+            if (lidarFrame != baselinkFrame) {
+                try {
+                    tf2::fromMsg(tfBuffer->lookupTransform(lidarFrame, baselinkFrame, rclcpp::Time(0)), lidar2Baselink);
+                } catch (tf2::TransformException ex) {
+                    RCLCPP_ERROR(get_logger(), "%s", ex.what());
+                }
+                tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
+                                                odometryFrame);
+                tCur = tb;
+            }
+            geometry_msgs::msg::TransformStamped ts;
+            tf2::convert(tCur, ts);
+            ts.child_frame_id = baselinkFrame;
+            tfBroadcaster->sendTransform(ts);
         }
-        geometry_msgs::msg::TransformStamped ts;
-        tf2::convert(tCur, ts);
-        ts.child_frame_id = baselinkFrame;
-        tfBroadcaster->sendTransform(ts);
 
         // publish IMU path
         static nav_msgs::msg::Path imuPath;
@@ -197,6 +237,11 @@ class IMUPreintegration : public ParamServer {
     const double delta_t = 0;
 
     int key = 1;
+    
+    rclcpp::Time systemStartTime;
+    
+    // Odometry delay control
+    bool odometryPublishingStarted = false;
 
     gtsam::Pose3 imu2Lidar =
         gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0), gtsam::Point3(-extTrans.x(), -extTrans.y(), -extTrans.z()));
@@ -250,6 +295,9 @@ class IMUPreintegration : public ParamServer {
         imuIntegratorOpt_ =
             new gtsam::PreintegratedImuMeasurements(p,
                                                     prior_imu_bias);  // setting up the IMU integration for optimization
+        
+        // 初始化系统启动时间
+        systemStartTime = this->now();
     }
 
     void resetOptimization() {
@@ -453,16 +501,41 @@ class IMUPreintegration : public ParamServer {
     }
 
     bool failureDetection(const gtsam::Vector3& velCur, const gtsam::imuBias::ConstantBias& biasCur) {
+        // 如果禁用失败检测，直接返回false
+        if (!this->imuFailureDetectionEnabled) {
+            return false;
+        }
+        
         Eigen::Vector3f vel(velCur.x(), velCur.y(), velCur.z());
-        if (vel.norm() > 30) {
-            RCLCPP_WARN(get_logger(), "Large velocity, reset IMU-preintegration!");
+        
+        // 在系统启动初期使用最严格的阈值（机器人静止状态）
+        rclcpp::Time currentTime = this->now();
+        double elapsedTime = (currentTime - systemStartTime).seconds();
+        double velocityThreshold;
+        double biasThreshold;
+        
+        if (elapsedTime < 10.0) {
+            // 前10秒机器人静止，使用最严格的阈值
+            velocityThreshold = 1.0;  // 1m/s，静止状态下允许的最大速度
+            biasThreshold = 0.1;      // 0.1，静止状态下允许的最大偏置
+        } else {
+            // 10秒后使用配置值
+            velocityThreshold = this->imuVelocityThreshold;
+            biasThreshold = this->imuBiasThreshold;
+        }
+        
+        if (vel.norm() > velocityThreshold) {
+            RCLCPP_WARN(get_logger(), "Large velocity (%.1f m/s > %.1f m/s), reset IMU-preintegration!", 
+                       vel.norm(), velocityThreshold);
             return true;
         }
 
         Eigen::Vector3f ba(biasCur.accelerometer().x(), biasCur.accelerometer().y(), biasCur.accelerometer().z());
         Eigen::Vector3f bg(biasCur.gyroscope().x(), biasCur.gyroscope().y(), biasCur.gyroscope().z());
-        if (ba.norm() > 1.0 || bg.norm() > 1.0) {
-            RCLCPP_WARN(get_logger(), "Large bias, reset IMU-preintegration!");
+        
+        if (ba.norm() > biasThreshold || bg.norm() > biasThreshold) {
+            RCLCPP_WARN(get_logger(), "Large bias (acc: %.1f > %.1f, gyr: %.1f > %.1f), reset IMU-preintegration!",
+                       ba.norm(), biasThreshold, bg.norm(), biasThreshold);
             return true;
         }
 
@@ -491,51 +564,114 @@ class IMUPreintegration : public ParamServer {
         // predict odometry
         gtsam::NavState currentState = imuIntegratorImu_->predict(prevStateOdom, prevBiasOdom);
 
-        // publish odometry
-        auto odometry = nav_msgs::msg::Odometry();
-        odometry.header.stamp = thisImu.header.stamp;
-        odometry.header.frame_id = odometryFrame;
-        odometry.child_frame_id = "odom_imu";
+        // publish odometry with delay mechanism
+        if (this->odometryDelayEnabled) {
+            rclcpp::Time currentTime = this->now();
+            double elapsedTime = (currentTime - systemStartTime).seconds();
+            
+            if (elapsedTime >= this->odometryDelaySeconds) {
+                // Delay period has passed, start publishing odometry
+                if (!odometryPublishingStarted) {
+                    RCLCPP_INFO(this->get_logger(), "Odometry delay period of %.1f seconds completed. Starting odometry publishing.", this->odometryDelaySeconds);
+                    odometryPublishingStarted = true;
+                }
+                
+                auto odometry = nav_msgs::msg::Odometry();
+                odometry.header.stamp = thisImu.header.stamp;
+                odometry.header.frame_id = odometryFrame;
+                odometry.child_frame_id = "odom_imu";
 
-        // transform imu pose to ldiar
-        gtsam::Pose3 imuPose = gtsam::Pose3(currentState.quaternion(), currentState.position());
-        gtsam::Pose3 lidarPose = imuPose.compose(imu2Lidar);
+                // transform imu pose to ldiar
+                gtsam::Pose3 imuPose = gtsam::Pose3(currentState.quaternion(), currentState.position());
+                gtsam::Pose3 lidarPose = imuPose.compose(imu2Lidar);
 
-        odometry.pose.pose.position.x = lidarPose.translation().x();
-        odometry.pose.pose.position.y = lidarPose.translation().y();
-        odometry.pose.pose.position.z = lidarPose.translation().z();
-        odometry.pose.pose.orientation.x = lidarPose.rotation().toQuaternion().x();
-        odometry.pose.pose.orientation.y = lidarPose.rotation().toQuaternion().y();
-        odometry.pose.pose.orientation.z = lidarPose.rotation().toQuaternion().z();
-        odometry.pose.pose.orientation.w = lidarPose.rotation().toQuaternion().w();
+                odometry.pose.pose.position.x = lidarPose.translation().x();
+                odometry.pose.pose.position.y = lidarPose.translation().y();
+                odometry.pose.pose.position.z = lidarPose.translation().z();
+                odometry.pose.pose.orientation.x = lidarPose.rotation().toQuaternion().x();
+                odometry.pose.pose.orientation.y = lidarPose.rotation().toQuaternion().y();
+                odometry.pose.pose.orientation.z = lidarPose.rotation().toQuaternion().z();
+                odometry.pose.pose.orientation.w = lidarPose.rotation().toQuaternion().w();
 
-        odometry.twist.twist.linear.x = currentState.velocity().x();
-        odometry.twist.twist.linear.y = currentState.velocity().y();
-        odometry.twist.twist.linear.z = currentState.velocity().z();
-        odometry.twist.twist.angular.x = thisImu.angular_velocity.x + prevBiasOdom.gyroscope().x();
-        odometry.twist.twist.angular.y = thisImu.angular_velocity.y + prevBiasOdom.gyroscope().y();
-        odometry.twist.twist.angular.z = thisImu.angular_velocity.z + prevBiasOdom.gyroscope().z();
-        pubImuOdometry->publish(odometry);
+                odometry.twist.twist.linear.x = currentState.velocity().x();
+                odometry.twist.twist.linear.y = currentState.velocity().y();
+                odometry.twist.twist.linear.z = currentState.velocity().z();
+                odometry.twist.twist.angular.x = thisImu.angular_velocity.x + prevBiasOdom.gyroscope().x();
+                odometry.twist.twist.angular.y = thisImu.angular_velocity.y + prevBiasOdom.gyroscope().y();
+                odometry.twist.twist.angular.z = thisImu.angular_velocity.z + prevBiasOdom.gyroscope().z();
+                pubImuOdometry->publish(odometry);
 
-        autorccar_interfaces::msg::NavState navState;
-        navState.timestamp = odometry.header.stamp;
-        navState.position.x = odometry.pose.pose.position.x;
-        navState.position.y = odometry.pose.pose.position.y;
-        navState.position.z = odometry.pose.pose.position.z;
-        navState.velocity.x = odometry.twist.twist.linear.x;
-        navState.velocity.y = odometry.twist.twist.linear.y;
-        navState.velocity.z = odometry.twist.twist.linear.z;
-        navState.quaternion.w = odometry.pose.pose.orientation.w;
-        navState.quaternion.x = odometry.pose.pose.orientation.x;
-        navState.quaternion.y = odometry.pose.pose.orientation.y;
-        navState.quaternion.z = odometry.pose.pose.orientation.z;
-        navState.acceleration.x = thisImu.linear_acceleration.x;
-        navState.acceleration.y = thisImu.linear_acceleration.y;
-        navState.acceleration.z = thisImu.linear_acceleration.z;
-        navState.angular_velocity.x = thisImu.angular_velocity.x;
-        navState.angular_velocity.y = thisImu.angular_velocity.y;
-        navState.angular_velocity.z = thisImu.angular_velocity.z;
-        pubNavState->publish(navState);
+                autorccar_interfaces::msg::NavState navState;
+                navState.timestamp = odometry.header.stamp;
+                navState.position.x = odometry.pose.pose.position.x;
+                navState.position.y = odometry.pose.pose.position.y;
+                navState.position.z = odometry.pose.pose.position.z;
+                navState.velocity.x = odometry.twist.twist.linear.x;
+                navState.velocity.y = odometry.twist.twist.linear.y;
+                navState.velocity.z = odometry.twist.twist.linear.z;
+                navState.quaternion.w = odometry.pose.pose.orientation.w;
+                navState.quaternion.x = odometry.pose.pose.orientation.x;
+                navState.quaternion.y = odometry.pose.pose.orientation.y;
+                navState.quaternion.z = odometry.pose.pose.orientation.z;
+                navState.acceleration.x = thisImu.linear_acceleration.x;
+                navState.acceleration.y = thisImu.linear_acceleration.y;
+                navState.acceleration.z = thisImu.linear_acceleration.z;
+                navState.angular_velocity.x = thisImu.angular_velocity.x;
+                navState.angular_velocity.y = thisImu.angular_velocity.y;
+                navState.angular_velocity.z = thisImu.angular_velocity.z;
+                pubNavState->publish(navState);
+            } else {
+                // Still in delay period, skip odometry publishing
+                RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, 
+                    "Odometry publishing delayed: %.1f/%.1f seconds elapsed", elapsedTime, this->odometryDelaySeconds);
+            }
+        } else {
+            // Odometry delay disabled, publish normally
+            auto odometry = nav_msgs::msg::Odometry();
+            odometry.header.stamp = thisImu.header.stamp;
+            odometry.header.frame_id = odometryFrame;
+            odometry.child_frame_id = "odom_imu";
+
+            // transform imu pose to ldiar
+            gtsam::Pose3 imuPose = gtsam::Pose3(currentState.quaternion(), currentState.position());
+            gtsam::Pose3 lidarPose = imuPose.compose(imu2Lidar);
+
+            odometry.pose.pose.position.x = lidarPose.translation().x();
+            odometry.pose.pose.position.y = lidarPose.translation().y();
+            odometry.pose.pose.position.z = lidarPose.translation().z();
+            odometry.pose.pose.orientation.x = lidarPose.rotation().toQuaternion().x();
+            odometry.pose.pose.orientation.y = lidarPose.rotation().toQuaternion().y();
+            odometry.pose.pose.orientation.z = lidarPose.rotation().toQuaternion().z();
+            odometry.pose.pose.orientation.w = lidarPose.rotation().toQuaternion().w();
+
+            odometry.twist.twist.linear.x = currentState.velocity().x();
+            odometry.twist.twist.linear.y = currentState.velocity().y();
+            odometry.twist.twist.linear.z = currentState.velocity().z();
+            odometry.twist.twist.angular.x = thisImu.angular_velocity.x + prevBiasOdom.gyroscope().x();
+            odometry.twist.twist.angular.y = thisImu.angular_velocity.y + prevBiasOdom.gyroscope().y();
+            odometry.twist.twist.angular.z = thisImu.angular_velocity.z + prevBiasOdom.gyroscope().z();
+            pubImuOdometry->publish(odometry);
+
+            autorccar_interfaces::msg::NavState navState;
+            navState.timestamp = odometry.header.stamp;
+            navState.position.x = odometry.pose.pose.position.x;
+            navState.position.y = odometry.pose.pose.position.y;
+            navState.position.z = odometry.pose.pose.position.z;
+            navState.velocity.x = odometry.twist.twist.linear.x;
+            navState.velocity.y = odometry.twist.twist.linear.y;
+            navState.velocity.z = odometry.twist.twist.linear.z;
+            navState.quaternion.w = odometry.pose.pose.orientation.w;
+            navState.quaternion.x = odometry.pose.pose.orientation.x;
+            navState.quaternion.y = odometry.pose.pose.orientation.y;
+            navState.quaternion.z = odometry.pose.pose.orientation.z;
+            navState.acceleration.x = thisImu.linear_acceleration.x;
+            navState.acceleration.y = thisImu.linear_acceleration.y;
+            navState.acceleration.z = thisImu.linear_acceleration.z;
+            navState.angular_velocity.x = thisImu.angular_velocity.x;
+            navState.angular_velocity.y = thisImu.angular_velocity.y;
+            navState.angular_velocity.z = thisImu.angular_velocity.z;
+            pubNavState->publish(navState);
+        }
     }
 };
 

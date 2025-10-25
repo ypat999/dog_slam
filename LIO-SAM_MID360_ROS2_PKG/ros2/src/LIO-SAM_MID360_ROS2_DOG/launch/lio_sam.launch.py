@@ -2,6 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
@@ -20,6 +21,7 @@ except ImportError:
     DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
     DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
     DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+    USE_TILT_CONFIG = False
     BUILD_MAP = False  # 默认不使用建图模式
 
 def generate_launch_description():
@@ -117,6 +119,11 @@ def generate_launch_description():
     )
     # # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
     # # 激光雷达前倾30度 (转换为弧度约为0.5236)
+    arguments_bl_lf = []
+    if USE_TILT_CONFIG:
+        arguments_bl_lf=['0.0', '0.0', '0.0', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame']
+    else:
+        arguments_bl_lf=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'livox_frame']
     static_transform_base_to_livox = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -126,7 +133,7 @@ def generate_launch_description():
         output='screen'
     )
 
-    # base_link -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
+    # livox -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
     static_transform_livox_to_lidar_link = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -193,14 +200,50 @@ def generate_launch_description():
         }],
         remappings=[
             ('/cloud_in', '/lio_sam/mapping/cloud_registered')  # 输入点云
-        ]
+        ],
+        condition=IfCondition(str(BUILD_MAP).lower())
     )
 
-        # 包含pointcloud_to_laserscan.launch.py
-    pointcloud_to_laserscan_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(share_dir, 'launch', 'pointcloud_to_laserscan.launch.py')
-        )
+    # PointCloud to LaserScan 节点
+    pointcloud_to_laserscan_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        remappings=[
+            # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
+            ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw'),
+            ('/scan', '/lio_sam/scan'),
+        ],
+        parameters=[{
+            'transform_tolerance': 0.01,
+            'min_height': -1.0,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
+            'angle_min': -3.14159,        # -180度
+            'angle_max': 3.14159,         # 180度
+            'angle_increment': 0.0087,   # 激光扫描的角度增量（约0.25度，提高分辨率）
+            'scan_time': 0.1,             # 扫描时间
+            
+            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_max': 20.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
+            
+            'inf_epsilon': 1000.0,           # 无穷大值的替代值
+            
+            # # QoS设置，确保与rviz2订阅者兼容
+            # 'qos_overrides./scan.publisher.reliability': 'reliable',
+            # 'qos_overrides./scan.publisher.depth': 10,
+            
+            # 其他参数
+            'use_sim_time': DEFAULT_USE_SIM_TIME,
+            # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
+            # 'use_latest_timestamp': 'True',
+            # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
+            'target_frame': 'base_link',
+            
+            # 确保laserscan投影到水平面，避免倾斜影响
+            'concurrency_level': 1,       # 处理并发级别
+        }],
+        output='screen'
     )
     
     rviz2_node = Node(
@@ -231,19 +274,26 @@ def generate_launch_description():
 
 
     launch_nodes.extend([
-        static_transform_map_to_odom,  # 添加地图到里程计的静态变换
+        # static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
-        # static_transform_base_link_to_lidar_link,  # 添加base_link到lidar_link的静态变换
-        # robot_state_publisher_node,
+        # static_transform_livox_to_lidar_link,  # 添加livox到lidar_link的静态变换
+        robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
         lio_sam_mapOptimization_node,
         # octomap_server_node,
-        pointcloud_to_laserscan_launch,
+        # pointcloud_to_laserscan_node,
         rviz2_node
     ])
+
+        # 3. 根据模式添加相应的节点
+    if BUILD_MAP:
+        # 建图模式：添加octomap server
+        launch_nodes.extend([
+            static_transform_map_to_odom,
+            octomap_server_node])
     
     return LaunchDescription(launch_nodes)
 

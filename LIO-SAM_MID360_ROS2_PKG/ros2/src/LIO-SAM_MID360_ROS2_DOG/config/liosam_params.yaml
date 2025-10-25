@@ -47,8 +47,8 @@
     imuGravity: 9.80511
     imuRPYWeight: 0.01
     # 添加IMU初始化参数
-    imuInitializationTimeout: 2.0  # IMU初始化超时时间（秒）
-    useImuInitialization: true        # 启用IMU初始化
+    # imuInitializationTimeout: 2.0  # IMU初始化超时时间（秒）
+    # useImuInitialization: true        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
     # extrinsicRot: [1.0, 0.0, 0.0,
@@ -110,3 +110,12 @@
     globalMapVisualizationSearchRadius: 100.0    # meters, global map visualization radius
     globalMapVisualizationPoseDensity: 1.0       # meters, global map visualization keyframe density
     globalMapVisualizationLeafSize: 0.1           # meters, global map visualization cloud density
+
+    # TF Delay Parameters (TF延迟发布参数)
+    tfDelayEnabled: true                        # 启用TF延迟发布功能
+    tfDelaySeconds: 2.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
+    
+    # IMU Failure Detection Parameters (IMU失败检测参数)
+    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuVelocityThreshold: 10.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

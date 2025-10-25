@@ -4,8 +4,8 @@ export ROS_DOMAIN_ID=27
 cd ros2
 export DISPLAY=localhost:10.0
 
-colcon build --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam lio_sam.launch.py
-colcon build --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam nav2.launch.py
+colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam lio_sam.launch.py
+colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam nav2.launch.py
 
 /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web.sh
 

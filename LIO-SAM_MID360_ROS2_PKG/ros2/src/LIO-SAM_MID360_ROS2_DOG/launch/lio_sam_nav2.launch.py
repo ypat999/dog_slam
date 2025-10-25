@@ -60,26 +60,6 @@ def generate_launch_description():
         }.items()
     )
     
-    # 建图模式下启动octomap server
-    octomap_server = Node(
-        package='octomap_server',
-        executable='octomap_server_node',
-        name='octomap_server',
-        output='screen',
-        parameters=[
-            {'resolution': 0.1},
-            {'frame_id': 'odom'},
-            {'sensor_model_type': 'Pointcloud'},
-            {'pointcloud_topic': '/lio_sam/mapping/cloud_registered'},
-            {'max_range': 50.0},
-            {'min_range': 0.1},
-            {'occupancy_min_z': -1.0},
-            {'occupancy_max_z': 1.0},
-            {'use_sim_time': use_sim_time}
-        ],
-        condition=IfCondition(str(BUILD_MAP).lower())
-    )
-    
     # 导航模式下启动Nav2和web
     nav2_and_web_actions = []
     if not CONFIG_IMPORTED or not BUILD_MAP:
@@ -134,7 +114,7 @@ def generate_launch_description():
     # 3. 根据模式添加相应的节点
     if CONFIG_IMPORTED and BUILD_MAP:
         # 建图模式：添加octomap server
-        launch_actions.append(octomap_server)
+        pass
     elif 'delayed_nav2_launch' in locals():
         # 导航模式：添加nav2和web
         launch_actions.append(delayed_nav2_launch)

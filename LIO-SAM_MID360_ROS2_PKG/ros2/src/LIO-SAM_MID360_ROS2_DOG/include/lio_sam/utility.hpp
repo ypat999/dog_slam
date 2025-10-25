@@ -165,6 +165,19 @@ public:
     float discreteNoiseMinIntensity;
     float discreteNoiseMaxIntensity;
 
+    // TF delay parameters
+    bool tfDelayEnabled;
+    double tfDelaySeconds;
+    
+    // Odometry delay parameters
+    bool odometryDelayEnabled;
+    double odometryDelaySeconds;
+    
+    // IMU failure detection parameters
+    bool imuFailureDetectionEnabled;
+    double imuVelocityThreshold;
+    double imuBiasThreshold;
+
     ParamServer(std::string node_name, const rclcpp::NodeOptions & options) : Node(node_name, options)
     {
         declare_parameter("pointCloudTopic", "points");
@@ -339,6 +352,26 @@ public:
         get_parameter("discreteNoiseMinIntensity", discreteNoiseMinIntensity);
         declare_parameter("discreteNoiseMaxIntensity", 1000.0);
         get_parameter("discreteNoiseMaxIntensity", discreteNoiseMaxIntensity);
+
+        // TF delay parameters
+        declare_parameter("tfDelayEnabled", true);
+        get_parameter("tfDelayEnabled", tfDelayEnabled);
+        declare_parameter("tfDelaySeconds", 0.0);
+        get_parameter("tfDelaySeconds", tfDelaySeconds);
+        
+        // Odometry delay parameters
+        declare_parameter("odometryDelayEnabled", true);
+        get_parameter("odometryDelayEnabled", odometryDelayEnabled);
+        declare_parameter("odometryDelaySeconds", 0.0);
+        get_parameter("odometryDelaySeconds", odometryDelaySeconds);
+        
+        // IMU failure detection parameters
+        declare_parameter("imuFailureDetectionEnabled", true);
+        get_parameter("imuFailureDetectionEnabled", imuFailureDetectionEnabled);
+        declare_parameter("imuVelocityThreshold", 30.0);
+        get_parameter("imuVelocityThreshold", imuVelocityThreshold);
+        declare_parameter("imuBiasThreshold", 1.0);
+        get_parameter("imuBiasThreshold", imuBiasThreshold);
 
         usleep(100);
     }

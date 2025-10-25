@@ -23,8 +23,8 @@ config_by_machine = {
         # jqr001主机配置
         'ONLINE_LIDAR': False,  # jqr001可能主要用于离线数据处理
         'BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
-        # 'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt/',
+        # 'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
+        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_begin/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
         'DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',

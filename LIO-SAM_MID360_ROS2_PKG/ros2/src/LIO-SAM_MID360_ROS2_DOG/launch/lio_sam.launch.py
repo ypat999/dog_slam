@@ -71,7 +71,7 @@ def generate_launch_description():
 
     #请另开窗口，source install/setup.sh后使用命令行录制，在launch内录制会缺少meta文件
     rosbag_record = ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-o', '/home/ztl/slam_data/livox_record_tilt/', 
+            cmd=['ros2', 'bag', 'record', '-o', '/home/ztl/slam_data/livox_record_tilt_new/', 
                  '/livox/lidar', '/livox/imu',],
             output='screen'
         )

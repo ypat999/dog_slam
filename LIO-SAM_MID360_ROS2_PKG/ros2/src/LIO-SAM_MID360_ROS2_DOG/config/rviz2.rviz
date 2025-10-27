@@ -48,8 +48,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 3.0013670921325684
-        Min Value: -0.19935476779937744
+        Max Value: 3.3761188983917236
+        Min Value: -0.19412046670913696
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -57,7 +57,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: AxisColor
       Decay Time: 1000
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 92.95751190185547
@@ -78,7 +78,7 @@ Visualization Manager:
         Value: /lio_sam/mapping/cloud_registered
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/TF
       Enabled: true
       Frame Timeout: 15
@@ -90,8 +90,6 @@ Visualization Manager:
           Value: true
         imu_link:
           Value: true
-        lidar_link:
-          Value: false
         livox_frame:
           Value: false
         map:
@@ -111,9 +109,7 @@ Visualization Manager:
                 {}
               imu_link:
                 {}
-              livox_frame:
-                {}
-            lidar_link:
+            livox_frame:
               {}
       Update Interval: 0
       Value: true
@@ -394,16 +390,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 22.072004318237305
+      Distance: 0.1571764051914215
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 3.9912807941436768
-        Y: 3.3075461387634277
-        Z: -0.6082742214202881
+        X: 11.365402221679688
+        Y: 7.437579154968262
+        Z: 8.747211456298828
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false

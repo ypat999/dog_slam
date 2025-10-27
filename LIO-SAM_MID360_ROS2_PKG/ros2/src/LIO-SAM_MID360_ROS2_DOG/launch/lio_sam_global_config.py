@@ -11,7 +11,7 @@ print(f"当前运行主机: {current_machine}")
 USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关
-BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+BUILD_MAP = False  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
 
 
 # 定义主机特定的配置字典

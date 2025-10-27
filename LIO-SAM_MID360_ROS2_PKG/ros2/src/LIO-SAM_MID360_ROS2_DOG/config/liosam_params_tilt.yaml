@@ -11,8 +11,8 @@
 
     lidarFrame: "livox_frame"
     baselinkFrame: "base_link"
-    odometryFrame: "odom"
-    mapFrame: "map"
+    # odometryFrame: "odom"
+    mapFrame: "odom"
     
     # TF Publishing Control
     # Set to false to disable publishing of map->odom transform

@@ -35,3 +35,8 @@ ros2 run tf2_ros tf2_monitor map odom
 
 
 ros2 lifecycle set /static_transform_publisher_odom_base shutdown
+
+
+#record
+source install/setup.bash
+ros2 bag record -o /home/ztl/slam_data/livox_record_tilt_new/ /livox/lidar /livox/imu

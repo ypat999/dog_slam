@@ -8,10 +8,13 @@ current_machine = platform.node()
 print(f"当前运行主机: {current_machine}")
 
 # 雷达倾斜配置开关
-USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
+USE_TILT_CONFIG = False  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关
 BUILD_MAP = False  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+
+# 建图模式开关
+RECORD_ONLY = True  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
 
 
 # 定义主机特定的配置字典
@@ -30,8 +33,8 @@ config_by_machine = {
         # jqr001主机配置
         'ONLINE_LIDAR': False,  # jqr001可能主要用于离线数据处理
         'BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        # 'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
-        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_new/',
+        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_new/',
+        # 'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_new/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
         'DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',

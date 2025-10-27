@@ -93,17 +93,17 @@ def generate_launch_description():
             shell=False
         ))
         
-        # 在Nav2启动完成后发布rotate消息到/rkbot/debug话题
-        nav2_and_web_actions.append(TimerAction(
-            period=8.0,  # 在Nav2启动后延迟8秒发布消息（确保Nav2完全初始化）
-            actions=[
-                ExecuteProcess(
-                    cmd=['ros2', 'topic', 'pub', '/rkbot/debug', 'std_msgs/msg/String', 'data: rotate', '--once'],
-                    output='screen',
-                    shell=False
-                )
-            ]
-        ))
+        # # 在Nav2启动完成后发布rotate消息到/rkbot/debug话题
+        # nav2_and_web_actions.append(TimerAction(
+        #     period=8.0,  # 在Nav2启动后延迟8秒发布消息（确保Nav2完全初始化）
+        #     actions=[
+        #         ExecuteProcess(
+        #             cmd=['ros2', 'topic', 'pub', '/rkbot/debug', 'std_msgs/msg/String', 'data: rotate', '--once'],
+        #             output='screen',
+        #             shell=False
+        #         )
+        #     ]
+        # ))
     
     # 根据模式创建适当的延迟启动动作
     if nav2_and_web_actions:

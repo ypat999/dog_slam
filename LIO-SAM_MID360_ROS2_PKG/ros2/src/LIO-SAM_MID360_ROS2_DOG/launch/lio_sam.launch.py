@@ -29,7 +29,7 @@ def generate_launch_description():
     xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 5.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     # lvx_file_path = '/home/livox/livox_test.lvx'
@@ -134,12 +134,12 @@ def generate_launch_description():
     )
 
     # livox -> lidar_link (确保pointcloud_to_laserscan能正常工作的静态变换)
-    static_transform_livox_to_lidar_link = Node(
+    static_transform_base_to_lidar_link = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_livox_to_lidar_link',
+        name='static_transform_base_to_lidar_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'livox_frame', 'lidar_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.5235987756', '0.0', 'base_link', 'lidar_link'],
         output='screen'
     )
 
@@ -190,11 +190,11 @@ def generate_launch_description():
         parameters=[{
             'frame_id': 'map',                   # 地图坐标系
             'sensor_model/max_range': 10.0,      # 最大感测距离
-            'sensor_model/min_range': 0.8,       # 最小感测距离
+            'sensor_model/min_range': 0.5,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -0.3,             # 投影高度下限
-            'occupancy_max_z': 0.5,              # 投影高度上限
+            'occupancy_min_z': -0.2,             # 投影高度下限
+            'occupancy_max_z': 1.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
@@ -216,15 +216,15 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.01,
-            'min_height': -0.3,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
-            'max_height': 0.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
+            'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.14159,        # -180度
             'angle_max': 3.14159,         # 180度
-            'angle_increment': 0.00436,   # 激光扫描的角度增量（约0.25度，提高分辨率）
-            'scan_time': 0.1,             # 扫描时间
+            'angle_increment': 0.0087,   # 激光扫描的角度增量（约0.25度，提高分辨率）
+            'scan_time': 0.2,             # 扫描时间
             
-            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 20.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_max': 30.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
             'inf_epsilon': 1000.0,           # 无穷大值的替代值
@@ -238,7 +238,7 @@ def generate_launch_description():
             # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
             # 'use_latest_timestamp': 'True',
             # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
-            'target_frame': 'base_link',
+            'target_frame': 'livox_frame',
             
             # 确保laserscan投影到水平面，避免倾斜影响
             'concurrency_level': 1,       # 处理并发级别
@@ -254,6 +254,9 @@ def generate_launch_description():
         arguments=['-d', rviz_config_file],
         output='screen'
     )
+
+    if RECORD_ONLY:
+        return LaunchDescription([livox_driver_node])
 
     launch_nodes = [params_declare]
 
@@ -277,7 +280,7 @@ def generate_launch_description():
         # static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
-        # static_transform_livox_to_lidar_link,  # 添加livox到lidar_link的静态变换
+        static_transform_base_to_lidar_link,  # 添加livox到lidar_link的静态变换
         robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,

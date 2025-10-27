@@ -9,7 +9,6 @@ Panels:
         - /TF1/Frames1
         - /TF1/Tree1
         - /PointCloud22/Topic1
-        - /PointCloud23
       Splitter Ratio: 0.43529412150382996
     Tree Height: 793
   - Class: rviz_common/Selection
@@ -91,6 +90,8 @@ Visualization Manager:
           Value: true
         imu_link:
           Value: true
+        lidar_link:
+          Value: true
         livox_frame:
           Value: false
         map:
@@ -109,6 +110,8 @@ Visualization Manager:
               chassis_link:
                 {}
               imu_link:
+                {}
+              lidar_link:
                 {}
             livox_frame:
               {}
@@ -200,10 +203,10 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 156
+      Max Intensity: 159
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
@@ -221,7 +224,7 @@ Visualization Manager:
         Value: /lio_sam/mapping/cloud_registered_raw
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
       Name: MarkerArray
@@ -391,25 +394,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 29.052696228027344
+      Distance: 31.608642578125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 26.281421661376953
-        Y: 20.792009353637695
-        Z: -1.6975444555282593
+        X: 17.16864776611328
+        Y: 13.277728080749512
+        Z: -1.7349721193313599
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.5597963333129883
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.538141250610352
+      Yaw: 4.683141231536865
     Saved: ~
 Window Geometry:
   Displays:
@@ -425,5 +428,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1848
-  X: 72
-  Y: 31
+  X: 15
+  Y: 1135

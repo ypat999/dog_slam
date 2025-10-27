@@ -12,6 +12,10 @@ colcon build --symlink-install --packages-select lio_sam && source install/setup
 
 
 
+source install/setup.bash && ros2 launch livox_ros_driver2 msg_MID360_launch.py
+
+
+
 ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_grid/map --fmt png
 
 
@@ -38,5 +42,9 @@ ros2 lifecycle set /static_transform_publisher_odom_base shutdown
 
 
 #record
-source install/setup.bash
-ros2 bag record -o /home/ztl/slam_data/livox_record_tilt_new/ /livox/lidar /livox/imu
+cd dog_slam
+source LIO-SAM_MID360_ROS2_PKG/ros2/install/setup.bash
+nohup ros2 bag record -o /home/ztl/slam_data/livox_record_tilt_test/ /livox/lidar /livox/imu > record.log &
+tail -f record.log 
+ps -ef | grep  livox_record_tilt_test
+kill 

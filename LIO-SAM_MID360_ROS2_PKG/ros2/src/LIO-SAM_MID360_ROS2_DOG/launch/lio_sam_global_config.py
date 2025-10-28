@@ -8,7 +8,7 @@ current_machine = platform.node()
 print(f"当前运行主机: {current_machine}")
 
 # 雷达倾斜配置开关
-USE_TILT_CONFIG = False  # True: 使用倾斜配置文件, False: 使用默认配置文件
+USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关
 BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
@@ -23,7 +23,7 @@ config_by_machine = {
         # RK3588主机配置
         'ONLINE_LIDAR': True,  # 通常RK3588是开发板，可能连接实际的激光雷达
         'BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
+        'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
         'DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",

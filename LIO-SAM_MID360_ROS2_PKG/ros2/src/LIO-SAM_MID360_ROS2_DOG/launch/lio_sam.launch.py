@@ -29,7 +29,7 @@ def generate_launch_description():
     xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 5.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     # lvx_file_path = '/home/livox/livox_test.lvx'
@@ -88,7 +88,7 @@ def generate_launch_description():
         # {"lvx_file_path": lvx_file_path},
         {"user_config_path": user_config_path},
         {"cmdline_input_bd_code": cmdline_bd_code},
-        {"enable_imu_sync_time": True},
+        # {"enable_imu_sync_time": True},
     ]
     livox_driver_node = Node(
         package='livox_ros_driver2',
@@ -189,7 +189,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'frame_id': 'map',                   # 地图坐标系
-            'sensor_model/max_range': 10.0,      # 最大感测距离
+            'sensor_model/max_range': 20.0,      # 最大感测距离
             'sensor_model/min_range': 0.5,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
@@ -211,7 +211,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw'),
+            ('/cloud_in', '/lio_sam/mapping/cloud_registered'),
             ('/scan', '/lio_sam/scan'),
         ],
         parameters=[{
@@ -224,7 +224,7 @@ def generate_launch_description():
             'scan_time': 0.2,             # 扫描时间
             
             'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 30.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
             'inf_epsilon': 1000.0,           # 无穷大值的替代值
@@ -269,7 +269,7 @@ def generate_launch_description():
         launch_nodes.extend([
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
             ExecuteProcess(
-                cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '1.0'],
+                cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '10.0'],
                 name='rosbag_player',
                 output='screen'
             )
@@ -277,18 +277,18 @@ def generate_launch_description():
 
 
     launch_nodes.extend([
+        rviz2_node,
         # static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         # static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
-        static_transform_base_to_lidar_link,  # 添加livox到lidar_link的静态变换
+        # static_transform_base_to_lidar_link,  # 添加livox到lidar_link的静态变换
         robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
-        lio_sam_mapOptimization_node,
+        lio_sam_mapOptimization_node
         # octomap_server_node,
-        pointcloud_to_laserscan_node,
-        rviz2_node
+        # 
     ])
 
         # 3. 根据模式添加相应的节点
@@ -297,6 +297,10 @@ def generate_launch_description():
         launch_nodes.extend([
             static_transform_map_to_odom,
             octomap_server_node])
+    else:
+        launch_nodes.extend([
+            pointcloud_to_laserscan_node
+        ])
     
     return LaunchDescription(launch_nodes)
 

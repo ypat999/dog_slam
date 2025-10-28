@@ -36,7 +36,7 @@
     Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
     downsampleRate: 1                            # default: 1. Downsample your data if too many
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
-    lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
+    lidarMinRange: 0.5                           # default: 1.0, minimum lidar range to be used
     lidarMaxRange: 40.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
@@ -48,8 +48,8 @@
     imuGravity: 9.80511
     imuRPYWeight: 0.01
     # 添加IMU初始化参数
-    imuInitializationTimeout: 2.0  # IMU初始化超时时间（秒）
-    useImuInitialization: true        # 启用IMU初始化
+    imuInitializationTimeout: 0.0  # IMU初始化超时时间（秒）
+    useImuInitialization: false        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
     extrinsicRot: [0.8660, 0.0, 0.5,
@@ -72,13 +72,13 @@
     mappingCornerLeafSize: 0.1                   # 适当增加体素大小，减少噪声点的影响 (原0.1)
     mappingSurfLeafSize: 0.2                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
 
-    # robot motion constraint (in case you are using a 2D robot)
-    z_tollerance: 1000.0                          # meters
-    rotation_tollerance: 1000.0                   # radians
+    # robot motion constraint (in case you are using a 2D robot) more limit for map building
+    z_tollerance: 0.5                          # meters
+    rotation_tollerance: 0.1                   # radians
 
     # CPU Params
     numberOfCores: 4                              # number of cores for mapping optimization
-    mappingProcessInterval: 0.15                  # seconds, regulate mapping frequency
+    mappingProcessInterval: 0.2                  # seconds, regulate mapping frequency
 
     # Surrounding map
     surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
@@ -110,13 +110,13 @@
     # Visualization
     globalMapVisualizationSearchRadius: 100.0    # meters, global map visualization radius
     globalMapVisualizationPoseDensity: 1.0       # meters, global map visualization keyframe density
-    globalMapVisualizationLeafSize: 0.1           # meters, global map visualization cloud density
+    globalMapVisualizationLeafSize: 0.2          # meters, global map visualization cloud density
 
     # TF Delay Parameters (TF延迟发布参数)
     tfDelayEnabled: false                        # 启用TF延迟发布功能
     tfDelaySeconds: 2.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: false             # 启用IMU失败检测
-    imuVelocityThreshold: 10.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
-    imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
+    imuFailureDetectionEnabled: True             # 启用IMU失败检测
+    imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuBiasThreshold: 2.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

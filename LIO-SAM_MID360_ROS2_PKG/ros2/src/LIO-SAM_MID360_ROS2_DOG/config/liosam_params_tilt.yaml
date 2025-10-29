@@ -63,7 +63,7 @@
 
     # LOAM feature threshold
     edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
-    surfThreshold: 0.1
+    surfThreshold: 0.2
     edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
 
@@ -73,7 +73,7 @@
     mappingSurfLeafSize: 0.2                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
 
     # robot motion constraint (in case you are using a 2D robot) more limit for map building
-    z_tollerance: 0.5                          # meters
+    z_tollerance: 0.2                          # meters
     rotation_tollerance: 0.1                   # radians
 
     # CPU Params
@@ -90,13 +90,13 @@
     # Loop closure
     loopClosureEnableFlag: true
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
-    surroundingKeyframeSize: 50                   # submap size (when loop closure enabled)
-    historyKeyframeSearchRadius: 15.0             # meters, key frame that is within n meters from
-    historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be
+    surroundingKeyframeSize: 30                   # submap size (when loop closure enabled)
+    historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from
+    historyKeyframeSearchTimeDiff: 60.0           # seconds, key frame that is n seconds older will be
     # considered for loop closure
-    historyKeyframeSearchNum: 25                  # number of hostory key frames will be fused into a
+    historyKeyframeSearchNum: 30                  # number of hostory key frames will be fused into a
     # submap for loop closure
-    historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
+    historyKeyframeFitnessScore: 0.2              # icp threshold, the smaller the better alignment
 
     # Discrete noise filtering (新增参数)
     enableDiscreteNoiseFilter: false               # 启用离散噪点过滤
@@ -115,8 +115,10 @@
     # TF Delay Parameters (TF延迟发布参数)
     tfDelayEnabled: false                        # 启用TF延迟发布功能
     tfDelaySeconds: 2.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
+    odometryDelayEnabled: false
+    odometryDelaySeconds: 2.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: True             # 启用IMU失败检测
-    imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuFailureDetectionEnabled: false             # 启用IMU失败检测
+    imuVelocityThreshold: 10.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 2.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

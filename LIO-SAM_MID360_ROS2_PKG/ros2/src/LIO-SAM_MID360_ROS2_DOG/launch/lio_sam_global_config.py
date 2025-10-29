@@ -11,7 +11,7 @@ print(f"当前运行主机: {current_machine}")
 USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关
-BUILD_MAP = True  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+BUILD_MAP = False  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
 
 # 建图模式开关
 RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
@@ -97,7 +97,6 @@ MAP_FRAME = 'map'
 ODOM_FRAME = 'odom'
 BASE_LINK_FRAME = 'base_link'
 LIVOX_FRAME = 'livox_frame'
-LIDAR_LINK_FRAME = 'lidar_link'
 
 # 话题名称配置（可选，方便统一管理）
 # LIDAR_TOPIC = '/livox/lidar'

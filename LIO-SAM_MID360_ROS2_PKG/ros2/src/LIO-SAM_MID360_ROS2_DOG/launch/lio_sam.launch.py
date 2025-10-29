@@ -114,7 +114,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.3', '0.0', '0.0', '0.0', 'odom', 'base_link'],
         output='screen'
     )
     # # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
@@ -125,7 +125,8 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_to_livox',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
+        # arguments=['0.2', '0.0', '0.1', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
         output='screen'
     )
 
@@ -186,7 +187,7 @@ def generate_launch_description():
         parameters=[{
             'frame_id': 'map',                   # 地图坐标系
             'sensor_model/max_range': 20.0,      # 最大感测距离
-            'sensor_model/min_range': 0.5,       # 最小感测距离
+            'sensor_model/min_range': 0.8,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
             'occupancy_min_z': -0.2,             # 投影高度下限
@@ -211,14 +212,14 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.01,
-            'min_height': -0.3,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': -0.0,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 2.0,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.0,        # -180度
             'angle_max': 3.0,         # 180度
             'angle_increment': 0.0087,   # 激光扫描的角度增量（约0.25度，提高分辨率）
             'scan_time': 0.1,             # 扫描时间
             
-            'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
             'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
@@ -234,6 +235,7 @@ def generate_launch_description():
             # 'use_latest_timestamp': 'True',
             # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
             'target_frame': 'base_link',
+            'concurrency_level': 1,       # 处理并发级别
         }],
         output='screen'
     )
@@ -273,7 +275,7 @@ def generate_launch_description():
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
         static_transform_base_to_lidar_link,  # 添加livox到lidar_link的静态变换
-        robot_state_publisher_node,
+        # robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
@@ -286,12 +288,12 @@ def generate_launch_description():
     if BUILD_MAP:
         # 建图模式：添加octomap server
         launch_nodes.extend([
-            rviz2_node,
+            # rviz2_node,
             # static_transform_map_to_odom,
             octomap_server_node])
     else:
         launch_nodes.extend([
-            rviz2_node,
+            # rviz2_node,
             pointcloud_to_laserscan_node
         ])
     

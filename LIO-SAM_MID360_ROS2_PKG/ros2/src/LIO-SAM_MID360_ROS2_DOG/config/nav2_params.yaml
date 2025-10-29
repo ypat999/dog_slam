@@ -81,15 +81,15 @@ amcl:
     # 取消注释使用Beam模型，注释掉Likelihood模型参数
     # =============================================================================
     # Beam模型标识
-    laser_model_type: "beam"
+    # laser_model_type: "beam"
     
-    # Beam模型特有参数
-    lambda_short: 0.1
-    sigma_hit: 0.08
-    z_hit: 0.70
-    z_rand: 0.20
-    z_max: 0.15
-    z_short: 0.05
+    # # Beam模型特有参数
+    # lambda_short: 0.1
+    # sigma_hit: 0.08
+    # z_hit: 0.70
+    # z_rand: 0.20
+    # z_max: 0.15
+    # z_short: 0.05
     
 
     
@@ -98,21 +98,21 @@ amcl:
     # 取消注释使用Likelihood模型，注释掉Beam模型参数
     # =============================================================================
     # Likelihood模型标识
-    # laser_model_type: "likelihood_field_prob"
+    laser_model_type: "likelihood_field_prob"
     
-    # Likelihood模型特有参数
-    # lambda_short: 0.1
-    # sigma_hit: 0.08
-    # z_hit: 0.70
-    # z_rand: 0.30
+    Likelihood模型特有参数
+    lambda_short: 0.1
+    sigma_hit: 0.08
+    z_hit: 0.70
+    z_rand: 0.30
     
-    # Likelihood距离参数
-    # laser_likelihood_max_dist: 10.0
+    Likelihood距离参数
+    laser_likelihood_max_dist: 10.0
     
-    # Beam跳过参数（Likelihood模型也使用）
-    # do_beamskip: true
-    # beam_skip_distance: 0.8
-    # beam_skip_threshold: 0.4
+    Beam跳过参数（Likelihood模型也使用）
+    do_beamskip: true
+    beam_skip_distance: 0.8
+    beam_skip_threshold: 0.4
 
 # =============================================================================
 # BT Navigator Configuration
@@ -369,7 +369,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: true
-    yaml_filename: ""
+    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
 
 # =============================================================================
 # Planner Server Configuration

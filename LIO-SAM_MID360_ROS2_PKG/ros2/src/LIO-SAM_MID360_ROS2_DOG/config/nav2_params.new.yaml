@@ -58,7 +58,7 @@ amcl:
     
     # 初始位姿配置 - 两个模型共用
     set_initial_pose: false
-    always_reset_initial_pose: true
+    always_reset_initial_pose: false
     first_map_only: true
     map_padding: 0.3
     save_pose_rate: 0.3
@@ -69,9 +69,10 @@ amcl:
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 20.0
+    laser_max_range: 30.0
     laser_beam_step: 2
     laser_max_beams: 180   #将一个Laserscan降采样至max_beams个波束。默认值过小，影响定位精度。
+    max_beams: 180
     
     # odom_topic: /lio_sam/mapping/odometry
     # scan_topic: /lio_sam/scan
@@ -128,10 +129,10 @@ bt_navigator:
     
     # 行为树配置 - 使用ROS2 Humble兼容版本
     default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_only_if_path_becomes_invalid.xml"
-    default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
+    # default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
     
     # Groot监控
-    enable_groot_monitoring: true
+    enable_groot_monitoring: false
     groot_zmq_publisher_port: 1666
     groot_zmq_server_port: 1667
     
@@ -193,7 +194,7 @@ bt_navigator:
 controller_server:
   ros__parameters:
     use_sim_time: false
-    controller_frequency: 30.0
+    controller_frequency: 10.0
     
     # 全向移动最小速度阈值
     min_x_velocity_threshold: 0.001
@@ -293,17 +294,17 @@ local_costmap:
   local_costmap:
     ros__parameters:
       use_sim_time: false
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 10.0
+      publish_frequency: 5.0
       global_frame: odom
       robot_base_frame: base_link
       
       # 滚动窗口参数
       rolling_window: true
-      width: 3
-      height: 3
-      resolution: 0.05
-      robot_radius: 0.3
+      width: 6
+      height: 6
+      resolution: 0.10
+      robot_radius: 0.5
       
       # 插件配置
       plugins: ["voxel_layer", "inflation_layer"]
@@ -317,7 +318,7 @@ local_costmap:
         z_resolution: 0.05
         z_voxels: 16
         max_obstacle_height: 2.0
-        mark_threshold: 0
+        mark_threshold: 0.5
         observation_sources: scan
         scan:
           topic: /scan
@@ -326,9 +327,9 @@ local_costmap:
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.4
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          obstacle_min_range: 0.4
       
       # 膨胀层参数
       inflation_layer:
@@ -337,7 +338,7 @@ local_costmap:
         inflation_radius: 0.55
       
       # 始终发送完整代价地图
-      always_send_full_costmap: true
+      always_send_full_costmap: false  ######
 
 # =============================================================================
 # Global Costmap Configuration
@@ -352,7 +353,7 @@ global_costmap:
       robot_base_frame: base_link
       
       # 地图参数
-      robot_radius: 0.3
+      robot_radius: 0.5
       resolution: 0.05
       track_unknown_space: true
       
@@ -376,9 +377,9 @@ global_costmap:
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.3
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          obstacle_min_range: 0.4
       
       # 膨胀层参数
       inflation_layer:
@@ -387,7 +388,7 @@ global_costmap:
         inflation_radius: 0.55
       
       # 始终发送完整代价地图
-      always_send_full_costmap: true
+      always_send_full_costmap: false
 
 # =============================================================================
 # Map Server Configuration
@@ -403,7 +404,7 @@ map_server:
 planner_server:
   ros__parameters:
     use_sim_time: false
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 10.0
     
     # 基于网格的规划器参数
     GridBased:

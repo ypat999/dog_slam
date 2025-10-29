@@ -30,7 +30,7 @@ amcl:
     scan_topic: /lio_sam/scan
 
     # 粒子滤波器参数 - 针对稀疏地图环境优化
-    min_particles: 2000       # 增加最少粒子数，提高对零散特征的鲁棒性
+    min_particles: 1000       # 增加最少粒子数，提高对零散特征的鲁棒性
     max_particles: 8000       # 增加最大粒子数，允许更多粒子探索可能位置
     kld_err: 0.01             # 提高KLD-sampling误差，减少对精确地图的依赖
     kld_z: 0.99               # 降低KLD置信度，允许更多粒子分布
@@ -65,6 +65,7 @@ amcl:
     laser_max_range: 30.0  # 降低激光最大范围，减少远距离干扰
     laser_beam_step: 2  # 保持光束密度
     laser_max_beams: 180  # 增加光束数量，提高精度
+    max_beams: 180
     laser_z_short: 0.05  # 降低短距离概率
     laser_do_beamskip: true  # 启用光束跳跃
     laser_beam_skip_distance: 0.6  # 降低跳跃距离
@@ -99,7 +100,7 @@ amcl:
     beam_skip_threshold: 0.4    # 增加跳跃阈值，更严格的噪声过滤
     global_frame_id: map
     update_min_d: 0.2          # 大幅提高最小平移更新阈值，避免微小移动干扰
-    update_min_a: 0.3          # 大幅提高最小角度更新阈值，减少角度跳动
+    update_min_a: 0.1          # 大幅提高最小角度更新阈值，减少角度跳动
     update_min_d_squared: 0.04 # 大幅提高平方距离阈值，降低敏感度
     
     # 收敛判断参数 - 优化跳跃问题
@@ -115,8 +116,8 @@ amcl:
     
     # 初始姿态参数（用于全局定位）- 优化地图边界约束
     initial_pose:
-      x: -20.0
-      y: -10.0 
+      x: 10.0
+      y: 3.0 
       theta: 0.0
     initial_covariance:
       x: 6.0   # 大幅增加X方向方差，允许整个地图搜索
@@ -372,8 +373,8 @@ local_costmap:
   local_costmap:
     ros__parameters:
       transform_tolerance: 1.0
-      update_frequency: 5.0 # 局部地图更新频率5hz
-      # publish_frequency: 2.0 # 发布频率
+      update_frequency: 10.0 # 局部地图更新频率5hz
+      publish_frequency: 5.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
       use_sim_time: false
@@ -428,8 +429,8 @@ global_costmap:
   global_costmap:
     ros__parameters:
       transform_tolerance: 1.0
-      update_frequency: 5.0  # 全局地图更新的频率
-      # publish_frequency: 2.0 # 发布频率，一般用于rviz显示
+      update_frequency: 1.0  # 全局地图更新的频率
+      publish_frequency: 1.0 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
       use_sim_time: false
@@ -478,7 +479,7 @@ map_server:
 map_saver:
   ros__parameters:
     use_sim_time: false
-    save_map_timeout: 5.0
+    save_map_timeout: 50.0
     free_thresh_default: 0.49
     occupied_thresh_default: 0.55
     map_subscribe_transient_local: true

@@ -48,3 +48,7 @@ nohup ros2 bag record -o /home/ztl/slam_data/livox_record_tilt_test/ /livox/lida
 tail -f record.log 
 ps -ef | grep  livox_record_tilt_test
 kill 
+
+source install/setup.bash
+nohup ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/ > record.log &
+tail -f record.log

@@ -1,7 +1,7 @@
 # 添加lifecycle_manager配置
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     autostart: false
     node_names: 
       - map_server
@@ -21,7 +21,7 @@ lifecycle_manager:
 
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
     # 里程计话题
     odom_topic: /lio_sam/mapping/odometry
@@ -35,7 +35,7 @@ amcl:
     kld_err: 0.01             # 提高KLD-sampling误差，减少对精确地图的依赖
     kld_z: 0.99               # 降低KLD置信度，允许更多粒子分布
 
-    # transform_tolerance: 1.0
+    transform_tolerance: 1.0
     
     # 粒子分布约束参数 - 室内环境优化
     pf_dist_threshold: 0.15   # 降低粒子距离阈值，室内环境需要更高精度
@@ -62,7 +62,7 @@ amcl:
     # laser_model_type: "likelihood_field"  # 改为似然场模型，更稳定的概率计算######
     laser_model_type: "likelihood_field_prob"
     laser_min_range: 0.3  # 保持最小范围
-    laser_max_range: 20.0  # 降低激光最大范围，减少远距离干扰
+    laser_max_range: 30.0  # 降低激光最大范围，减少远距离干扰
     laser_beam_step: 2  # 保持光束密度
     laser_max_beams: 180  # 增加光束数量，提高精度
     laser_z_short: 0.05  # 降低短距离概率
@@ -71,7 +71,7 @@ amcl:
     laser_beam_skip_threshold: 0.2  # 降低跳跃阈值
     
     # 极端环境优化 - 添加更多激光参数
-    laser_min_beams_used: 10  # 最少使用的光束数量，低于此值跳过更新
+    laser_min_beams_used: 50  # 最少使用的光束数量，低于此值跳过更新
     laser_beam_angle_increment: 0.02  # 光束角度增量，降低角度分辨率
     laser_beam_angle_min: -3.14  # 最小扫描角度（-90度）
     laser_beam_angle_max: 3.14   # 最大扫描角度（+90度）
@@ -165,7 +165,7 @@ bt_navigator:
   ros__parameters:
     enable_timer_sampling: true          # 默认 false
     default_tick_rate: 50  
-    use_sim_time: true
+    use_sim_time: false
     global_frame: map
     robot_base_frame: base_link
     odom_topic: /lio_sam/mapping/odometry
@@ -238,16 +238,16 @@ bt_navigator:
 
 bt_navigator_navigate_through_poses_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 
 controller_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     controller_frequency: 10.0
     allow_multiple_goals: false   # 如果支持多点连续 Goal
     min_x_velocity_threshold: 0.001
@@ -288,7 +288,7 @@ controller_server:
       wz_max: 0.5
       iteration_count: 1
       prune_distance: 1.7
-      # transform_tolerance: 1.0
+      transform_tolerance: 1.0
       temperature: 0.3
       gamma: 0.015
       motion_model: "DiffDrive"
@@ -371,12 +371,12 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      # transform_tolerance: 1.0
+      transform_tolerance: 1.0
       update_frequency: 5.0 # 局部地图更新频率5hz
       # publish_frequency: 2.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
-      use_sim_time: true
+      use_sim_time: false
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
       width: 6 # 局部地图大小
       height: 6
@@ -427,12 +427,12 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      # transform_tolerance: 1.0
+      transform_tolerance: 1.0
       update_frequency: 5.0  # 全局地图更新的频率
       # publish_frequency: 2.0 # 发布频率，一般用于rviz显示
       global_frame: map      # 全局地图坐标系名称
       robot_base_frame: base_link # 机器人本体坐标系名称
-      use_sim_time: true
+      use_sim_time: false
       robot_radius: 0.5 # 机器人半径
       resolution: 0.05 # 地图分辨率，一般和slam建的图保持一致
       track_unknown_space: true
@@ -465,7 +465,7 @@ global_costmap:
 
 map_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     # 使用项目根目录中的地图文件
     yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
     # 设置地图发布频率为每10秒一次（0.1Hz）
@@ -477,7 +477,7 @@ map_server:
 
 map_saver:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     save_map_timeout: 5.0
     free_thresh_default: 0.49
     occupied_thresh_default: 0.55
@@ -486,7 +486,7 @@ map_saver:
 planner_server:
   ros__parameters:
     expected_planner_frequency: 10.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
-    use_sim_time: true
+    use_sim_time: false
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
     # 添加规划器状态管理
     planner_state_reset_on_goal_change: true
@@ -503,7 +503,7 @@ planner_server:
 
 smoother_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -531,8 +531,8 @@ behavior_server:
     #   plugin: "nav2_behaviors/ClearCostmap"
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.1
-    use_sim_time: true
+    transform_tolerance: 0.5
+    use_sim_time: false
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
@@ -546,7 +546,7 @@ behavior_server:
 
 robot_state_publisher:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 
 waypoint_follower:
   ros__parameters:
@@ -568,7 +568,7 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"

@@ -12,30 +12,30 @@
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     autostart: true  # 可根据需要修改为false
     node_names: ['map_server', 'amcl', 'planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
-    bond_timeout_ms: 3000
+    bond_timeout_ms: 10000
 
 # =============================================================================
 # AMCL Configuration - 模型选择区域
 # =============================================================================
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 500
-    max_particles: 3000
+    min_particles: 1000
+    max_particles: 8000
     kld_err: 0.01
     kld_z: 0.99
     
-    # 运动模型参数 - 两个模型共用
-    alpha1: 0.008
-    alpha2: 0.008
-    alpha3: 0.01
-    alpha4: 0.003
-    alpha5: 0.005
+    # 里程计运动模型噪声参数 - 室内环境优化
+    alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.003           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.003           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
     robot_model_type: "nav2_amcl::OmniMotionModel"
@@ -119,7 +119,7 @@ amcl:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     global_frame: map
     robot_base_frame: base_link
     bt_loop_duration: 50
@@ -192,7 +192,7 @@ bt_navigator:
 # =============================================================================
 controller_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     controller_frequency: 30.0
     
     # 全向移动最小速度阈值
@@ -292,7 +292,7 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      use_sim_time: true
+      use_sim_time: false
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
@@ -345,7 +345,7 @@ local_costmap:
 global_costmap:
   global_costmap:
     ros__parameters:
-      use_sim_time: true
+      use_sim_time: false
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
@@ -394,7 +394,7 @@ global_costmap:
 # =============================================================================
 map_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
 
 # =============================================================================
@@ -402,7 +402,7 @@ map_server:
 # =============================================================================
 planner_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     expected_planner_frequency: 20.0
     
     # 基于网格的规划器参数
@@ -417,7 +417,7 @@ planner_server:
 # ==============================================================================
 smoother_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     # 路径平滑器参数
     path_smoother:
@@ -432,7 +432,7 @@ smoother_server:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     # 行为插件配置
     plugins: ["spin", "backup", "drive_on_heading"]
@@ -466,7 +466,7 @@ behavior_server:
 # =============================================================================
 waypoint_follower:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     loop_rate: 20
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -480,7 +480,7 @@ waypoint_follower:
 # =============================================================================
 velocity_smoother:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"

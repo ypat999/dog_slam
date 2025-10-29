@@ -47,9 +47,6 @@
 
     imuGravity: 9.80511
     imuRPYWeight: 0.01
-    # 添加IMU初始化参数
-    imuInitializationTimeout: 0.0  # IMU初始化超时时间（秒）
-    useImuInitialization: false        # 启用IMU初始化
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
     extrinsicRot: [0.8660, 0.0, 0.5,

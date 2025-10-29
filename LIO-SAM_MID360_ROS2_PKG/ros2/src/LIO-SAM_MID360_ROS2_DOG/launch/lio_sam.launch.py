@@ -212,7 +212,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.01,
-            'min_height': -0.0,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 2.0,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.0,        # -180度
             'angle_max': 3.0,         # 180度

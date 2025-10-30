@@ -110,19 +110,19 @@ amcl:
     resample_interval: 5  # 增加重采样间隔，减少频繁重采样导致的跳变
     
     # 自动全局定位配置
-    set_initial_pose: false          # 不设置初始姿态，让AMCL自动全局定位
+    set_initial_pose: true          # 不设置初始姿态，让AMCL自动全局定位
     always_reset_initial_pose: false  # 不总是重置初始姿态
     first_map_only: true           # 不只在第一个地图时运行
     
     # 初始姿态参数（用于全局定位）- 限制粒子散步范围，防止大幅跳变
     initial_pose:
-      x: 10.0
-      y: 3.0 
-      theta: 0.0
+      x: 33.5
+      y: 3.5 
+      theta: 1.6
     initial_covariance:
-      x: 1.0   # 大幅减小X方向方差，限制粒子散步范围
-      y: 1.0   # 大幅减小Y方向方差，防止大幅跳变
-      yaw: 0.5 # 大幅减小角度方差，限制朝向变化范围
+      x: 5.0   # 大幅减小X方向方差，限制粒子散步范围
+      y: 5.0   # 大幅减小Y方向方差，防止大幅跳变
+      yaw: 3.0 # 大幅减小角度方差，限制朝向变化范围
     
     # 关键全局定位优化参数 - 进一步限制粒子散步
     force_update_on_initial_pose: false    # 禁用强制更新，允许自然收敛
@@ -133,8 +133,8 @@ amcl:
     # 全局定位搜索策略 - 极端环境优化
     global_localization_search_size: 8.0   # 大幅增加全局搜索范围（米）
     restrict_global_search: true          # 禁用搜索范围限制，允许全地图搜索
-    search_center_x: 5.0                  # 搜索中心X
-    search_center_y: 3.0                  # 搜索中心Y
+    search_center_x: 33.5                  # 搜索中心X
+    search_center_y: 3.5                  # 搜索中心Y
     
     # 自动全局定位服务
     # 启用全局定位服务，允许通过服务调用来初始化全局定位

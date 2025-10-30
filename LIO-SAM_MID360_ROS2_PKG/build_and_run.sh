@@ -20,14 +20,14 @@ if [ -z "$ROS_DISTRO" ]; then
     fi
 fi
 
+cd $WORKSPACE_DIR
+colcon build --symlink-install --packages-select lio_sam
+
 # 加载工作空间环境
 echo "加载工作空间环境..."
-source install/setup.bash
-
+source $WORKSPACE_DIR/install/setup.bash
 
 echo "启动导航..."
-
-colcon build --symlink-install --packages-select lio_sa
 ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/
 
 

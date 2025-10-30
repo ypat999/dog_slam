@@ -74,17 +74,17 @@ def generate_launch_description():
             }.items()
         ))
         
-        # 延迟调用AMCL的全局定位服务
-        nav2_and_web_actions.append(TimerAction(
-            period=5.0,  # Nav2启动后再延迟5秒调用服务
-            actions=[
-                ExecuteProcess(
-                    cmd=['ros2', 'service', 'call', '/reinitialize_global_localization', 'std_srvs/srv/Empty'],
-                    output='screen',
-                    shell=False
-                )
-            ]
-        ))
+        # # 延迟调用AMCL的全局定位服务
+        # nav2_and_web_actions.append(TimerAction(
+        #     period=5.0,  # Nav2启动后再延迟5秒调用服务
+        #     actions=[
+        #         ExecuteProcess(
+        #             cmd=['ros2', 'service', 'call', '/reinitialize_global_localization', 'std_srvs/srv/Empty'],
+        #             output='screen',
+        #             shell=False
+        #         )
+        #     ]
+        # ))
         
         # 调用web控制脚本
         nav2_and_web_actions.append(ExecuteProcess(

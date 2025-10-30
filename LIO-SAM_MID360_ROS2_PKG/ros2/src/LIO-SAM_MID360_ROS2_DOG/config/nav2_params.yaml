@@ -283,7 +283,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 45
-      model_dt: 0.1 # 间隔
+      model_dt: 0.2 # 间隔
       batch_size: 1500
       vx_std: 0.2
       vy_std: 0.0

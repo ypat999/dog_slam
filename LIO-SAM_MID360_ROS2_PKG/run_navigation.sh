@@ -23,7 +23,7 @@ fi
 
 # 加载工作空间环境
 echo "加载工作空间环境..."
-source install/setup.bash
+source $WORKSPACE_DIR/install/setup.bash
 
 
 echo "启动导航..."

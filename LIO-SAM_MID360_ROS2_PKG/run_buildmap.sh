@@ -1,4 +1,3 @@
-
 #!/bin/bash
 echo "===== ROS2 建图模式启动脚本 ====="
 WORKSPACE_DIR="/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2"
@@ -23,7 +22,7 @@ fi
 
 # 加载工作空间环境
 echo "加载工作空间环境..."
-source install/setup.bash
+source $WORKSPACE_DIR/install/setup.bash
 
 
 echo "启动建图模式..."

@@ -53,3 +53,5 @@ source install/setup.bash
 nohup ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/ > record.log &
 tail -f record.log
 
+
+ros2 topic pub --once /map nav_msgs/msg/OccupancyGrid {}

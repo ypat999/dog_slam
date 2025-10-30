@@ -1,5 +1,5 @@
 [Unit]
-Description=LIO-SAM NAV2 Navigation Service
+Description=LIO-SAM Build Map Service
 After=network.target
 Wants=network.target
 
@@ -9,7 +9,7 @@ User=ztl
 Group=ztl
 WorkingDirectory=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/
 Environment="ROS_DOMAIN_ID=27"
-ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/run_navigation.sh > /dev/null 2>&1
+ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/run_buildmap.sh > /dev/null 2>&1
 ExecStop=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/stop_all_navs.sh
 Restart=always
 RestartSec=10

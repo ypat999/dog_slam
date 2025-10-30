@@ -30,17 +30,17 @@ amcl:
     scan_topic: /lio_sam/scan
 
     # 粒子滤波器参数 - 针对稀疏地图环境优化
-    min_particles: 1000       # 增加最少粒子数，提高对零散特征的鲁棒性
-    max_particles: 8000       # 增加最大粒子数，允许更多粒子探索可能位置
+    min_particles: 500       # 增加最少粒子数，提高对零散特征的鲁棒性
+    max_particles: 4000       # 增加最大粒子数，允许更多粒子探索可能位置
     kld_err: 0.01             # 提高KLD-sampling误差，减少对精确地图的依赖
     kld_z: 0.99               # 降低KLD置信度，允许更多粒子分布
 
     transform_tolerance: 1.0
     
-    # 粒子分布约束参数 - 室内环境优化
-    pf_dist_threshold: 0.15   # 降低粒子距离阈值，室内环境需要更高精度
-    pf_straight_threshold: 0.1  # 降低直线运动阈值，室内环境需要更频繁更新
-    pf_turn_threshold: 0.05     # 降低旋转运动阈值，适应室内频繁转向场景
+    # 粒子分布约束参数 - 严格限制粒子散步范围
+    pf_dist_threshold: 0.05   # 大幅减小粒子距离阈值，严格限制粒子散步范围
+    pf_straight_threshold: 0.3  # 大幅提高直线运动阈值，减少频繁更新
+    pf_turn_threshold: 0.2     # 大幅提高旋转运动阈值，减少敏感转向更新
 
     # 里程计运动模型噪声参数 - 室内环境优化
     alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
@@ -58,14 +58,14 @@ amcl:
     laser_z_min: -0.3              # 调整最小距离权重，避免过度拟合零散特征
     
     # 激光雷达相关参数 - 优化跳跃问题
-    laser_likelihood_max_dist: 200.0  # 降低最大似然距离，减少远距离干扰
+    laser_likelihood_max_dist: 30.0  # 降低最大似然距离，减少远距离干扰
     # laser_model_type: "likelihood_field"  # 改为似然场模型，更稳定的概率计算######
     laser_model_type: "likelihood_field_prob"
     laser_min_range: 0.3  # 保持最小范围
     laser_max_range: 30.0  # 降低激光最大范围，减少远距离干扰
     laser_beam_step: 2  # 保持光束密度
-    laser_max_beams: 180  # 增加光束数量，提高精度
-    max_beams: 180
+    laser_max_beams: 100  # 增加光束数量，提高精度
+    max_beams: 100
     laser_z_short: 0.05  # 降低短距离概率
     laser_do_beamskip: true  # 启用光束跳跃
     laser_beam_skip_distance: 0.6  # 降低跳跃距离
@@ -89,46 +89,46 @@ amcl:
     allow_no_observations: true          # 允许无观测值更新
     no_observations_timeout: 10.0        # 无观测值超时时间
     
-    # 失败恢复机制 - 优化跳跃问题
-    recovery_alpha_slow: 0.001          # 提高慢恢复权重，增加历史稳定性
-    recovery_alpha_fast: 0.1              # 保持快恢复权重，平衡响应速度
-    save_pose_rate: 0.3                  # 提高保存频率，增强历史连续性
+    # 失败恢复机制 - 降低恢复强度，防止跳变
+    recovery_alpha_slow: 0.0005          # 降低慢恢复权重，减少历史影响
+    recovery_alpha_fast: 0.05            # 降低快恢复权重，减弱恢复强度
+    save_pose_rate: 0.5                  # 降低保存频率，减少历史干扰
 
-    # 位姿更新参数 - 优化跳跃问题
+    # 位姿更新参数 - 进一步降低敏感度，防止跳变
     do_beamskip: true            # 启用光束跳跃，过滤不可靠的激光数据
-    beam_skip_distance: 0.8     # 增加跳跃距离，过滤更多噪声
-    beam_skip_threshold: 0.4    # 增加跳跃阈值，更严格的噪声过滤
+    beam_skip_distance: 1.0     # 进一步增加跳跃距离，严格过滤噪声
+    beam_skip_threshold: 0.5    # 进一步增加跳跃阈值，更严格的噪声过滤
     global_frame_id: map
-    update_min_d: 0.2          # 大幅提高最小平移更新阈值，避免微小移动干扰
-    update_min_a: 0.1          # 大幅提高最小角度更新阈值，减少角度跳动
-    update_min_d_squared: 0.04 # 大幅提高平方距离阈值，降低敏感度
+    update_min_d: 0.5          # 大幅提高最小平移更新阈值，只有较大移动才更新
+    update_min_a: 0.3          # 大幅提高最小角度更新阈值，只有较大旋转才更新
+    update_min_d_squared: 0.25 # 大幅提高平方距离阈值，显著降低敏感度
     
     # 收敛判断参数 - 优化跳跃问题
     selective_resampling: true   # 启用选择性重采样，只在需要时重采样，减少跳动
     
-    # 自动全局初始化 - 优化跳跃问题
-    resample_interval: 2  # 减少重采样间隔，避免权重积累过多导致跳跃
+    # 自动全局初始化 - 减少重采样频率，防止跳变
+    resample_interval: 5  # 增加重采样间隔，减少频繁重采样导致的跳变
     
     # 自动全局定位配置
     set_initial_pose: false          # 不设置初始姿态，让AMCL自动全局定位
     always_reset_initial_pose: false  # 不总是重置初始姿态
     first_map_only: true           # 不只在第一个地图时运行
     
-    # 初始姿态参数（用于全局定位）- 优化地图边界约束
+    # 初始姿态参数（用于全局定位）- 限制粒子散步范围，防止大幅跳变
     initial_pose:
       x: 10.0
       y: 3.0 
       theta: 0.0
     initial_covariance:
-      x: 6.0   # 大幅增加X方向方差，允许整个地图搜索
-      y: 6.0   # 大幅增加Y方向方差
-      yaw: 3.14 # 大幅增加角度方差，允许任意朝向
+      x: 1.0   # 大幅减小X方向方差，限制粒子散步范围
+      y: 1.0   # 大幅减小Y方向方差，防止大幅跳变
+      yaw: 0.5 # 大幅减小角度方差，限制朝向变化范围
     
-    # 关键全局定位优化参数 - 优化跳跃问题
+    # 关键全局定位优化参数 - 进一步限制粒子散步
     force_update_on_initial_pose: false    # 禁用强制更新，允许自然收敛
     use_clustering: true                   # 启用聚类，增加稳定性
-    cluster_dist: 2.0                     # 减少聚类距离，避免过度分散
-    max_clusters: 3                       # 减少最大聚类数，集中粒子分布
+    cluster_dist: 0.5                     # 大幅减小聚类距离，严格限制粒子分散
+    max_clusters: 1                       # 限制为单个聚类，强制粒子集中
     
     # 全局定位搜索策略 - 极端环境优化
     global_localization_search_size: 8.0   # 大幅增加全局搜索范围（米）
@@ -147,9 +147,9 @@ amcl:
     # 粒子滤波器重置机制
     reset_particles_on_failure: false   # 禁用失败重置，保持连续性
     particle_reset_timeout: 30.0       # 减少重置超时时间
-    # 定位质量检查
-    min_localization_score: 0.3        # 提高最小定位分数，避免低质量定位
-    localization_check_interval: 5.0   # 降低检查频率，减少干扰
+    # 定位质量检查 - 严格质量控制，防止低质量更新导致跳变
+    min_localization_score: 0.7        # 大幅提高最小定位分数，只有高质量观测才更新
+    localization_check_interval: 10.0  # 进一步降低检查频率，减少干扰
     
     # 恢复参数 - 优化跳跃问题
     enable_particle_reset_service: false  # 禁用粒子重置服务，避免突然重置
@@ -249,19 +249,24 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: false
-    controller_frequency: 10.0
+    controller_frequency: 5.0
     allow_multiple_goals: false   # 如果支持多点连续 Goal
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 4.0
     progress_checker_plugin: "progress_checker"
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.3   # 半径 0.3 m 内没动才算“卡住”
+      movement_time_allowance: 10.0   # 10 s 内没动才判失败
+    # 如果你用 Regulated PP
     # 添加控制器状态管理配置
     reset_controller_state_on_goal_change: true
-    max_goal_tolerance: 0.5
+    max_goal_tolerance: 1.0
     # 添加导航完成后的状态清理
     clear_goal_on_completion: true
-    goal_completion_timeout: 30.0  # 30秒完成超时
+    goal_completion_timeout: 60.0  # 30秒完成超时
     goal_checker_plugins: ["general_goal_checker"] 
     controller_plugins: ["FollowPath"]
     general_goal_checker:
@@ -289,7 +294,7 @@ controller_server:
       wz_max: 0.5
       iteration_count: 1
       prune_distance: 1.7
-      transform_tolerance: 1.0
+      transform_tolerance: 2.0
       temperature: 0.3
       gamma: 0.015
       motion_model: "DiffDrive"
@@ -373,14 +378,14 @@ local_costmap:
   local_costmap:
     ros__parameters:
       transform_tolerance: 1.0
-      update_frequency: 10.0 # 局部地图更新频率5hz
+      update_frequency: 5.0 # 局部地图更新频率5hz
       publish_frequency: 5.0 # 发布频率
       global_frame: odom # 局部地图坐标系
       robot_base_frame: base_link # 机器人本体坐标系
       use_sim_time: false
       rolling_window: true # 局部地图那个矩形框是否跟着机器人姿态旋转
-      width: 6 # 局部地图大小
-      height: 6
+      width: 3 # 局部地图大小
+      height: 3
       resolution: 0.10 # 分辨率原0.05改0.1，减小计算量
       robot_radius: 0.5 # 机器人半径，调整为合理值
       plugins: ["voxel_layer", "inflation_layer"]
@@ -397,7 +402,7 @@ local_costmap:
         enabled: true
         publish_voxel_map: true
         origin_z: 0.0
-        z_resolution: 0.2 # 进一步提高z轴分辨率，大幅减少零散特征
+        z_resolution: 0.1 # 进一步提高z轴分辨率，大幅减少零散特征
         z_voxels: 8 # 大幅减少z轴体素个数，最小化噪声影响
         max_obstacle_height: 1.2 # 进一步降低最大障碍物高度
         mark_threshold: 2 # 大幅提高标记阈值，只保留可靠特征
@@ -405,13 +410,13 @@ local_costmap:
         scan: # 激光传感器数据的极端优化配置
           topic: /scan
           max_obstacle_height: 1.2
-          min_obstacle_height: 0.0
+          min_obstacle_height: -0.5
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 1.8 # 大幅降低光线追踪最大范围，只关注近距离
+          raytrace_max_range: 2.5 # 大幅降低光线追踪最大范围，只关注近距离
           raytrace_min_range: 0.3 # 提高最小范围，避免近距离噪声
-          obstacle_max_range: 1.5 # 大幅降低障碍物检测最大范围
+          obstacle_max_range: 2.5 # 大幅降低障碍物检测最大范围
           obstacle_min_range: 0.3 # 提高最小障碍物检测范围
           # 添加扫描状态管理和过滤
           reset_on_new_goal: true
@@ -470,7 +475,7 @@ map_server:
     # 使用项目根目录中的地图文件
     yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
     # 设置地图发布频率为每10秒一次（0.1Hz）
-    # publish_frequency: 1.0
+    publish_frequency: 0.1
     topic_name: "map"
     frame_id: "map"
     # 如果存在，确保启用周期性发布
@@ -486,7 +491,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 10.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
+    expected_planner_frequency: 2.0 # 期望的规划器频率，路径计算有耗时，所以是期望达到的频率
     use_sim_time: false
     planner_plugins: ["GridBased"] # 要加载的规划器id，后续动作请求具体使用哪个规划器
     # 添加规划器状态管理
@@ -495,12 +500,13 @@ planner_server:
     reset_planner_on_failure: true  # 规划失败时重置
     GridBased: # 对应上面规划器id，下面为此规划器内的一些参数设置
       plugin: "nav2_navfn_planner/NavfnPlanner" # 此id规划器具体指代的规划器插件
-      tolerance: 0.5 # 公差
-      use_astar: false
-      allow_unknown: true
+      tolerance: 1.0 # 公差
+      use_astar: true
+      allow_unknown: false
       # 添加规划失败处理
-      max_iterations: 1000
+      max_iterations: 100000
       planner_error_recovery: true
+      max_cycles: 100000      # NavFn 内部迭代上限，大一点防止“跑爆”
 
 smoother_server:
   ros__parameters:
@@ -516,7 +522,7 @@ behavior_server:
   ros__parameters:
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
-    cycle_frequency: 10.0
+    cycle_frequency: 5.0
     behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"] # , "clear_costmap"]
     spin:
       plugin: "nav2_behaviors/Spin"
@@ -532,7 +538,7 @@ behavior_server:
     #   plugin: "nav2_behaviors/ClearCostmap"
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.5
+    transform_tolerance: 1.0
     use_sim_time: false
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
@@ -540,7 +546,7 @@ behavior_server:
     rotational_acc_lim: 3.2
     # 添加行为状态管理
     reset_on_completion: true
-    behavior_timeout: 30.0  # 行为超时时间
+    behavior_timeout: 60.0  # 行为超时时间
     # 添加代价地图清理配置
     clear_costmap_on_init: true
     clear_costmap_on_completion: true
@@ -551,14 +557,14 @@ robot_state_publisher:
 
 waypoint_follower:
   ros__parameters:
-    loop_rate: 20
+    loop_rate: 10
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
     # 添加航点跟随状态管理
     reset_state_on_new_goal: true
     waypoint_timeout: 60.0  # 航点超时时间
     retry_on_failure: true  # 失败时重试
-    max_retries: 3  # 最大重试次数
+    max_retries: 9  # 最大重试次数
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: True
@@ -570,7 +576,7 @@ waypoint_follower:
 velocity_smoother:
   ros__parameters:
     use_sim_time: false
-    smoothing_frequency: 20.0
+    smoothing_frequency: 10.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
     max_velocity: [0.5, 0.0, 0.5]
@@ -580,11 +586,11 @@ velocity_smoother:
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
-    velocity_timeout: 1.0
+    velocity_timeout: 5.0
     # 添加速度平滑器状态管理
     reset_on_stop: true
-    smooth_stop_timeout: 2.0  # 平滑停止超时
+    smooth_stop_timeout: 5.0  # 平滑停止超时
     # 添加异常处理
     emergency_stop_on_error: true
-    error_recovery_timeout: 5.0  # 错误恢复超时
+    error_recovery_timeout: 15.0  # 错误恢复超时
 

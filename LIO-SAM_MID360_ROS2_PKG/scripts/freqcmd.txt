@@ -16,7 +16,7 @@ source install/setup.bash && ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 
 
-ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_grid/map --fmt png
+ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_part --fmt png
 
 
 
@@ -54,4 +54,10 @@ nohup ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/ > record.log &
 tail -f record.log
 
 
-ros2 topic pub --once /map nav_msgs/msg/OccupancyGrid {}
+ros2 service call /map_server/load_map nav2_msgs/srv/LoadMap "{map_url: '/home/ztl/slam_data/grid_map/map.yaml'}"
+
+sudo journalctl -u lio_sam_nav2.service -f
+
+sudo systemctl start lio_sam_nav2.service
+
+colcon build --symlink-install --packages-select lio_sam

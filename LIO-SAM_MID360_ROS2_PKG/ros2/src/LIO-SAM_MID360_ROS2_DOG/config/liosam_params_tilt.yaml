@@ -116,6 +116,6 @@
     odometryDelaySeconds: 2.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: false             # 启用IMU失败检测
-    imuVelocityThreshold: 10.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
-    imuBiasThreshold: 2.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
+    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuVelocityThreshold: 3.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuBiasThreshold: 1.5                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

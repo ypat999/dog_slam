@@ -381,7 +381,7 @@ controller_server:
 local_costmap:
   local_costmap:
     ros__parameters:
-      transform_tolerance: 1.0
+      transform_tolerance: 0.3
       update_frequency: 5.0 # 局部地图更新频率5hz
       publish_frequency: 5.0 # 发布频率
       global_frame: odom # 局部地图坐标系

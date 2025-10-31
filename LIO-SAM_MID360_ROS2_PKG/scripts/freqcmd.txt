@@ -60,4 +60,9 @@ sudo journalctl -u lio_sam_nav2.service -f
 
 sudo systemctl start lio_sam_nav2.service
 
+ps -ef | grep ros
+
 colcon build --symlink-install --packages-select lio_sam
+
+
+ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 1}}"

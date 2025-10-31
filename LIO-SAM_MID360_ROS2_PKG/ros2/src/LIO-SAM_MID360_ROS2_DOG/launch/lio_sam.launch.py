@@ -190,7 +190,7 @@ def generate_launch_description():
             'sensor_model/min_range': 0.8,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -0.2,             # 投影高度下限
+            'occupancy_min_z': -0.1,             # 投影高度下限
             'occupancy_max_z': 1.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': DEFAULT_USE_SIM_TIME,
@@ -211,8 +211,8 @@ def generate_launch_description():
             ('/scan', '/lio_sam/scan'),
         ],
         parameters=[{
-            'transform_tolerance': 0.01,
-            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'transform_tolerance': 0.1,
+            'min_height': -0.0,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.0,        # -180度
             'angle_max': 3.0,         # 180度

@@ -1,5 +1,18 @@
 #!/bin/bash
 echo "===== ROS2 导航停止脚本 ====="
+# 检查是否已加载ROS2环境
+if [ -z "$ROS_DISTRO" ]; then
+    echo "加载ROS2环境..."
+    source /opt/ros/humble/setup.bash
+
+    if [ $? -ne 0 ]; then
+        echo "错误: 无法加载ROS2环境"
+        exit 1
+    fi
+fi
+
+
+
 pkill -f lio_sam
 pkill -f LIO_SAM
 pkill -f run_web_

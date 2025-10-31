@@ -37,7 +37,7 @@
     downsampleRate: 1                            # default: 1. Downsample your data if too many
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
     lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
-    lidarMaxRange: 40.0                        # default: 1000.0, maximum lidar range to be used
+    lidarMaxRange: 80.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
     imuAccNoise: 3.9939570888238808e-03
@@ -59,7 +59,7 @@
 
 
     # LOAM feature threshold
-    edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
+    edgeThreshold: 0.2              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
     surfThreshold: 0.2
     edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
@@ -117,5 +117,5 @@
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
     imuFailureDetectionEnabled: true             # 启用IMU失败检测
-    imuVelocityThreshold: 3.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuVelocityThreshold: 2.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.5                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

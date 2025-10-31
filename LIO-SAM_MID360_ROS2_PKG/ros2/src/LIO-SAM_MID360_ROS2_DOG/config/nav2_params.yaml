@@ -71,9 +71,9 @@ amcl:
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 30.0
+    laser_max_range: 80.0
     # laser_beam_step: 4
-    max_beams: 180
+    max_beams: 100
     
     # odom_topic: /lio_sam/mapping/odometry
     # scan_topic: /lio_sam/scan
@@ -82,16 +82,16 @@ amcl:
     # BEAM MODEL 参数 - 适用于结构化环境
     # 取消注释使用Beam模型，注释掉Likelihood模型参数
     # =============================================================================
-    # Beam模型标识
-    laser_model_type: "beam"
+    # # Beam模型标识
+    # laser_model_type: "beam"
     
-    # Beam模型特有参数
-    lambda_short: 0.1
-    sigma_hit: 0.08
-    z_hit: 0.70
-    z_rand: 0.20
-    z_max: 0.15
-    z_short: 0.05
+    # # Beam模型特有参数
+    # lambda_short: 0.1
+    # sigma_hit: 0.08
+    # z_hit: 0.70
+    # z_rand: 0.20
+    # z_max: 0.15
+    # z_short: 0.05
     
 
     
@@ -99,22 +99,22 @@ amcl:
     # LIKELIHOOD FIELD MODEL 参数 - 适用于非结构化环境
     # 取消注释使用Likelihood模型，注释掉Beam模型参数
     # =============================================================================
-    # # Likelihood模型标识
-    # laser_model_type: "likelihood_field_prob"
+    # Likelihood模型标识
+    laser_model_type: "likelihood_field_prob"
     
-    # # Likelihood模型特有参数
-    # lambda_short: 0.1
-    # sigma_hit: 0.08
-    # z_hit: 0.80
-    # z_rand: 0.20
+    # Likelihood模型特有参数
+    lambda_short: 0.1
+    sigma_hit: 0.08
+    z_hit: 0.70
+    z_rand: 0.30
     
-    # # Likelihood距离参数
-    # laser_likelihood_max_dist: 20.0
+    # Likelihood距离参数
+    laser_likelihood_max_dist: 40.0
     
-    # # Beam跳过参数（Likelihood模型也使用）
-    # do_beamskip: true
-    # beam_skip_distance: 0.8
-    # beam_skip_threshold: 0.4
+    # Beam跳过参数（Likelihood模型也使用）
+    do_beamskip: true
+    beam_skip_distance: 0.8
+    beam_skip_threshold: 0.4
 
 # =============================================================================
 # BT Navigator Configuration
@@ -199,7 +199,7 @@ controller_server:
 
     use_sim_time: false
     controller_frequency: 20.0
-    failure_tolerance: 30.0
+    failure_tolerance: 10.0
     
     # 全向移动最小速度阈值
     min_x_velocity_threshold: 0.001

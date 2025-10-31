@@ -212,18 +212,18 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.1,
-            'min_height': -0.0,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
-            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
+            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'max_height': 1.8,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.0,        # -180度
             'angle_max': 3.0,         # 180度
             'angle_increment': 0.0087,   # 激光扫描的角度增量（约0.25度，提高分辨率）
             'scan_time': 0.1,             # 扫描时间
             
-            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_max': 80.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
-            'inf_epsilon': 1000.0,           # 无穷大值的替代值
+            'inf_epsilon': 10000.0,           # 无穷大值的替代值
             
             # # QoS设置，确保与rviz2订阅者兼容
             # 'qos_overrides./scan.publisher.reliability': 'reliable',

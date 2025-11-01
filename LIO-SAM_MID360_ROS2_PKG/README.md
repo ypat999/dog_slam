@@ -65,10 +65,9 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 ros2 launch lio_sam run.launch.py
 ```
 
-## 保存点云 （不使用）
+## 保存点云 （可选）
 source install/setup.bash 
-ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: '/projects/LOAM/'}"
-sudo apt update
+ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.05, destination: '/projects/LOAM/'}"
 
 ## 转换为占用网格 （PNG 地图输出）
 sudo apt install ros-humble-octomap ros-humble-octomap-msgs
@@ -139,7 +138,13 @@ sudo apt install ros-humble-rqt
 ### 配置文件说明
 项目包含多个配置文件，用于调整系统参数：
 - **liosam_params.yaml**：LIO-SAM算法参数配置，包括传感器设置、特征提取阈值、回环检测等
-- **nav2_params.yaml**：Nav2导航参数配置，包括代价地图、路径规划器、控制器等
+- **nav2_params.yaml**：Nav2导航参数配置，近期更新调整为差速运动模型，主要变更包括：
+  - 机器人运动模型从全向移动更改为差速移动模型
+  - 优化了里程计运动模型噪声参数，提高室内环境定位精度
+  - 调整了更新阈值参数，提高定位稳定性
+  - 更新了激光参数设置，增加最大范围至80.0
+  - 优化了地图参数，减小机器人半径和膨胀半径，适配差速运动
+  - 调整了速度限制和加速度限制，适配差速运动特性
 - **initialpose.yaml**：初始位姿配置文件
 - **robot.urdf.xacro**：机器人模型描述文件
 - **rviz2.rviz**：RViz可视化配置文件

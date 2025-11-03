@@ -229,16 +229,16 @@ controller_server:
       batch_size: 2000
       transform_tolerance: 3.0
       
-      # 全向移动速度限制
+      # 全向移动速度限制 - 增加角速度以减小转向半径
       vx_std: 0.2
       vy_std: 0.0
-      vtheta_std: 0.2
+      vtheta_std: 0.3  # 增加角速度采样标准差，提高转向灵活性
       vx_max: 0.4
       vx_min: -0.06
       vy_max: 0.0
       vy_min: -0.0
-      vtheta_max: 0.25
-      vtheta_min: -0.25
+      vtheta_max: 0.5  # 增加最大角速度，减小转向半径
+      vtheta_min: -0.5  # 增加最小角速度，减小转向半径
       
       # 温度参数
       temperature: 0.3
@@ -514,13 +514,13 @@ velocity_smoother:
     # max_velocity: [0.5, 0.2, 1.0]  # [vx_max, vy_max, vtheta_max]
     # min_velocity: [-0.0, -0.2, -1.0]  # [vx_min, vy_min, vtheta_min]
 
-    # 差速
-    max_velocity: [0.5, 0.0, 0.25]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.006, -0.0, -0.25]  # [vx_min, vy_min, vtheta_min]
+    # 差速 - 增加角速度以减小转向半径
+    max_velocity: [0.5, 0.0, 0.5]  # [vx_max, vy_max, vtheta_max] - 增加最大角速度
+    min_velocity: [-0.006, -0.0, -0.5]  # [vx_min, vy_min, vtheta_min] - 增加最小角速度
     
-    # 加速度限制
-    max_accel: [2.5, 0.5, 1.0]  # [ax_max, ay_max, atheta_max]
-    max_decel: [-0.5, -0.5, -1.0]  # [ax_min, ay_min, atheta_min]
+    # 加速度限制 - 增加角加速度以提高转向响应速度
+    max_accel: [2.5, 0.5, 2.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
+    max_decel: [-0.5, -0.5, -2.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
     
     # 其他参数
     odom_topic: "/lio_sam/mapping/odometry"

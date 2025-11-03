@@ -198,7 +198,7 @@ controller_server:
       verbose: true
 
     use_sim_time: false
-    controller_frequency: 20.0
+    controller_frequency: 10.0  # 降低控制器频率，减轻CPU负担
     failure_tolerance: 10.0
     
     # 全向移动最小速度阈值
@@ -225,14 +225,14 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 56
-      model_dt: 0.05
+      model_dt: 0.1
       batch_size: 2000
       transform_tolerance: 3.0
       
       # 全向移动速度限制 - 增加角速度以减小转向半径
       vx_std: 0.2
       vy_std: 0.0
-      vtheta_std: 0.2  # 增加角速度采样标准差，提高转向灵活性
+      vtheta_std: 0.3  # 保持较高的角速度采样标准差，确保转向灵活性
       vx_max: 0.4
       vx_min: -0.0
       vy_max: 0.0
@@ -251,12 +251,12 @@ controller_server:
       trajectory_visualize: false
       trajectory_visualize_max: 100
       
-      # 评价器参数
+      # 评价器参数 - 调整权重以减少不必要的方向修正
       critics: ["ConstraintCritic", "CostCritic", "PathAlignCritic", "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic"]
       
       ConstraintCritic:
         enabled: true
-        cost_weight: 4.0
+        cost_weight: 4.0  # 保持高权重确保安全性
       
       CostCritic:
         enabled: true
@@ -267,32 +267,30 @@ controller_server:
       
       PathAlignCritic:
         enabled: true
-        cost_weight: 14.0
+        cost_weight: 6.0  # 降低权重，减少方向对齐的激进修正
         cost_power: 1
         max_path_occupancy_ratio: 0.05
-        offset_from_furthest: 20
-        threshold_to_consider: 0.5
+        offset_from_furthest: 25  # 增加前瞻距离
+        threshold_to_consider: 0.7  # 增加阈值，减少小角度修正
         
       PathFollowCritic:
         enabled: true
-        cost_weight: 5.0
+        cost_weight: 7.0  # 增加权重，更关注路径跟踪而非方向修正
         cost_power: 1
-        offset_from_furthest: 5
-        threshold_to_consider: 1.4
+        offset_from_furthest: 8  # 增加前瞻距离
+        threshold_to_consider: 1.8  # 增加阈值，允许更大偏差
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 2.0
+        cost_weight: 1.0  # 降低权重，减少方向角度修正的影响
         cost_power: 1
-        offset_from_furthest: 4
-        threshold_to_consider: 0.5
-        max_angle_to_furthest: 1.0
+        offset_from_furthest: 6  # 增加前瞻距离
+        threshold_to_consider: 0.8  # 增加阈值，减少小角度修正
+        max_angle_to_furthest: 1.2  # 增加最大角度阈值
         
       PreferForwardCritic:
         enabled: true
-        cost_weight: 5.0
-        cost_power: 1
-        threshold_to_consider: 0.5
+        cost_weight: 7.0  # 增加权重，鼓励直线前进
 
 # =============================================================================
 # Local Costmap Configuration

@@ -35,11 +35,6 @@ def generate_launch_description():
     bringup_launch_file = os.path.join(nav2_bringup_dir, 'launch', 'bringup_launch.py')
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     
-    # PointCloud to LaserScan launch文件
-    pointcloud_to_laserscan_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            share_dir, 'launch', 'pointcloud_to_laserscan.launch.py')])
-    )
 
     declare_map_cmd = DeclareLaunchArgument(
         'map',
@@ -86,32 +81,6 @@ def generate_launch_description():
                   '--roll', '0', '--pitch', '0', '--yaw', '0',
                   '--frame-id', 'odom', '--child-frame-id', 'base_link'])
 
-    # Nav2 核心节点组
-    # 注意：这里不再使用nav2_bringup的默认启动，而是单独启动各个节点
-    # 这样可以更好地控制启动过程和参数
-    # map_server = Node(
-    #     package='nav2_map_server',
-    #     executable='map_server',
-    #     name='map_server',
-    #     output='screen',
-    #     parameters=[params_file, {'yaml_filename': map_dir}],
-    #     remappings=[
-    #         ('/map', '/map'),
-    #         ('/map_metadata', '/map_metadata')
-    #     ])
-    
-    # 注意：不再手动定义AMCL节点，而是通过bringup_launch.py统一管理
-    # 这样可以避免节点重复启动的问题
-    
-    # 移除静态变换发布器，让AMCL动态发布map->odom变换
-
-    # map_align = Node(
-    #     package='lio_sam',
-    #     executable='map_align_node',
-    #     name='map_align_node',
-    #     output='screen'
-    # )
-
 
     
     # 启动nav2控制器和规划器节点（使用lifecycle管理）
@@ -148,29 +117,6 @@ def generate_launch_description():
             {'send_action_goals_in_new_thread': True}  # 在新线程中发送动作目标
         ]
     )
-
-    # Lifecycle Manager节点 - 统一管理nav2节点状态
-    # 直接从配置文件读取参数，避免重复定义
-    # lifecycle_manager = Node(
-    #     package='nav2_lifecycle_manager',
-    #     executable='lifecycle_manager',
-    #     name='lifecycle_manager_navigation',
-    #     output='screen',
-    #     parameters=[params_file],
-    #     condition=IfCondition(use_lifecycle_manager)
-    # )
-
-    # # 节点启动顺序控制器 - 确保节点按正确顺序启动
-    # delayed_amcl = TimerAction(
-    #     period=2.0,  # 延迟2秒启动AMCL，确保map_server已就绪
-    #     actions=[amcl]
-    # )
-
-    # delayed_nav2_nodes = TimerAction(
-    #     period=5.0,  # 延迟5秒启动其他nav2节点，确保AMCL已初始化
-    #     actions=[nav2_nodes]
-    # )
-
 
 
     # 创建启动描述

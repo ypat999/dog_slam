@@ -59,23 +59,23 @@
 
 
     # LOAM feature threshold
-    edgeThreshold: 0.2              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
-    surfThreshold: 0.2
+    edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
+    surfThreshold: 0.1
     edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
 
     # voxel filter paprams
-    odometrySurfLeafSize: 0.2                     # 增加里程计表面体素大小，减少噪声影响 (原0.2)
-    mappingCornerLeafSize: 0.1                   # 适当增加体素大小，减少噪声点的影响 (原0.1)
-    mappingSurfLeafSize: 0.2                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
+    odometrySurfLeafSize: 0.4                     # 增加里程计表面体素大小，减少噪声影响 (原0.2)
+    mappingCornerLeafSize: 0.2                   # 适当增加体素大小，减少噪声点的影响 (原0.1)
+    mappingSurfLeafSize: 0.4                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
 
     # robot motion constraint (in case you are using a 2D robot) more limit for map building
     z_tollerance: 0.2                          # meters
     rotation_tollerance: 0.1                   # radians
 
     # CPU Params
-    numberOfCores: 4                              # number of cores for mapping optimization
-    mappingProcessInterval: 0.2                  # seconds, regulate mapping frequency
+    numberOfCores: 2                              # number of cores for mapping optimization
+    mappingProcessInterval: 0.5                  # seconds, regulate mapping frequency
 
     # Surrounding map
     surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
@@ -85,7 +85,7 @@
     # (when loop closure disabled)
 
     # Loop closure
-    loopClosureEnableFlag: true
+    loopClosureEnableFlag: false
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 30                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from
@@ -116,6 +116,6 @@
     odometryDelaySeconds: 2.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuFailureDetectionEnabled: false             # 启用IMU失败检测
     imuVelocityThreshold: 2.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.5                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）

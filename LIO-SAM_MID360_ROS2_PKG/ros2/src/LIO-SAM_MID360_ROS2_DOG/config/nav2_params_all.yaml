@@ -25,27 +25,27 @@ amcl:
     use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 1000
-    max_particles: 4000
-    kld_err: 0.01
+    min_particles: 500
+    max_particles: 2000
+    kld_err: 0.03
     kld_z: 0.99
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.05            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.05            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
-    alpha5: 0.05           # 降低额外噪声参数，室内环境更可预测
+    alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.015           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.015           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    # robot_model_type: "nav2_amcl::OmniMotionModel"
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+    #robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
-    update_min_d: 0.3
+    update_min_d: 0.2
     update_min_a: 0.1
-    resample_interval: 2
-    selective_resampling: true
+    resample_interval: 3
+    selective_resampling: false
     
     # 恢复参数 - 两个模型共用
     recovery_alpha_slow: 0.001
@@ -71,9 +71,9 @@ amcl:
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 40.0
+    laser_max_range: 80.0
     # laser_beam_step: 4
-    max_beams: 120
+    max_beams: 100
     
     # odom_topic: /lio_sam/mapping/odometry
     # scan_topic: /lio_sam/scan
@@ -105,16 +105,16 @@ amcl:
     # Likelihood模型特有参数
     lambda_short: 0.1
     sigma_hit: 0.08
-    z_hit: 0.70
-    z_rand: 0.30
+    z_hit: 0.80
+    z_rand: 0.20
     
     # Likelihood距离参数
-    laser_likelihood_max_dist: 40.0
+    laser_likelihood_max_dist: 60.0
     
     # Beam跳过参数（Likelihood模型也使用）
-    do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
-    beam_skip_distance: 1.2  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束“异常”，不参与粒子权重计算。
-    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    do_beamskip: true
+    beam_skip_distance: 0.8
+    beam_skip_threshold: 0.4
 
 # =============================================================================
 # BT Navigator Configuration
@@ -203,9 +203,9 @@ controller_server:
     
     # 全向移动最小速度阈值
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.001
-    min_speed_xy: 0.001
+    min_speed_xy: 0.1
     min_speed_theta: 0.001
     
     # 进度检查器参数
@@ -218,7 +218,7 @@ controller_server:
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.1
+      yaw_goal_tolerance: 0.25
       stateful: true
     
     # MPPI控制器参数 - 全向移动配置
@@ -231,19 +231,19 @@ controller_server:
       
       # 全向移动速度限制
       vx_std: 0.2
-      vy_std: 0.0
+      vy_std: 0.1
       vtheta_std: 0.2
       vx_max: 0.4
-      vx_min: -0.06
-      vy_max: 0.0
-      vy_min: -0.0
+      vx_min: -0.1
+      vy_max: 0.2
+      vy_min: -0.2
       vtheta_max: 0.25
       vtheta_min: -0.25
       
       # 温度参数
       temperature: 0.3
-      motion_model: "DiffDrive" 
-      # motion_model: "Omni"  # 全向移动模型
+      #motion_model: "DiffDrive" 
+      motion_model: "Omni"  # 全向移动模型
       visualize: false
       reset_period: 1.0
       
@@ -511,12 +511,12 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     
     # 全向移动速度限制
-    # max_velocity: [0.5, 0.2, 1.0]  # [vx_max, vy_max, vtheta_max]
-    # min_velocity: [-0.0, -0.2, -1.0]  # [vx_min, vy_min, vtheta_min]
+    max_velocity: [0.5, 0.2, 1.0]  # [vx_max, vy_max, vtheta_max]
+    min_velocity: [-0.0, -0.2, -1.0]  # [vx_min, vy_min, vtheta_min]
 
     # 差速
-    max_velocity: [0.5, 0.0, 0.25]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.006, -0.0, -0.25]  # [vx_min, vy_min, vtheta_min]
+    #max_velocity: [0.5, 0.0, 0.25]  # [vx_max, vy_max, vtheta_max]
+    #min_velocity: [-0.006, -0.0, -0.25]  # [vx_min, vy_min, vtheta_min]
     
     # 加速度限制
     max_accel: [2.5, 0.5, 1.0]  # [ax_max, ay_max, atheta_max]

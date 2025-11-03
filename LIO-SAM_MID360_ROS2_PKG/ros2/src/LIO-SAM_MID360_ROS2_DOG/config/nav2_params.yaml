@@ -25,17 +25,17 @@ amcl:
     use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 1000
+    min_particles: 200
     max_particles: 4000
-    kld_err: 0.01
+    kld_err: 0.03
     kld_z: 0.99
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.05            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.05            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
-    alpha5: 0.05           # 降低额外噪声参数，室内环境更可预测
+    alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.02           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.02           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
     # robot_model_type: "nav2_amcl::OmniMotionModel"
@@ -45,7 +45,7 @@ amcl:
     update_min_d: 0.3
     update_min_a: 0.1
     resample_interval: 2
-    selective_resampling: true
+    selective_resampling: false
     
     # 恢复参数 - 两个模型共用
     recovery_alpha_slow: 0.001
@@ -202,11 +202,11 @@ controller_server:
     failure_tolerance: 10.0
     
     # 全向移动最小速度阈值
-    min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.001
-    min_theta_velocity_threshold: 0.001
-    min_speed_xy: 0.001
-    min_speed_theta: 0.001
+    min_x_velocity_threshold: 0.01
+    min_y_velocity_threshold: 0.01
+    min_theta_velocity_threshold: 0.01
+    min_speed_xy: 0.01
+    min_speed_theta: 0.01
     
     # 进度检查器参数
     progress_checker:
@@ -232,9 +232,9 @@ controller_server:
       # 全向移动速度限制 - 增加角速度以减小转向半径
       vx_std: 0.2
       vy_std: 0.0
-      vtheta_std: 0.3  # 增加角速度采样标准差，提高转向灵活性
+      vtheta_std: 0.2  # 增加角速度采样标准差，提高转向灵活性
       vx_max: 0.4
-      vx_min: -0.06
+      vx_min: -0.0
       vy_max: 0.0
       vy_min: -0.0
       vtheta_max: 0.5  # 增加最大角速度，减小转向半径
@@ -476,7 +476,7 @@ behavior_server:
       min_dist: 0.05
       max_dist: 0.5
       max_speed: 0.4
-      min_speed: 0.05
+      min_speed: 0.01
       min_theta_error: 0.15
       max_theta_error: 0.5
       speed_theta_error_scale: 0.5
@@ -516,7 +516,7 @@ velocity_smoother:
 
     # 差速 - 增加角速度以减小转向半径
     max_velocity: [0.5, 0.0, 0.5]  # [vx_max, vy_max, vtheta_max] - 增加最大角速度
-    min_velocity: [-0.006, -0.0, -0.5]  # [vx_min, vy_min, vtheta_min] - 增加最小角速度
+    min_velocity: [-0.0, -0.0, -0.5]  # [vx_min, vy_min, vtheta_min] - 增加最小角速度
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
     max_accel: [2.5, 0.5, 2.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度

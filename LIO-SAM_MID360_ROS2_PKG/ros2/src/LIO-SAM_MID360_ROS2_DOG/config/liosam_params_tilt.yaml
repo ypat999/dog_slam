@@ -85,15 +85,15 @@
     # (when loop closure disabled)
 
     # Loop closure
-    loopClosureEnableFlag: false
+    loopClosureEnableFlag: true
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
-    surroundingKeyframeSize: 30                   # submap size (when loop closure enabled)
+    surroundingKeyframeSize: 20                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from
-    historyKeyframeSearchTimeDiff: 60.0           # seconds, key frame that is n seconds older will be
+    historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be
     # considered for loop closure
     historyKeyframeSearchNum: 30                  # number of hostory key frames will be fused into a
     # submap for loop closure
-    historyKeyframeFitnessScore: 0.2              # icp threshold, the smaller the better alignment
+    historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
 
     # Discrete noise filtering (新增参数)
     enableDiscreteNoiseFilter: false               # 启用离散噪点过滤

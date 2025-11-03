@@ -355,11 +355,11 @@ local_costmap:
           obstacle_max_range: 3.0
           obstacle_min_range: 0.2
       
-      # 膨胀层参数
+      # 膨胀层参数 - 增加膨胀半径使路径远离障碍物
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 2.5
-        inflation_radius: 0.5
+        cost_scaling_factor: 3.0  # 增加成本缩放因子，使靠近障碍物的路径代价更高
+        inflation_radius: 0.8     # 增加膨胀半径，让机器人更远地避开障碍物
       
       # 始终发送完整代价地图
       always_send_full_costmap: false  ######
@@ -430,10 +430,10 @@ planner_server:
     use_sim_time: false
     expected_planner_frequency: 5.0
     
-    # 基于网格的规划器参数
+    # 基于网格的规划器参数 - 调整以获得更平滑的路径
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 1.0
+      tolerance: 1.5  # 增加容差，允许规划器在更大范围内寻找更平滑的路径
       use_astar: true
       allow_unknown: false
 
@@ -444,12 +444,12 @@ smoother_server:
   ros__parameters:
     use_sim_time: false
     
-    # 路径平滑器参数
+    # 路径平滑器参数 - 增强平滑效果
     path_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
       smoother:
         do_refinement: true
-        refinement_num: 2
+        refinement_num: 5  # 增加细化次数，提高路径平滑度
         smooth_path_on_approach: true
 
 # =============================================================================

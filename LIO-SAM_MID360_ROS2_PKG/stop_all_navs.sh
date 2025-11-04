@@ -23,7 +23,7 @@ pkill -f 'http.server 8083'
 
 
 ps -ef | awk '/rosbridge/ {print $2}' | xargs -r kill -9
-ps -ef | awk '/publisher/ && {print $2}' | xargs -r kill -9
+ps -ef | awk '/publisher/ {print $2}' | xargs -r kill -9
 ps -ef | awk '/rclcpp/ {print $2}' | xargs -r kill -9
 ros2 daemon stop 
 ros2 daemon start

@@ -259,6 +259,15 @@ public:
         allocateMemory();
     }
 
+    ~mapOptimization()
+    {
+        // Clean up ISAM2 object to prevent memory leaks and segmentation faults
+        if (isam != nullptr) {
+            delete isam;
+            isam = nullptr;
+        }
+    }
+
     void allocateMemory()
     {
         cloudKeyPoses3D.reset(new pcl::PointCloud<PointType>());

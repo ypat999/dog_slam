@@ -114,7 +114,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.3', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
         output='screen'
     )
     # # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
@@ -126,7 +126,7 @@ def generate_launch_description():
         name='static_transform_base_to_livox',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.2', '0.0', '0.1', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
-        arguments=['0.2', '0.0', '0.1', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.2', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
         output='screen'
     )
 
@@ -136,7 +136,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_to_lidar_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.2', '0.0', '0.1', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
+        arguments=['0.2', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
         output='screen'
     )
 
@@ -150,33 +150,42 @@ def generate_launch_description():
             'use_sim_time': DEFAULT_USE_SIM_TIME
         }]
     )
+    # 创建带自动重启功能的LIO-SAM节点（使用Node类确保进程管理）
     lio_sam_imuPreintegration_node = Node(
         package='lio_sam',
         executable='lio_sam_imuPreintegration',
         name='lio_sam_imuPreintegration',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        output='screen'
+        output='screen',
+        respawn=True,  # 启用自动重启
+        respawn_delay=5.0  # 重启延迟5秒
     )
     lio_sam_imageProjection_node = Node(
         package='lio_sam',
         executable='lio_sam_imageProjection',
         name='lio_sam_imageProjection',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        output='screen'
+        output='screen',
+        respawn=True,  # 启用自动重启
+        respawn_delay=5.0  # 重启延迟5秒
     )
     lio_sam_featureExtraction_node = Node(
         package='lio_sam',
         executable='lio_sam_featureExtraction',
         name='lio_sam_featureExtraction',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        output='screen'
+        output='screen',
+        respawn=True,  # 启用自动重启
+        respawn_delay=5.0  # 重启延迟5秒
     )
     lio_sam_mapOptimization_node = Node(
         package='lio_sam',
         executable='lio_sam_mapOptimization',
         name='lio_sam_mapOptimization',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        output='screen'
+        output='screen',
+        respawn=True,  # 启用自动重启
+        respawn_delay=5.0  # 重启延迟5秒
     )
 
     octomap_server_node = Node(

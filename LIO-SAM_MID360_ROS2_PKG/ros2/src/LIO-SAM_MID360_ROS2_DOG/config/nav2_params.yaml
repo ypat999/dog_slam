@@ -74,7 +74,7 @@ amcl:
     initial_pose:
       x: 33.5
       y: 3.5 
-      z: 0.0
+      z: 1.0
       yaw: 1.57 
 
     # 激光雷达配置
@@ -329,9 +329,9 @@ local_costmap:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: true
         publish_voxel_map: true
-        origin_z: 0.0
+        origin_z: -0.5  # 负值以容纳传感器原点的负值z坐标
         z_resolution: 0.1
-        z_voxels: 8
+        z_voxels: 25    # 增加体素数量以保持足够的垂直覆盖范围
         max_obstacle_height: 2.0
         # mark_threshold: 0.5
         observation_sources: scan

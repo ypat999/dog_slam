@@ -105,7 +105,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_map_to_odom',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        arguments=['0.0', '0.0', '0.3', '0.0', '0.0', '0.0', 'map', 'odom'],
         output='screen'
     )
     # odom -> base_link (里程计到机器人基坐标系的静态变换)

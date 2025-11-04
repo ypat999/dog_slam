@@ -47,6 +47,7 @@
   <build_depend>nav2_waypoint_follower</build_depend>
   <build_depend>nav2_msgs</build_depend>
   <build_depend>nav2_costmap_2d</build_depend>
+  <build_depend>slam_toolbox</build_depend>
   
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>rclcpp</exec_depend>
@@ -81,6 +82,7 @@
   <exec_depend>nav2_msgs</exec_depend>
   <exec_depend>nav2_costmap_2d</exec_depend>
   <exec_depend>rosbridge_server</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
     
   <member_of_group>rosidl_interface_packages</member_of_group>
 

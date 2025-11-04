@@ -108,8 +108,9 @@
       <select id="position-source-select" onchange="changePositionSource(this.value)">
         <option value="amcl">使用AMCL定位</option>
         <option value="lio_sam">使用LIO-SAM里程计</option>
+        <option value="slam_toolbox">使用slam_toolbox定位</option>
       </select>
-      <span id="position-source-status">当前：使用AMCL定位</span>
+  <span id="position-source-status">当前：使用slam_toolbox定位</span>
     </div>
     
     <!-- 地图颜色配置 -->
@@ -147,12 +148,13 @@
     const MAP_TOPIC = "/map";
     const ROBOT_FRAME = "base_link";
     const LIO_SAM_ODOM_TOPIC = "/lio_sam/mapping/odometry"; // LIO-SAM发布的里程计话题
-    const AMCL_POSE_TOPIC = "/amcl_pose"; // AMCL发布的定位话题
+  const AMCL_POSE_TOPIC = "/amcl_pose"; // AMCL发布的定位话题
+  const SLAM_TOOLBOX_POSE_TOPIC = "/slam_toolbox_pose"; // slam_toolbox 常见的定位话题（若你的版本或配置不同，请根据实际topic调整）
     const CMD_TOPIC = "/cmd_vel";
     const GOAL_TOPIC = "/goal_pose";
     const INITIAL_POSE_TOPIC = "/initialpose";
-    // 位置源选择：'lio_sam' 或 'amcl'
-    let positionSource = 'amcl'; // 默认使用AMCL定位信息
+  // 位置源选择：'lio_sam' 或 'amcl' 或 'slam_toolbox'
+  let positionSource = 'slam_toolbox'; // 默认使用slam_toolbox定位信息
     
     // 地图颜色配置
     let mapColors = {
@@ -499,7 +501,7 @@
         }
       });
       
-      // 订阅AMCL位置主题
+      // 订阅AMCL位置主题（仍然保持）
       var amclPoseTopic = new ROSLIB.Topic({
         ros: ros,
         name: AMCL_POSE_TOPIC,
@@ -512,6 +514,25 @@
           // 更新机器人位置
           robotPosition.x = poseMsg.pose.pose.position.x;
           // 注意：这里保持原始Y坐标，因为在updateRobotMarker中已经处理了翻转
+          robotPosition.y = poseMsg.pose.pose.position.y;
+          
+          // 重绘地图以更新机器人位置
+          drawMap();
+        }
+      });
+
+      // 订阅 slam_toolbox 的位姿话题（兼容处理）；部分 slam_toolbox 配置会发布 PoseWithCovarianceStamped
+      var slamToolboxPoseTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: SLAM_TOOLBOX_POSE_TOPIC,
+        messageType: 'geometry_msgs/PoseWithCovarianceStamped'
+      });
+
+      slamToolboxPoseTopic.subscribe(function(poseMsg) {
+        // 只有当位置源设置为 slam_toolbox 时才使用这些数据
+        if (positionSource === 'slam_toolbox') {
+          // 更新机器人位置
+          robotPosition.x = poseMsg.pose.pose.position.x;
           robotPosition.y = poseMsg.pose.pose.position.y;
           
           // 重绘地图以更新机器人位置

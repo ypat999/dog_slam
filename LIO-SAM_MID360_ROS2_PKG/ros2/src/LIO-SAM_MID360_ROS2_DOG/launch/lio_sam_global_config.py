@@ -48,7 +48,7 @@ config_by_machine = {
         'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/mnt/d/projects/LOAM/',
         'DEFAULT_MAP_FILE': "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
-        'DEFAULT_WEB_SCRIPT_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web_137.sh'
+        'DEFAULT_WEB_SCRIPT_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web_notebook.sh'
     }
 }
 

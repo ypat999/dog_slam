@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
@@ -216,7 +216,10 @@ def generate_launch_description():
             'max_height': 1.8,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.0,        # -180度
             'angle_max': 3.0,         # 180度
-            'angle_increment': 0.0087,   # 激光扫描的角度增量（约0.25度，提高分辨率）
+            # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
+            # 原始地图中的激光束数量为 691，实际转换产生 690 时会触发 slam_toolbox 的长度校验错误。
+            # 使用精确值可以避免舍入导致的“expected 691 / got 690”问题。
+            'angle_increment': 0.008695652173913044,
             'scan_time': 0.1,             # 扫描时间
             
             'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
@@ -263,26 +266,37 @@ def generate_launch_description():
         launch_nodes.extend([
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
             ExecuteProcess(
-                cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '10.0'],
+                cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '1.0'],
                 name='rosbag_player',
                 output='screen'
             )
         ])
 
 
+    # 添加坐标系转换节点
     launch_nodes.extend([
         static_transform_map_to_odom,  # 添加地图到里程计的静态变换
         static_transform_odom_to_base_link,  # 添加里程计到机器人基坐标系的静态变换
         static_transform_base_to_livox,  # 添加机器人基坐标系到激光雷达的静态变换
         static_transform_base_to_lidar_link,  # 添加livox到lidar_link的静态变换
+    ])
+    
+    # 使用TimerAction添加延迟启动LIO-SAM核心节点，确保雷达数据就位
+    # 延迟5秒启动LIO-SAM节点，给雷达足够的初始化时间
+    lio_sam_nodes = [
         # robot_state_publisher_node,
         lio_sam_imuPreintegration_node,
         lio_sam_imageProjection_node,
         lio_sam_featureExtraction_node,
         lio_sam_mapOptimization_node
-        # octomap_server_node,
-        # 
-    ])
+    ]
+    
+    launch_nodes.append(
+        TimerAction(
+            period=5.0,  # 延迟5秒启动LIO-SAM核心节点
+            actions=lio_sam_nodes
+        )
+    )
 
         # 3. 根据模式添加相应的节点
     if BUILD_MAP:

@@ -3,7 +3,7 @@ from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDesc
 from launch.conditions import IfCondition
 from launch_ros.actions import PushRosNamespace, Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -50,6 +50,12 @@ def generate_launch_description():
         'nav2_params_file',
         default_value=os.path.join(package_dir, 'config', 'nav2_params.yaml'),
         description='Full path to the Nav2 parameters file')
+
+    declare_localization_cmd = DeclareLaunchArgument(
+        'localization',
+        default_value='amcl',
+        description='Localization backend to use: amcl or slam_toolbox'
+    )
     
     # 包含LIO-SAM的launch文件
     lio_sam_launch = IncludeLaunchDescription(
@@ -63,16 +69,35 @@ def generate_launch_description():
     # 导航模式下启动Nav2和web
     nav2_and_web_actions = []
     if not CONFIG_IMPORTED or not BUILD_MAP:
-        # 延迟启动Nav2的launch文件
-        nav2_and_web_actions.append(IncludeLaunchDescription(
+        # 根据 localization 参数选择包含哪一个 nav2 启动文件（amcl 或 slam_toolbox）
+        nav2_amcl_include = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
                 current_dir, 'nav2.launch.py')]),
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': map_file,
                 'params_file': nav2_params_file
-            }.items()
-        ))
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'amcl'"]))
+        )
+
+        nav2_slam_include = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                current_dir, 'nav2_slam_toolbox.launch.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time,
+                'map': map_file,
+                'params_file': os.path.join(package_dir, 'config', 'nav2_params_no_amcl.yaml'),
+                'slam_toolbox_params': os.path.join(package_dir, 'config', 'slam_toolbox_localization.yaml')
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+        )
+
+        # 延迟启动Nav2的launch文件（两个 include 都会被放入延迟动作中，条件决定实际生效的那个）
+        # Append both include actions; each include has its own condition so only the
+        # matching one (amcl or slam_toolbox) will actually be executed at runtime.
+        nav2_and_web_actions.append(nav2_amcl_include)
+        nav2_and_web_actions.append(nav2_slam_include)
         
         # # 延迟调用AMCL的全局定位服务
         # nav2_and_web_actions.append(TimerAction(
@@ -118,6 +143,7 @@ def generate_launch_description():
         PushRosNamespace(ns),
         # 1. 声明所有启动参数
         declare_map_file_cmd,
+        declare_localization_cmd,
         declare_nav2_params_file_cmd,
         # 2. 启动主要组件
         lio_sam_launch

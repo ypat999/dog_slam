@@ -45,6 +45,7 @@ config_by_machine = {
         'ONLINE_LIDAR': False,  # DESKTOP-4LS1SSN可能主要用于离线数据处理
         'BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/home/ywj/livox_record_tilt_test2/',
+        # 'DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_LOAM_SAVE_DIR': '/mnt/d/projects/LOAM/',
         'DEFAULT_MAP_FILE': "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",

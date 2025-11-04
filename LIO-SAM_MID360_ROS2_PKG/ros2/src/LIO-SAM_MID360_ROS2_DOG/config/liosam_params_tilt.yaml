@@ -46,8 +46,8 @@
     imuAccBiasN: 6.4356659353532566e-05
     imuGyrBiasN: 3.5640318696367613e-05
 
-    imuGravity: 0.0 #9.80511
-    imuRPYWeight: 0.01  # 增加IMU姿态权重，提高姿态稳定性
+    imuGravity: 0.0 #默认9.80511，但是livox驱动输出的imu数据已抵消重力，此处置0
+    imuRPYWeight: 0.01  # IMU姿态权重，提高姿态稳定性
 
     extrinsicTrans:  [ 0.0,  0.0,  0.0 ]
     extrinsicRot: [0.8660, 0.0, 0.5,
@@ -120,8 +120,3 @@
     imuFailureDetectionEnabled: false             # 启用IMU失败检测
     imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
-
-    # IMU Continuity Detection Parameters (IMU连续性检测参数)
-    imuContinuityDetectionEnabled: false          # 启用IMU连续性检测
-    imuMaxDisconnectionTime: 1.0                # 最大断流时间（秒），减少到1秒以便更快检测问题
-    imuNormalIntervalThreshold: 0.02            # 正常IMU间隔阈值（秒），小于此值认为IMU重连

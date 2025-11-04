@@ -243,13 +243,7 @@ class IMUPreintegration : public ParamServer {
     // Odometry delay control
     bool odometryPublishingStarted = false;
 
-    // IMU continuity detection
-    bool imuContinuityDetectionEnabled = false;
-    double lastImuTimestamp = -1.0;
-    double imuDisconnectionStartTime = -1.0;
-    bool imuDisconnected = false;
-    const double IMU_MAX_DISCONNECTION_TIME = 5.0; // 最大断流时间5秒
-    const double IMU_NORMAL_INTERVAL_THRESHOLD = 0.02; // 正常IMU间隔阈值20ms
+
 
     gtsam::Pose3 imu2Lidar =
         gtsam::Pose3(gtsam::Rot3(1, 0, 0, 0), gtsam::Point3(-extTrans.x(), -extTrans.y(), -extTrans.z()));
@@ -325,14 +319,6 @@ class IMUPreintegration : public ParamServer {
         lastImuT_imu = -1;
         doneFirstOpt = false;
         systemInitialized = false;
-        
-        // 重置IMU连续性检测状态
-        if (imuContinuityDetectionEnabled) {
-            imuDisconnected = false;
-            imuDisconnectionStartTime = -1.0;
-            lastImuTimestamp = -1.0;
-            RCLCPP_INFO(get_logger(), "IMU continuity detection state reset.");
-        }
     }
 
     void odometryHandler(const nav_msgs::msg::Odometry::SharedPtr odomMsg) {
@@ -343,12 +329,6 @@ class IMUPreintegration : public ParamServer {
         // make sure we have imu data to integrate
         if (imuQueOpt.empty()) return;
         
-        // 检查IMU连续性状态：如果IMU处于断流状态，跳过本次处理
-        if (imuContinuityDetectionEnabled && imuDisconnected) {
-            RCLCPP_WARN_THROTTLE(get_logger(), *this->get_clock(), 2000, 
-                               "Skipping odometry processing due to IMU disconnection.");
-            return;
-        }
 
         float p_x = odomMsg->pose.pose.position.x;
         float p_y = odomMsg->pose.pose.position.y;
@@ -529,11 +509,7 @@ class IMUPreintegration : public ParamServer {
             return false;
         }
         
-        // 集成IMU连续性检测：如果IMU处于断流状态，返回true触发系统重置
-        if (imuContinuityDetectionEnabled && imuDisconnected) {
-            RCLCPP_WARN(get_logger(), "IMU disconnection detected in failure detection, resetting system!");
-            return true;
-        }
+
         
         Eigen::Vector3f vel(velCur.x(), velCur.y(), velCur.z());
         
@@ -576,58 +552,7 @@ class IMUPreintegration : public ParamServer {
 
         sensor_msgs::msg::Imu thisImu = imuConverter(*imu_raw);
 
-        // IMU连续性检测逻辑
-        if (imuContinuityDetectionEnabled) {
-            double imuTime = stamp2Sec(thisImu.header.stamp);
-            
-            // 检测IMU断流
-            if (lastImuTimestamp > 0) {
-                double timeInterval = imuTime - lastImuTimestamp;
-                
-                // 如果时间间隔异常大，说明IMU断流
-                if (timeInterval > IMU_NORMAL_INTERVAL_THRESHOLD * 10) { // 10倍正常间隔阈值
-                    if (!imuDisconnected) {
-                        // 首次检测到断流
-                        imuDisconnected = true;
-                        imuDisconnectionStartTime = imuTime;
-                        RCLCPP_WARN(get_logger(), "IMU disconnection detected! Interval: %.3fs", timeInterval);
-                    } else {
-                        // 持续断流状态，检查是否超过最大断流时间
-                        double disconnectionDuration = imuTime - imuDisconnectionStartTime;
-                        if (disconnectionDuration > IMU_MAX_DISCONNECTION_TIME) {
-                            RCLCPP_ERROR(get_logger(), "IMU disconnection too long (%.1fs > %.1fs), resetting system!", 
-                                       disconnectionDuration, IMU_MAX_DISCONNECTION_TIME);
-                            resetParams();
-                            return; // 停止处理当前IMU数据
-                        }
-                    }
-                } else {
-                    // 正常间隔或重连
-                    if (imuDisconnected) {
-                        // IMU重连检测
-                        if (timeInterval <= IMU_NORMAL_INTERVAL_THRESHOLD) {
-                            RCLCPP_INFO(get_logger(), "IMU reconnected! Clearing old IMU cache and resetting integrator.");
-                            
-                            // 清空旧IMU缓存
-                            imuQueOpt.clear();
-                            imuQueImu.clear();
-                            
-                            // 重置预积分器
-                            if (imuIntegratorImu_) {
-                                imuIntegratorImu_->resetIntegrationAndSetBias(prevBiasOdom);
-                            }
-                            
-                            // 重置连续性检测状态
-                            imuDisconnected = false;
-                            imuDisconnectionStartTime = -1.0;
-                            lastImuT_imu = -1.0; // 重新标定起始时间
-                        }
-                    }
-                }
-            }
-            
-            lastImuTimestamp = imuTime;
-        }
+
 
         imuQueOpt.push_back(thisImu);
         imuQueImu.push_back(thisImu);

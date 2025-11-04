@@ -70,13 +70,20 @@ def generate_launch_description():
     nav2_and_web_actions = []
     if not CONFIG_IMPORTED or not BUILD_MAP:
         # 根据 localization 参数选择包含哪一个 nav2 启动文件（amcl 或 slam_toolbox）
+        # For AMCL we use a dedicated local launch that starts map_server + amcl
+        # and forwards the main params file. This avoids the need for a second
+        # YAML file and lets the nodes read their sections from nav2_params.yaml.
         nav2_amcl_include = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                current_dir, 'nav2.launch.py')]),
+                current_dir, 'nav2_amcl.launch.py')]),
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': map_file,
-                'params_file': nav2_params_file
+                'params_file': nav2_params_file,
+                'autostart': 'True',
+                'use_composition': 'True',
+                'use_respawn': 'False',
+                'log_level': 'info'
             }.items(),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'amcl'"]))
         )
@@ -87,8 +94,8 @@ def generate_launch_description():
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': map_file,
-                'params_file': os.path.join(package_dir, 'config', 'nav2_params_no_amcl.yaml'),
-                'slam_toolbox_params': os.path.join(package_dir, 'config', 'slam_toolbox_localization.yaml')
+                'params_file': os.path.join(package_dir, 'config', 'nav2_params.yaml'),
+                'slam_toolbox_params': os.path.join(package_dir, 'config', 'nav2_params.yaml')
             }.items(),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
         )

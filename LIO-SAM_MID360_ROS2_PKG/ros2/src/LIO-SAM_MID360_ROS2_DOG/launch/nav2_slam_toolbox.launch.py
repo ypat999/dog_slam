@@ -43,7 +43,7 @@ def generate_launch_description():
 
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(share_dir, 'config', 'slam_toolbox_localization.yaml'),
+        default_value=os.path.join(share_dir, 'config', 'nav2_params.yaml'),
         description='Full path to slam_toolbox parameters file')
 
     # Instead of including the top-level bringup (which will start localization/amcl by default),
@@ -65,7 +65,7 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'params_file': params_file,
             'autostart': 'True',
-            'use_composition': 'True',
+            'use_composition': 'False',
             'use_respawn': 'False',
             'container_name': 'nav2_container',
             'namespace': '',

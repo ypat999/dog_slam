@@ -120,3 +120,8 @@
     imuFailureDetectionEnabled: false             # 启用IMU失败检测
     imuVelocityThreshold: 1.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
+
+    # IMU Continuity Detection Parameters (IMU连续性检测参数)
+    imuContinuityDetectionEnabled: true          # 启用IMU连续性检测
+    imuMaxDisconnectionTime: 3.0                # 最大断流时间（秒），超过此时间重置系统
+    imuNormalIntervalThreshold: 0.02            # 正常IMU间隔阈值（秒），小于此值认为IMU重连

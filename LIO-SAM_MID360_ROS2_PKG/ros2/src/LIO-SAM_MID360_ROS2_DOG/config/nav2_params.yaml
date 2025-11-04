@@ -13,8 +13,16 @@
 lifecycle_manager:
   ros__parameters:
     use_sim_time: true
-    autostart: true  # 可根据需要修改为false
-    # node_names: ['map_server', 'amcl', 'planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
+    autostart: true
+    node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
+    bond_timeout_ms: 10000
+
+# 单独的定位生命周期管理器配置
+lifecycle_manager_localization:
+  ros__parameters:
+    use_sim_time: true
+    autostart: true
+    node_names: ['map_server', 'amcl']
     bond_timeout_ms: 10000
 
 # =============================================================================
@@ -25,16 +33,16 @@ amcl:
     use_sim_time: true
     
     # 基础参数 - 两个模型共用
-    min_particles: 200
+    min_particles: 500
     max_particles: 4000
     kld_err: 0.03
     kld_z: 0.99
     
     # 里程计运动模型噪声参数 - 室内环境优化
     alpha1: 0.2            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.02           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.02           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.05            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
@@ -361,7 +369,7 @@ local_costmap:
         inflation_radius: 0.8     # 增加膨胀半径，让机器人更远地避开障碍物
       
       # 始终发送完整代价地图
-      always_send_full_costmap: false  ######
+      always_send_full_costmap: true
 
 # =============================================================================
 # Global Costmap Configuration
@@ -526,3 +534,59 @@ velocity_smoother:
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 5.0
+
+
+
+
+
+
+
+
+slam_toolbox_localization:
+  ros__parameters:
+    # 基本设置
+    use_sim_time: true
+    mode: "localization"  # 使用 localization / relocalization 模式
+
+    # 地图文件（可由 launch 时覆盖 map_file_name）
+    map_file_name: ''
+
+    # 启动时用于定位（与 AMCL 的 /initialpose 等价的参数）
+    # 格式: [x, y, yaw] (单位: 米, 弧度)
+    # 值示例: 将初始位姿设为 x=33.5, y=3.5, yaw=1.57
+    map_start_pose: [33.5, 3.5, 1.57]
+    # 如果想以 dock（第一节点）作为启动位置，可以启用下一项
+    map_start_at_dock: false
+
+    # 坐标系
+    map_frame: map
+    odom_frame: odom
+    base_frame: base_link
+
+    # 激光与里程计话题
+    scan_topic: /lio_sam/scan
+    odom_topic: /lio_sam/mapping/odometry
+
+    # 发布频率与变换发布
+    # 禁止 slam_toolbox 输出/更新 2D occupancy map（避免覆盖 nav2 的 /map）
+    # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
+    map_update_interval: 0.0
+    # 保持 transform publish（map->odom 发布通常需要）
+    transform_publish_period: 0.05
+
+    # 传感器范围与匹配参数（可按需调优）
+    max_laser_range: 40.0
+    min_laser_range: 0.2
+
+    # 使能局部scan-matching用于相对定位增强
+    use_scan_matching: true
+
+    # 当需要重定位时相关参数（短时间内多尝试以尽快定位）
+    loop_closure_threshold: 1.0
+    loop_closure_max_candidates: 10
+
+    # 调试 / 可视化
+    publish_occupancy_map: false
+    # 不启用内置的 map saver 服务以避免意外写盘或覆盖
+    use_map_saver: false
+    publish_pose: true

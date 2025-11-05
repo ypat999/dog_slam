@@ -223,8 +223,8 @@ def generate_launch_description():
             'transform_tolerance': 0.1,
             'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.8,            # 最大高度（过滤掉较高的点，限制在地面附近）
-            'angle_min': -3.0,        # -180度
-            'angle_max': 3.0,         # 180度
+            'angle_min': -3.1,        # -180度
+            'angle_max': 3.1,         # 180度
             # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
             # 原始地图中的激光束数量为 691，实际转换产生 690 时会触发 slam_toolbox 的长度校验错误。
             # 使用精确值可以避免舍入导致的“expected 691 / got 690”问题。

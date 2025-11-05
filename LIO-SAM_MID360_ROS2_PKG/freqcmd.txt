@@ -52,7 +52,7 @@ ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {va
 ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 0}}"
 
 # 关闭导航：
-sudo systemctl start lio_sam_nav2.service
+sudo systemctl stop lio_sam_nav2.service
 
 # 检查组件是否完全关闭：
 ps -ef | grep rosbridge

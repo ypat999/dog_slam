@@ -8,7 +8,6 @@
     gpsTopic: "odometry/gpsz"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
     # Frames
-
     lidarFrame: "livox_frame"
     baselinkFrame: "base_link"
     odometryFrame: "odom"
@@ -47,7 +46,7 @@
     imuGyrBiasN: 3.5640318696367613e-05
 
     imuGravity: 0.0 #默认9.80511，但是livox驱动输出的imu数据已抵消重力，此处置0
-    imuRPYWeight: 0.01  # IMU姿态权重，提高姿态稳定性
+    imuRPYWeight: 0.1  # IMU姿态权重，提高姿态稳定性
 
     extrinsicTrans:  [ 0.2,  0.0,  -0.3 ] #能否保持机器人在地面以上
     extrinsicRot: [0.8660, 0.0, 0.5,
@@ -56,8 +55,6 @@
     # extrinsicRot: [1.0, 0.0, 0.0,
     #                0.0, 1.0, 0.0,
     #                0.0, 0.0, 1.0]
-
-
 
     # LOAM feature threshold
     edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
@@ -76,7 +73,7 @@
 
     # CPU Params - 优化以减轻处理负担，避免IMU数据丢失
     numberOfCores: 2                              # 减少使用的核心数，避免CPU过载
-    mappingProcessInterval: 0.2                  # 增加映射处理间隔，减少CPU负担
+    mappingProcessInterval: 0.1                  # 增加映射处理间隔，减少CPU负担
 
     # Surrounding map
     surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
@@ -87,14 +84,14 @@
 
     # Loop closure
     loopClosureEnableFlag: true
-    loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
+    loopClosureFrequency: 2.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 20                   # submap size (when loop closure enabled)
-    historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from
-    historyKeyframeSearchTimeDiff: 30.0           # seconds, key frame that is n seconds older will be
+    historyKeyframeSearchRadius: 10.0             # meters, key frame that is within n meters from
+    historyKeyframeSearchTimeDiff: 20.0           # seconds, key frame that is n seconds older will be
     # considered for loop closure
     historyKeyframeSearchNum: 30                  # number of hostory key frames will be fused into a
     # submap for loop closure
-    historyKeyframeFitnessScore: 0.3              # icp threshold, the smaller the better alignment
+    historyKeyframeFitnessScore: 0.18             # icp threshold, the smaller the better alignment
 
     # Discrete noise filtering (新增参数)
     enableDiscreteNoiseFilter: false               # 启用离散噪点过滤
@@ -120,3 +117,19 @@
     imuFailureDetectionEnabled: false             # 启用IMU失败检测
     imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
+
+    # # QoS Overrides - TF Publisher (新增参数)
+    # qos_overrides./tf.publisher.depth: 100
+    # qos_overrides./tf.publisher.durability: "volatile"
+    # qos_overrides./tf.publisher.history: "keep_last"
+    # qos_overrides./tf.publisher.reliability: "reliable"
+
+    # # QoS Overrides - Parameter Events Publisher (已存在参数)
+    # qos_overrides./parameter_events.publisher.depth: 1000
+    # qos_overrides./parameter_events.publisher.durability: "volatile"
+    # qos_overrides./parameter_events.publisher.history: "keep_last"
+    # qos_overrides./parameter_events.publisher.reliability: "reliable"
+
+    # 以下参数在系统输出中提及但不存在于当前配置 - 标为不存在参数
+    # extrinsicRPY: [0.0, 0.0, 0.0]  # 不存在参数 - 外部旋转RPY
+    # use_sim_time: false  # 不存在参数 - 仿真时间设置

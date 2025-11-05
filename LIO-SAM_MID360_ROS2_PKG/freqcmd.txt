@@ -1,18 +1,18 @@
-启动可视化（在导航前启动，占cpu多可考虑设置初始点后关闭）：
+# 启动可视化（在导航前启动，占cpu多可考虑设置初始点后关闭）：
 rviz2
 
-启动建图：
+# 启动建图：
 sudo systemctl start lio_sam_buildmap.service
 
-保存二维地图：
+# 保存二维地图：
 source ros2/install/setup.bash 
 ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_part --fmt png
 
-保存点云 （不使用）
+# 保存点云 （不使用）
 source ros2/install/setup.bash 
 ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: '/projects/LOAM/'}"
 
-录制点云信息供离线调试：
+# 录制点云信息供离线调试：
 cd dog_slam
 source LIO-SAM_MID360_ROS2_PKG/ros2/install/setup.bash
 nohup ros2 bag record -o /home/ztl/slam_data/livox_record_tilt_test/ /livox/lidar /livox/imu > record.log &
@@ -20,48 +20,48 @@ tail -f record.log
 ps -ef | grep  livox_record_tilt_test
 kill -
 
-关闭建图：
+# 关闭建图：
 sudo systemctl stop lio_sam_buildmap.service
 
 
 
 
 
-启动导航：
+# 启动导航：
 sudo systemctl start lio_sam_nav2.service
 
-查看日志（启动后尽快运行，避免错过ERROR）：
+# 查看日志（启动后尽快运行，避免错过ERROR）：
 sudo journalctl -u lio_sam_nav2.service -f
 
-设置初始点：
+# 设置初始点：
 rviz2内点击2d pose estimate后点击地图拖动方向
 
-设置目标点：
+# 设置目标点：
 rviz2内点击2d goal后点击地图拖动方向
 
-地图刷新：
+# 地图刷新：
 ros2 service call /map_server/load_map nav2_msgs/srv/LoadMap "{map_url: '/home/ztl/slam_data/grid_map/map.yaml'}"
 
-定位模块全局自动重定位：
+# 定位模块全局自动重定位：
 ros2 service call /reinitialize_global_localization std_srvs/srv/Empty {}
 
-机器狗站立：
+# 机器狗站立：
 ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 1}}"
 
-机器狗趴下：
+# 机器狗趴下：
 ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 0}}"
 
-关闭导航：
+# 关闭导航：
 sudo systemctl start lio_sam_nav2.service
 
-检查组件是否完全关闭：
+# 检查组件是否完全关闭：
 ps -ef | grep rosbridge
 ps -ef | grep rclcpp
 lsof -i:8083
 
 
 
-其他：
+# 其他：
 
 echo $DISPLAY
 

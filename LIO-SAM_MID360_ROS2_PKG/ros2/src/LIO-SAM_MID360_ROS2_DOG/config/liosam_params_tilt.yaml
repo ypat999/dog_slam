@@ -48,7 +48,7 @@
     imuGravity: 0.0 #默认9.80511，但是livox驱动输出的imu数据已抵消重力，此处置0
     imuRPYWeight: 0.1  # IMU姿态权重，提高姿态稳定性
 
-    extrinsicTrans:  [ 0.2,  0.0,  -0.3 ] #能否保持机器人在地面以上
+    extrinsicTrans:  [ 0.1,  0.0,  -0.3 ] #能否保持机器人在地面以上
     extrinsicRot: [0.8660, 0.0, 0.5,
                    0.0, 1.0, 0.0,
                    -0.5, 0.0, 0.8660]
@@ -58,7 +58,7 @@
 
     # LOAM feature threshold
     edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
-    surfThreshold: 0.1
+    surfThreshold: 0.8
     edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
 

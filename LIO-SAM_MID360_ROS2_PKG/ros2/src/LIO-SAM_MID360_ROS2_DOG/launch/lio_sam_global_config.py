@@ -74,9 +74,9 @@ selected_config = config_by_machine.get(current_machine, default_config)
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
 BASE_CODE_PATH = selected_config['BASE_CODE_PATH']
 
-# 行为树XML文件绝对路径配置
-BT_CONFIG_PATH = os.path.join(BASE_CODE_PATH, 'config')
-DEFAULT_BT_XML_PATH = selected_config.get('DEFAULT_BT_XML_PATH', os.path.join(BASE_CODE_PATH, 'config/bt_straight_then_rotate.xml'))
+# # 行为树XML文件绝对路径配置
+# BT_CONFIG_PATH = os.path.join(BASE_CODE_PATH, 'config')
+# DEFAULT_BT_XML_PATH = selected_config.get('DEFAULT_BT_XML_PATH', os.path.join(BASE_CODE_PATH, 'config/bt_straight_then_rotate.xml'))
 
 DEFAULT_USE_SIM_TIME = True
 DEFAULT_USE_SIM_TIME_STRING = 'true'
@@ -98,9 +98,9 @@ with open(nav2_params_path, 'w') as file:
             file.write(f'    use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
         elif 'yaml_filename:' in line:
             file.write(f'    yaml_filename: {DEFAULT_MAP_FILE}\n')
-        elif 'default_nav_to_pose_bt_xml:' in line:
-            # 更新行为树XML文件路径为绝对路径
-            file.write(f'    default_nav_to_pose_bt_xml: "{DEFAULT_BT_XML_PATH}"\n')
+        # elif 'default_nav_to_pose_bt_xml:' in line:
+        #     # 更新行为树XML文件路径为绝对路径
+        #     file.write(f'    default_nav_to_pose_bt_xml: "{DEFAULT_BT_XML_PATH}"\n')
         else:
             file.write(line)
     

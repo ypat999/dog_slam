@@ -126,7 +126,7 @@ def generate_launch_description():
         name='static_transform_base_to_livox',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.2', '0.0', '0.1', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
-        arguments=['0.2', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
         output='screen'
     )
 
@@ -136,7 +136,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_to_lidar_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.2', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
+        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
         output='screen'
     )
 
@@ -231,7 +231,7 @@ def generate_launch_description():
             'angle_increment': 0.008695652173913044,
             'scan_time': 0.1,             # 扫描时间
             
-            'range_min': 0.4,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
             'range_max': 80.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             

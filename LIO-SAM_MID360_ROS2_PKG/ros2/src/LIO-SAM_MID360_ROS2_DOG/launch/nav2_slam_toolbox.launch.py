@@ -97,10 +97,24 @@ def generate_launch_description():
         remappings=[('/scan', '/lio_sam/scan'), ('/odom', '/lio_sam/mapping/odometry')]
     )
 
+    rosbridge_websocket = Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+        name='rosbridge_websocket',
+        output='screen',
+        parameters=[
+            {'port': 9090},
+            {'default_call_service_timeout': 5.0},  # 设置服务调用超时为5.0秒
+            {'call_services_in_new_thread': True},  # 在新线程中调用服务
+            {'send_action_goals_in_new_thread': True}  # 在新线程中发送动作目标
+        ]
+    )
+
     launch_actions = [
         declare_map_cmd,
         declare_params_file_cmd,
         declare_slam_toolbox_params_cmd,
+        rosbridge_websocket,  # 添加 rosbridge_websocket 节点
     ]
 
     if not BUILD_MAP:

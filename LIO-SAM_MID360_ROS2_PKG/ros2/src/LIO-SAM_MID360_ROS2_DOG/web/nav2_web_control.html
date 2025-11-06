@@ -95,6 +95,13 @@
     <h2>ROS2 网页导航控制</h2>
     <div id="status">连接状态：<span id="conn-status">未连接</span></div>
     <div id="map-info">地图信息：等待连接...</div>
+    
+    <!-- 主机名配置 -->
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+      <label for="hostname-input">ROS主机名/IP：</label>
+      <input type="text" id="hostname-input" value="" placeholder="留空使用当前主机" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
+      <button onclick="updateHostname()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
+    </div>
     <div>
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
@@ -143,7 +150,7 @@
 
   <script type="text/javascript">
     // === 配置部分 ===
-    const ROSBRIDGE_SERVER_IP = location.hostname; // 自动用当前域名/IP
+    let ROSBRIDGE_SERVER_IP = localStorage.getItem('ros_hostname') || location.hostname; // 优先使用本地存储的主机名
     const ROSBRIDGE_SERVER_PORT = 9090;
     const MAP_TOPIC = "/map";
     const ROBOT_FRAME = "base_link";
@@ -194,6 +201,48 @@
       canvas.addEventListener('mouseup', handleMouseUp);
       canvas.addEventListener('mouseleave', handleMouseUp);
       canvas.addEventListener('click', handleCanvasClick);
+    }
+
+    // 更新主机名
+    function updateHostname() {
+      const hostnameInput = document.getElementById('hostname-input');
+      const newHostname = hostnameInput.value.trim();
+      
+      if (newHostname === '') {
+        ROSBRIDGE_SERVER_IP = location.hostname;
+        localStorage.removeItem('ros_hostname'); // 清除本地存储
+        alert('已重置为当前主机名：' + location.hostname + '\n设置已保存，刷新页面后生效');
+      } else {
+        ROSBRIDGE_SERVER_IP = newHostname;
+        localStorage.setItem('ros_hostname', newHostname); // 保存到本地存储
+        alert('已更新主机名为：' + newHostname + '\n设置已保存，刷新页面后生效');
+      }
+      
+      // 更新输入框显示
+      hostnameInput.value = ROSBRIDGE_SERVER_IP === location.hostname ? '' : ROSBRIDGE_SERVER_IP;
+      
+      console.log('ROS主机名已更新为：', ROSBRIDGE_SERVER_IP);
+      
+      // 显示重新连接提示
+      document.getElementById('conn-status').innerHTML = "🔄 需要刷新页面";
+      document.getElementById('conn-status').style.color = "#ffa500";
+    }
+
+    // 初始化主机名输入框
+    function initHostnameInput() {
+      const hostnameInput = document.getElementById('hostname-input');
+      const savedHostname = localStorage.getItem('ros_hostname');
+      
+      if (savedHostname) {
+        // 如果有保存的主机名，显示它
+        hostnameInput.value = savedHostname;
+      } else if (ROSBRIDGE_SERVER_IP !== location.hostname) {
+        // 如果当前主机名不是默认的，显示当前主机名
+        hostnameInput.value = ROSBRIDGE_SERVER_IP;
+      } else {
+        // 否则留空（使用默认主机名）
+        hostnameInput.value = '';
+      }
     }
     
     // 处理鼠标滚轮缩放
@@ -426,8 +475,14 @@
     
     // === 连接 ROS ===
     function connectROS() {
+      // 确保主机名有效
+      const hostname = ROSBRIDGE_SERVER_IP || location.hostname || 'localhost';
+      const wsUrl = "ws://" + hostname + ":" + ROSBRIDGE_SERVER_PORT;
+      
+      console.log('正在连接到ROS Bridge:', wsUrl);
+      
       var ros = new ROSLIB.Ros({
-        url: "ws://" + ROSBRIDGE_SERVER_IP + ":" + ROSBRIDGE_SERVER_PORT
+        url: wsUrl
       });
 
       ros.on("connection", function () {
@@ -845,6 +900,9 @@
     window.onload = function() {
       // 初始化变量
       window.settingInitialPose = false;
+      
+      // 初始化主机名输入框
+      initHostnameInput();
       
       initCanvas();
       window.ros = connectROS();

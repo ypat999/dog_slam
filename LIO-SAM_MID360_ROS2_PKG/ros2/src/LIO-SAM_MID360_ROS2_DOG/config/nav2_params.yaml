@@ -12,7 +12,7 @@
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
@@ -20,7 +20,7 @@ lifecycle_manager:
 # 单独的定位生命周期管理器配置
 lifecycle_manager_localization:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['map_server', 'amcl']
     bond_timeout_ms: 10000
@@ -30,7 +30,7 @@ lifecycle_manager_localization:
 # =============================================================================
 amcl:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     
     # 基础参数 - 两个模型共用
     min_particles: 500
@@ -125,7 +125,7 @@ amcl:
     # z_short: 0.05  # 注释掉 - Likelihood模型不需要此参数
     
     # 缺失参数 - 根据系统输出添加
-    beam_skip_error_threshold: 0.1  # 新增参数
+    # beam_skip_error_threshold: 0.1  # 新增参数
     
     # Likelihood距离参数
     laser_likelihood_max_dist: 40.0
@@ -148,7 +148,7 @@ amcl:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     global_frame: map
     robot_base_frame: base_link
     bt_loop_duration: 50
@@ -165,9 +165,11 @@ bt_navigator:
     # path_blackboard_id: "path"
     # transform_tolerance: 0.1
     
-    # 行为树配置 - 根据系统实际文件调整参数名称
+    # 行为树配置 - 使用绝对路径
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
+
     # 选项1: 单目标点导航带重规划和恢复的行为树（推荐）
-    default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项2: 多目标点导航带重规划和恢复的行为树
     # default_nav_through_poses_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_through_poses_w_replanning_and_recovery.xml"
@@ -176,28 +178,28 @@ bt_navigator:
     # default_follow_point_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/follow_point.xml"
     
     # 选项4: 带目标耐心和恢复的单目标点导航行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_goal_patience_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项5: 仅当路径无效时重规划和恢复的行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_only_if_path_becomes_invalid.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项6: 基于距离的重规划行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_distance.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项7: 基于时间的重规划行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_time.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项8: 基于速度的重规划行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_speed.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项9: 仅当目标更新时重规划的行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_only_if_goal_is_updated.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项10: 带一致重规划和路径无效检查的行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/nav_to_pose_with_consistent_replanning_and_if_path_becomes_invalid.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 选项11: 仅当路径无效时重规划和恢复的行为树
-    # default_nav_to_pose_bt_xml: "/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_recovery_and_replanning_only_if_path_becomes_invalid.xml"
+    default_nav_to_pose_bt_xml: "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/config/bt_straight_then_rotate.xml"
     
     # 未使用的行为树文件（系统存在但当前配置未使用）:
     # - /opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_and_round_robin_recovery.xml (系统无此文件)
@@ -285,7 +287,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     controller_frequency: 20.0  # 保持20Hz控制器频率
     control_duration: 0.01  # 添加控制周期参数，减少计算延迟
     failure_tolerance: 10.0
@@ -294,7 +296,8 @@ controller_server:
     controller_plugins: ["FollowPath"]  # 新增参数
     
     # 其他缺失参数
-    goal_checker_plugins: ["goal_checker"]  # 新增参数
+    # goal_checker_plugins: ["goal_checker"]  # 新增参数
+    goal_checker_plugins: ["position_only_goal_checker", "full_goal_checker"]  # 新增参数
     progress_checker_plugin: "progress_checker"  # 新增参数
     # odom_topic: "/lio_sam/mapping/odometry"  # 新增参数
     # publish_zero_velocity: true  # 新增参数
@@ -316,16 +319,29 @@ controller_server:
       required_movement_radius: 0.15  # 增加移动半径，从0.1增加到0.15，减少误判
       movement_time_allowance: 20.0  # 减少移动时间容差，从30.0减到20.0，提高响应速度
     
-    # 目标检查器参数 - 配合新行为树优化
-    goal_checker:
+    # # 目标检查器参数 - 配合新行为树优化
+    # goal_checker:
+    #   plugin: "nav2_controller::SimpleGoalChecker"
+    #   xy_goal_tolerance: 0.3  # 适当增加容差，从0.25增加到0.3，减少频繁触发恢复行为
+    #   yaw_goal_tolerance: 0.5  # 适当增加角度容差，从0.2增加到0.25，提高稳定性
+    #   stateful: true
+    #   velocity_threshold: 0.05  # 降低速度检查阈值，从0.05减到0.03，更快检测停止
+    #   min_velocity_threshold: 0.005  # 降低最小速度阈值，从0.01减到0.005，提高灵敏度
+    #   goal_angle_tolerance: 0.20  # 减小目标角度容差，提高方向精度
+    #   max_goal_pose_distance: 0.15  # 减小最大目标点距离，从0.15减到0.1，提高停止精度
+
+    position_only_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.3  # 适当增加容差，从0.25增加到0.3，减少频繁触发恢复行为
-      yaw_goal_tolerance: 0.5  # 适当增加角度容差，从0.2增加到0.25，提高稳定性
-      stateful: true
-      velocity_threshold: 0.05  # 降低速度检查阈值，从0.05减到0.03，更快检测停止
-      min_velocity_threshold: 0.005  # 降低最小速度阈值，从0.01减到0.005，提高灵敏度
-      goal_angle_tolerance: 0.20  # 减小目标角度容差，提高方向精度
-      max_goal_pose_distance: 0.15  # 减小最大目标点距离，从0.15减到0.1，提高停止精度
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 9999.0  # 忽略方向对齐
+      stateful: False
+
+    full_goal_checker:
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 0.1
+      stateful: False
+
     
     # MPPI控制器参数 - 全向移动配置（实时性优化）
     FollowPath:
@@ -338,15 +354,15 @@ controller_server:
       # 全向移动速度限制 - 增加角速度以减小转向半径
       vx_std: 0.3
       vy_std: 0.15
-      wz_std: 0.3  # 保持较高的角速度采样标准差，确保转向灵活性
+      wz_std: 0.2  # 保持较高的角速度采样标准差，确保转向灵活性
       vx_max: 0.5
-      vx_min: -0.05
-      vy_max: 0.2
-      vy_min: -0.2
-      wz_max: 1.0  # 增加最大角速度，减小转向半径
+      vx_min: -0.03
+      vy_max: 0.3
+      vy_min: -0.3
+      wz_max: 0.8  # 增加最大角速度，减小转向半径
       
       # 温度参数
-      temperature: 0.3
+      temperature: 0.2
       # motion_model: "DiffDrive" 
       motion_model: "Omni"  # 全向移动模型
       visualize: false
@@ -371,32 +387,32 @@ controller_server:
       # retry_attempt_limit: 1  # 新增参数
       
       # 评价器参数 - 优化权重以提高停止精度
-      # critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "GoalCritic"]
-      critics: ["ConstraintCritic", "CostCritic", "PathAlignCritic", "PathFollowCritic", "GoalCritic"]
+      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "TwirlingCritic", "GoalCritic"]
+      # critics: ["ConstraintCritic", "CostCritic", "PathAlignCritic", "PathFollowCritic", "GoalCritic"]
 
       ConstraintCritic:
         enabled: true
-        cost_weight: 5.0  # 保持安全性权重
+        cost_weight: 6.0  # 保持安全性权重
       
       CostCritic:
         enabled: true
         cost_weight: 6.81
         cost_power: 1
-        collision_cost: 254  # 新增参数
-        consider_footprint: true  # 新增参数
-        critical_cost: 254  # 新增参数
-        inflation_layer_name: "inflation_layer"  # 新增参数
-        near_goal_distance: 0.5  # 新增参数
+        # collision_cost: 254.0  # 新增参数
+        # consider_footprint: true  # 新增参数
+        # critical_cost: 254.0  # 新增参数
+        # inflation_layer_name: "inflation_layer"  # 新增参数
+        # near_goal_distance: 0.5  # 新增参数
       
       PathAlignCritic:
         enabled: true
-        cost_weight: 8.0  # 降低权重，减少方向对齐的激进性
+        cost_weight: 15.0  # 降低权重，减少方向对齐的激进性
         cost_power: 1
         max_path_occupancy_ratio: 0.05
         offset_from_furthest: 8  # 大幅减少前瞻距离，从15减到8，提高响应速度
         threshold_to_consider: 1.0  # 增加阈值，减少小角度修正
-        trajectory_point_step: 2  # 新增参数
-        use_path_orientations: false  # 新增参数
+        # trajectory_point_step: 2  # 新增参数
+        use_path_orientations: true  # 新增参数
         
       PathFollowCritic:
         enabled: true
@@ -405,17 +421,23 @@ controller_server:
         offset_from_furthest: 2  # 大幅减少前瞻距离，从6减到4，提高实时响应
         threshold_to_consider: 1.2  # 增加阈值，允许更大偏差
       
-      # PathAngleCritic:
-      #   enabled: true
-      #   cost_weight: 0.3  # 进一步降低权重，减少方向修正
-      #   cost_power: 1
-      #   offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高响应速度
-      #   threshold_to_consider: 0.8  # 增加阈值
-      #   max_angle_to_furthest: 2.5  # 减少最大角度阈值
+      PathAngleCritic:
+        enabled: true
+        cost_weight: 5.0  # 进一步降低权重，减少方向修正
+        cost_power: 1
+        offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高响应速度
+        threshold_to_consider: 0.8  # 增加阈值
+        max_angle_to_furthest: 2.5  # 减少最大角度阈值
         
-      # PreferForwardCritic:
-      #   enabled: true
-      #   cost_weight: 8.0  # 降低权重，减少直线前进的强制性
+      PreferForwardCritic:
+        enabled: true
+        cost_weight: 8.0  # 降低权重，减少直线前进的强制性
+      
+      TwirlingCritic:
+        enabled: true
+        cost_weight: 20.0     # 强惩绕圈行为
+        max_angular_velocity: 1.0
+        angular_accel_penalty: 1.0
         
       GoalCritic:
         enabled: true
@@ -423,6 +445,64 @@ controller_server:
         cost_power: 1
         offset_from_furthest: 1  # 减少前瞻距离，从10减到6，提高停止精度
         threshold_to_consider: 0.6
+    goal_checker: "full_goal_checker"
+
+    # FollowPathXY控制器 - 只检查位置不检查方向的控制器
+    FollowPathXY:
+      plugin: "nav2_mppi_controller::MPPIController"
+      time_steps: 20
+      model_dt: 0.05
+      batch_size: 100
+      transform_tolerance: 0.1
+      
+      # 全向移动速度限制
+      vx_std: 0.3
+      vy_std: 0.15
+      wz_std: 0.2
+      vx_max: 0.5
+      vx_min: -0.03
+      vy_max: 0.3
+      vy_min: -0.3
+      wz_max: 0.8
+      
+      # 温度参数
+      temperature: 0.2
+      motion_model: "Omni"  # 全向移动模型
+      visualize: false
+      reset_period: 1.0
+      
+      # 轨迹可视化
+      trajectory_visualize: false
+      trajectory_visualize_max: 100
+      
+      # 评价器参数 - 移除方向相关的评价器，只关注位置跟踪
+      critics: ["ConstraintCritic", "CostCritic", "PathFollowCritic", "GoalCritic"]
+
+      ConstraintCritic:
+        enabled: true
+        cost_weight: 6.0
+      
+      CostCritic:
+        enabled: true
+        cost_weight: 6.81
+        cost_power: 1
+      
+      PathFollowCritic:
+        enabled: true
+        cost_weight: 8.0
+        cost_power: 1
+        offset_from_furthest: 2
+        threshold_to_consider: 1.2
+        
+      GoalCritic:
+        enabled: true
+        cost_weight: 50.0
+        cost_power: 1
+        offset_from_furthest: 1
+        threshold_to_consider: 0.6
+        
+      # 使用position_only_goal_checker，只检查位置不检查方向
+      goal_checker: "position_only_goal_checker"
 
     # # 安全监控和补偿策略配置（实时性优化）
     # safety_monitor:
@@ -462,7 +542,7 @@ local_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 5.0
       publish_frequency: 5.0
       global_frame: odom
@@ -564,7 +644,7 @@ global_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 0.5
       publish_frequency: 0.5
       global_frame: map
@@ -644,8 +724,8 @@ global_costmap:
 # =============================================================================
 map_server:
   ros__parameters:
-    use_sim_time: false
-    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
+    use_sim_time: true
+    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
 
 # =============================================================================
 # Planner Server Configuration
@@ -654,7 +734,7 @@ planner_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     expected_planner_frequency: 10.0
     planner_plugins: ["GridBased"]  # 新增参数
     
@@ -673,7 +753,7 @@ smoother_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     # footprint_topic: "local_costmap/published_footprint"  # 新增参数
     # robot_base_frame: "base_link"  # 新增参数
@@ -696,7 +776,7 @@ smoother_server:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     log_level: "debug"  # 启用debug级别日志输出
     
     # 缺失参数 - 根据系统输出添加
@@ -724,7 +804,7 @@ behavior_server:
     # 后退行为 - 用于脱离障碍物
     backup:
       plugin: "nav2_behaviors/BackUp"
-      backup_dist: 0.25  # 增加后退距离，从0.15增加到0.25
+      backup_dist: 0.5  # 增加后退距离，从0.15增加到0.25
       backup_speed: 0.05  # 增加后退速度，从0.025增加到0.1
       # acceleration_limit: 0.5  # 新增参数
       # deceleration_limit: -0.5  # 新增参数
@@ -761,7 +841,7 @@ waypoint_follower:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     loop_rate: 10
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -777,7 +857,7 @@ velocity_smoother:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     smoothing_frequency: 20.0
     scale_velocities: true
     feedback: "OPEN_LOOP"
@@ -814,7 +894,7 @@ velocity_smoother:
 slam_toolbox_localization:
   ros__parameters:
     # 基本设置
-    use_sim_time: false
+    use_sim_time: true
     mode: "localization"  # 使用 localization / relocalization 模式
 
     # 地图文件（可由 launch 时覆盖 map_file_name）

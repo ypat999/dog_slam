@@ -1,0 +1,51 @@
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+
+    <!-- 顶层恢复节点 -->
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+
+      <PipelineSequence name="StraightThenRotateSequence">
+
+        <!-- ========== 阶段1：规划路径 + 直线前进 ========== -->
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+
+        <!-- 跟随路径阶段，只要求到达 xy -->
+        <RecoveryNode number_of_retries="1" name="FollowPathXYOnly">
+          <!-- 使用position_only_goal_checker控制器，只检查位置不检查方向 -->
+          <FollowPath path="{path}" controller_id="FollowPathXY"/>
+          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+
+        <!-- 等待到达位置 -->
+        <Wait wait_duration="2.0"/>
+
+        <!-- ========== 阶段2：原地旋转对齐 ========== -->
+        <Sequence name="RotateAtGoal">
+          <!-- 原地旋转到目标方向 -->
+          <Spin name="FinalAlign" spin_dist="1.57"/>
+        </Sequence>
+
+      </PipelineSequence>
+
+      <!-- ========== 恢复行为 ========== -->
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <Spin spin_dist="1.57"/>
+          <Wait wait_duration="5"/>
+          <BackUp backup_dist="0.30" backup_speed="0.05"/>
+        </RoundRobin>
+      </ReactiveFallback>
+
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

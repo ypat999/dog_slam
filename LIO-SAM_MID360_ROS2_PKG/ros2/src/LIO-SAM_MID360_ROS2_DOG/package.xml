@@ -68,6 +68,14 @@
   <exec_depend>GTSAM</exec_depend>
   <exec_depend>Eigen</exec_depend>
   <exec_depend>livox_ros_driver2</exec_depend>
+  <exec_depend>autorccar_interfaces</exec_depend>
+  <!-- Gazebo dependencies -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>gazebo_ros2_control</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>xacro</exec_depend>
   <!-- Nav2 dependencies -->
   <exec_depend>nav2_controller</exec_depend>
   <exec_depend>nav2_dwb_controller</exec_depend>

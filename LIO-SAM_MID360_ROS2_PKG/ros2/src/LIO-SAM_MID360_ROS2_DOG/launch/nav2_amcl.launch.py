@@ -92,6 +92,21 @@ def generate_launch_description():
         }.items()
     )
 
+    # 网页控制界面节点（ROS2 bridge + Websocket）
+    # 这里用 rosbridge + web_video_server 组合
+    rosbridge_websocket = Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+        name='rosbridge_websocket',
+        output='screen',
+        parameters=[
+            {'port': 9090},
+            {'default_call_service_timeout': 5.0},  # 设置服务调用超时为5.0秒
+            {'call_services_in_new_thread': True},  # 在新线程中调用服务
+            {'send_action_goals_in_new_thread': True}  # 在新线程中发送动作目标
+        ]
+    )
+
     ld = LaunchDescription()
 
     # declare args used by lio_sam_nav2 wrapper (these will be passed through)
@@ -110,5 +125,6 @@ def generate_launch_description():
     ld.add_action(amcl_node)
     ld.add_action(lifecycle_manager)
     ld.add_action(navigation_include)
+    ld.add_action(rosbridge_websocket)  # 添加 rosbridge_websocket 节点
 
     return ld

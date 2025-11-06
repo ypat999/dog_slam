@@ -35,7 +35,7 @@ amcl:
     # 基础参数 - 两个模型共用
     min_particles: 500
     max_particles: 4000
-    pf_err: 0.03      # 修正参数名：kld_err -> pf_err
+    pf_err: 0.01      # 修正参数名：kld_err -> pf_err
     pf_z: 0.99        # 修正参数名：kld_z -> pf_z
     
     # # 缺失参数 - 根据系统输出添加
@@ -119,8 +119,8 @@ amcl:
     # Likelihood模型特有参数
     lambda_short: 0.1
     sigma_hit: 0.08
-    z_hit: 0.70
-    z_rand: 0.30
+    z_hit: 0.80
+    z_rand: 0.20
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
     # z_short: 0.05  # 注释掉 - Likelihood模型不需要此参数
     
@@ -132,8 +132,8 @@ amcl:
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
-    beam_skip_distance: 1.2  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
-    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    beam_skip_distance: 0.8  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
+    beam_skip_threshold: 0.3   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
     
     # # QoS覆盖参数 - 新增
     # qos_overrides:
@@ -293,7 +293,7 @@ controller_server:
     # 目标检查器参数 - 配合新行为树优化
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.3  # 适当增加容差，从0.25增加到0.3，减少频繁触发恢复行为
+      xy_goal_tolerance: 0.8  # 适当增加容差，从0.25增加到0.3，减少频繁触发恢复行为
       yaw_goal_tolerance: 0.2  # 适当增加角度容差，从0.2增加到0.25，提高稳定性
       stateful: false
       velocity_threshold: 0.05  # 降低速度检查阈值，从0.05减到0.03，更快检测停止
@@ -395,9 +395,9 @@ controller_server:
       
       TwirlingCritic:
         enabled: true
-        cost_weight: 14.0     # 强惩绕圈行为
+        cost_weight: 18.0     # 强惩绕圈行为
         max_angular_velocity: 1.0
-        angular_accel_penalty: 1.0
+        angular_accel_penalty: 0.5
         
       GoalCritic:
         enabled: true
@@ -691,8 +691,8 @@ global_costmap:
           topic: /lio_sam/scan
           max_obstacle_height: 1.8
           min_obstacle_height: -0.5
-          clearing: true
-          marking: true
+          clearing: false
+          marking: false
           data_type: "LaserScan"
           raytrace_max_range: 4.0
           raytrace_min_range: 0.5
@@ -855,8 +855,8 @@ velocity_smoother:
     feedback: "OPEN_LOOP"
     
     # 全向移动速度限制
-    max_velocity: [0.5, 0.2, 2.0]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.07, -0.2, -2.0]  # [vx_min, vy_min, vtheta_min]
+    max_velocity: [0.7, 0.2, 1.0]  # [vx_max, vy_max, vtheta_max]
+    min_velocity: [-0.07, -0.2, -1.0]  # [vx_min, vy_min, vtheta_min]
 
     # 差速 - 增加角速度以减小转向半径
     # max_velocity: [0.5, 0.0, 0.8]  # [vx_max, vy_max, vtheta_max] - 增加最大角速度
@@ -871,10 +871,6 @@ velocity_smoother:
     odom_duration: 0.03
     deadband_velocity: [0.051, 0.11, 0.021]  # 设置死区速度，避免输出-0.01到+0.01之间的速度被忽略
     velocity_timeout: 5.0
-
-    # 接近目标时的减速参数
-    slowdown_radius: 1.5  # 距离目标0.5米时开始减速（待查）
-    max_slowdown_factor: 0.2  # 最大减速因子，接近目标时速度降至30%（待查）
 
 
 

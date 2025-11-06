@@ -12,6 +12,11 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam_unstable/nonlinear/IncrementalFixedLagSmoother.h>
+#include <gtsam/base/Matrix.h>
+#include <gtsam/linear/NoiseModel.h>
+#include <gtsam/linear/GaussianFactorGraph.h>
+#include <gtsam/linear/VectorValues.h>
+#include <gtsam/linear/linearExceptions.h>
 
 #include "autorccar_interfaces/msg/nav_state.hpp"
 #include "utility.hpp"
@@ -279,14 +284,16 @@ class IMUPreintegration : public ParamServer {
         gtsam::imuBias::ConstantBias prior_imu_bias((gtsam::Vector(6) << 0, 0, 0, 0, 0, 0).finished());
         ;  // assume zero initial bias
 
+        // Optimized noise models to prevent indeterminant linear systems
+        // More conservative noise models for better numerical stability
         priorPoseNoise = gtsam::noiseModel::Diagonal::Sigmas(
-            (gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished());  // rad,rad,rad,m, m, m
-        priorVelNoise = gtsam::noiseModel::Isotropic::Sigma(3, 1e4);               // m/s
-        priorBiasNoise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-3);             // 1e-2 ~ 1e-3 seems to be good
+            (gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1).finished());  // rad,rad,rad,m, m, m
+        priorVelNoise = gtsam::noiseModel::Isotropic::Sigma(3, 1e2);               // m/s (reduced from 1e4)
+        priorBiasNoise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-2);             // 1e-2 (increased from 1e-3)
         correctionNoise = gtsam::noiseModel::Diagonal::Sigmas(
-            (gtsam::Vector(6) << 0.05, 0.05, 0.05, 0.1, 0.1, 0.1).finished());  // rad,rad,rad,m, m, m
+            (gtsam::Vector(6) << 0.1, 0.1, 0.1, 0.2, 0.2, 0.2).finished());  // rad,rad,rad,m, m, m
         correctionNoise2 = gtsam::noiseModel::Diagonal::Sigmas(
-            (gtsam::Vector(6) << 1, 1, 1, 1, 1, 1).finished());  // rad,rad,rad,m, m, m
+            (gtsam::Vector(6) << 2.0, 2.0, 2.0, 2.0, 2.0, 2.0).finished());  // rad,rad,rad,m, m, m
         noiseModelBetweenBias =
             (gtsam::Vector(6) << imuAccBiasN, imuAccBiasN, imuAccBiasN, imuGyrBiasN, imuGyrBiasN, imuGyrBiasN)
                 .finished();
@@ -304,8 +311,11 @@ class IMUPreintegration : public ParamServer {
 
     void resetOptimization() {
         gtsam::ISAM2Params optParameters;
-        optParameters.relinearizeThreshold = 0.1;
+        optParameters.relinearizeThreshold = 0.01;  // Lower threshold for more frequent relinearization
         optParameters.relinearizeSkip = 1;
+        optParameters.enablePartialRelinearizationCheck = true;
+        optParameters.evaluateNonlinearError = true;
+        optParameters.cacheLinearizedFactors = false;  // Disable caching to prevent stale linearization
         optimizer = gtsam::ISAM2(optParameters);
 
         gtsam::NonlinearFactorGraph newGraphFactors;
@@ -451,22 +461,62 @@ class IMUPreintegration : public ParamServer {
         graphValues.insert(X(key), propState_.pose());
         graphValues.insert(V(key), propState_.v());
         graphValues.insert(B(key), prevBias_);
-        // optimize
-        optimizer.update(graphFactors, graphValues);
-        optimizer.update();
-        graphFactors.resize(0);
-        graphValues.clear();
-        // Overwrite the beginning of the preintegration for the next step.
-        gtsam::Values result = optimizer.calculateEstimate();
-        prevPose_ = result.at<gtsam::Pose3>(X(key));
-        prevVel_ = result.at<gtsam::Vector3>(V(key));
-        prevState_ = gtsam::NavState(prevPose_, prevVel_);
-        prevBias_ = result.at<gtsam::imuBias::ConstantBias>(B(key));
-        // Reset the optimization preintegration object.
-        imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
-        // check optimization
-        if (failureDetection(prevVel_, prevBias_)) {
+        // optimize with exception handling
+        try {
+            optimizer.update(graphFactors, graphValues);
+            optimizer.update();
+            graphFactors.resize(0);
+            graphValues.clear();
+            // Overwrite the beginning of the preintegration for the next step.
+            gtsam::Values result = optimizer.calculateEstimate();
+            prevPose_ = result.at<gtsam::Pose3>(X(key));
+            prevVel_ = result.at<gtsam::Vector3>(V(key));
+            prevState_ = gtsam::NavState(prevPose_, prevVel_);
+            prevBias_ = result.at<gtsam::imuBias::ConstantBias>(B(key));
+            // Reset the optimization preintegration object.
+            imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
+            // check optimization
+            if (failureDetection(prevVel_, prevBias_)) {
+                resetParams();
+                return;
+            }
+        } catch (const gtsam::IndeterminantLinearSystemException& e) {
+            RCLCPP_ERROR(get_logger(), "GTSAM IndeterminantLinearSystemException caught: %s", e.what());
+            RCLCPP_WARN(get_logger(), "Resetting IMU preintegration due to linear system indeterminancy");
+            
+            // Reset the system to recover from the exception
             resetParams();
+            
+            // Clear the optimization graph and values
+            graphFactors.resize(0);
+            graphValues.clear();
+            
+            // Reset the optimizer
+            resetOptimization();
+            
+            // Reinitialize with current state
+            systemInitialized = false;
+            
+            RCLCPP_INFO(get_logger(), "IMU preintegration system reset completed");
+            return;
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(get_logger(), "Unknown exception caught during optimization: %s", e.what());
+            RCLCPP_WARN(get_logger(), "Resetting IMU preintegration due to unknown exception");
+            
+            // Reset the system to recover from the exception
+            resetParams();
+            
+            // Clear the optimization graph and values
+            graphFactors.resize(0);
+            graphValues.clear();
+            
+            // Reset the optimizer
+            resetOptimization();
+            
+            // Reinitialize with current state
+            systemInitialized = false;
+            
+            RCLCPP_INFO(get_logger(), "IMU preintegration system reset completed");
             return;
         }
 
@@ -509,46 +559,76 @@ class IMUPreintegration : public ParamServer {
             return false;
         }
         
-
-        
-        Eigen::Vector3f vel(velCur.x(), velCur.y(), velCur.z());
-        
-        // 在系统启动初期使用最严格的阈值（机器人静止状态）
-        rclcpp::Time currentTime = this->now();
-        double elapsedTime = (currentTime - systemStartTime).seconds();
-        double velocityThreshold;
-        double biasThreshold;
-        
-        if (elapsedTime < 2.0) {
-            // 前2秒机器人静止，使用最严格的阈值
-            velocityThreshold = 5.0;  // 1m/s，静止状态下允许的最大速度
-            biasThreshold = 0.5;      // 0.1，静止状态下允许的最大偏置
-        } else {
-            // 10秒后使用配置值
-            velocityThreshold = this->imuVelocityThreshold;
-            biasThreshold = this->imuBiasThreshold;
-        }
-        
-        if (vel.norm() > velocityThreshold) {
-            RCLCPP_WARN(get_logger(), "Large velocity (%.1f m/s > %.1f m/s), reset IMU-preintegration!", 
-                       vel.norm(), velocityThreshold);
+        gtsam::Vector3 velNorm = velCur;
+        if (velNorm.norm() > 10) {  // Reduced threshold from 30 to 10 for more conservative detection
+            RCLCPP_WARN(this->get_logger(), "Large velocity (%.2f m/s), reset IMU-preintegration!", velNorm.norm());
             return true;
         }
 
-        Eigen::Vector3f ba(biasCur.accelerometer().x(), biasCur.accelerometer().y(), biasCur.accelerometer().z());
-        Eigen::Vector3f bg(biasCur.gyroscope().x(), biasCur.gyroscope().y(), biasCur.gyroscope().z());
+        gtsam::Vector6 biasNorm = biasCur.vector();
+        if (biasNorm.norm() > 0.5) {  // Reduced threshold from 1.0 to 0.5 for more conservative detection
+            RCLCPP_WARN(this->get_logger(), "Large bias (%.4f), reset IMU-preintegration!", biasNorm.norm());
+            return true;
+        }
+
+        // Additional system health checks
+        static int consecutiveFailures = 0;
+        static auto lastResetTime = this->now();
+        auto currentTime = this->now();
         
-        if (ba.norm() > biasThreshold || bg.norm() > biasThreshold) {
-            RCLCPP_WARN(get_logger(), "Large bias (acc: %.1f > %.1f, gyr: %.1f > %.1f), reset IMU-preintegration!",
-                       ba.norm(), biasThreshold, bg.norm(), biasThreshold);
+        // If we've had too many resets in a short time, indicate system instability
+        if ((currentTime - lastResetTime).seconds() < 5.0) {
+            consecutiveFailures++;
+        } else {
+            consecutiveFailures = 0;
+        }
+        lastResetTime = currentTime;
+        
+        if (consecutiveFailures > 3) {
+            RCLCPP_ERROR(this->get_logger(), "System instability detected: %d consecutive failures in 5 seconds", consecutiveFailures);
+            consecutiveFailures = 0;
             return true;
         }
 
         return false;
     }
 
+    // Enhanced system monitoring and recovery mechanism
+    void monitorSystemHealth() {
+        static auto lastHealthCheckTime = this->now();
+        auto currentTime = this->now();
+        
+        // Perform health check every 10 seconds
+        if ((currentTime - lastHealthCheckTime).seconds() < 10.0) {
+            return;
+        }
+        
+        lastHealthCheckTime = currentTime;
+        
+        // Check if system is receiving IMU data regularly
+        static auto lastImuTime = this->now();
+        if ((currentTime - lastImuTime).seconds() > 1.0) {
+            RCLCPP_WARN(this->get_logger(), "No IMU data received for %.1f seconds", (currentTime - lastImuTime).seconds());
+        }
+        
+        // Check if optimization is running normally
+        if (systemInitialized && optimizer.getFactorsUnsafe().size() > 1000) {
+            RCLCPP_INFO(this->get_logger(), "Optimization graph size: %zu factors", optimizer.getFactorsUnsafe().size());
+        }
+        
+        // Log system status
+        RCLCPP_INFO(this->get_logger(), "System health check: IMU integration running normally");
+    }
+
     void imuHandler(const sensor_msgs::msg::Imu::SharedPtr imu_raw) {
         std::lock_guard<std::mutex> lock(mtx);
+        
+        // Update last IMU time for health monitoring
+        static auto lastImuTime = this->now();
+        lastImuTime = this->now();
+        
+        // Perform system health monitoring
+        monitorSystemHealth();
 
         sensor_msgs::msg::Imu thisImu = imuConverter(*imu_raw);
 

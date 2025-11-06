@@ -57,8 +57,8 @@
     #                0.0, 0.0, 1.0]
 
     # LOAM feature threshold
-    edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
-    surfThreshold: 0.8
+    edgeThreshold: 0.5              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
+    surfThreshold: 0.07
     edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
     surfFeatureMinValidNum: 100
 

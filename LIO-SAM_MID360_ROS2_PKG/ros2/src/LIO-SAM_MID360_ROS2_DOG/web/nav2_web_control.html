@@ -105,11 +105,19 @@
     <div>
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
+      <div style="margin-top: 5px;">
+        <label for="goal-yaw">目标点朝向(yaw)：</label>
+        <input type="number" id="goal-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
+      </div>
     </div>
     <div style="margin-top: 10px;">
       <button onclick="setInitialPose()">设置初始点</button>
       <button onclick="clearInitialPose()">清除初始点</button>
       <span id="initial-pose-status">未设置</span>
+      <div style="margin-top: 5px;">
+        <label for="initial-pose-yaw">初始点朝向(yaw)：</label>
+        <input type="number" id="initial-pose-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
+      </div>
     </div>
     <div style="margin-top: 10px;">
       <select id="position-source-select" onchange="changePositionSource(this.value)">
@@ -468,8 +476,38 @@
          marker.style.left = canvasX + 'px';
          marker.style.top = canvasY + 'px';
          marker.style.display = 'block';
+         
+         // 如果有朝向信息，显示箭头
+         if (goalPosition.theta !== undefined) {
+           // 清除之前的箭头
+           const existingArrow = document.getElementById('goal-arrow');
+           if (existingArrow) {
+             existingArrow.remove();
+           }
+           
+           // 创建箭头元素
+           const arrow = document.createElement('div');
+           arrow.id = 'goal-arrow';
+           arrow.style.position = 'absolute';
+           arrow.style.width = '0';
+           arrow.style.height = '0';
+           arrow.style.borderLeft = '8px solid transparent';
+           arrow.style.borderRight = '8px solid transparent';
+           arrow.style.borderBottom = '12px solid #00ff00';
+           arrow.style.transform = `translate(-50%, -50%) rotate(${goalPosition.theta}rad)`;
+           arrow.style.zIndex = '5';
+           arrow.style.left = canvasX + 'px';
+           arrow.style.top = canvasY + 'px';
+           
+           document.getElementById('map-container').appendChild(arrow);
+         }
        } else {
          marker.style.display = 'none';
+         // 清除箭头
+         const existingArrow = document.getElementById('goal-arrow');
+         if (existingArrow) {
+           existingArrow.remove();
+         }
        }
      }
     
@@ -599,11 +637,15 @@
     }
     
     // 发布初始点
-    function publishInitialPose(x, y, theta = 0) {
+    function publishInitialPose(x, y) {
       if (!window.ros || !currentMap) {
         alert('请先确保ROS连接正常且已收到地图数据');
         return;
       }
+      
+      // 获取yaw值
+      const yawInput = document.getElementById('initial-pose-yaw');
+      const theta = yawInput ? parseFloat(yawInput.value) * Math.PI / 180 : 0; // 转换为弧度
       
       // 保存初始点位置用于显示
       initialPosePosition = { x: x, y: y, theta: theta };
@@ -690,6 +732,11 @@
       const marker = document.getElementById('initial-pose-marker');
       if (!initialPosePosition || !currentMap) {
         marker.style.display = 'none';
+        // 清除箭头
+        const existingArrow = document.getElementById('initial-pose-arrow');
+        if (existingArrow) {
+          existingArrow.remove();
+        }
         return;
       }
       
@@ -700,12 +747,42 @@
       // 检查坐标是否在Canvas范围内
       if (canvasX < 0 || canvasX > canvas.width || canvasY < 0 || canvasY > canvas.height) {
         marker.style.display = 'none';
+        // 清除箭头
+        const existingArrow = document.getElementById('initial-pose-arrow');
+        if (existingArrow) {
+          existingArrow.remove();
+        }
         return;
       }
       
       marker.style.left = canvasX + 'px';
       marker.style.top = canvasY + 'px';
       marker.style.display = 'block';
+      
+      // 如果有朝向信息，显示箭头
+      if (initialPosePosition.theta !== undefined) {
+        // 清除之前的箭头
+        const existingArrow = document.getElementById('initial-pose-arrow');
+        if (existingArrow) {
+          existingArrow.remove();
+        }
+        
+        // 创建箭头元素
+        const arrow = document.createElement('div');
+        arrow.id = 'initial-pose-arrow';
+        arrow.style.position = 'absolute';
+        arrow.style.width = '0';
+        arrow.style.height = '0';
+        arrow.style.borderLeft = '8px solid transparent';
+        arrow.style.borderRight = '8px solid transparent';
+        arrow.style.borderBottom = '12px solid #ff8800';
+        arrow.style.transform = `translate(-50%, -50%) rotate(${initialPosePosition.theta}rad)`;
+        arrow.style.zIndex = '6';
+        arrow.style.left = canvasX + 'px';
+        arrow.style.top = canvasY + 'px';
+        
+        document.getElementById('map-container').appendChild(arrow);
+      }
     }
     
     // 发布目标点
@@ -715,8 +792,12 @@
         return;
       }
       
+      // 获取yaw值
+      const yawInput = document.getElementById('goal-yaw');
+      const yaw = yawInput ? parseFloat(yawInput.value) * Math.PI / 180 : 0; // 转换为弧度
+      
       // 保存目标位置用于显示
-      goalPosition = { x: x, y: y };
+      goalPosition = { x: x, y: y, theta: yaw };
       console.log('设置目标位置:', goalPosition);
       
       // 创建目标发布器（如果还没有）
@@ -740,7 +821,12 @@
         },
         pose: {
           position: { x: x, y: y, z: 0 },
-          orientation: { x: 0, y: 0, z: 0, w: 1 } // 默认朝向
+          orientation: { 
+            x: 0, 
+            y: 0, 
+            z: Math.sin(yaw/2), 
+            w: Math.cos(yaw/2) 
+          }
         }
       });
       

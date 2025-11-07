@@ -228,7 +228,7 @@ def generate_launch_description():
             # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
             # 原始地图中的激光束数量为 691，实际转换产生 690 时会触发 slam_toolbox 的长度校验错误。
             # 使用精确值可以避免舍入导致的“expected 691 / got 690”问题。
-            'angle_increment': 0.0086956521739130434782,
+            'angle_increment': 0.00869347338,
             'scan_time': 0.1,             # 扫描时间
             
             'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)

@@ -481,8 +481,8 @@ class IMUPreintegration : public ParamServer {
                 return;
             }
         } catch (const gtsam::IndeterminantLinearSystemException& e) {
-            RCLCPP_ERROR(get_logger(), "GTSAM IndeterminantLinearSystemException caught: %s", e.what());
-            RCLCPP_WARN(get_logger(), "Resetting IMU preintegration due to linear system indeterminancy");
+            RCLCPP_ERROR(this->get_logger(), "GTSAM IndeterminantLinearSystemException caught: %s", e.what());
+            RCLCPP_WARN(this->get_logger(), "Resetting IMU preintegration due to linear system indeterminancy");
             
             // Reset the system to recover from the exception
             resetParams();
@@ -497,11 +497,11 @@ class IMUPreintegration : public ParamServer {
             // Reinitialize with current state
             systemInitialized = false;
             
-            RCLCPP_INFO(get_logger(), "IMU preintegration system reset completed");
+            RCLCPP_INFO(this->get_logger(), "IMU preintegration system reset completed");
             return;
         } catch (const std::exception& e) {
-            RCLCPP_ERROR(get_logger(), "Unknown exception caught during optimization: %s", e.what());
-            RCLCPP_WARN(get_logger(), "Resetting IMU preintegration due to unknown exception");
+            RCLCPP_ERROR(this->get_logger(), "Unknown exception caught during optimization: %s", e.what());
+            RCLCPP_WARN(this->get_logger(), "Resetting IMU preintegration due to unknown exception");
             
             // Reset the system to recover from the exception
             resetParams();
@@ -516,7 +516,7 @@ class IMUPreintegration : public ParamServer {
             // Reinitialize with current state
             systemInitialized = false;
             
-            RCLCPP_INFO(get_logger(), "IMU preintegration system reset completed");
+            RCLCPP_INFO(this->get_logger(), "IMU preintegration system reset completed");
             return;
         }
 
@@ -605,19 +605,19 @@ class IMUPreintegration : public ParamServer {
         
         lastHealthCheckTime = currentTime;
         
-        // Check if system is receiving IMU data regularly
-        static auto lastImuTime = this->now();
-        if ((currentTime - lastImuTime).seconds() > 1.0) {
-            RCLCPP_WARN(this->get_logger(), "No IMU data received for %.1f seconds", (currentTime - lastImuTime).seconds());
-        }
+        // // Check if system is receiving IMU data regularly
+        // static auto lastImuTime = this->now();
+        // if ((currentTime - lastImuTime).seconds() > 1.0) {
+        //     RCLCPP_WARN(this->get_logger(), "No IMU data received for %.1f seconds", (currentTime - lastImuTime).seconds());
+        // }
         
-        // Check if optimization is running normally
-        if (systemInitialized && optimizer.getFactorsUnsafe().size() > 1000) {
-            RCLCPP_INFO(this->get_logger(), "Optimization graph size: %zu factors", optimizer.getFactorsUnsafe().size());
-        }
+        // // Check if optimization is running normally
+        // if (systemInitialized && optimizer.getFactorsUnsafe().size() > 1000) {
+        //     RCLCPP_INFO(this->get_logger(), "Optimization graph size: %zu factors", optimizer.getFactorsUnsafe().size());
+        // }
         
-        // Log system status
-        RCLCPP_INFO(this->get_logger(), "System health check: IMU integration running normally");
+        // // Log system status
+        // RCLCPP_INFO(this->get_logger(), "System health check: IMU integration running normally");
     }
 
     void imuHandler(const sensor_msgs::msg::Imu::SharedPtr imu_raw) {
@@ -628,7 +628,7 @@ class IMUPreintegration : public ParamServer {
         lastImuTime = this->now();
         
         // Perform system health monitoring
-        monitorSystemHealth();
+        // monitorSystemHealth();
 
         sensor_msgs::msg::Imu thisImu = imuConverter(*imu_raw);
 

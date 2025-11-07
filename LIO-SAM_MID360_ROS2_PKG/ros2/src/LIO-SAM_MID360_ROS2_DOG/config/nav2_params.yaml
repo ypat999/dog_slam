@@ -34,7 +34,7 @@ amcl:
     
     # 基础参数 - 两个模型共用
     min_particles: 500
-    max_particles: 2000
+    max_particles: 4000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.99        # 修正参数名：kld_z -> pf_z
     
@@ -378,14 +378,14 @@ controller_server:
         enabled: true
         cost_weight: 12.0  # 降低路径跟踪权重，减少过冲
         cost_power: 1
-        offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高实时响应
+        offset_from_furthest: 6  # 大幅减少前瞻距离，从6减到4，提高实时响应
         threshold_to_consider: 0.5  # 增加阈值，允许更大偏差
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 12.0  # 进一步降低权重，减少方向修正
+        cost_weight: 14.0  # 进一步降低权重，减少方向修正
         cost_power: 1
-        offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高响应速度
+        offset_from_furthest: 5  # 大幅减少前瞻距离，从6减到4，提高响应速度
         threshold_to_consider: 0.6  # 增加阈值
         max_angle_to_furthest: 0.2  # 减少最大角度阈值
         

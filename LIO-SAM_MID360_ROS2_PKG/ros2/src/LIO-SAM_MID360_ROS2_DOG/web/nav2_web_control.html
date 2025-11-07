@@ -114,10 +114,10 @@
     <div style="margin-top: 10px;">
       <select id="position-source-select" onchange="changePositionSource(this.value)">
         <option value="amcl">使用AMCL定位</option>
-        <option value="lio_sam">使用LIO-SAM里程计</option>
         <option value="slam_toolbox">使用slam_toolbox定位</option>
+        <option value="lio_sam">使用LIO-SAM里程计</option>
       </select>
-  <span id="position-source-status">当前：使用slam_toolbox定位</span>
+  <span id="position-source-status">当前：使用AMCL定位</span>
     </div>
     
     <!-- 地图颜色配置 -->
@@ -161,7 +161,7 @@
     const GOAL_TOPIC = "/goal_pose";
     const INITIAL_POSE_TOPIC = "/initialpose";
   // 位置源选择：'lio_sam' 或 'amcl' 或 'slam_toolbox'
-  let positionSource = 'slam_toolbox'; // 默认使用slam_toolbox定位信息
+  let positionSource = 'amcl'; // 默认使用AMCL定位信息
     
     // 地图颜色配置
     let mapColors = {

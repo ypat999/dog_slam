@@ -124,4 +124,5 @@ ps -ef | grep ros
 colcon build --symlink-install --packages-select lio_sam
 
 
-
+# 使用slamtoolbox建图
+BUILD_MAP=false ros2 launch lio_sam lio_sam_nav2.launch.py localization:=slam_toolbox

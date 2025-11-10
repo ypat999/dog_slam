@@ -199,13 +199,13 @@ def generate_launch_description():
             'sensor_model/min_range': 0.4,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -0.3,             # 投影高度下限
+            'occupancy_min_z': -0.2,             # 投影高度下限
             'occupancy_max_z': 2.0,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
         remappings=[
-            ('/cloud_in', '/lio_sam/mapping/cloud_registered')  # 输入点云
+            ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw')  # 输入点云
         ]
     )
 
@@ -232,7 +232,7 @@ def generate_launch_description():
             'scan_time': 0.1,             # 扫描时间
             
             'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 80.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'range_max': 200.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
             'inf_epsilon': 10000.0,           # 无穷大值的替代值

@@ -4,9 +4,14 @@ rviz2
 # 启动建图：
 sudo systemctl start lio_sam_buildmap.service
 
-# 保存二维地图：
+# 保存二维地图(amcl)：
 source ros2/install/setup.bash 
 ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_part --fmt png
+
+# 保存位姿图(slam_toolbox)：
+# 调用 serialize_map 服务保存序列化地图
+ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph "{filename: '/home/ywj/projects/posegraph/my_map'}"
+
 
 # 保存点云 （不使用）
 source ros2/install/setup.bash 
@@ -69,7 +74,7 @@ export ROS_DOMAIN_ID=27
 cd ros2
 export DISPLAY=localhost:10.0
 
-colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam lio_sam.launch.py
+colcon build --symlink-install --packages-select lio_sam && source install/setup.bash &&BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam nav2.launch.py
 
 /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web.sh

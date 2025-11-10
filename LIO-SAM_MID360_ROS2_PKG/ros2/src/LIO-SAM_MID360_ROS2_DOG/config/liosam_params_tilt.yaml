@@ -12,7 +12,6 @@
     baselinkFrame: "base_link"
     odometryFrame: "odom"
     mapFrame: "map"
-    # mapFrame: "odom"
     
     # TF Publishing Control
     # Set to false to disable publishing of map->odom transform
@@ -37,7 +36,7 @@
     downsampleRate: 2                            # 增加下采样率，减少数据处理量，避免IMU数据积压
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
     lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
-    lidarMaxRange: 80.0                        # default: 1000.0, maximum lidar range to be used
+    lidarMaxRange: 100.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
     imuAccNoise: 3.9939570888238808e-03

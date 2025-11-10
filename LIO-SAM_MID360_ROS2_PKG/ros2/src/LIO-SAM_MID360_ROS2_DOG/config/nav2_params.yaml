@@ -717,7 +717,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: true
-    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
+    yaml_filename: /home/ywj/projects/map_grid/map.yaml
 
 # =============================================================================
 # Planner Server Configuration
@@ -887,40 +887,14 @@ slam_toolbox_localization:
   ros__parameters:
     # 基本设置
     use_sim_time: true
-    mode: "localization"  # 使用 localization / relocalization 模式
 
-    # 地图文件（可由 launch 时覆盖 map_file_name）
-    map_file_name: ''
-
-    # 启动时用于定位（与 AMCL 的 /initialpose 等价的参数）
-    # 格式: [x, y, yaw] (单位: 米, 弧度)
-    # 值示例: 将初始位姿设为 x=33.5, y=3.5, yaw=1.57
-    map_start_pose: [33.5, 3.5, 1.57]
-    # 如果想以 dock（第一节点）作为启动位置，可以启用下一项
-    map_start_at_dock: false
-
-    # 坐标系
-    map_frame: map
-    odom_frame: odom
-    base_frame: base_link
-
-    # 激光与里程计话题
-    scan_topic: /lio_sam/scan
-    odom_topic: /lio_sam/mapping/odometry
-
-    # 保持 transform publish（map->odom 发布通常需要）
-    transform_publish_period: 0.05
-
-    # 传感器范围与匹配参数（可按需调优）
-    max_laser_range: 40.0
-    min_laser_range: 0.2
-
-    # 使能局部scan-matching用于相对定位增强
-    use_scan_matching: true
-
-    # 当需要重定位时相关参数（短时间内多尝试以尽快定位）
-    loop_closure_threshold: 1.0
-    loop_closure_max_candidates: 10
+    # 模式 - "mapping" 或 "localization" 模式，用于 Ceres 问题创建的性能优化
+    #     工作原理与使用场景
+    # LifeLong Mapping模式详解
+    # 这个模式非常适合需要长期在动态环境中工作的机器人。它通过多会话（multi-session） 的管理方式，允许机器人不断地将运行过程中感知到的新环境变化（如新增的障碍物、改变的布局）整合到现有地图中。同时，它也会利用诸如Chow-Liu树等算法对位姿图进行稀疏化，以控制计算和存储成本，确保系统能够长期稳定运行。简单来说，它让地图"活"起来，伴随机器人的一生共同演进。
+    # Localization模式详解
+    # 一旦你拥有了一张高质量的地图，并且环境相对稳定，就可以切换到Localization模式。在此模式下，slam_toolbox的核心任务不再是构建地图，而是像一个更强大的自适应蒙特卡洛定位（AMCL） 一样，专注于解决"我在哪里"的问题。它通过匹配当前的传感器观测和已知地图，来提供精确的位姿，并修正里程计累积的漂移。
+    mode: "mapping"  
 
     # 调试 / 可视化
     # 发布频率与变换发布
@@ -928,6 +902,232 @@ slam_toolbox_localization:
     # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
     map_update_interval: 1.0
     publish_occupancy_map: true
+
+    # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
+    map_file_name: '/home/ywj/projects/posegraph/my_map'
+
+    # 启动时用于定位（与 AMCL 的 /initialpose 等价的参数）
+    # 格式: [x, y, yaw] (单位: 米, 弧度)
+    # 值示例: 将初始位姿设为 x=33.5, y=3.5, yaw=1.57
+    # map_start_pose: [1.5, 1.5, 0.57]
+    # 如果想以 dock（第一节点）作为启动位置，可以启用下一项
+    map_start_at_dock: false
+
+    # 坐标系
+    # 里程计坐标系
+    odom_frame: odom
+    # 地图坐标系
+    map_frame: map
+    # 基座坐标系
+    base_frame: base_link
+
+    # 激光与里程计话题
+    # 扫描话题 - 绝对路径，即 /scan 而不是 scan
+    scan_topic: /lio_sam/scan
+    # 里程计话题
+    odom_topic: /lio_sam/mapping/odometry
+
+    # 保持 transform publish（map->odom 发布通常需要）
+    # 地图到里程计变换的发布周期，0 表示不发布变换
+    transform_publish_period: 0.0
+
+    # 传感器范围与匹配参数（可按需调优）
+    # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
+    max_laser_range: 60.0
+    # 最小激光范围 - 用于 2D 占用地图栅格化的最小激光范围
+    min_laser_range: 1.5
+
+    # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
+    use_scan_matching: true
+
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
+    # 实例化地图保存服务并自订阅地图话题
     use_map_saver: false
-    publish_pose: true
+
+    # =============================================================================
+    # 新增重要参数配置 - 根据 ros2 param list 添加
+    # =============================================================================
+    
+    # 角度方差惩罚 - 当匹配扫描与里程计位姿不同时应用的惩罚，用于重定位时惩罚与里程计不一致的位姿
+    angle_variance_penalty: 1.0
+    
+    # 距离方差惩罚 - 当匹配扫描与里程计位姿不同时应用的惩罚，用于重定位时惩罚与里程计不一致的位姿
+    distance_variance_penalty: 1.0
+    
+    # 最小角度惩罚 - 确保角度惩罚不会过大的最小惩罚值，防止重定位时角度变化过大
+    minimum_angle_penalty: 0.3
+    
+    # 最小距离惩罚 - 确保距离惩罚不会过大的最小惩罚值，防止重定位时位置变化过大
+    minimum_distance_penalty: 0.3
+    
+    # 是否启用闭环检测 - 必须启用才能支持重定位功能
+    do_loop_closing: true
+    
+    # # 是否启用交互模式
+    # enable_interactive_mode: false
+    # interactive_mode: false
+    
+    # # 暂停新测量处理
+    # paused_new_measurements: false
+    
+    # # 暂停处理
+    # paused_processing: false
+    
+    # 位置协方差缩放 - 控制位置估计的不确定性，值越小表示对位置估计越自信
+    position_covariance_scale: 0.8
+    
+    # 偏航角协方差缩放 - 控制角度估计的不确定性，值越小表示对角度估计越自信
+    yaw_covariance_scale: 0.5
+    
+    # # 分辨率 - 地图分辨率
+    resolution: 0.05
+    
+    # # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
+    # occupancy_threshold: 0.65
+    
+    # # 地图名称
+    # map_name: "map"
+    
+    # 最小时间间隔 - 扫描处理间隔，降低频率以减少计算负载，提高长距离稳定性
+    minimum_time_interval: 0.2
+    
+    # 最小移动距离 - 触发地图更新的最小距离，增加距离阈值以减少频繁更新
+    minimum_travel_distance: 0.2
+    
+    # 最小移动角度 - 触发地图更新的最小角度，增加角度阈值以减少频繁更新
+    minimum_travel_heading: 0.08
+    
+    # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
+    scan_buffer_size: 20
+    
+    # 扫描队列大小 - 控制扫描数据的处理队列
+    scan_queue_size: 8
+    
+    # 扫描缓冲区最大扫描距离 - 增加匹配距离范围，提高重定位能力
+    scan_buffer_maximum_scan_distance: 8.0
+    
+    # # 最小通过距离 - 在单元格被标记为占用或未占用之前必须通过的光束数量
+    # min_pass_through: 0.0
+    
+    # # 链接扫描最小响应（精细）
+    # link_match_minimum_response_fine: 0.1
+    
+    # # 链接扫描最大距离
+    # link_scan_maximum_distance: 10.0
+    
+    # 闭环匹配最大方差（粗略） - 控制闭环检测的匹配阈值，值越小匹配越严格
+    loop_match_maximum_variance_coarse: 0.2
+    
+    # 闭环匹配最小链大小 - 检测闭环所需的最小连续匹配数
+    loop_match_minimum_chain_size: 3
+    
+    # 闭环匹配最小响应（粗略） - 粗略匹配的最小响应阈值
+    loop_match_minimum_response_coarse: 0.8
+    
+    # 闭环匹配最小响应（精细） - 精细匹配的最小响应阈值
+    loop_match_minimum_response_fine: 0.1
+    
+    # 闭环搜索最大距离 - 增加搜索距离范围以支持更长的匹配，提高重定位能力
+    loop_search_maximum_distance: 6.0
+    
+    # 闭环搜索空间维度 - 适当增加搜索空间尺寸以支持更长的匹配距离
+    loop_search_space_dimension: 0.25
+    
+    # 闭环搜索空间分辨率 - 略微降低分辨率以减少计算负载，平衡性能
+    loop_search_space_resolution: 0.008
+    
+    # 闭环搜索空间模糊偏差 - 用于平滑响应的多模态模糊量
+    loop_search_space_smear_deviation: 0.025
+    
+    # 相关搜索空间维度 - 增加搜索空间尺寸以支持更长的匹配距离
+    correlation_search_space_dimension: 0.4
+    
+    # 相关搜索空间分辨率 - 略微降低分辨率以减少计算负载，平衡性能
+    correlation_search_space_resolution: 0.008
+    
+    # 相关搜索空间模糊偏差 - 相关匹配的模糊偏差
+    correlation_search_space_smear_deviation: 0.025
+    
+    # 粗略角度分辨率 - 在扫描匹配中测试角度偏移范围的角度分辨率
+    coarse_angle_resolution: 0.0174532925
+    
+    # 粗略搜索角度偏移 - 用于粗略扫描匹配的角度测试范围
+    coarse_search_angle_offset: 0.0
+    
+    # 精细搜索角度偏移 - 用于精细扫描匹配的角度测试范围
+    fine_search_angle_offset: 0.00174532925
+    
+    # 是否使用扫描重心 - 使用扫描重心进行匹配，提高重定位精度
+    use_scan_barycenter: true
+    
+    # 是否使用响应扩展 - 如果未找到可行匹配，是否自动增加搜索网格大小，重定位时建议启用
+    use_response_expansion: true
+    
+    # # 是否启用调试日志
+    # debug_logging: false
+    
+    # # 限制扫描频率
+    # throttle_scans: 1
+    
+    # # 变换超时
+    # transform_timeout: 0.2
+    
+    # # TF缓冲区持续时间
+    # tf_buffer_duration: 10.0
+    
+    # # 求解器插件 - 用于karto扫描求解器的非线性求解器类型
+    # # 选项: solver_plugins::CeresSolver, solver_plugins::SpaSolver, solver_plugins::G2oSolver
+    # # 默认: solver_plugins::CeresSolver
+    # solver_plugin: "CeresSolver"
+    
+    # # Ceres求解器参数
+    # # Ceres线性求解器 - Ceres使用的线性求解器
+    # # 选项: SPARSE_NORMAL_CHOLESKY, SPARSE_SCHUR, ITERATIVE_SCHUR, CGNR
+    # # 默认: SPARSE_NORMAL_CHOLESKY
+    # ceres_linear_solver: "SPARSE_NORMAL_CHOLESKY"
+    
+    # # Ceres预处理器 - 与求解器一起使用的预处理器
+    # # 选项: JACOBI, IDENTITY (无), SCHUR_JACOBI
+    # # 默认: JACOBI
+    # ceres_preconditioner: "JACOBI"
+    
+    # # Ceres信任区域策略 - 信任区域策略
+    # # 选项: LEVENBERG_MARQUARDT, DOGLEG
+    # # 默认: LEVENBERG_MARQUARDT
+    # ceres_trust_strategy: "LEVENBERG_MARQUARDT"
+    
+    # # Ceres狗腿类型 - 如果信任策略是DOGLEG时使用的狗腿策略
+    # # 选项: TRADITIONAL_DOGLEG, SUBSPACE_DOGLEG
+    # # 默认: TRADITIONAL_DOGLEG
+    # ceres_dogleg_type: "TRADITIONAL_DOGLEG"
+    
+    # # Ceres损失函数 - 用于拒绝异常值测量的损失函数类型
+    # # 选项: None (等价于平方损失), HuberLoss, CauchyLoss
+    # # 默认: None
+    # ceres_loss_function: "Cauchy"
+
+    # # QoS 参数配置 - 消息服务质量设置
+    # qos_overrides:
+    #   # 时钟话题订阅配置
+    #   ./clock:
+    #     subscription:
+    #       depth: 10
+    #       durability: "volatile"
+    #       history: "keep_last"
+    #       reliability: "reliable"
+      
+    #   # 参数事件发布配置
+    #   ./parameter_events:
+    #     publisher:
+    #       depth: 10
+    #       durability: "volatile"
+    #       history: "keep_last"
+    #       reliability: "reliable"
+      
+    #   # TF 发布配置
+    #   ./tf:
+    #     publisher:
+    #       depth: 10
+    #       durability: "volatile"
+    #       history: "keep_last"
+    #       reliability: "reliable"

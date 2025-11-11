@@ -275,14 +275,14 @@ controller_server:
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
     # 控制器服务器详细日志
-    verbose: false
+    verbose: true
     
     # 全向移动最小速度阈值
     min_x_velocity_threshold: 0.05
     min_y_velocity_threshold: 0.1
-    min_theta_velocity_threshold: 0.02
-    min_speed_xy: 0.0
-    min_speed_theta: 0.01
+    min_theta_velocity_threshold: 0.1
+    min_speed_xy: 0.05
+    min_speed_theta: 0.1
     
     # 进度检查器参数 - 配合新行为树优化
     progress_checker:
@@ -298,26 +298,14 @@ controller_server:
       stateful: false
       velocity_threshold: 0.05  # 降低速度检查阈值，从0.05减到0.03，更快检测停止
       min_velocity_threshold: 0.005  # 降低最小速度阈值，从0.01减到0.005，提高灵敏度
-      goal_angle_tolerance: 0.20  # 减小目标角度容差，提高方向精度
-      max_goal_pose_distance: 0.15  # 减小最大目标点距离，从0.15减到0.1，提高停止精度
-
-    # position_only_goal_checker:
-    #   plugin: "nav2_controller::SimpleGoalChecker"
-    #   xy_goal_tolerance: 0.3
-    #   yaw_goal_tolerance: 999.9  # 忽略方向对齐
-    #   stateful: true
-
-    # full_goal_checker:
-    #   plugin: "nav2_controller::SimpleGoalChecker"
-    #   xy_goal_tolerance: 999.9
-    #   yaw_goal_tolerance: 0.2
-    #   stateful: true
+      goal_angle_tolerance: 0.15  # 减小目标角度容差，提高方向精度
+      max_goal_pose_distance: 0.5  # 减小最大目标点距离，从0.15减到0.1，提高停止精度
 
     
     # MPPI控制器参数 - 全向移动配置（实时性优化）
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 30  # 大幅减少时间步数，从40减到20，降低计算延迟
+      time_steps: 20  # 大幅减少时间步数，从40减到20，降低计算延迟
       model_dt: 0.1
       batch_size: 100  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 0.1  # 减少变换容差，提高实时性
@@ -366,7 +354,7 @@ controller_server:
       
       CostCritic:
         enabled: true
-        cost_weight: 16.0
+        cost_weight: 5.0
         cost_power: 1
         collision_cost: 254.0  # 新增参数
         # consider_footprint: true  # 新增参数
@@ -385,7 +373,7 @@ controller_server:
         enabled: true
         cost_weight: 14.0  # 进一步降低权重，减少方向修正
         cost_power: 1
-        offset_from_furthest: 5  # 大幅减少前瞻距离，从6减到4，提高响应速度
+        offset_from_furthest: 30  # 大幅减少前瞻距离，从6减到4，提高响应速度
         threshold_to_consider: 0.6  # 增加阈值
         max_angle_to_furthest: 0.2  # 减少最大角度阈值
         
@@ -395,7 +383,7 @@ controller_server:
       
       TwirlingCritic:
         enabled: true
-        cost_weight: 18.0     # 强惩绕圈行为
+        cost_weight: 25.0     # 强惩绕圈行为
         max_angular_velocity: 1.0
         angular_accel_penalty: 0.5
         
@@ -405,95 +393,6 @@ controller_server:
         cost_power: 1
         offset_from_furthest: 2  # 减少前瞻距离，从10减到6，提高停止精度
         threshold_to_consider: 0.6
-      
-      # goal_checker: "full_goal_checker"
-      # current_goal_checker: "full_goal_checker"
-
-    # # FollowPathXY控制器 - 只检查位置不检查方向的控制器
-    # FollowPathXY:
-    #   plugin: "nav2_mppi_controller::MPPIController"
-    #   time_steps: 20
-    #   model_dt: 0.1
-    #   batch_size: 100
-    #   transform_tolerance: 0.1
-      
-    #   # 全向移动速度限制
-    #   vx_std: 0.3
-    #   vy_std: 0.15
-    #   wz_std: 0.2
-    #   vx_max: 0.5
-    #   vx_min: -0.03
-    #   vy_max: 0.3
-    #   vy_min: -0.3
-    #   wz_max: 0.8
-      
-    #   # 温度参数
-    #   temperature: 0.2
-    #   motion_model: "Omni"  # 全向移动模型
-    #   visualize: false
-    #   reset_period: 1.0
-      
-    #   # 轨迹可视化
-    #   trajectory_visualize: false
-    #   trajectory_visualize_max: 100
-      
-    #   # 评价器参数 - 移除方向相关的评价器，只关注位置跟踪
-    #   critics: ["ConstraintCritic", "CostCritic", "PathFollowCritic", "GoalCritic"]
-
-    #   ConstraintCritic:
-    #     enabled: true
-    #     cost_weight: 6.0
-      
-    #   CostCritic:
-    #     enabled: true
-    #     cost_weight: 6.81
-    #     cost_power: 1
-      
-    #   PathFollowCritic:
-    #     enabled: true
-    #     cost_weight: 8.0
-    #     cost_power: 1
-    #     offset_from_furthest: 2
-    #     threshold_to_consider: 1.2
-        
-    #   GoalCritic:
-    #     enabled: true
-    #     cost_weight: 50.0
-    #     cost_power: 1
-    #     offset_from_furthest: 1
-    #     threshold_to_consider: 0.6
-        
-    #   # 使用position_only_goal_checker，只检查位置不检查方向
-    #   # goal_checker: "position_only_goal_checker"
-    #   # current_goal_checker: "full_goal_checker"
-
-
-    # FollowPathYawOnly:
-    #   plugin: "nav2_mppi_controller::MPPIController"
-
-    #   motion_model: "Omni"     # 全向机器人
-    #   model_dt: 0.1
-    #   time_steps: 15
-    #   batch_size: 100
-
-    #   # ✅ 禁止 XY，用于只旋转
-    #   vx_max: 0.0
-    #   vx_min: 0.0
-    #   vy_max: 0.0
-    #   vy_min: 0.0
-
-    #   # ✅ 允许角速度
-    #   wz_max: 1.5
-    #   wz_min: -1.5
-    #   wz_std: 0.2
-
-    #   critics: ["GoalCritic", "ConstraintCritic"]
-
-    #   GoalCritic:
-    #     cost_weight: 20.0  # 强制对齐 yaw
-
-    #   ConstraintCritic:
-    #     cost_weight: 5.0
 
 
     # # 安全监控和补偿策略配置（实时性优化）

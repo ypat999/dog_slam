@@ -79,8 +79,8 @@ amcl:
     save_pose_rate: 0.3
     initial_pose:
       x: 33.5
-      y: 3.5 
-      z: 1.0
+      y: 4.5 
+      z: 0.5
       yaw: 1.57 
 
     # 激光雷达配置
@@ -305,15 +305,15 @@ controller_server:
     # MPPI控制器参数 - 全向移动配置（实时性优化）
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 20  # 大幅减少时间步数，从40减到20，降低计算延迟
+      time_steps: 30  # 大幅减少时间步数，从40减到20，降低计算延迟
       model_dt: 0.1
       batch_size: 100  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.1  # 减少变换容差，提高实时性
+      transform_tolerance: 3.0  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 增加角速度以减小转向半径
       vx_std: 0.4
       vy_std: 0.12
-      wz_std: 0.2  # 保持较高的角速度采样标准差，确保转向灵活性
+      wz_std: 0.3  # 保持较高的角速度采样标准差，确保转向灵活性
       vx_max: 0.7
       vx_min: -0.06
       vy_max: 0.2
@@ -321,20 +321,20 @@ controller_server:
       wz_max: 1.0  # 增加最大角速度，减小转向半径
       
       # 温度参数
-      temperature: 0.1
+      temperature: 0.05
       # motion_model: "DiffDrive" 
       motion_model: "Omni"  # 全向移动模型
-      visualize: false
+      visualize: true
       reset_period: 1.0
       
       # 轨迹可视化
       trajectory_visualize: true
-      trajectory_visualize_max: 20
+      trajectory_visualize_max: 50
       
       # TrajectoryVisualizer参数
       TrajectoryVisualizer:
-        time_step: 1  # 新增参数
-        trajectory_step: 5  # 新增参数
+        time_step: 30  # 新增参数
+        trajectory_step: 50  # 新增参数
       
       # # 缺失的MPPI参数
       # enforce_path_inversion: false  # 新增参数
@@ -346,7 +346,7 @@ controller_server:
       # retry_attempt_limit: 1  # 新增参数
       
       # 评价器参数 - 优化权重以提高停止精度
-      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "TwirlingCritic", "GoalCritic"]
+      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "PathAngleCritic", "PreferForwardCritic", "GoalCritic"]  #"TwirlingCritic", 
 
       ConstraintCritic:
         enabled: true
@@ -354,7 +354,7 @@ controller_server:
       
       CostCritic:
         enabled: true
-        cost_weight: 5.0
+        cost_weight: 9.0
         cost_power: 1
         collision_cost: 254.0  # 新增参数
         # consider_footprint: true  # 新增参数
@@ -364,34 +364,34 @@ controller_server:
         
       PathFollowCritic:
         enabled: true
-        cost_weight: 12.0  # 降低路径跟踪权重，减少过冲
+        cost_weight: 15.0  # 降低路径跟踪权重，减少过冲
         cost_power: 1
         offset_from_furthest: 6  # 大幅减少前瞻距离，从6减到4，提高实时响应
         threshold_to_consider: 0.5  # 增加阈值，允许更大偏差
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 14.0  # 进一步降低权重，减少方向修正
+        cost_weight: 30.0  # 进一步降低权重，减少方向修正
         cost_power: 1
-        offset_from_furthest: 30  # 大幅减少前瞻距离，从6减到4，提高响应速度
+        offset_from_furthest: 10  # 大幅减少前瞻距离，从6减到4，提高响应速度
         threshold_to_consider: 0.6  # 增加阈值
         max_angle_to_furthest: 0.2  # 减少最大角度阈值
         
       PreferForwardCritic:
         enabled: true
-        cost_weight: 1.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
       
-      TwirlingCritic:
-        enabled: true
-        cost_weight: 25.0     # 强惩绕圈行为
-        max_angular_velocity: 1.0
-        angular_accel_penalty: 0.5
+      # TwirlingCritic:
+      #   enabled: true
+      #   cost_weight: 1.0     # 强惩绕圈行为
+      #   max_angular_velocity: 1.0
+      #   angular_accel_penalty: 0.5
         
       GoalCritic:
         enabled: true
         cost_weight: 12.0  # 目标对齐评价器权重
         cost_power: 1
-        offset_from_furthest: 2  # 减少前瞻距离，从10减到6，提高停止精度
+        offset_from_furthest: 4  # 减少前瞻距离，从10减到6，提高停止精度
         threshold_to_consider: 0.6
 
 
@@ -444,8 +444,8 @@ local_costmap:
       robot_radius: 0.3
       resolution: 0.1
       rolling_window: true
-      width: 5
-      height: 5
+      width: 4
+      height: 4
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -616,7 +616,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: true
-    yaml_filename: /home/ywj/projects/map_grid/map.yaml
+    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
 
 # =============================================================================
 # Planner Server Configuration
@@ -767,8 +767,8 @@ velocity_smoother:
     
     # 其他参数
     odom_topic: "/lio_sam/mapping/odometry"
-    odom_duration: 0.03
-    deadband_velocity: [0.051, 0.11, 0.021]  # 设置死区速度，避免输出-0.01到+0.01之间的速度被忽略
+    odom_duration: 0.05
+    deadband_velocity: [0.051, 0.101, 0.021]  # 设置死区速度，避免输出-0.01到+0.01之间的速度被忽略
     velocity_timeout: 5.0
 
     # 接近目标时的减速参数
@@ -803,12 +803,13 @@ slam_toolbox_localization:
     publish_occupancy_map: true
 
     # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
-    map_file_name: '/home/ywj/projects/posegraph/my_map'
+    # map_file_name: '/home/ztl/slam_data/posegraph/my_map'
 
     # 启动时用于定位（与 AMCL 的 /initialpose 等价的参数）
     # 格式: [x, y, yaw] (单位: 米, 弧度)
     # 值示例: 将初始位姿设为 x=33.5, y=3.5, yaw=1.57
     # map_start_pose: [1.5, 1.5, 0.57]
+
     # 如果想以 dock（第一节点）作为启动位置，可以启用下一项
     map_start_at_dock: false
 
@@ -834,14 +835,14 @@ slam_toolbox_localization:
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
     max_laser_range: 60.0
     # 最小激光范围 - 用于 2D 占用地图栅格化的最小激光范围
-    min_laser_range: 1.5
+    min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: true
+    use_scan_matching: false
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
-    use_map_saver: false
+    use_map_saver: true
 
     # =============================================================================
     # 新增重要参数配置 - 根据 ros2 param list 添加
@@ -873,10 +874,10 @@ slam_toolbox_localization:
     # paused_processing: false
     
     # 位置协方差缩放 - 控制位置估计的不确定性，值越小表示对位置估计越自信
-    position_covariance_scale: 0.8
+    position_covariance_scale: 0.3
     
     # 偏航角协方差缩放 - 控制角度估计的不确定性，值越小表示对角度估计越自信
-    yaw_covariance_scale: 0.5
+    yaw_covariance_scale: 0.3
     
     # # 分辨率 - 地图分辨率
     resolution: 0.05
@@ -897,13 +898,13 @@ slam_toolbox_localization:
     minimum_travel_heading: 0.08
     
     # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
-    scan_buffer_size: 20
+    scan_buffer_size: 100
     
     # 扫描队列大小 - 控制扫描数据的处理队列
-    scan_queue_size: 8
+    scan_queue_size: 10
     
     # 扫描缓冲区最大扫描距离 - 增加匹配距离范围，提高重定位能力
-    scan_buffer_maximum_scan_distance: 8.0
+    scan_buffer_maximum_scan_distance: 20.0
     
     # # 最小通过距离 - 在单元格被标记为占用或未占用之前必须通过的光束数量
     # min_pass_through: 0.0
@@ -963,16 +964,16 @@ slam_toolbox_localization:
     use_response_expansion: true
     
     # # 是否启用调试日志
-    # debug_logging: false
+    debug_logging: false
     
     # # 限制扫描频率
     # throttle_scans: 1
     
     # # 变换超时
-    # transform_timeout: 0.2
+    transform_timeout: 10.0
     
     # # TF缓冲区持续时间
-    # tf_buffer_duration: 10.0
+    tf_buffer_duration: 5.0
     
     # # 求解器插件 - 用于karto扫描求解器的非线性求解器类型
     # # 选项: solver_plugins::CeresSolver, solver_plugins::SpaSolver, solver_plugins::G2oSolver

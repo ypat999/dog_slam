@@ -13,6 +13,9 @@ USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配
 # 建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
 BUILD_MAP = os.environ.get('BUILD_MAP', 'False').lower() == 'true'  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
 
+# 建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
+BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式（打开octomap server，不运行nav2和web）, slam_toolbox: 导航模式
+
 # 建图模式开关
 RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
 

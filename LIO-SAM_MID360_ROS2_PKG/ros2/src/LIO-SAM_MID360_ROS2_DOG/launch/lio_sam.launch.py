@@ -23,6 +23,7 @@ except ImportError:
     DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
     USE_TILT_CONFIG = False
     BUILD_MAP = False  # 默认不使用建图模式
+    BUILD_TOOL = 'octomap'
 
 def generate_launch_description():
     ################### Livox LiDAR配置参数 ###################
@@ -195,12 +196,12 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'frame_id': 'map',                   # 地图坐标系
-            'sensor_model/max_range': 60.0,      # 最大感测距离
+            'sensor_model/max_range': 100.0,      # 最大感测距离
             'sensor_model/min_range': 0.4,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
             'occupancy_min_z': -0.2,             # 投影高度下限
-            'occupancy_max_z': 2.0,              # 投影高度上限
+            'occupancy_max_z': 1.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
@@ -222,7 +223,7 @@ def generate_launch_description():
         parameters=[{
             'transform_tolerance': 0.1,
             'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
-            'max_height': 2.0,            # 最大高度（过滤掉较高的点，限制在地面附近）
+            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
             'angle_max': 3.1,         # 180度
             # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
@@ -250,6 +251,29 @@ def generate_launch_description():
             'concurrency_level': 1,       # 处理并发级别
         }],
         output='screen'
+    )
+
+    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
+    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
+        'slam_toolbox_params',
+        default_value=os.path.join(share_dir, 'config', 'nav2_params.yaml'),
+        description='Full path to slam_toolbox parameters file')
+    slam_toolbox_node = Node(
+        package='slam_toolbox',
+        executable='sync_slam_toolbox_node',
+        name='slam_toolbox_localization',
+        output='screen',
+        parameters=[
+            slam_toolbox_params,
+            {
+                'use_sim_time': DEFAULT_USE_SIM_TIME,
+                # force-disable map publishing/updating to keep nav2 map_server as authoritative
+                'map_update_interval': 1.0,
+                'publish_occupancy_map': True,
+                'use_map_saver': True
+            }
+        ],
+        remappings=[('/scan', '/lio_sam/scan'), ('/odom', '/lio_sam/mapping/odometry')]
     )
     
     rviz2_node = Node(
@@ -302,18 +326,29 @@ def generate_launch_description():
     
     launch_nodes.append(
         TimerAction(
-            period=5.0,  # 延迟5秒启动LIO-SAM核心节点
+            period=3.0,  # 延迟3秒启动LIO-SAM核心节点
             actions=lio_sam_nodes
         )
     )
 
         # 3. 根据模式添加相应的节点
     if BUILD_MAP:
-        # 建图模式：添加octomap server
-        launch_nodes.extend([
-            # rviz2_node,
-            # static_transform_map_to_odom,
-            octomap_server_node])
+        if BUILD_TOOL == 'slam_toolbox':
+            launch_nodes.extend([
+                pointcloud_to_laserscan_node,
+                declare_slam_toolbox_params_cmd])
+            launch_nodes.append(
+                TimerAction(
+                    period=5.0,  # 延迟5秒
+                    actions=[slam_toolbox_node]
+                )
+            )    
+        else:
+            # 建图模式：添加octomap server
+            launch_nodes.extend([
+                # rviz2_node,
+                # static_transform_map_to_odom,
+                octomap_server_node])
     else:
         launch_nodes.extend([
             # rviz2_node,

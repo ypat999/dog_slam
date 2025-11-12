@@ -482,22 +482,9 @@ class IMUPreintegration : public ParamServer {
             }
         } catch (const gtsam::IndeterminantLinearSystemException& e) {
             RCLCPP_ERROR(this->get_logger(), "GTSAM IndeterminantLinearSystemException caught: %s", e.what());
-            RCLCPP_WARN(this->get_logger(), "Resetting IMU preintegration due to linear system indeterminancy");
+            RCLCPP_WARN(this->get_logger(), "Skipping current optimization due to linear system indeterminancy");
             
-            // Reset the system to recover from the exception
-            resetParams();
-            
-            // Clear the optimization graph and values
-            graphFactors.resize(0);
-            graphValues.clear();
-            
-            // Reset the optimizer
-            resetOptimization();
-            
-            // Reinitialize with current state
-            systemInitialized = false;
-            
-            RCLCPP_INFO(this->get_logger(), "IMU preintegration system reset completed");
+            // Simply return without processing this optimization cycle
             return;
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "Unknown exception caught during optimization: %s", e.what());

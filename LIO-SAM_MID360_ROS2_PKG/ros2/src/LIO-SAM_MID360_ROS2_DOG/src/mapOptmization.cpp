@@ -13,6 +13,7 @@
 #include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/inference/Symbol.h>
+#include <gtsam/linear/linearExceptions.h>
 
 #include <gtsam/nonlinear/ISAM2.h>
 
@@ -1382,11 +1383,11 @@ public:
     float constraintTransformation(float value, float limit)
     {
         if (value < -limit){
-            printf("constraintTransformation over: %f more than %f", value, limit);
+            printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = -limit;
         }
         if (value > limit){
-            printf("constraintTransformation over: %f more than %f", value, limit);
+            printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = limit;
         }
 
@@ -1426,13 +1427,24 @@ public:
         {
             noiseModel::Diagonal::shared_ptr priorNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-2, 1e-2, M_PI*M_PI, 1e8, 1e8, 1e8).finished()); // rad*rad, meter*meter
             gtSAMgraph.add(PriorFactor<Pose3>(0, trans2gtsamPose(transformTobeMapped), priorNoise));
-            initialEstimate.insert(0, trans2gtsamPose(transformTobeMapped));
+            // Check if key already exists before inserting
+            if (!initialEstimate.exists(0)) {
+                initialEstimate.insert(0, trans2gtsamPose(transformTobeMapped));
+            } else {
+                initialEstimate.update(0, trans2gtsamPose(transformTobeMapped));
+            }
         }else{
             noiseModel::Diagonal::shared_ptr odometryNoise = noiseModel::Diagonal::Variances((Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4).finished());
             gtsam::Pose3 poseFrom = pclPointTogtsamPose3(cloudKeyPoses6D->points.back());
             gtsam::Pose3 poseTo   = trans2gtsamPose(transformTobeMapped);
             gtSAMgraph.add(BetweenFactor<Pose3>(cloudKeyPoses3D->size()-1, cloudKeyPoses3D->size(), poseFrom.between(poseTo), odometryNoise));
-            initialEstimate.insert(cloudKeyPoses3D->size(), poseTo);
+            // Check if key already exists before inserting
+            size_t key = cloudKeyPoses3D->size();
+            if (!initialEstimate.exists(key)) {
+                initialEstimate.insert(key, poseTo);
+            } else {
+                initialEstimate.update(key, poseTo);
+            }
         }
     }
 
@@ -1506,8 +1518,15 @@ public:
                 gtsam::Vector Vector3(3);
                 Vector3 << max(noise_x, 1.0f), max(noise_y, 1.0f), max(noise_z, 1.0f);
                 noiseModel::Diagonal::shared_ptr gps_noise = noiseModel::Diagonal::Variances(Vector3);
-                gtsam::GPSFactor gps_factor(cloudKeyPoses3D->size(), gtsam::Point3(gps_x, gps_y, gps_z), gps_noise);
+                size_t gps_key = cloudKeyPoses3D->size();
+                gtsam::GPSFactor gps_factor(gps_key, gtsam::Point3(gps_x, gps_y, gps_z), gps_noise);
                 gtSAMgraph.add(gps_factor);
+                // Check if key already exists before inserting
+                if (!initialEstimate.exists(gps_key)) {
+                    initialEstimate.insert(gps_key, gtsam::Pose3(gtsam::Rot3::identity(), gtsam::Point3(gps_x, gps_y, gps_z)));
+                } else {
+                    initialEstimate.update(gps_key, gtsam::Pose3(gtsam::Rot3::identity(), gtsam::Point3(gps_x, gps_y, gps_z)));
+                }
 
                 aLoopIsClosed = true;
                 break;
@@ -1553,16 +1572,36 @@ public:
         // gtSAMgraph.print("GTSAM Graph:\n");
 
         // update iSAM
-        isam->update(gtSAMgraph, initialEstimate);
-        isam->update();
+        try {
+            isam->update(gtSAMgraph, initialEstimate);
+            isam->update();
 
-        if (aLoopIsClosed == true)
-        {
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
-            isam->update();
+            if (aLoopIsClosed == true)
+            {
+                isam->update();
+                isam->update();
+                isam->update();
+                isam->update();
+                isam->update();
+            }
+        } catch (const gtsam::IndeterminantLinearSystemException& e) {
+            RCLCPP_ERROR(this->get_logger(), "GTSAM IndeterminantLinearSystemException caught, skipping current optimization cycle.");
+            // Clear the graph and estimates to prevent further issues
+            gtSAMgraph.resize(0);
+            initialEstimate.clear();
+            return;
+        } catch (const gtsam::ValuesKeyAlreadyExists& e) {
+            RCLCPP_ERROR(this->get_logger(), "GTSAM ValuesKeyAlreadyExists caught: %s, clearing graph and estimates.", e.what());
+            // Clear the graph and estimates to prevent further issues
+            gtSAMgraph.resize(0);
+            initialEstimate.clear();
+            return;
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "GTSAM std::exception caught: %s, skipping current optimization cycle.", e.what());
+            // Clear the graph and estimates to prevent further issues
+            gtSAMgraph.resize(0);
+            initialEstimate.clear();
+            return;
         }
 
         gtSAMgraph.resize(0);

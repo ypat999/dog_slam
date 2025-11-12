@@ -71,7 +71,7 @@
     rotation_tollerance: 0.1                   # radians
 
     # CPU Params - 优化以减轻处理负担，避免IMU数据丢失
-    numberOfCores: 4                              # 减少使用的核心数，避免CPU过载
+    numberOfCores: 1                              # 减少使用的核心数，避免CPU过载
     mappingProcessInterval: 0.1                  # 增加映射处理间隔，减少CPU负担
 
     # Surrounding map
@@ -82,7 +82,7 @@
     # (when loop closure disabled)
 
     # Loop closure
-    loopClosureEnableFlag: true
+    loopClosureEnableFlag: false
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 20                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from

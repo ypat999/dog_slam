@@ -288,15 +288,15 @@ class IMUPreintegration : public ParamServer {
         // More conservative noise models for better numerical stability
         priorPoseNoise = gtsam::noiseModel::Diagonal::Sigmas(
             (gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 1e-1, 1e-1, 1e-1).finished());  // rad,rad,rad,m, m, m
-        priorVelNoise = gtsam::noiseModel::Isotropic::Sigma(3, 1e2);               // m/s (reduced from 1e4)
-        priorBiasNoise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-2);             // 1e-2 (increased from 1e-3)
+        priorVelNoise = gtsam::noiseModel::Isotropic::Sigma(3, 1e3);               // m/s (increased from 1e2 for more stability)
+        priorBiasNoise = gtsam::noiseModel::Isotropic::Sigma(6, 1e-1);             // 1e-1 (increased from 1e-2 for more stability)
         correctionNoise = gtsam::noiseModel::Diagonal::Sigmas(
-            (gtsam::Vector(6) << 0.1, 0.1, 0.1, 0.2, 0.2, 0.2).finished());  // rad,rad,rad,m, m, m
+            (gtsam::Vector(6) << 0.2, 0.2, 0.2, 0.4, 0.4, 0.4).finished());  // rad,rad,rad,m, m, m (increased for stability)
         correctionNoise2 = gtsam::noiseModel::Diagonal::Sigmas(
-            (gtsam::Vector(6) << 2.0, 2.0, 2.0, 2.0, 2.0, 2.0).finished());  // rad,rad,rad,m, m, m
+            (gtsam::Vector(6) << 5.0, 5.0, 5.0, 5.0, 5.0, 5.0).finished());  // rad,rad,rad,m, m, m (increased for degenerate cases)
         noiseModelBetweenBias =
             (gtsam::Vector(6) << imuAccBiasN, imuAccBiasN, imuAccBiasN, imuGyrBiasN, imuGyrBiasN, imuGyrBiasN)
-                .finished();
+                .finished() * 10.0;  // Scale up bias noise for better numerical stability
 
         imuIntegratorImu_ =
             new gtsam::PreintegratedImuMeasurements(p, prior_imu_bias);  // setting up the IMU integration for IMU
@@ -311,11 +311,12 @@ class IMUPreintegration : public ParamServer {
 
     void resetOptimization() {
         gtsam::ISAM2Params optParameters;
-        optParameters.relinearizeThreshold = 0.01;  // Lower threshold for more frequent relinearization
-        optParameters.relinearizeSkip = 1;
+        optParameters.relinearizeThreshold = 0.1;   // Increased threshold for more stable relinearization
+        optParameters.relinearizeSkip = 2;        // Increased skip for better stability
         optParameters.enablePartialRelinearizationCheck = true;
         optParameters.evaluateNonlinearError = true;
         optParameters.cacheLinearizedFactors = false;  // Disable caching to prevent stale linearization
+        optParameters.factorization = gtsam::ISAM2Params::QR;  // Use QR factorization for better numerical stability
         optimizer = gtsam::ISAM2(optParameters);
 
         gtsam::NonlinearFactorGraph newGraphFactors;
@@ -483,6 +484,14 @@ class IMUPreintegration : public ParamServer {
         } catch (const gtsam::IndeterminantLinearSystemException& e) {
             RCLCPP_ERROR(this->get_logger(), "GTSAM IndeterminantLinearSystemException caught: %s", e.what());
             RCLCPP_WARN(this->get_logger(), "Skipping current optimization due to linear system indeterminancy");
+            
+            // Clear the factors and values that were added for this iteration
+            // to prevent duplicate key insertion in the next cycle
+            graphFactors.resize(0);
+            graphValues.clear();
+            
+            // Reset the preintegration to discard the current measurement
+            imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
             
             // Simply return without processing this optimization cycle
             return;

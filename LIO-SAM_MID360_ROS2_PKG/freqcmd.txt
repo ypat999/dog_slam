@@ -12,7 +12,7 @@ BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch lio_sam lio_sam_nav2.launch.p
 
 # 保存二维地图(amcl)：
 source ros2/install/setup.bash 
-ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_part --fmt png
+ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_10 --fmt png
 
 # 保存位姿图(slam_toolbox)：
 # 调用 serialize_map 服务保存序列化地图

@@ -45,15 +45,15 @@ amcl:
     # map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.2            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha1: 0.9            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
     alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
     alpha3: 0.05            # 降低平移-平移噪声，室内环境减少位置漂移
     alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    robot_model_type: "nav2_amcl::OmniMotionModel"
-    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    # robot_model_type: "nav2_amcl::OmniMotionModel"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
     update_min_d: 0.3
@@ -119,8 +119,8 @@ amcl:
     # Likelihood模型特有参数
     lambda_short: 0.1
     sigma_hit: 0.08
-    z_hit: 0.60
-    z_rand: 0.40
+    z_hit: 0.70
+    z_rand: 0.30
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
     # z_short: 0.05  # 注释掉 - Likelihood模型不需要此参数
     
@@ -322,13 +322,13 @@ controller_server:
       
       # 温度参数
       temperature: 0.05
-      # motion_model: "DiffDrive" 
-      motion_model: "Omni"  # 全向移动模型
-      visualize: true
+      motion_model: "DiffDrive" 
+      # motion_model: "Omni"  # 全向移动模型
+      visualize: false
       reset_period: 1.0
       
       # 轨迹可视化
-      trajectory_visualize: true
+      trajectory_visualize: false
       trajectory_visualize_max: 50
       
       # TrajectoryVisualizer参数
@@ -371,7 +371,7 @@ controller_server:
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 30.0  # 进一步降低权重，减少方向修正
+        cost_weight: 15.0  # 进一步降低权重，减少方向修正
         cost_power: 1
         offset_from_furthest: 10  # 大幅减少前瞻距离，从6减到4，提高响应速度
         threshold_to_consider: 0.6  # 增加阈值
@@ -389,7 +389,7 @@ controller_server:
         
       GoalCritic:
         enabled: true
-        cost_weight: 12.0  # 目标对齐评价器权重
+        cost_weight: 18.0  # 目标对齐评价器权重
         cost_power: 1
         offset_from_furthest: 4  # 减少前瞻距离，从10减到6，提高停止精度
         threshold_to_consider: 0.6
@@ -444,8 +444,8 @@ local_costmap:
       robot_radius: 0.3
       resolution: 0.1
       rolling_window: true
-      width: 4
-      height: 4
+      width: 5
+      height: 5
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -615,7 +615,7 @@ global_costmap:
 # =============================================================================
 map_server:
   ros__parameters:
-    use_sim_time: false
+
     yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
 
 # =============================================================================
@@ -762,8 +762,8 @@ velocity_smoother:
     # min_velocity: [-0.05, -0.0, -0.8]  # [vx_min, vy_min, vtheta_min] - 增加最小角速度
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
-    max_accel: [4.0, 1.5, 5.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
-    max_decel: [-2.5, -1.5, -5.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
+    max_accel: [4.0, 1.5, 2.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
+    max_decel: [-2.5, -1.5, -2.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
     
     # 其他参数
     odom_topic: "/lio_sam/mapping/odometry"
@@ -799,7 +799,7 @@ slam_toolbox_localization:
     # 发布频率与变换发布
     # 禁止 slam_toolbox 输出/更新 2D occupancy map（避免覆盖 nav2 的 /map）
     # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
-    map_update_interval: 0.1
+    map_update_interval: 1.0
     publish_occupancy_map: true
 
     # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
@@ -829,7 +829,7 @@ slam_toolbox_localization:
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
-    transform_publish_period: 0.0
+    transform_publish_period: 0.1
 
     # 传感器范围与匹配参数（可按需调优）
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
@@ -898,10 +898,10 @@ slam_toolbox_localization:
     minimum_travel_heading: 0.08
     
     # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
-    scan_buffer_size: 100
+    scan_buffer_size: 20
     
     # 扫描队列大小 - 控制扫描数据的处理队列
-    scan_queue_size: 10
+    scan_queue_size: 5
     
     # 扫描缓冲区最大扫描距离 - 增加匹配距离范围，提高重定位能力
     scan_buffer_maximum_scan_distance: 20.0
@@ -958,10 +958,10 @@ slam_toolbox_localization:
     fine_search_angle_offset: 0.00174532925
     
     # 是否使用扫描重心 - 使用扫描重心进行匹配，提高重定位精度
-    use_scan_barycenter: false
+    use_scan_barycenter: true
     
     # 是否使用响应扩展 - 如果未找到可行匹配，是否自动增加搜索网格大小，重定位时建议启用
-    use_response_expansion: false
+    use_response_expansion: true
     
     # # 是否启用调试日志
     debug_logging: true

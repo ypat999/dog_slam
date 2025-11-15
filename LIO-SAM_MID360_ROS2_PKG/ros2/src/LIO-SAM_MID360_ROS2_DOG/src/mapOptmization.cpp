@@ -1832,19 +1832,30 @@ public:
         if (pubRecentKeyFrame->get_subscription_count() != 0)
         {
             pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
-            PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
-            *cloudOut += *transformPointCloud(laserCloudCornerLastDS,  &thisPose6D);
-            *cloudOut += *transformPointCloud(laserCloudSurfLastDS,    &thisPose6D);
-            publishCloud(pubRecentKeyFrame, cloudOut, timeLaserInfoStamp, odometryFrame);
+            // 修正旋转多一倍的问题：
+            // 由于TF已经发布了从odom到lidar_link的变换，这里不应该再对点云进行坐标变换
+            // 直接将原始点云发布在lidar_link坐标系，不进行任何坐标变换
+            
+            // 不进行坐标变换，保持点云在原始坐标系
+            // octomap_server可以通过TF树理解lidar_link到base_link的变换
+            *cloudOut += *laserCloudCornerLastDS;
+            *cloudOut += *laserCloudSurfLastDS;
+            publishCloud(pubRecentKeyFrame, cloudOut, timeLaserInfoStamp, "lidar_link");
         }
         // publish registered high-res raw cloud
         if (pubCloudRegisteredRaw->get_subscription_count() != 0)
         {
             pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
             pcl::fromROSMsg(cloudInfo.cloud_deskewed, *cloudOut);
-            PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
-            *cloudOut = *transformPointCloud(cloudOut,  &thisPose6D);
-            publishCloud(pubCloudRegisteredRaw, cloudOut, timeLaserInfoStamp, odometryFrame);
+            
+            // 修正旋转多一倍的问题：
+            // 由于TF已经发布了从odom到lidar_link的变换，这里不应该再对点云进行坐标变换
+            // 直接将原始点云发布在lidar_link坐标系，不进行任何坐标变换
+            
+            // 不进行坐标变换，保持点云在原始坐标系
+            // octomap_server可以通过TF树理解lidar_link到base_link的变换
+            
+            publishCloud(pubCloudRegisteredRaw, cloudOut, timeLaserInfoStamp, "lidar_link");
         }
         // publish path
         if (pubPath->get_subscription_count() != 0)

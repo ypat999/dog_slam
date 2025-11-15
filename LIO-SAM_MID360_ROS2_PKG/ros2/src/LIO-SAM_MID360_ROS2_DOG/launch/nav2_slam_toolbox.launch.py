@@ -88,13 +88,15 @@ def generate_launch_description():
             slam_toolbox_params,
             {
                 'use_sim_time': use_sim_time,
-                # force-disable map publishing/updating to keep nav2 map_server as authoritative
-                'map_update_interval': 0.0,
-                'publish_occupancy_map': False,
-                'use_map_saver': False
             }
         ],
-        remappings=[('/scan', '/lio_sam/scan'), ('/odom', '/lio_sam/mapping/odometry')]
+        remappings=[
+            ('/scan', '/lio_sam/scan'), 
+            ('/odom', '/lio_sam/mapping/odometry'),
+            ('/initialpose', '/initialpose')  # Enable initial pose setting
+        ],
+        respawn=True,  # 启用自动重启，防止崩溃后系统停止运行
+        respawn_delay=1.0  # 重启延迟10秒，给系统足够时间稳定
     )
 
     rosbridge_websocket = Node(

@@ -206,7 +206,7 @@ def generate_launch_description():
             'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
         remappings=[
-            ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw')  # 输入点云
+            ('/cloud_in', '/lio_sam/mapping/cloud_registered')  # 输入点云
         ]
     )
 

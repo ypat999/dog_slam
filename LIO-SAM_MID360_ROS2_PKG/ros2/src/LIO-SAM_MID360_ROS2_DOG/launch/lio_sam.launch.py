@@ -199,7 +199,13 @@ def generate_launch_description():
             'sensor_model/max_range': 100.0,      # 最大感测距离
             'sensor_model/min_range': 0.4,       # 最小感测距离
             'sensor_model/insert_free_space': True,
+            'sensor_model/hit_prob': 0.9,        # 命中概率
+            'sensor_model/miss_prob': 0.1,       # 未命中概率
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
+            'filter_ground': True,              # 启用地面过滤
+            'ground_filter/distance': 0.2,       # 地面过滤距离（20cm）
+            'ground_filter/angle': 0.15,        # 地面角度（15度）
+            'ground_filter/plane_distance': 0.07,  # 平面距离（7cm）
             'occupancy_min_z': -0.2,             # 投影高度下限
             'occupancy_max_z': 1.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
@@ -339,7 +345,7 @@ def generate_launch_description():
                 declare_slam_toolbox_params_cmd])
             launch_nodes.append(
                 TimerAction(
-                    period=5.0,  # 延迟5秒
+                    period=50.0,  # 延迟5秒
                     actions=[slam_toolbox_node]
                 )
             )    

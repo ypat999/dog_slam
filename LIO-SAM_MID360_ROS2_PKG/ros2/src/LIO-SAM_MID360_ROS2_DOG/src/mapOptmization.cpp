@@ -1383,11 +1383,11 @@ public:
     float constraintTransformation(float value, float limit)
     {
         if (value < -limit){
-            printf("constraintTransformation over: %f more than %f\n", value, limit);
+            // printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = -limit;
         }
         if (value > limit){
-            printf("constraintTransformation over: %f more than %f\n", value, limit);
+            // printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = limit;
         }
 

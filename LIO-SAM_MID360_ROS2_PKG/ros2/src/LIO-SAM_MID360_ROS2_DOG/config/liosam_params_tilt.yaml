@@ -33,10 +33,10 @@
     N_SCAN: 4                                   # number of lidar channels (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
     Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
 # 传感器设置
-    downsampleRate: 1                           # 增加下采样率，减少数据处理量，避免IMU数据积压
+    downsampleRate: 2                           # 增加下采样率，减少数据处理量，避免IMU数据积压
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
     lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
-    lidarMaxRange: 50.0                        # default: 1000.0, maximum lidar range to be used
+    lidarMaxRange: 100.0                        # default: 1000.0, maximum lidar range to be used
 
     # IMU Settings
     imuAccNoise: 3.9939570888238808e-03
@@ -54,6 +54,11 @@
     # extrinsicRot: [1.0, 0.0, 0.0,
     #                0.0, 1.0, 0.0,
     #                0.0, 0.0, 1.0]
+
+    # Enable failure detection to improve system stability
+    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
 
     # LOAM feature threshold
     edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
@@ -84,7 +89,7 @@
     # (when loop closure disabled)
 
     # Loop closure
-    loopClosureEnableFlag: false
+    loopClosureEnableFlag: true
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 20                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 30.0             # meters, key frame that is within n meters from
@@ -115,8 +120,8 @@
     odometryDelaySeconds: 2.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: false             # 启用IMU失败检测
-    imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuVelocityThreshold: 2.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
 
     # # QoS Overrides - TF Publisher (新增参数)

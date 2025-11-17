@@ -324,6 +324,9 @@ class IMUPreintegration : public ParamServer {
 
         gtsam::Values NewGraphValues;
         graphValues = NewGraphValues;
+        
+        // Note: We don't need to explicitly erase keys from optimizer as we're creating a new instance
+        // The old optimizer with its keys will be destroyed when we assign a new one above
     }
 
     void resetParams() {
@@ -377,6 +380,17 @@ class IMUPreintegration : public ParamServer {
             gtsam::PriorFactor<gtsam::imuBias::ConstantBias> priorBias(B(0), prevBias_, priorBiasNoise);
             graphFactors.add(priorBias);
             // add values
+            // Check if keys already exist and remove them if they do
+            if (graphValues.exists(X(0))) {
+                graphValues.erase(X(0));
+            }
+            if (graphValues.exists(V(0))) {
+                graphValues.erase(V(0));
+            }
+            if (graphValues.exists(B(0))) {
+                graphValues.erase(B(0));
+            }
+            
             graphValues.insert(X(0), prevPose_);
             graphValues.insert(V(0), prevVel_);
             graphValues.insert(B(0), prevBias_);
@@ -459,6 +473,19 @@ class IMUPreintegration : public ParamServer {
         graphFactors.add(pose_factor);
         // insert predicted values
         gtsam::NavState propState_ = imuIntegratorOpt_->predict(prevState_, prevBias_);
+        
+        // Check if keys already exist and remove them if they do
+        if (graphValues.exists(X(key))) {
+            graphValues.erase(X(key));
+        }
+        if (graphValues.exists(V(key))) {
+            graphValues.erase(V(key));
+        }
+        if (graphValues.exists(B(key))) {
+            graphValues.erase(B(key));
+        }
+        
+        // Insert predicted values
         graphValues.insert(X(key), propState_.pose());
         graphValues.insert(V(key), propState_.v());
         graphValues.insert(B(key), prevBias_);
@@ -494,6 +521,54 @@ class IMUPreintegration : public ParamServer {
             imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
             
             // Simply return without processing this optimization cycle
+            return;
+        } catch (const gtsam::ValuesKeyAlreadyExists& e) {
+            RCLCPP_ERROR(this->get_logger(), "GTSAM ValuesKeyAlreadyExists caught: %s", e.what());
+            RCLCPP_WARN(this->get_logger(), "Key already exists, clearing graph and resetting integration");
+            
+            // Clear the factors and values to prevent duplicate keys
+            graphFactors.resize(0);
+            graphValues.clear();
+            
+            // Reset the preintegration to discard the current measurement
+            imuIntegratorOpt_->resetIntegrationAndSetBias(prevBias_);
+            
+            // Reset the optimizer to clear any problematic state
+            resetOptimization();
+            
+            // Reinitialize with current state if system was initialized
+            if (systemInitialized) {
+                // Add prior factors with current state estimates
+                gtsam::noiseModel::Gaussian::shared_ptr priorPoseNoise = 
+                    gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished());
+                gtsam::noiseModel::Gaussian::shared_ptr priorVelNoise = 
+                    gtsam::noiseModel::Isotropic::Sigma(3, 1e3);
+                gtsam::noiseModel::Gaussian::shared_ptr priorBiasNoise = 
+                    gtsam::noiseModel::Isotropic::Sigma(6, 1e-1);
+                    
+                gtsam::PriorFactor<gtsam::Pose3> priorPose(X(0), prevPose_, priorPoseNoise);
+                graphFactors.add(priorPose);
+                gtsam::PriorFactor<gtsam::Vector3> priorVel(V(0), prevVel_, priorVelNoise);
+                graphFactors.add(priorVel);
+                gtsam::PriorFactor<gtsam::imuBias::ConstantBias> priorBias(B(0), prevBias_, priorBiasNoise);
+                graphFactors.add(priorBias);
+                
+                // Insert initial values
+                graphValues.insert(X(0), prevPose_);
+                graphValues.insert(V(0), prevVel_);
+                graphValues.insert(B(0), prevBias_);
+                
+                try {
+                    optimizer.update(graphFactors, graphValues);
+                    graphFactors.resize(0);
+                    graphValues.clear();
+                } catch (const std::exception& ex) {
+                    RCLCPP_ERROR(this->get_logger(), "Failed to reinitialize optimizer: %s", ex.what());
+                    resetParams();
+                    systemInitialized = false;
+                }
+            }
+            
             return;
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "Unknown exception caught during optimization: %s", e.what());

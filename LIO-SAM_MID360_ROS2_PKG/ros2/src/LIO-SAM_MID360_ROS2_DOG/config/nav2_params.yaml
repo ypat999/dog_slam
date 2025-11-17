@@ -12,7 +12,7 @@
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
@@ -20,7 +20,7 @@ lifecycle_manager:
 # 单独的定位生命周期管理器配置
 lifecycle_manager_localization:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['map_server', 'amcl']
     bond_timeout_ms: 10000
@@ -30,7 +30,7 @@ lifecycle_manager_localization:
 # =============================================================================
 amcl:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     
     # 基础参数 - 两个模型共用
     min_particles: 500
@@ -148,7 +148,7 @@ amcl:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     global_frame: map
     robot_base_frame: base_link
     bt_loop_duration: 50
@@ -254,7 +254,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     controller_frequency: 10.0  # 保持10Hz控制器频率
     control_duration: 0.01  # 添加控制周期参数，减少计算延迟
     failure_tolerance: 10.0
@@ -433,7 +433,7 @@ local_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 5.0
       publish_frequency: 5.0
       global_frame: odom
@@ -535,7 +535,7 @@ global_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 0.5
       publish_frequency: 0.5
       global_frame: map
@@ -615,8 +615,8 @@ global_costmap:
 # =============================================================================
 map_server:
   ros__parameters:
-    use_sim_time: false
-    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
+    use_sim_time: true
+    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
 
 # =============================================================================
 # Planner Server Configuration
@@ -625,7 +625,7 @@ planner_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     expected_planner_frequency: 2.0
     planner_plugins: ["GridBased"]  # 新增参数
     
@@ -644,7 +644,7 @@ smoother_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     # footprint_topic: "local_costmap/published_footprint"  # 新增参数
     # robot_base_frame: "base_link"  # 新增参数
@@ -667,7 +667,7 @@ smoother_server:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     log_level: "debug"  # 启用debug级别日志输出
     
     # 缺失参数 - 根据系统输出添加
@@ -732,7 +732,7 @@ waypoint_follower:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     loop_rate: 10
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -748,7 +748,7 @@ velocity_smoother:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     smoothing_frequency: 10.0
     scale_velocities: true
     feedback: "OPEN_LOOP"
@@ -829,16 +829,16 @@ slam_toolbox_localization:
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
-    transform_publish_period: 0.0
+    transform_publish_period: 10.0
 
     # 传感器范围与匹配参数（可按需调优）
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
-    max_laser_range: 60.0
+    max_laser_range: 25.0  # 从60.0降低到25.0以防止网格索引越界错误
     # 最小激光范围 - 用于 2D 占用地图栅格化的最小激光范围
     min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: false
+    use_scan_matching: true
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
@@ -889,22 +889,22 @@ slam_toolbox_localization:
     # map_name: "map"
     
     # 最小时间间隔 - 扫描处理间隔，降低频率以减少计算负载，提高长距离稳定性
-    minimum_time_interval: 0.2
+    minimum_time_interval: 0.1
     
     # 最小移动距离 - 触发地图更新的最小距离，增加距离阈值以减少频繁更新
-    minimum_travel_distance: 0.2
+    minimum_travel_distance: 0.3  # 从0.2增加到0.3以优化关键帧间隔
     
     # 最小移动角度 - 触发地图更新的最小角度，增加角度阈值以减少频繁更新
-    minimum_travel_heading: 0.08
+    minimum_travel_heading: 0.15  # 从0.08增加到0.15以优化关键帧间隔
     
     # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
-    scan_buffer_size: 100
+    scan_buffer_size: 200
     
     # 扫描队列大小 - 控制扫描数据的处理队列
-    scan_queue_size: 10
+    scan_queue_size: 20
     
     # 扫描缓冲区最大扫描距离 - 增加匹配距离范围，提高重定位能力
-    scan_buffer_maximum_scan_distance: 20.0
+    scan_buffer_maximum_scan_distance: 30.0
     
     # # 最小通过距离 - 在单元格被标记为占用或未占用之前必须通过的光束数量
     # min_pass_through: 0.0
@@ -916,7 +916,7 @@ slam_toolbox_localization:
     # link_scan_maximum_distance: 10.0
     
     # 闭环匹配最大方差（粗略） - 控制闭环检测的匹配阈值，值越小匹配越严格
-    loop_match_maximum_variance_coarse: 0.2
+    loop_match_maximum_variance_coarse: 0.4
     
     # 闭环匹配最小链大小 - 检测闭环所需的最小连续匹配数
     loop_match_minimum_chain_size: 3
@@ -928,25 +928,25 @@ slam_toolbox_localization:
     loop_match_minimum_response_fine: 0.1
     
     # 闭环搜索最大距离 - 增加搜索距离范围以支持更长的匹配，提高重定位能力
-    loop_search_maximum_distance: 6.0
+    loop_search_maximum_distance: 10.0
     
     # 闭环搜索空间维度 - 适当增加搜索空间尺寸以支持更长的匹配距离
-    loop_search_space_dimension: 0.25
+    loop_search_space_dimension: 8.0
     
     # 闭环搜索空间分辨率 - 略微降低分辨率以减少计算负载，平衡性能
-    loop_search_space_resolution: 0.008
+    loop_search_space_resolution: 0.05
     
     # 闭环搜索空间模糊偏差 - 用于平滑响应的多模态模糊量
-    loop_search_space_smear_deviation: 0.025
+    loop_search_space_smear_deviation: 0.05  # 从0.025增加到0.05以提高闭环检测稳定性
     
     # 相关搜索空间维度 - 增加搜索空间尺寸以支持更长的匹配距离
-    correlation_search_space_dimension: 0.4
+    correlation_search_space_dimension: 0.9
     
     # 相关搜索空间分辨率 - 略微降低分辨率以减少计算负载，平衡性能
-    correlation_search_space_resolution: 0.008
+    correlation_search_space_resolution: 0.02
     
     # 相关搜索空间模糊偏差 - 相关匹配的模糊偏差
-    correlation_search_space_smear_deviation: 0.025
+    correlation_search_space_smear_deviation: 0.15  # 从0.025增加到0.15以改善概率分布，避免网格索引越界
     
     # 粗略角度分辨率 - 在扫描匹配中测试角度偏移范围的角度分辨率
     coarse_angle_resolution: 0.0174532925
@@ -958,16 +958,16 @@ slam_toolbox_localization:
     fine_search_angle_offset: 0.00174532925
     
     # 是否使用扫描重心 - 使用扫描重心进行匹配，提高重定位精度
-    use_scan_barycenter: true
+    use_scan_barycenter: false
     
     # 是否使用响应扩展 - 如果未找到可行匹配，是否自动增加搜索网格大小，重定位时建议启用
-    use_response_expansion: true
+    use_response_expansion: false
     
     # # 是否启用调试日志
     debug_logging: false
     
     # # 限制扫描频率
-    # throttle_scans: 1
+    throttle_scans: 1
     
     # # 变换超时
     transform_timeout: 10.0
@@ -978,33 +978,33 @@ slam_toolbox_localization:
     # # 求解器插件 - 用于karto扫描求解器的非线性求解器类型
     # # 选项: solver_plugins::CeresSolver, solver_plugins::SpaSolver, solver_plugins::G2oSolver
     # # 默认: solver_plugins::CeresSolver
-    # solver_plugin: "CeresSolver"
+    solver_plugin: "solver_plugins::CeresSolver"
     
     # # Ceres求解器参数
     # # Ceres线性求解器 - Ceres使用的线性求解器
     # # 选项: SPARSE_NORMAL_CHOLESKY, SPARSE_SCHUR, ITERATIVE_SCHUR, CGNR
     # # 默认: SPARSE_NORMAL_CHOLESKY
-    # ceres_linear_solver: "SPARSE_NORMAL_CHOLESKY"
+    ceres_linear_solver: "SPARSE_NORMAL_CHOLESKY"
     
     # # Ceres预处理器 - 与求解器一起使用的预处理器
     # # 选项: JACOBI, IDENTITY (无), SCHUR_JACOBI
     # # 默认: JACOBI
-    # ceres_preconditioner: "JACOBI"
+    ceres_preconditioner: "JACOBI"
     
     # # Ceres信任区域策略 - 信任区域策略
     # # 选项: LEVENBERG_MARQUARDT, DOGLEG
     # # 默认: LEVENBERG_MARQUARDT
-    # ceres_trust_strategy: "LEVENBERG_MARQUARDT"
+    ceres_trust_strategy: "LEVENBERG_MARQUARDT"
     
     # # Ceres狗腿类型 - 如果信任策略是DOGLEG时使用的狗腿策略
     # # 选项: TRADITIONAL_DOGLEG, SUBSPACE_DOGLEG
     # # 默认: TRADITIONAL_DOGLEG
-    # ceres_dogleg_type: "TRADITIONAL_DOGLEG"
+    ceres_dogleg_type: "TRADITIONAL_DOGLEG"
     
     # # Ceres损失函数 - 用于拒绝异常值测量的损失函数类型
     # # 选项: None (等价于平方损失), HuberLoss, CauchyLoss
     # # 默认: None
-    # ceres_loss_function: "Cauchy"
+    ceres_loss_function: "None"
 
     # # QoS 参数配置 - 消息服务质量设置
     # qos_overrides:
@@ -1031,3 +1031,6 @@ slam_toolbox_localization:
     #       durability: "volatile"
     #       history: "keep_last"
     #       reliability: "reliable"
+      
+
+      

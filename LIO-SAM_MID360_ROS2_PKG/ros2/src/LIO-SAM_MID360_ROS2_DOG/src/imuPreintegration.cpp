@@ -298,12 +298,17 @@ class IMUPreintegration : public ParamServer {
             (gtsam::Vector(6) << imuAccBiasN, imuAccBiasN, imuAccBiasN, imuGyrBiasN, imuGyrBiasN, imuGyrBiasN)
                 .finished() * 10.0;  // Scale up bias noise for better numerical stability
 
-        imuIntegratorImu_ =
-            new gtsam::PreintegratedImuMeasurements(p, prior_imu_bias);  // setting up the IMU integration for IMU
-                                                                         // message thread
-        imuIntegratorOpt_ =
-            new gtsam::PreintegratedImuMeasurements(p,
-                                                    prior_imu_bias);  // setting up the IMU integration for optimization
+        try {
+            imuIntegratorImu_ =
+                new gtsam::PreintegratedImuMeasurements(p, prior_imu_bias);  // setting up the IMU integration for IMU
+                                                                             // message thread
+            imuIntegratorOpt_ =
+                new gtsam::PreintegratedImuMeasurements(p,
+                                                        prior_imu_bias);  // setting up the IMU integration for optimization
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "Failed to initialize IMU integrators: %s", e.what());
+            throw;
+        }
         
         // 初始化系统启动时间
         systemStartTime = this->now();
@@ -337,6 +342,18 @@ class IMUPreintegration : public ParamServer {
 
     void odometryHandler(const nav_msgs::msg::Odometry::SharedPtr odomMsg) {
         std::lock_guard<std::mutex> lock(mtx);
+        
+        // Check if odomMsg is valid
+        if (!odomMsg) {
+            RCLCPP_WARN(this->get_logger(), "Received null odometry message, skipping");
+            return;
+        }
+        
+        // Check if header is valid
+        if (odomMsg->header.frame_id.empty()) {
+            RCLCPP_WARN(this->get_logger(), "Received odometry message with empty frame_id, skipping");
+            return;
+        }
 
         double currentCorrectionTime = stamp2Sec(odomMsg->header.stamp);
 
@@ -446,6 +463,15 @@ class IMUPreintegration : public ParamServer {
             double imuTime = stamp2Sec(thisImu->header.stamp);
             if (imuTime < currentCorrectionTime - delta_t) {
                 double dt = (lastImuT_opt < 0) ? (1.0 / 500.0) : (imuTime - lastImuT_opt);
+                
+                // 检查dt值的有效性，防止dt<=0导致的异常
+                if (dt <= 0) {
+                    RCLCPP_WARN(this->get_logger(), "Invalid dt value (%.6f), skipping IMU measurement", dt);
+                    lastImuT_opt = imuTime;
+                    imuQueOpt.pop_front();
+                    continue;
+                }
+                
                 imuIntegratorOpt_->integrateMeasurement(
                     gtsam::Vector3(thisImu->linear_acceleration.x, thisImu->linear_acceleration.y,
                                    thisImu->linear_acceleration.z),
@@ -609,6 +635,13 @@ class IMUPreintegration : public ParamServer {
                 sensor_msgs::msg::Imu* thisImu = &imuQueImu[i];
                 double imuTime = stamp2Sec(thisImu->header.stamp);
                 double dt = (lastImuQT < 0) ? (1.0 / 500.0) : (imuTime - lastImuQT);
+                
+                // 检查dt值的有效性，防止dt<=0导致的异常
+                if (dt <= 0) {
+                    RCLCPP_WARN(this->get_logger(), "Invalid dt value (%.6f) in repropagation, skipping IMU measurement", dt);
+                    lastImuQT = imuTime;
+                    continue;
+                }
 
                 imuIntegratorImu_->integrateMeasurement(
                     gtsam::Vector3(thisImu->linear_acceleration.x, thisImu->linear_acceleration.y,
@@ -655,7 +688,7 @@ class IMUPreintegration : public ParamServer {
         }
         lastResetTime = currentTime;
         
-        if (consecutiveFailures > 3) {
+        if (consecutiveFailures > 30) {
             RCLCPP_ERROR(this->get_logger(), "System instability detected: %d consecutive failures in 5 seconds", consecutiveFailures);
             consecutiveFailures = 0;
             return true;
@@ -694,6 +727,18 @@ class IMUPreintegration : public ParamServer {
     void imuHandler(const sensor_msgs::msg::Imu::SharedPtr imu_raw) {
         std::lock_guard<std::mutex> lock(mtx);
         
+        // Check if imu_raw is valid
+        if (!imu_raw) {
+            RCLCPP_WARN(this->get_logger(), "Received null IMU message, skipping");
+            return;
+        }
+        
+        // Check if header is valid
+        if (imu_raw->header.frame_id.empty()) {
+            RCLCPP_WARN(this->get_logger(), "Received IMU message with empty frame_id, skipping");
+            return;
+        }
+        
         // Update last IMU time for health monitoring
         static auto lastImuTime = this->now();
         lastImuTime = this->now();
@@ -713,6 +758,12 @@ class IMUPreintegration : public ParamServer {
         double imuTime = stamp2Sec(thisImu.header.stamp);
         double dt = (lastImuT_imu < 0) ? (1.0 / 500.0) : (imuTime - lastImuT_imu);
         lastImuT_imu = imuTime;
+
+        // 检查dt值的有效性，防止dt<=0导致的异常
+        if (dt <= 0) {
+            RCLCPP_WARN(this->get_logger(), "Invalid dt value (%.6f) in imuHandler, skipping IMU measurement", dt);
+            return;
+        }
 
         // integrate this single imu message
         imuIntegratorImu_->integrateMeasurement(
@@ -834,20 +885,30 @@ class IMUPreintegration : public ParamServer {
 };
 
 int main(int argc, char** argv) {
-    rclcpp::init(argc, argv);
+    try {
+        rclcpp::init(argc, argv);
 
-    rclcpp::NodeOptions options;
-    options.use_intra_process_comms(true);
-    rclcpp::executors::MultiThreadedExecutor e;
+        rclcpp::NodeOptions options;
+        options.use_intra_process_comms(true);
+        rclcpp::executors::MultiThreadedExecutor e;
 
-    auto ImuP = std::make_shared<IMUPreintegration>(options);
-    auto TF = std::make_shared<TransformFusion>(options);
-    e.add_node(ImuP);
-    e.add_node(TF);
+        auto ImuP = std::make_shared<IMUPreintegration>(options);
+        auto TF = std::make_shared<TransformFusion>(options);
+        e.add_node(ImuP);
+        e.add_node(TF);
 
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "\033[1;32m----> IMU Preintegration Started.\033[0m");
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "\033[1;32m----> IMU Preintegration Started.\033[0m");
 
-    e.spin();
+        e.spin();
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Exception in IMU Preintegration: %s", e.what());
+        rclcpp::shutdown();
+        return -1;
+    } catch (...) {
+        RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Unknown exception in IMU Preintegration");
+        rclcpp::shutdown();
+        return -1;
+    }
 
     rclcpp::shutdown();
     return 0;

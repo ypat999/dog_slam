@@ -378,6 +378,20 @@ public:
 
     sensor_msgs::msg::Imu imuConverter(const sensor_msgs::msg::Imu& imu_in)
     {
+        // Check if input IMU message is valid
+        if (std::isnan(imu_in.linear_acceleration.x) || std::isnan(imu_in.linear_acceleration.y) || std::isnan(imu_in.linear_acceleration.z) ||
+            std::isnan(imu_in.angular_velocity.x) || std::isnan(imu_in.angular_velocity.y) || std::isnan(imu_in.angular_velocity.z)) {
+            RCLCPP_WARN(get_logger(), "Received IMU message with NaN values, using zero values instead");
+            sensor_msgs::msg::Imu imu_out = imu_in;
+            imu_out.linear_acceleration.x = 0.0;
+            imu_out.linear_acceleration.y = 0.0;
+            imu_out.linear_acceleration.z = 0.0;
+            imu_out.angular_velocity.x = 0.0;
+            imu_out.angular_velocity.y = 0.0;
+            imu_out.angular_velocity.z = 0.0;
+            return imu_out;
+        }
+        
         sensor_msgs::msg::Imu imu_out = imu_in;
         // rotate acceleration
         Eigen::Vector3d acc(imu_in.linear_acceleration.x, imu_in.linear_acceleration.y, imu_in.linear_acceleration.z);
@@ -403,10 +417,14 @@ public:
         imu_out.orientation.z = q_final.z();
         imu_out.orientation.w = q_final.w();
 
-        if (sqrt(q_final.x()*q_final.x() + q_final.y()*q_final.y() + q_final.z()*q_final.z() + q_final.w()*q_final.w()) < 0.1)
+        double quat_norm = sqrt(q_final.x()*q_final.x() + q_final.y()*q_final.y() + q_final.z()*q_final.z() + q_final.w()*q_final.w());
+        if (quat_norm < 0.1 || std::isnan(quat_norm))
         {
-            RCLCPP_ERROR(get_logger(), "Invalid quaternion, please use a 9-axis IMU!");
-            rclcpp::shutdown();
+            RCLCPP_WARN(get_logger(), "Invalid quaternion detected (norm: %f), using identity quaternion", quat_norm);
+            imu_out.orientation.x = 0.0;
+            imu_out.orientation.y = 0.0;
+            imu_out.orientation.z = 0.0;
+            imu_out.orientation.w = 1.0;
         }
 
         return imu_out;
@@ -428,7 +446,18 @@ sensor_msgs::msg::PointCloud2 publishCloud(rclcpp::Publisher<sensor_msgs::msg::P
 template<typename T>
 double stamp2Sec(const T& stamp)
 {
-    return rclcpp::Time(stamp).seconds();
+    try {
+        // 检查时间戳是否有效
+        rclcpp::Time time(stamp);
+        if (time.nanoseconds() <= 0) {
+            RCLCPP_WARN(rclcpp::get_logger("stamp2Sec"), "Invalid timestamp detected, using current time instead");
+            return rclcpp::Clock().now().seconds();
+        }
+        return time.seconds();
+    } catch (const std::exception& e) {
+        RCLCPP_ERROR(rclcpp::get_logger("stamp2Sec"), "Exception in stamp2Sec: %s, using current time", e.what());
+        return rclcpp::Clock().now().seconds();
+    }
 }
 
 

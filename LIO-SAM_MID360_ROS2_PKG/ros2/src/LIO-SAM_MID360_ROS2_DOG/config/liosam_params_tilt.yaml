@@ -121,7 +121,11 @@
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
     imuFailureDetectionEnabled: true             # 启用IMU失败检测
+<<<<<<< HEAD
     imuVelocityThreshold: 2.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+=======
+    imuVelocityThreshold: 3.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+>>>>>>> f0cacc3 (正常运行备份)
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
 
     # # QoS Overrides - TF Publisher (新增参数)

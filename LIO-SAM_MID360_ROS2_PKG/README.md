@@ -289,3 +289,186 @@ ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: 
    - 检查AMCL参数配置
    - 调整代价地图参数
    - 优化传感器数据质量
+
+
+## 后续规划
+🔵 一、SLAM 方向（建图、定位、畸变）
+1. 改用 FAST-LIO2
+
+替换 LIO-SAM，降低 CPU/内存，提高实时性、稳定性、抗震性。
+
+2. 改用 slam_toolbox（2D 定位）
+
+实现 2D 层面的稳定定位，结合 FAST-LIO2 作为高频 odom。
+
+3. 建图扭曲校正（IMU / 外参 / 时间同步）
+
+Livox 时间源统一
+
+外参优化工具
+
+IMU-LiDAR 时延估计
+
+处理长直线弯曲问题
+
+4. 大地图 + 动态地图处理
+
+Submap
+
+多分辨率地图
+
+动态物体过滤（Voxel + Temporal filter）
+
+节点生命周期热切换
+
+5. 尝试 3D 重定位与导航
+
+使用 ScanContext / ISC 重定位
+
+Fast-LIO + Octomap → Lite3D Nav
+
+多楼层、多工位自动返回
+
+🟣 二、导航（Nav2 控制、路径规划）
+6. 导航直行优化（更丝滑）
+
+MPPI
+
+Timed Elastic Band
+
+DWB 参数调优
+
+控制延迟补偿
+
+小核→大核迁移
+
+7. 各种超时问题处理
+
+planner_server 超时
+
+controller_server 超时
+
+costmap update 超时
+
+global_costmap clear 超时
+重点：解决 TF extrapolation / Future TF。
+
+8. 行为树优化
+
+去掉无用 action 节点
+
+增加恢复策略（recovery tree）
+
+增加 fallback 和运行时安全保护
+
+多任务调度（任务队列）
+
+9. 根据现场优化机器人速度
+
+动态加速度限制
+
+根据通道宽度自适应速度
+
+根据代价地图动态调整提速/减速
+
+自动测速标定
+
+🟢 三、硬件/算力方向（RK3588 大小核调度）
+10. 大小核资源分配（核心绑定）
+
+建议方案：
+
+Livox → A76 大核 2/3
+
+FAST-LIO → A76 大核
+
+Nav2（planner/controller/BT）→ A76
+
+Costmap、AMCL、TF → 小核
+
+RVIZ → 小核（不在主板上跑）
+
+11. DDS/ROS2 通信优化
+
+更换 CycloneDDS → Zenoh（可选）
+
+降低点云复制次数
+
+使用 loaned messages，降低内存 alloc
+
+12. 内存和 swap 优化
+
+减少内存碎片造成的卡顿
+
+TCP buffer/UDP buffer 优化
+
+Hugepages（可能提高 10% 性能）
+
+🟡 四、系统稳定性（可靠性 + 安全）
+13. 完整的 TF 延迟/漂移监控
+
+TF future/past extrapolation
+
+滤除不合规 TF
+
+每秒监控 TF 延迟
+
+14. 自动恢复策略
+
+SLAM 崩溃自动重启
+
+Nav2 崩溃自动恢复
+
+Livox 数据延迟自动切换
+
+15. 远程调试 / OTA 合规化
+
+集成日志（syslog + ros2 log）
+
+OTA 分区
+
+崩溃快照 dump
+
+🟠 五、应用层（地图管理、流程优化）
+16. 地图服务化（Map server / 多地图管理）
+
+一个仓库多个 map
+
+多楼层 map
+
+地图存档/回滚/更新
+
+17. 自定义任务框架（更可靠的任务执行）
+
+队列化调度
+
+并发任务
+
+安全区限制
+
+18. 支持“边走边更新地图”
+
+lifelong SLAM / online mapping
+
+对轻微环境变化实时适应
+
+无需停机建新地图
+
+🟤 六、扩展能力（未来可选）
+19. 引入 YOLO / RT-DETR 做障碍动态识别
+
+人体检测
+
+动态屏蔽 + costmap integration
+
+20. 碰撞预测模型（Collision Prediction RNN/MLP）
+
+在动作执行前提前预判潜在风险。
+
+21. 整体架构组件化（提升可维护性）
+
+SLAM、Nav、Sensor、App 四大模块解耦
+
+使用 docker 化管理（可选）
+
+提高可移植性

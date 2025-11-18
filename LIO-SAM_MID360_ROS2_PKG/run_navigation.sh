@@ -27,4 +27,4 @@ source $WORKSPACE_DIR/install/setup.bash
 
 echo "启动导航..."
 echo "BUILD_MAP=$BUILD_MAP"
-ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/
+taskset -c 4-7  ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/

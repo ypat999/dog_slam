@@ -74,7 +74,7 @@
 
     numberOfCores: 4                              # 减少使用的核心数，避免CPU过载
 
-    mappingProcessInterval: 0.2                  # 增加映射处理间隔，减少CPU负担
+    mappingProcessInterval: 0.1                  # 增加映射处理间隔，减少CPU负担
 
     # Surrounding map
     surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
@@ -84,7 +84,7 @@
     # (when loop closure disabled)
 
     # Loop closure
-    loopClosureEnableFlag: true
+    loopClosureEnableFlag: false
     loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
     surroundingKeyframeSize: 30                   # submap size (when loop closure enabled)
     historyKeyframeSearchRadius: 20.0             # meters, key frame that is within n meters from
@@ -115,7 +115,7 @@
     odometryDelaySeconds: 2.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
-    imuFailureDetectionEnabled: true             # 启用IMU失败检测
+    imuFailureDetectionEnabled: false             # 启用IMU失败检测
     imuVelocityThreshold: 3.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
     imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
 

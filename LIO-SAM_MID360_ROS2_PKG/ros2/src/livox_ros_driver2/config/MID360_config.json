@@ -38,10 +38,6 @@
         "z": 0
       }
     }
-  ],
-  "time_sync": {
-    "time_sync_mode": 0,
-    "time_sync_ip": "192.168.168.150"
-  }
+  ]
 }
 

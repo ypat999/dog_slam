@@ -34,8 +34,8 @@ amcl:
     
     # 基础参数 - 两个模型共用
     min_particles: 500
-    max_particles: 4000
-    pf_err: 0.03      # 修正参数名：kld_err -> pf_err
+    max_particles: 5000
+    pf_err: 0.05      # 修正参数名：kld_err -> pf_err
     pf_z: 0.99        # 修正参数名：kld_z -> pf_z
     
     # # 缺失参数 - 根据系统输出添加
@@ -45,7 +45,7 @@ amcl:
     # map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.2            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha1: 0.05            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
     alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
     alpha3: 0.05            # 降低平移-平移噪声，室内环境减少位置漂移
     alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
@@ -85,9 +85,9 @@ amcl:
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 40.0
+    laser_max_range: 60.0
     # laser_beam_step: 4
-    max_beams: 120
+    max_beams: 180
     
     # odom_topic: /lio_sam/mapping/odometry
     # scan_topic: /lio_sam/scan
@@ -128,7 +128,7 @@ amcl:
     # beam_skip_error_threshold: 0.1  # 新增参数
     
     # Likelihood距离参数
-    laser_likelihood_max_dist: 40.0
+    laser_likelihood_max_dist: 60.0
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
@@ -354,7 +354,7 @@ controller_server:
       
       CostCritic:
         enabled: true
-        cost_weight: 9.0
+        cost_weight: 20.0
         cost_power: 1
         collision_cost: 254.0  # 新增参数
         # consider_footprint: true  # 新增参数
@@ -371,9 +371,9 @@ controller_server:
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 20.0  # 进一步降低权重，减少方向修正
+        cost_weight: 7.0  # 进一步降低权重，减少方向修正
         cost_power: 1
-        offset_from_furthest: 10  # 大幅减少前瞻距离，从6减到4，提高响应速度
+        offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高响应速度
         threshold_to_consider: 0.6  # 增加阈值
         max_angle_to_furthest: 0.2  # 减少最大角度阈值
         
@@ -441,7 +441,7 @@ local_costmap:
       transform_tolerance: 0.2
       
       # 地图参数
-      robot_radius: 0.3
+      robot_radius: 0.5
       resolution: 0.1
       rolling_window: true
       width: 5
@@ -542,7 +542,7 @@ global_costmap:
       robot_base_frame: base_link
       
       # 地图参数
-      robot_radius: 0.3
+      robot_radius: 0.5
       resolution: 0.05
       track_unknown_space: true
       
@@ -590,8 +590,8 @@ global_costmap:
           topic: /lio_sam/scan
           max_obstacle_height: 1.8
           min_obstacle_height: -0.5
-          clearing: false
-          marking: false
+          clearing: true
+          marking: true
           data_type: "LaserScan"
           raytrace_max_range: 4.0
           raytrace_min_range: 0.5

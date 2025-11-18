@@ -152,8 +152,8 @@ bt_navigator:
     global_frame: map
     robot_base_frame: base_link
     bt_loop_duration: 50
-    default_server_timeout: 20
-    wait_for_service_timeout: 10
+    default_server_timeout: 30
+    wait_for_service_timeout: 15
     
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false
@@ -255,9 +255,11 @@ controller_server:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
     use_sim_time: false
-    controller_frequency: 10.0  # 保持10Hz控制器频率
-    control_duration: 0.01  # 添加控制周期参数，减少计算延迟
-    failure_tolerance: 10.0
+    controller_frequency: 15.0  # 提高控制器频率，从10.0增加到15.0
+    control_duration: 0.02  # 增加控制周期，提高响应能力
+    failure_tolerance: 15.0  # 增加容错次数
+    # 新增性能优化参数
+    plugin_lib_timeout: 10.0
     
     # 插件配置
     # controller_plugins: ["FollowPath", "FollowPathXY", "FollowPathYawOnly"]  # 新增参数
@@ -536,8 +538,10 @@ global_costmap:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
       use_sim_time: false
-      update_frequency: 0.5
+      update_frequency: 1.0
       publish_frequency: 0.5
+      # 新增性能优化参数
+      always_send_full_costmap: false
       global_frame: map
       robot_base_frame: base_link
       
@@ -626,15 +630,18 @@ planner_server:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
     use_sim_time: false
-    expected_planner_frequency: 2.0
+    expected_planner_frequency: 5.0
     planner_plugins: ["GridBased"]  # 新增参数
     
     # 基于网格的规划器参数 - 调整以获得更平滑的路径
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.8  # 增加容差，允许规划器在更大范围内寻找更平滑的路径
+      tolerance: 0.5  # 适当减小容差，提高路径精度
       use_astar: true
       allow_unknown: false
+      # 新增参数 - 提高规划性能
+      allow_unknown_initial_position: true
+      search_optimization: true
       # use_final_approach_orientation: false  # 新增参数
 
 # =============================================================================

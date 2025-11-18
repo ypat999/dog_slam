@@ -189,8 +189,15 @@ public:
             string saveMapDirectory;
             cout << "****************************************************" << endl;
             cout << "Saving map to pcd files ..." << endl;
-            if(req->destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
-            else saveMapDirectory = std::getenv("HOME") + req->destination;
+            // Check if HOME environment variable is set to avoid "basic_string::_M_construct null not valid" exception
+            const char* homeDir = std::getenv("HOME");
+            if (homeDir == nullptr) {
+                RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set, cannot save map");
+                res->success = false;
+                return;
+            }
+            if(req->destination.empty()) saveMapDirectory = std::string(homeDir) + savePCDDirectory;
+            else saveMapDirectory = std::string(homeDir) + req->destination;
             cout << "Save destination: " << saveMapDirectory << endl;
             // create directory and remove old files;
             int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
@@ -446,7 +453,13 @@ public:
             return;
         cout << "****************************************************" << endl;
         cout << "Saving map to pcd files ..." << endl;
-        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
+        // Check if HOME environment variable is set to avoid "basic_string::_M_construct null not valid" exception
+        const char* homeDir = std::getenv("HOME");
+        if (homeDir == nullptr) {
+            RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set, cannot save map");
+            return;
+        }
+        savePCDDirectory = std::string(homeDir) + savePCDDirectory;
         int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
         unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
         pcl::io::savePCDFileASCII(savePCDDirectory + "trajectory.pcd", *cloudKeyPoses3D);

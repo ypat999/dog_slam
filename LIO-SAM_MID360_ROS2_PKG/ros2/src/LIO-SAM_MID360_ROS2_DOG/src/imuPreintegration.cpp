@@ -143,9 +143,17 @@ class TransformFusion : public ParamServer {
                     } catch (tf2::TransformException ex) {
                         RCLCPP_ERROR(get_logger(), "%s", ex.what());
                     }
-                    tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
-                                                    odometryFrame);
-                    tCur = tb;
+                    // Check if timestamp is valid before using tf2_ros::fromMsg
+                    if (odomMsg->header.stamp.sec != 0 || odomMsg->header.stamp.nanosec != 0) {
+                        tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
+                                                        odometryFrame);
+                        tCur = tb;
+                    } else {
+                        RCLCPP_WARN(get_logger(), "Invalid timestamp in odomMsg, using current time");
+                        tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2::TimePoint(std::chrono::nanoseconds(this->now().nanoseconds())),
+                                                        odometryFrame);
+                        tCur = tb;
+                    }
                 }
                 geometry_msgs::msg::TransformStamped ts;
                 tf2::convert(tCur, ts);
@@ -164,9 +172,17 @@ class TransformFusion : public ParamServer {
                 } catch (tf2::TransformException ex) {
                     RCLCPP_ERROR(get_logger(), "%s", ex.what());
                 }
-                tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
-                                                odometryFrame);
-                tCur = tb;
+                // Check if timestamp is valid before using tf2_ros::fromMsg
+                if (odomMsg->header.stamp.sec != 0 || odomMsg->header.stamp.nanosec != 0) {
+                    tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2_ros::fromMsg(odomMsg->header.stamp),
+                                                    odometryFrame);
+                    tCur = tb;
+                } else {
+                    RCLCPP_WARN(get_logger(), "Invalid timestamp in odomMsg, using current time");
+                    tf2::Stamped<tf2::Transform> tb(tCur * lidar2Baselink, tf2::TimePoint(std::chrono::nanoseconds(this->now().nanoseconds())),
+                                                    odometryFrame);
+                    tCur = tb;
+                }
             }
             geometry_msgs::msg::TransformStamped ts;
             tf2::convert(tCur, ts);
@@ -688,7 +704,7 @@ class IMUPreintegration : public ParamServer {
         }
         lastResetTime = currentTime;
         
-        if (consecutiveFailures > 30) {
+        if (consecutiveFailures > 90) {
             RCLCPP_ERROR(this->get_logger(), "System instability detected: %d consecutive failures in 5 seconds", consecutiveFailures);
             consecutiveFailures = 0;
             return true;

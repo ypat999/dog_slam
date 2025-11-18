@@ -53,7 +53,7 @@ set(dependencies
   visualization_msgs
   pluginlib
   tf2_geometry_msgs
-  tf2_sensor_msgs::tf2_sensor_msgs::tf2_sensor_msgs
+  tf2_sensor_msgs
   std_msgs
   std_srvs
   builtin_interfaces
@@ -150,7 +150,7 @@ target_link_libraries(SlamToolboxPlugin PUBLIC
   tf2_geometry_msgs::tf2_geometry_msgs
   tf2_ros::static_transform_broadcaster_node
   tf2_ros::tf2_ros
-  tf2_sensor_msgs::tf2_sensor_msgs
+  tf2_sensor_msgs
 )
 target_include_directories(SlamToolboxPlugin PUBLIC
   ${Qt5Widgets_INCLUDE_DIRS}

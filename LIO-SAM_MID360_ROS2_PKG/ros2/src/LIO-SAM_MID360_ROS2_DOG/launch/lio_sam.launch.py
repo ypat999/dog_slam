@@ -30,7 +30,7 @@ def generate_launch_description():
     xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 20.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     # lvx_file_path = '/home/livox/livox_test.lvx'
@@ -227,7 +227,7 @@ def generate_launch_description():
             ('/scan', '/lio_sam/scan'),
         ],
         parameters=[{
-            'transform_tolerance': 0.1,
+            'transform_tolerance': 0.5,
             'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度

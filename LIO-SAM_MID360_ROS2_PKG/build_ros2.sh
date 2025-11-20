@@ -7,6 +7,9 @@ else
     exit 1
 fi
 
-cd ros2
+cd ./ros2
+colcon build --symlink-install --packages-select lio_sam
+colcon build --symlink-install --packages-select fast_lio
 colcon build --symlink-install
 source install/setup.bash
+ywj 

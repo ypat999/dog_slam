@@ -411,8 +411,20 @@ TCP buffer/UDP buffer 优化
 
 Hugepages（可能提高 10% 性能）
 
+13.增加外部硬件定位
+
+UWB定位：https://item.taobao.com/item.htm?ali_refid=a3_420434_1006%3A1232160183%3AN%3AiLGziN2xQg7ZXuJqeAHqJQ%3D%3D%3A4ab99fd62fd386de2c03be677202e418&ali_trackid=1_4ab99fd62fd386de2c03be677202e418&id=620357984572&mi_id=0000YbbY1Xw9iafMAT0NIu6ipqFnzlgrJYJecfyW0ii9qws&mm_sceneid=1_0_460640197_0&priceTId=2147826a17636183853591244e1805&skuId=4385110940671&spm=a21n57.1.hoverItem.5&utparam=%7B%22aplus_abtest%22%3A%228cd4a81de99827ec9db8e14c446b5f5a%22%7D&xxc=ad_ztc
+
+https://item.taobao.com/item.htm?abbucket=17&id=817535595979&mi_id=00005kq1AfphR1j35XPX7K1RZXiRU4URGapu3kJ2vsuOpfk&ns=1&priceTId=213e093b17636229488816365e0ec9&skuId=5517778360700&spm=a21n57.1.hoverItem.4&utparam=%7B%22aplus_abtest%22%3A%226cb8814cb1cd26812cdf681e1acf2029%22%7D&xxc=taobaoSearch
+
+蓝牙信标RSSI
+蓝牙寻向AOA
+wifi
+RFID
+声学定位
+
 🟡 四、系统稳定性（可靠性 + 安全）
-13. 完整的 TF 延迟/漂移监控
+14. 完整的 TF 延迟/漂移监控
 
 TF future/past extrapolation
 
@@ -420,7 +432,7 @@ TF future/past extrapolation
 
 每秒监控 TF 延迟
 
-14. 自动恢复策略
+15. 自动恢复策略
 
 SLAM 崩溃自动重启
 
@@ -428,7 +440,7 @@ Nav2 崩溃自动恢复
 
 Livox 数据延迟自动切换
 
-15. 远程调试 / OTA 合规化
+16. 远程调试 / OTA 合规化
 
 集成日志（syslog + ros2 log）
 
@@ -437,7 +449,7 @@ OTA 分区
 崩溃快照 dump
 
 🟠 五、应用层（地图管理、流程优化）
-16. 地图服务化（Map server / 多地图管理）
+17. 地图服务化（Map server / 多地图管理）
 
 一个仓库多个 map
 
@@ -445,7 +457,7 @@ OTA 分区
 
 地图存档/回滚/更新
 
-17. 自定义任务框架（更可靠的任务执行）
+18. 自定义任务框架（更可靠的任务执行）
 
 队列化调度
 
@@ -453,7 +465,7 @@ OTA 分区
 
 安全区限制
 
-18. 支持“边走边更新地图”
+19. 支持“边走边更新地图”
 
 lifelong SLAM / online mapping
 
@@ -462,17 +474,17 @@ lifelong SLAM / online mapping
 无需停机建新地图
 
 🟤 六、扩展能力（未来可选）
-19. 引入 YOLO / RT-DETR 做障碍动态识别
+20. 引入 YOLO / RT-DETR 做障碍动态识别
 
 人体检测
 
 动态屏蔽 + costmap integration
 
-20. 碰撞预测模型（Collision Prediction RNN/MLP）
+21. 碰撞预测模型（Collision Prediction RNN/MLP）
 
 在动作执行前提前预判潜在风险。
 
-21. 整体架构组件化（提升可维护性）
+22. 整体架构组件化（提升可维护性）
 
 SLAM、Nav、Sensor、App 四大模块解耦
 

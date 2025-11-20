@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>lio_sam</name>
+  <name>nav2_dog_slam</name>
   <version>1.0.0</version>
-  <description>Lidar Odometry</description>
+  <description>Navigation system for Dog SLAM</description>
 
   <maintainer email="shant@mit.edu">Tixiao Shan</maintainer>
 
@@ -21,21 +21,23 @@
   <build_depend>nav_msgs</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>tf2_geometry_msgs</build_depend>
-  <build_depend>tf2_sensor_msgs</build_depend>
-  <build_depend>visualization_msgs</build_depend>
-  <build_depend>pcl_conversions</build_depend>
-  <build_depend>pcl_msgs</build_depend>
-  <build_depend>tf2_eigen</build_depend>
   <build_depend>tf2_ros</build_depend>
   <build_depend>tf2</build_depend>
-  <build_depend>OpenCV</build_depend>
-  <build_depend>PCL</build_depend>
-  <build_depend>GTSAM</build_depend>
-  <build_depend>Eigen</build_depend>
-  <build_depend>livox_ros_driver2</build_depend>
-  <build_depend>autorccar_interfaces</build_depend>
-
+  <!-- Nav2 dependencies -->
+  <build_depend>nav2_controller</build_depend>
+  <build_depend>nav2_dwb_controller</build_depend>
+  <build_depend>dwb_core</build_depend>
+  <build_depend>dwb_critics</build_depend>
+  <build_depend>nav2_amcl</build_depend>
+  <build_depend>nav2_planner</build_depend>
+  <build_depend>nav2_bt_navigator</build_depend>
+  <build_depend>nav2_lifecycle_manager</build_depend>
+  <build_depend>nav2_map_server</build_depend>
+  <build_depend>nav2_waypoint_follower</build_depend>
+  <build_depend>nav2_msgs</build_depend>
+  <build_depend>nav2_costmap_2d</build_depend>
   <build_depend>slam_toolbox</build_depend>
+  <build_depend>rosbridge_server</build_depend>
   
   <exec_depend>rosidl_default_runtime</exec_depend>
   <exec_depend>rclcpp</exec_depend>
@@ -44,24 +46,14 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>visualization_msgs</exec_depend>
-  <exec_depend>pcl_msgs</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
-  <exec_depend>tf2_sensor_msgs</exec_depend>
-  <exec_depend>tf2_eigen</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>tf2</exec_depend>
-  <exec_depend>OpenCV</exec_depend>
-  <exec_depend>PCL</exec_depend>
-  <exec_depend>GTSAM</exec_depend>
-  <exec_depend>Eigen</exec_depend>
-  <exec_depend>livox_ros_driver2</exec_depend>
-  <exec_depend>autorccar_interfaces</exec_depend>
-
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>xacro</exec_depend>
   <!-- Nav2 dependencies -->
+  <exec_depend>nav2_bringup</exec_depend>
   <exec_depend>nav2_controller</exec_depend>
   <exec_depend>nav2_dwb_controller</exec_depend>
   <exec_depend>dwb_core</exec_depend>

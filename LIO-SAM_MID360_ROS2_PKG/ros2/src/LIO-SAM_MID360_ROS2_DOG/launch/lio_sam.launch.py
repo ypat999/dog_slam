@@ -30,7 +30,7 @@ def generate_launch_description():
     xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 20.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 50.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     # lvx_file_path = '/home/livox/livox_test.lvx'
@@ -199,13 +199,7 @@ def generate_launch_description():
             'sensor_model/max_range': 100.0,      # 最大感测距离
             'sensor_model/min_range': 0.4,       # 最小感测距离
             'sensor_model/insert_free_space': True,
-            'sensor_model/hit_prob': 0.9,        # 命中概率
-            'sensor_model/miss_prob': 0.1,       # 未命中概率
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'filter_ground': True,              # 启用地面过滤
-            'ground_filter/distance': 0.2,       # 地面过滤距离（20cm）
-            'ground_filter/angle': 0.15,        # 地面角度（15度）
-            'ground_filter/plane_distance': 0.07,  # 平面距离（7cm）
             'occupancy_min_z': -0.2,             # 投影高度下限
             'occupancy_max_z': 1.5,              # 投影高度上限
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
@@ -223,11 +217,11 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', '/lio_sam/mapping/cloud_registered'),
+            ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw'),
             ('/scan', '/lio_sam/scan'),
         ],
         parameters=[{
-            'transform_tolerance': 0.5,
+            'transform_tolerance': 0.1,
             'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
@@ -345,7 +339,7 @@ def generate_launch_description():
                 declare_slam_toolbox_params_cmd])
             launch_nodes.append(
                 TimerAction(
-                    period=50.0,  # 延迟5秒
+                    period=5.0,  # 延迟5秒
                     actions=[slam_toolbox_node]
                 )
             )    

@@ -295,11 +295,11 @@ ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: 
 🔵 一、SLAM 方向（建图、定位、畸变）
 1. 改用 FAST-LIO2
 
-替换 LIO-SAM，降低 CPU/内存，提高实时性、稳定性、抗震性。
+修正LIOSAM的健壮性问题，替换 LIO-SAM，降低 CPU/内存，提高实时性、稳定性、抗震性。
 
 2. 改用 slam_toolbox（2D 定位）
 
-实现 2D 层面的稳定定位，结合 FAST-LIO2 作为高频 odom。
+实现 2D 层面的稳定定位，结合 FAST-LIO2 作为高频 odom。或者使用cartographer作为定位。
 
 3. 建图扭曲校正（IMU / 外参 / 时间同步）
 
@@ -317,11 +317,18 @@ Submap
 
 多分辨率地图
 
-动态物体过滤（Voxel + Temporal filter）
+动态物体过滤（Voxel + Temporal filter）(costmap距离优化)
 
 节点生命周期热切换
 
 5. 尝试 3D 重定位与导航
+
+NDT-Matching Global Localization、Correlative Scan Matching、ICP 粗匹配 + 局部优化等全局初始化方法
+
+AMCL + 激光全局匹配（Google 的经典方案）
+使用 correlative scan matcher 粗匹配得到全局位姿
+用此位姿作为 AMCL initial pose
+AMCL 开始精配
 
 使用 ScanContext / ISC 重定位
 

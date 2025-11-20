@@ -189,15 +189,8 @@ public:
             string saveMapDirectory;
             cout << "****************************************************" << endl;
             cout << "Saving map to pcd files ..." << endl;
-            // Check if HOME environment variable is set to avoid "basic_string::_M_construct null not valid" exception
-            const char* homeDir = std::getenv("HOME");
-            if (homeDir == nullptr) {
-                RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set, cannot save map");
-                res->success = false;
-                return;
-            }
-            if(req->destination.empty()) saveMapDirectory = std::string(homeDir) + savePCDDirectory;
-            else saveMapDirectory = std::string(homeDir) + req->destination;
+            if(req->destination.empty()) saveMapDirectory = std::getenv("HOME") + savePCDDirectory;
+            else saveMapDirectory = std::getenv("HOME") + req->destination;
             cout << "Save destination: " << saveMapDirectory << endl;
             // create directory and remove old files;
             int unused = system((std::string("exec rm -r ") + saveMapDirectory).c_str());
@@ -453,13 +446,7 @@ public:
             return;
         cout << "****************************************************" << endl;
         cout << "Saving map to pcd files ..." << endl;
-        // Check if HOME environment variable is set to avoid "basic_string::_M_construct null not valid" exception
-        const char* homeDir = std::getenv("HOME");
-        if (homeDir == nullptr) {
-            RCLCPP_ERROR(this->get_logger(), "HOME environment variable not set, cannot save map");
-            return;
-        }
-        savePCDDirectory = std::string(homeDir) + savePCDDirectory;
+        savePCDDirectory = std::getenv("HOME") + savePCDDirectory;
         int unused = system((std::string("exec rm -r ") + savePCDDirectory).c_str());
         unused = system((std::string("mkdir ") + savePCDDirectory).c_str());
         pcl::io::savePCDFileASCII(savePCDDirectory + "trajectory.pcd", *cloudKeyPoses3D);
@@ -1396,11 +1383,11 @@ public:
     float constraintTransformation(float value, float limit)
     {
         if (value < -limit){
-            // printf("constraintTransformation over: %f more than %f\n", value, limit);
+            printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = -limit;
         }
         if (value > limit){
-            // printf("constraintTransformation over: %f more than %f\n", value, limit);
+            printf("constraintTransformation over: %f more than %f\n", value, limit);
             value = limit;
         }
 

@@ -12,6 +12,7 @@
     gain_scale: 1.0
     transform_tolerance: 0.5
     min_frontier_size: 2.0
+
     
     # Map saving parameters
     enable_map_saving: true

@@ -7,20 +7,41 @@ from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch import LaunchDescription
 
+# 导入全局配置
+from ament_index_python.packages import get_package_share_directory
 import sys, os
-sys.path.insert(0, os.path.dirname(__file__))
+
+# 添加global_config包的路径到Python路径
 try:
-    from lio_sam_global_config import (
-        DEFAULT_USE_SIM_TIME,
-        DEFAULT_MAP_FILE,
-        BUILD_MAP
+    global_config_path = get_package_share_directory('global_config')
+    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
+    from global_config.global_config import (
+        BUILD_MAP, BUILD_TOOL, RECORD_ONLY, LIO_SAM_ONLINE_LIDAR as ONLINE_LIDAR, 
+        LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, LIO_SAM_DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
+        LIO_SAM_DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
+        LIO_SAM_DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
+        LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
+        LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR, MAP_FRAME,
+        ODOM_FRAME, BASE_LINK_FRAME, LIVOX_FRAME, NAV2_DEFAULT_MAP_FILE as DEFAULT_MAP_FILE
     )
-    CONFIG_IMPORTED = True
-except ImportError:
-    CONFIG_IMPORTED = False
-    DEFAULT_USE_SIM_TIME = 'True'
-    DEFAULT_MAP_FILE = os.path.expanduser('/home/ywj/projects/map_grid/map.yaml')
+except Exception as e:
+    print(f"导入global_config失败: {e}")
+    # 如果导入失败，使用默认值
     BUILD_MAP = False
+    BUILD_TOOL = 'octomap_server'
+    RECORD_ONLY = False
+    ONLINE_LIDAR = False
+    BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/'
+    DEFAULT_USE_SIM_TIME = True
+    DEFAULT_USE_SIM_TIME_STRING = 'true'
+    DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+    DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+    DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
+    MAP_FRAME = 'map'
+    ODOM_FRAME = 'odom'
+    BASE_LINK_FRAME = 'base_link'
+    LIVOX_FRAME = 'livox_frame'
+    DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
 
 
 def generate_launch_description():

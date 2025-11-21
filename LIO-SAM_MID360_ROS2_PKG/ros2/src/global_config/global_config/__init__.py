@@ -1,0 +1,194 @@
+# 全局配置参数包
+# 此文件作为标准Python模块，可以被其他模块导入使用
+import os
+import platform
+
+# 获取当前主机名
+current_machine = platform.node()
+print(f"当前运行主机: {current_machine}")
+
+# ========== LIO-SAM 相关配置 ==========
+# 雷达倾斜配置开关
+USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
+
+# 建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
+BUILD_MAP = os.environ.get('BUILD_MAP', 'False').lower() == 'true'  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+
+# 建图工具选择
+BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式工具选择
+
+# 仅记录模式开关
+RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
+
+# ========== Nav2 相关配置 ==========
+# 导航模式配置
+NAVIGATION_MODE = os.environ.get('NAVIGATION_MODE', 'standalone').lower()  # standalone: 独立模式, integrated: 集成模式
+
+# ========== FAST-LIO 相关配置 ==========
+# FAST-LIO 运行模式
+FAST_LIO_MODE = os.environ.get('FAST_LIO_MODE', 'online').lower()  # online: 在线模式, offline: 离线模式
+
+# ========== 主机特定的配置字典 ==========
+config_by_machine = {
+    'RK3588': {
+        # RK3588主机配置 - LIO-SAM
+        'LIO_SAM_ONLINE_LIDAR': True,
+        'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'LIO_SAM_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
+        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
+        
+        # RK3588主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_150.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_USE_SIM_TIME': False,
+        
+        # RK3588主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
+        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+        'FAST_LIO_DEFAULT_USE_SIM_TIME': False,
+    },
+    'jqr001': {
+        # jqr001主机配置 - LIO-SAM
+        'LIO_SAM_ONLINE_LIDAR': False,
+        'LIO_SAM_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'LIO_SAM_DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
+        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
+        
+        # jqr001主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_137.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_USE_SIM_TIME': True,
+        
+        # jqr001主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
+        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
+        'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+    },
+    'DESKTOP-4LS1SSN': {
+        # DESKTOP-4LS1SSN主机配置 - LIO-SAM
+        'LIO_SAM_ONLINE_LIDAR': False,
+        'LIO_SAM_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'LIO_SAM_DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
+        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/mnt/d/projects/LOAM/',
+        
+        # DESKTOP-4LS1SSN主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_notebook.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_USE_SIM_TIME': True,
+        
+        # DESKTOP-4LS1SSN主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
+        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+    }
+}
+
+# 默认配置（当主机名不在配置字典中时使用）
+default_config = {
+    # LIO-SAM 默认配置
+    'LIO_SAM_ONLINE_LIDAR': False,
+    'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+    'LIO_SAM_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
+    'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+    'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
+    
+    # Nav2 默认配置
+    'NAV2_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+    'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+    'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
+    'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+    'NAV2_DEFAULT_USE_SIM_TIME': True,
+    
+    # FAST-LIO 默认配置
+    'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+    'FAST_LIO_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
+    'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+    'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+}
+
+# 根据当前主机名选择配置
+selected_config = config_by_machine.get(current_machine, default_config)
+
+# ========== 导出LIO-SAM配置参数 ==========
+LIO_SAM_ONLINE_LIDAR = selected_config['LIO_SAM_ONLINE_LIDAR']
+LIO_SAM_BASE_CODE_PATH = selected_config['LIO_SAM_BASE_CODE_PATH']
+LIO_SAM_DEFAULT_BAG_PATH = selected_config['LIO_SAM_DEFAULT_BAG_PATH']
+LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE = selected_config['LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE']
+LIO_SAM_DEFAULT_LOAM_SAVE_DIR = selected_config['LIO_SAM_DEFAULT_LOAM_SAVE_DIR']
+
+LIO_SAM_DEFAULT_USE_SIM_TIME = True
+LIO_SAM_DEFAULT_USE_SIM_TIME_STRING = 'true'
+if LIO_SAM_ONLINE_LIDAR:
+    LIO_SAM_DEFAULT_USE_SIM_TIME = False
+    LIO_SAM_DEFAULT_USE_SIM_TIME_STRING = 'false'
+
+# ========== 导出Nav2配置参数 ==========
+NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']
+NAV2_DEFAULT_MAP_FILE = selected_config['NAV2_DEFAULT_MAP_FILE']
+NAV2_DEFAULT_WEB_SCRIPT_PATH = selected_config['NAV2_DEFAULT_WEB_SCRIPT_PATH']
+NAV2_DEFAULT_BT_XML_PATH = selected_config['NAV2_DEFAULT_BT_XML_PATH']
+NAV2_DEFAULT_USE_SIM_TIME = selected_config['NAV2_DEFAULT_USE_SIM_TIME']
+NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true' if NAV2_DEFAULT_USE_SIM_TIME else 'false'
+
+# ========== 导出FAST-LIO配置参数 ==========
+FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']
+FAST_LIO_DEFAULT_BAG_PATH = selected_config['FAST_LIO_DEFAULT_BAG_PATH']
+FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = selected_config['FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE']
+FAST_LIO_DEFAULT_USE_SIM_TIME = selected_config['FAST_LIO_DEFAULT_USE_SIM_TIME']
+FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'true' if FAST_LIO_DEFAULT_USE_SIM_TIME else 'false'
+
+# ========== 坐标系名称配置 ==========
+MAP_FRAME = 'map'
+ODOM_FRAME = 'odom'
+BASE_LINK_FRAME = 'base_link'
+LIVOX_FRAME = 'livox_frame'
+
+# ========== 话题名称配置 ==========
+ODOM_TOPIC = '/odometry/global'
+SCAN_TOPIC = '/scan'
+CMD_VEL_TOPIC = '/cmd_vel'
+LIDAR_TOPIC = '/livox/lidar'
+IMU_TOPIC = '/livox/imu'
+
+# ========== 服务名称配置 ==========
+INITIAL_POSE_SERVICE = '/initialpose'
+GOAL_POSE_SERVICE = '/goal_pose'
+
+# ========== Nav2参数文件自动更新 ==========
+def update_nav2_params():
+    """自动更新nav2_params.yaml中的配置"""
+    nav2_params_path = os.path.join(NAV2_BASE_CODE_PATH, 'config/nav2_params.yaml')
+    if os.path.exists(nav2_params_path):
+        try:
+            with open(nav2_params_path, 'r') as file:
+                lines = file.readlines()
+            with open(nav2_params_path, 'w') as file:
+                for line in lines:
+                    if '      use_sim_time' in line:
+                        file.write(f'      use_sim_time: {NAV2_DEFAULT_USE_SIM_TIME_STRING}\n')
+                    elif '    use_sim_time:' in line:
+                        file.write(f'    use_sim_time: {NAV2_DEFAULT_USE_SIM_TIME_STRING}\n')
+                    elif 'yaml_filename:' in line:
+                        file.write(f'    yaml_filename: {NAV2_DEFAULT_MAP_FILE}\n')
+                    elif 'default_nav_to_pose_bt_xml:' in line:
+                        file.write(f'    default_nav_to_pose_bt_xml: "{NAV2_DEFAULT_BT_XML_PATH}"\n')
+                    else:
+                        file.write(line)
+            print(f"Nav2参数文件已更新: {nav2_params_path}")
+        except Exception as e:
+            print(f"更新Nav2参数文件时出错: {e}")
+
+# 导入时自动更新Nav2参数
+update_nav2_params()

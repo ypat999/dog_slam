@@ -6,12 +6,17 @@ from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
-# 从标准Python包导入全局配置参数
+# 从ROS2包导入全局配置参数
+from ament_index_python.packages import get_package_share_directory
 import sys, os
-sys.path.insert(0, os.path.dirname(__file__))   # 让解释器能找到同级模块
+
+# 添加global_config包的路径到Python路径
 try:
-    from lio_sam_global_config import *
-except ImportError:
+    global_config_path = get_package_share_directory('global_config')
+    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
+    from global_config.global_config import *
+except Exception as e:
+    print(f"导入global_config失败: {e}")
     # 如果导入失败，使用默认值
     print("ONLINE_LIDAR is None, set to True")
     ONLINE_LIDAR = True
@@ -218,7 +223,7 @@ def generate_launch_description():
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
             ('/cloud_in', '/lio_sam/mapping/cloud_registered_raw'),
-            ('/scan', '/lio_sam/scan'),
+            ('/scan', '/scan'),
         ],
         parameters=[{
             'transform_tolerance': 0.1,

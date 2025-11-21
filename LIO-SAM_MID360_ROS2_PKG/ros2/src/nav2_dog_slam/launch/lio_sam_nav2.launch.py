@@ -12,27 +12,56 @@ import sys, os
 # 获取包的共享目录
 lio_sam_package_dir = get_package_share_directory('lio_sam')
 sys.path.insert(0, lio_sam_package_dir + '/launch')
+
+# 导入全局配置
+from ament_index_python.packages import get_package_share_directory
+import sys, os
+
+# 添加global_config包的路径到Python路径
 try:
-    from lio_sam_global_config import (
-        DEFAULT_USE_SIM_TIME,
-        BUILD_MAP
+    global_config_path = get_package_share_directory('global_config')
+    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
+    from global_config.global_config import (
+        BUILD_MAP, BUILD_TOOL, RECORD_ONLY, NAVIGATION_MODE, 
+        LIO_SAM_ONLINE_LIDAR as ONLINE_LIDAR, 
+        LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, 
+        LIO_SAM_DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
+        LIO_SAM_DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
+        LIO_SAM_DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
+        LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
+        LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
+        NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
+        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_USE_SIM_TIME, 
+        NAV2_DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
+        BASE_LINK_FRAME, LIVOX_FRAME
     )
-except ImportError:
-    DEFAULT_USE_SIM_TIME = 'True'
-    BUILD_MAP = False  # 默认不使用建图模式
+except Exception as e:
+    print(f"导入global_config失败: {e}")
+    # 如果导入失败，使用默认值
+    BUILD_MAP = False
+    BUILD_TOOL = 'octomap_server'
+    RECORD_ONLY = False
+    NAVIGATION_MODE = 'standalone'
+    ONLINE_LIDAR = False
+    BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/'
+    DEFAULT_USE_SIM_TIME = True
+    DEFAULT_USE_SIM_TIME_STRING = 'true'
+    DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+    DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+    DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
+    NAV2_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/'
+    NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+    NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
+    NAV2_DEFAULT_BT_XML_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/bt_straight_then_rotate.xml'
+    NAV2_DEFAULT_USE_SIM_TIME = True
+    NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true'
+    MAP_FRAME = 'map'
+    ODOM_FRAME = 'odom'
+    BASE_LINK_FRAME = 'base_link'
+    LIVOX_FRAME = 'livox_frame'
 
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)   # 让解释器能找到同级模块
-try:
-    from nav2_global_config import (
-        DEFAULT_MAP_FILE,
-        DEFAULT_WEB_SCRIPT_PATH
-    )
-except ImportError:
-    # 如果导入失败，设置默认值
-    DEFAULT_MAP_FILE = os.path.expanduser('/home/ztl/slam_data/grid_map/map.yaml')
-    DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_150.sh'
     
 
 
@@ -45,7 +74,7 @@ def generate_launch_description():
 
     declare_map_file_cmd = DeclareLaunchArgument(
         'map_file',
-        default_value=DEFAULT_MAP_FILE,
+        default_value=NAV2_DEFAULT_MAP_FILE,
         description='Full path to map file to load')
     
     declare_nav2_params_file_cmd = DeclareLaunchArgument(

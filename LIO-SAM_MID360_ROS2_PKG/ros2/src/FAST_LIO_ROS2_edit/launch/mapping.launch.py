@@ -14,19 +14,32 @@ def generate_launch_description():
 
     # 正确导入global_config包
     try:
-        # 直接导入已安装的global_config包
-        from global_config.global_config import (
+        # 方法1：通过ROS2包路径导入
+        global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
+        sys.path.insert(0, global_config_path)
+        from global_config import (
             FAST_LIO_MODE, FAST_LIO_DEFAULT_BAG_PATH, FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE,
             FAST_LIO_DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
         )
     except ImportError as e:
-        print(f"导入global_config失败: {e}")
-        # 如果导入失败，使用默认值
-        FAST_LIO_MODE = 'online'
-        FAST_LIO_DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
-        FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
-        FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'false'
-        FAST_LIO_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/'
+        print(f"方法1导入global_config失败: {e}")
+        try:
+            # 方法2：直接通过相对路径导入
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            global_config_path = os.path.join(current_dir, '../../global_config')
+            sys.path.insert(0, global_config_path)
+            from global_config import (
+                FAST_LIO_MODE, FAST_LIO_DEFAULT_BAG_PATH, FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE,
+                FAST_LIO_DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
+            )
+        except ImportError as e2:
+            print(f"方法2导入global_config失败: {e2}")
+            # 如果导入失败，使用默认值
+            FAST_LIO_MODE = 'online'
+            FAST_LIO_DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+            FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+            FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'false'
+            FAST_LIO_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/'
     
     package_path = get_package_share_directory('fast_lio')
     default_config_path = os.path.join(package_path, 'config')
@@ -114,7 +127,7 @@ def generate_launch_description():
     )
 
     livox_share_dir = get_package_share_directory('livox_ros_driver2')
-    default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
+    default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config.json')
 
     # 在线模式：Livox雷达驱动
     livox_driver_node = Node(

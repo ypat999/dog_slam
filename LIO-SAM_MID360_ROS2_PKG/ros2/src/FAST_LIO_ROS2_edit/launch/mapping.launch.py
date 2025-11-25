@@ -174,7 +174,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', 'cloud_registered_body'),
+            ('/cloud_in', 'cloud_registered'),
             ('/scan', '/scan'),
         ],
         parameters=[{
@@ -214,42 +214,32 @@ def generate_launch_description():
     # 修正TF变换链：确保所有坐标系变换方向正确
     # 正确的TF链：map → odom → camera_init → body → base_link → livox_frame
     
-    # 1. map到odom的静态变换（地图坐标系到里程计坐标系）
-    map_to_odom_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
-        output='screen'
-    )
-    ld.add_action(map_to_odom_tf)
+    # # 1. map到odom的静态变换（地图坐标系到里程计坐标系）
+    # map_to_odom_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+    #     output='screen'
+    # )
+    # ld.add_action(map_to_odom_tf)
 
-    # 2. odom到camera_init的静态变换（里程计坐标系到FAST-LIO初始坐标系）
-    odom_to_camera_init_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'camera_init'],
-        output='screen'
-    )
-    ld.add_action(odom_to_camera_init_tf)
+    # # 2. odom到camera_init的静态变换（里程计坐标系到FAST-LIO初始坐标系）
+    # odom_to_camera_init_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'odom', 'camera_init'],
+    #     output='screen'
+    # )
+    # ld.add_action(odom_to_camera_init_tf)
 
     # 3. body到base_link的静态变换（FAST-LIO估计的机器人身体坐标系到机器人基座坐标系）
     # FAST-LIO发布camera_init到body的动态变换，这里设置body到base_link的静态变换
-    body_to_base_link_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'body', 'base_link'],
-        output='screen'
-    )
-    ld.add_action(body_to_base_link_tf)
-
-    # 4. base_link到livox_frame的静态变换（机器人基座坐标系到雷达坐标系）
-    # 根据URDF文件，雷达安装在base_link上，位置为(0, 0, 0)，方向为(0, 0, 0)
-    base_link_to_livox_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_link', 'livox_frame'],
-        output='screen'
-    )
-    ld.add_action(base_link_to_livox_tf)
+    # body_to_base_link_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     arguments=['0', '0', '0', '0', '0', '0', 'body', 'base_link'],
+    #     output='screerviz2n'
+    # )
+    # ld.add_action(body_to_base_link_tf)
 
     return ld

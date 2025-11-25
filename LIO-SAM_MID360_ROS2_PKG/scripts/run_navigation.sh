@@ -54,7 +54,7 @@ echo "  Use Sim Time: $USE_SIM_TIME"
 echo "  Map File: $MAP_FILE"
 
 # 启动导航系统
-ros2 launch nav2_dog_slam nav2_dog_slam.launch.py \
+taskset -c 4-7  ros2 launch nav2_dog_slam nav2_dog_slam.launch.py \
     slam_backend:="$SLAM_BACKEND" \
     localization:="$LOCALIZATION" \
     use_sim_time:="$USE_SIM_TIME" \

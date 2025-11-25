@@ -139,7 +139,7 @@ def generate_launch_description():
             {"xfer_format": 1},
             {"multi_topic": 0},
             {"data_src": 0},
-            {"publish_freq": 20.0},
+            {"publish_freq": 10.0},
             {"output_data_type": 0},
             {"frame_id": 'livox_frame'},
             {"user_config_path": default_user_config_path},
@@ -234,12 +234,12 @@ def generate_launch_description():
 
     # 3. body到base_link的静态变换（FAST-LIO估计的机器人身体坐标系到机器人基座坐标系）
     # FAST-LIO发布camera_init到body的动态变换，这里设置body到base_link的静态变换
-    # body_to_base_link_tf = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     arguments=['0', '0', '0', '0', '0', '0', 'body', 'base_link'],
-    #     output='screerviz2n'
-    # )
-    # ld.add_action(body_to_base_link_tf)
+    base_link_to_lidar_link_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['-0.1', '0', '-0.1', '0', '0', '0', 'lidar_link', 'base_link'],
+        output='screen'
+    )
+    ld.add_action(base_link_to_lidar_link_tf)
 
     return ld

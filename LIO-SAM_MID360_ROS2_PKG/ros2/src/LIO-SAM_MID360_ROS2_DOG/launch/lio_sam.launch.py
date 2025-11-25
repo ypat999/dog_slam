@@ -13,8 +13,9 @@ import sys, os
 # 添加global_config包的路径到Python路径
 try:
     global_config_path = get_package_share_directory('global_config')
-    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
-    from global_config.global_config import *
+    if global_config_path not in sys.path:
+        sys.path.insert(0, global_config_path)
+    from global_config import *
 except Exception as e:
     print(f"导入global_config失败: {e}")
     # 如果导入失败，使用默认值
@@ -29,6 +30,7 @@ except Exception as e:
     USE_TILT_CONFIG = False
     BUILD_MAP = False  # 默认不使用建图模式
     BUILD_TOOL = 'octomap'
+    RECORD_ONLY = False
 
 def generate_launch_description():
     ################### Livox LiDAR配置参数 ###################

@@ -22,10 +22,10 @@ try:
     if global_config_path not in sys.path:
         sys.path.insert(0, global_config_path)
     from global_config import (
-        FAST_LIO_DEFAULT_BAG_PATH,
-        FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE,
-        FAST_LIO_DEFAULT_USE_SIM_TIME,
-        FAST_LIO_DEFAULT_USE_SIM_TIME_STRING,
+        DEFAULT_BAG_PATH,
+        DEFAULT_RELIABILITY_OVERRIDE,
+        DEFAULT_USE_SIM_TIME,
+        DEFAULT_USE_SIM_TIME_STRING,
         NAV2_DEFAULT_MAP_FILE,
         NAV2_DEFAULT_WEB_SCRIPT_PATH,
         NAV2_DEFAULT_BT_XML_PATH,
@@ -35,10 +35,10 @@ try:
 except ImportError:
     # 如果导入失败，使用默认值
     print("Warning: Failed to import global_config, using default values")
-    FAST_LIO_DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
-    FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
-    FAST_LIO_DEFAULT_USE_SIM_TIME = True
-    FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'true'
+    DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+    DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+    DEFAULT_USE_SIM_TIME = True
+    DEFAULT_USE_SIM_TIME_STRING = 'true'
     
     NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'

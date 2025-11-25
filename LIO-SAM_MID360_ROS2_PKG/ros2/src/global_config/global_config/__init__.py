@@ -32,10 +32,10 @@ FAST_LIO_MODE = os.environ.get('FAST_LIO_MODE', 'online').lower()  # online: 在
 config_by_machine = {
     'RK3588': {
         # RK3588主机配置 - LIO-SAM
-        'LIO_SAM_ONLINE_LIDAR': True,
+        'ONLINE_LIDAR': True,
         'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'LIO_SAM_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
-        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+        'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
         
         # RK3588主机配置 - Nav2
@@ -47,16 +47,15 @@ config_by_machine = {
         
         # RK3588主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
-        'FAST_LIO_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
-        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
-        'FAST_LIO_DEFAULT_USE_SIM_TIME': False,
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+        'DEFAULT_USE_SIM_TIME': False,
     },
     'jqr001': {
         # jqr001主机配置 - LIO-SAM
-        'LIO_SAM_ONLINE_LIDAR': False,
+        'ONLINE_LIDAR': False,
         'LIO_SAM_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'LIO_SAM_DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
-        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
+        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
         
         # jqr001主机配置 - Nav2
@@ -68,16 +67,15 @@ config_by_machine = {
         
         # jqr001主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
-        'FAST_LIO_DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
-        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
-        'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
+        'DEFAULT_USE_SIM_TIME': True,
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - LIO-SAM
-        'LIO_SAM_ONLINE_LIDAR': False,
+        'ONLINE_LIDAR': False,
         'LIO_SAM_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'LIO_SAM_DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
-        'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/mnt/d/projects/LOAM/',
         
         # DESKTOP-4LS1SSN主机配置 - Nav2
@@ -89,19 +87,18 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
-        'FAST_LIO_DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
-        'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
-        'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+        'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'DEFAULT_USE_SIM_TIME': True,
     }
 }
 
 # 默认配置（当主机名不在配置字典中时使用）
 default_config = {
     # LIO-SAM 默认配置
-    'LIO_SAM_ONLINE_LIDAR': False,
+    'ONLINE_LIDAR': False,
     'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-    'LIO_SAM_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
-    'LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+    'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
+    'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
     'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
     
     # Nav2 默认配置
@@ -113,26 +110,25 @@ default_config = {
     
     # FAST-LIO 默认配置
     'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
-    'FAST_LIO_DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_new/',
-    'FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
-    'FAST_LIO_DEFAULT_USE_SIM_TIME': True,
+    'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+    'DEFAULT_USE_SIM_TIME': True,
 }
 
 # 根据当前主机名选择配置
 selected_config = config_by_machine.get(current_machine, default_config)
 
 # ========== 导出LIO-SAM配置参数 ==========
-LIO_SAM_ONLINE_LIDAR = selected_config['LIO_SAM_ONLINE_LIDAR']
+ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
 LIO_SAM_BASE_CODE_PATH = selected_config['LIO_SAM_BASE_CODE_PATH']
-LIO_SAM_DEFAULT_BAG_PATH = selected_config['LIO_SAM_DEFAULT_BAG_PATH']
-LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE = selected_config['LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE']
+DEFAULT_BAG_PATH = selected_config['DEFAULT_BAG_PATH']
+DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
 LIO_SAM_DEFAULT_LOAM_SAVE_DIR = selected_config['LIO_SAM_DEFAULT_LOAM_SAVE_DIR']
 
-LIO_SAM_DEFAULT_USE_SIM_TIME = True
-LIO_SAM_DEFAULT_USE_SIM_TIME_STRING = 'true'
-if LIO_SAM_ONLINE_LIDAR:
-    LIO_SAM_DEFAULT_USE_SIM_TIME = False
-    LIO_SAM_DEFAULT_USE_SIM_TIME_STRING = 'false'
+DEFAULT_USE_SIM_TIME = True
+DEFAULT_USE_SIM_TIME_STRING = 'true'
+if ONLINE_LIDAR:
+    DEFAULT_USE_SIM_TIME = False
+    DEFAULT_USE_SIM_TIME_STRING = 'false'
 
 # ========== 导出Nav2配置参数 ==========
 NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']
@@ -144,10 +140,9 @@ NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true' if NAV2_DEFAULT_USE_SIM_TIME else 'fal
 
 # ========== 导出FAST-LIO配置参数 ==========
 FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']
-FAST_LIO_DEFAULT_BAG_PATH = selected_config['FAST_LIO_DEFAULT_BAG_PATH']
-FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = selected_config['FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE']
-FAST_LIO_DEFAULT_USE_SIM_TIME = selected_config['FAST_LIO_DEFAULT_USE_SIM_TIME']
-FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'true' if FAST_LIO_DEFAULT_USE_SIM_TIME else 'false'
+DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
+DEFAULT_USE_SIM_TIME = selected_config['DEFAULT_USE_SIM_TIME']
+DEFAULT_USE_SIM_TIME_STRING = 'true' if DEFAULT_USE_SIM_TIME else 'false'
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'

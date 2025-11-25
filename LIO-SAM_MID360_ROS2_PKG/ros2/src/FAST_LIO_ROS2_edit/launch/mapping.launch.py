@@ -18,8 +18,8 @@ def generate_launch_description():
         global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
         from global_config import (
-            FAST_LIO_MODE, FAST_LIO_DEFAULT_BAG_PATH, FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE,
-            FAST_LIO_DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
+            FAST_LIO_MODE, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
+            DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
         )
     except ImportError as e:
         print(f"方法1导入global_config失败: {e}")
@@ -29,16 +29,16 @@ def generate_launch_description():
             global_config_path = os.path.join(current_dir, '../../global_config')
             sys.path.insert(0, global_config_path)
             from global_config import (
-                FAST_LIO_MODE, FAST_LIO_DEFAULT_BAG_PATH, FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE,
-                FAST_LIO_DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
+                FAST_LIO_MODE, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
+                DEFAULT_USE_SIM_TIME_STRING, FAST_LIO_BASE_CODE_PATH
             )
         except ImportError as e2:
             print(f"方法2导入global_config失败: {e2}")
             # 如果导入失败，使用默认值
             FAST_LIO_MODE = 'online'
-            FAST_LIO_DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
-            FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
-            FAST_LIO_DEFAULT_USE_SIM_TIME_STRING = 'false'
+            DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+            DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+            DEFAULT_USE_SIM_TIME_STRING = 'false'
             FAST_LIO_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/'
     
     package_path = get_package_share_directory('fast_lio')
@@ -53,7 +53,7 @@ def generate_launch_description():
     rviz_cfg = LaunchConfiguration('rviz_cfg')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
-        'use_sim_time', default_value=FAST_LIO_DEFAULT_USE_SIM_TIME_STRING,
+        'use_sim_time', default_value=DEFAULT_USE_SIM_TIME_STRING,
         description='Use simulation (Gazebo) clock if true'
     )
     declare_config_path_cmd = DeclareLaunchArgument(
@@ -75,8 +75,8 @@ def generate_launch_description():
 
     # 离线模式相关参数
     offline_mode = LaunchConfiguration('offline_mode', default='true' if FAST_LIO_MODE == 'offline' else 'false')
-    bag_path = LaunchConfiguration('bag_path', default=FAST_LIO_DEFAULT_BAG_PATH)
-    reliability_file_path = LaunchConfiguration('reliability_file_path', default=FAST_LIO_DEFAULT_RELIABILITY_OVERRIDE)
+    bag_path = LaunchConfiguration('bag_path', default=DEFAULT_BAG_PATH)
+    reliability_file_path = LaunchConfiguration('reliability_file_path', default=DEFAULT_RELIABILITY_OVERRIDE)
 
     declare_offline_mode_cmd = DeclareLaunchArgument(
         'offline_mode', default_value='false',

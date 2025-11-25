@@ -20,15 +20,16 @@ import sys, os
 # 添加global_config包的路径到Python路径
 try:
     global_config_path = get_package_share_directory('global_config')
-    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
-    from global_config.global_config import (
+    if global_config_path not in sys.path:
+        sys.path.insert(0, global_config_path)
+    from global_config import (
         BUILD_MAP, BUILD_TOOL, RECORD_ONLY, NAVIGATION_MODE, 
-        LIO_SAM_ONLINE_LIDAR as ONLINE_LIDAR, 
+        ONLINE_LIDAR as ONLINE_LIDAR, 
         LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, 
-        LIO_SAM_DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
-        LIO_SAM_DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
+        DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
+        DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
         LIO_SAM_DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
-        LIO_SAM_DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
+        DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
         NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_USE_SIM_TIME, 
@@ -150,7 +151,7 @@ def generate_launch_description():
         
         # 调用web控制脚本
         nav2_and_web_actions.append(ExecuteProcess(
-            cmd=['bash', DEFAULT_WEB_SCRIPT_PATH],
+            cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
             output='screen',
             shell=False
         ))

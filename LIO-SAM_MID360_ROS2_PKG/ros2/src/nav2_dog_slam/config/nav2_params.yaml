@@ -36,7 +36,7 @@ amcl:
     min_particles: 500
     max_particles: 4000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
-    pf_z: 0.99        # 修正参数名：kld_z -> pf_z
+    pf_z: 0.97        # 修正参数名：kld_z -> pf_z
     
     # # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false  # 新增参数
@@ -57,7 +57,7 @@ amcl:
     
     # 更新阈值 - 两个模型共用
     update_min_d: 0.3
-    update_min_a: 0.1
+    update_min_a: 0.3
     resample_interval: 2
     # selective_resampling: false  # 删除不存在的参数
     

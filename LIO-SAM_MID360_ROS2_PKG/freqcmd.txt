@@ -146,3 +146,5 @@ taskset -c 4-7  ros2 launch fast_lio mapping.launch.py
 taskset -c 4-7  ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
 
 
+cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
+source install/setup.bash

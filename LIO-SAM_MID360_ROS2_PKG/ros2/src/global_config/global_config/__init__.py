@@ -43,7 +43,6 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_150.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_USE_SIM_TIME': False,
         
         # RK3588主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
@@ -63,7 +62,6 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_137.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_USE_SIM_TIME': True,
         
         # jqr001主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
@@ -83,7 +81,6 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_notebook.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_USE_SIM_TIME': True,
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
@@ -106,7 +103,6 @@ default_config = {
     'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
     'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
     'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
-    'NAV2_DEFAULT_USE_SIM_TIME': True,
     
     # FAST-LIO 默认配置
     'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
@@ -135,8 +131,6 @@ NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']
 NAV2_DEFAULT_MAP_FILE = selected_config['NAV2_DEFAULT_MAP_FILE']
 NAV2_DEFAULT_WEB_SCRIPT_PATH = selected_config['NAV2_DEFAULT_WEB_SCRIPT_PATH']
 NAV2_DEFAULT_BT_XML_PATH = selected_config['NAV2_DEFAULT_BT_XML_PATH']
-NAV2_DEFAULT_USE_SIM_TIME = selected_config['NAV2_DEFAULT_USE_SIM_TIME']
-NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true' if NAV2_DEFAULT_USE_SIM_TIME else 'false'
 
 # ========== 导出FAST-LIO配置参数 ==========
 FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']

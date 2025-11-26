@@ -32,7 +32,7 @@ try:
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
-        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_USE_SIM_TIME, 
+        NAV2_DEFAULT_BT_XML_PATH, 
         NAV2_DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME
     )
@@ -54,7 +54,6 @@ except Exception as e:
     NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
     NAV2_DEFAULT_BT_XML_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/bt_straight_then_rotate.xml'
-    NAV2_DEFAULT_USE_SIM_TIME = True
     NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'

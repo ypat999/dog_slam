@@ -18,8 +18,6 @@ def generate_launch_description():
     params_file = LaunchConfiguration('params_file')
     map_yaml_file = LaunchConfiguration('map')
     autostart = LaunchConfiguration('autostart')
-    use_composition = LaunchConfiguration('use_composition')
-    use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
 
     # Create rewritten params so nodes can pick their sections from the single params file
@@ -61,7 +59,8 @@ def generate_launch_description():
         remappings=[
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
-        ]
+        ],
+        prefix=['taskset -c 6'],   # 绑定 CPU 4
     )
 
     # lifecycle manager node to configure and activate map_server and amcl
@@ -89,7 +88,8 @@ def generate_launch_description():
             'use_respawn': 'False',  # 确保节点不会意外重启
             'container_name': 'nav2_container',
             'log_level': log_level
-        }.items()
+        }.items(),
+        prefix=['taskset -c 0,1,2,3'],   # 绑定 CPU 
     )
 
     # 网页控制界面节点（ROS2 bridge + Websocket）

@@ -73,6 +73,12 @@ def generate_launch_description():
         description='RViz config file path'
     )
 
+
+    livox_share_dir = get_package_share_directory('livox_ros_driver2')
+    default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
+
+
+
     # 离线模式相关参数
     offline_mode = LaunchConfiguration('offline_mode', default='true' if FAST_LIO_MODE == 'offline' else 'false')
     bag_path = LaunchConfiguration('bag_path', default=DEFAULT_BAG_PATH)
@@ -90,12 +96,24 @@ def generate_launch_description():
         'reliability_file_path', default_value='/home/ywj/projects/dataset/reliability_override.yaml',
         description='Path to reliability override file'
     )
+    # 离线模式：rosbag播放
+    from launch.actions import ExecuteProcess
+    rosbag_player = ExecuteProcess(
+        cmd=['ros2', 'bag', 'play', LaunchConfiguration('bag_path'), '--qos-profile-overrides-path', LaunchConfiguration('reliability_file_path'), '--clock', '--rate', '1.0'],
+        name='rosbag_player',
+        output='screen',
+        prefix=['taskset -c 4'],   # 绑定 CPU 7
+        condition=IfCondition(LaunchConfiguration('offline_mode'))
+    )
+
+
 
     fast_lio_node = Node(
         package='fast_lio',
         executable='fastlio_mapping',
         parameters=[PathJoinSubstitution([config_path, config_file]),
                     {'use_sim_time': use_sim_time}],
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
         output='screen'
     )
     rviz_node = Node(
@@ -117,17 +135,7 @@ def generate_launch_description():
     ld.add_action(declare_bag_path_cmd)
     ld.add_action(declare_reliability_file_path_cmd)
 
-    # 离线模式：rosbag播放
-    from launch.actions import ExecuteProcess
-    rosbag_player = ExecuteProcess(
-        cmd=['ros2', 'bag', 'play', LaunchConfiguration('bag_path'), '--qos-profile-overrides-path', LaunchConfiguration('reliability_file_path'), '--clock', '--rate', '1.0'],
-        name='rosbag_player',
-        output='screen',
-        condition=IfCondition(LaunchConfiguration('offline_mode'))
-    )
 
-    livox_share_dir = get_package_share_directory('livox_ros_driver2')
-    default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config.json')
 
     # 在线模式：Livox雷达驱动
     livox_driver_node = Node(
@@ -139,13 +147,14 @@ def generate_launch_description():
             {"xfer_format": 1},
             {"multi_topic": 0},
             {"data_src": 0},
-            {"publish_freq": 10.0},
+            {"publish_freq": 20.0},
             {"output_data_type": 0},
             {"frame_id": 'livox_frame'},
             {"user_config_path": default_user_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
             {"enable_imu_sync_time": True},
         ],
+        prefix=['taskset -c 4,5'],   # 绑定 CPU 4
         condition=IfCondition(PythonExpression(["'", LaunchConfiguration('offline_mode'), "' == 'false'"])),
     )
 
@@ -207,7 +216,8 @@ def generate_launch_description():
             'target_frame': 'base_link',
             'concurrency_level': 1,       # 处理并发级别
         }],
-        output='screen'
+        output='screen',
+        prefix=['taskset -c 5'],   # 绑定 CPU 5
     )
     ld.add_action(pointcloud_to_laserscan_node)
 
@@ -234,12 +244,12 @@ def generate_launch_description():
 
     # 3. body到base_link的静态变换（FAST-LIO估计的机器人身体坐标系到机器人基座坐标系）
     # FAST-LIO发布camera_init到body的动态变换，这里设置body到base_link的静态变换
-    base_link_to_lidar_link_tf = Node(
+    base_link_to_livox_frame_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=['-0.1', '0', '-0.1', '0', '0', '0', 'lidar_link', 'base_link'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
         output='screen'
     )
-    ld.add_action(base_link_to_lidar_link_tf)
+    ld.add_action(base_link_to_livox_frame_tf)
 
     return ld

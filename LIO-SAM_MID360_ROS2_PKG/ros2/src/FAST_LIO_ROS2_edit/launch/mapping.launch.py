@@ -19,13 +19,13 @@ def generate_launch_description():
         global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
         from global_config import (
-            FAST_LIO_MODE, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
+            ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
             DEFAULT_USE_SIM_TIME,
         )
     except ImportError as e:
         print(f"方法2导入global_config失败: {e2}")
         # 如果导入失败，使用默认值
-        FAST_LIO_MODE = 'online'
+        ONLINE_LIDAR = True
         DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
         DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
         DEFAULT_USE_SIM_TIME = False
@@ -61,7 +61,7 @@ def generate_launch_description():
             {"enable_imu_sync_time": True},
         ],
         prefix=['taskset -c 4,5'],   # 绑定 CPU 4
-        condition=IfCondition(PythonExpression(["'", FAST_LIO_MODE, "' != 'offline'"])),
+        condition=IfCondition(PythonExpression([str(ONLINE_LIDAR), " == 'True'"])),
     )
 
     # 离线模式：rosbag播放
@@ -71,7 +71,7 @@ def generate_launch_description():
         name='rosbag_player',
         output='screen',
         prefix=['taskset -c 4'],   # 绑定 CPU 4
-        condition=IfCondition(PythonExpression(["'", FAST_LIO_MODE, "' == 'offline'"]))
+        condition=IfCondition(PythonExpression([str(ONLINE_LIDAR), " == 'False'"]))
     )
 
     # 根据模式选择启动相应的节点

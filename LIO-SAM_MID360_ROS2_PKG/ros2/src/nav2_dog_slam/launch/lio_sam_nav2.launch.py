@@ -53,8 +53,7 @@ except Exception as e:
     NAV2_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/'
     NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
-    NAV2_DEFAULT_BT_XML_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/bt_straight_then_rotate.xml'
-    NAV2_DEFAULT_USE_SIM_TIME_STRING = 'true'
+    NAV2_DEFAULT_BT_XML_PATH = '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'
     BASE_LINK_FRAME = 'base_link'

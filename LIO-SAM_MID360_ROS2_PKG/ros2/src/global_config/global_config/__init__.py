@@ -24,10 +24,6 @@ RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web�
 # 导航模式配置
 NAVIGATION_MODE = os.environ.get('NAVIGATION_MODE', 'standalone').lower()  # standalone: 独立模式, integrated: 集成模式
 
-# ========== FAST-LIO 相关配置 ==========
-# FAST-LIO 运行模式
-FAST_LIO_MODE = os.environ.get('FAST_LIO_MODE', 'online').lower()  # online: 在线模式, offline: 离线模式
-
 # ========== 主机特定的配置字典 ==========
 config_by_machine = {
     'RK3588': {
@@ -166,9 +162,9 @@ def update_nav2_params():
             with open(nav2_params_path, 'w') as file:
                 for line in lines:
                     if '      use_sim_time' in line:
-                        file.write(f'      use_sim_time: {NAV2_DEFAULT_USE_SIM_TIME_STRING}\n')
+                        file.write(f'      use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
                     elif '    use_sim_time:' in line:
-                        file.write(f'    use_sim_time: {NAV2_DEFAULT_USE_SIM_TIME_STRING}\n')
+                        file.write(f'    use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
                     elif 'yaml_filename:' in line:
                         file.write(f'    yaml_filename: {NAV2_DEFAULT_MAP_FILE}\n')
                     elif 'default_nav_to_pose_bt_xml:' in line:

@@ -142,8 +142,8 @@ colcon build --symlink-install --packages-select lio_sam
 
 BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 BUILD_MAP=False ros2 launch nav2_dog_slam lio_sam_nav2.launch.py
-taskset -c 4-7  ros2 launch fast_lio mapping.launch.py
-taskset -c 4-7  ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
+ros2 launch fast_lio mapping.launch.py
+ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
 
 
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/

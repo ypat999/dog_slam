@@ -6,43 +6,45 @@ from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 from nav2_common.launch import RewrittenYaml
 from launch_ros.descriptions import ParameterFile
-import os
+import os, sys
 
 
 def generate_launch_description():
+    try:
+        global_config_path = os .path.join(get_package_share_directory('global_config'), '../../src/global_config')
+        sys.path.insert(0, global_config_path)
+        from global_config import (
+            DEFAULT_USE_SIM_TIME,
+            NAV2_DEFAULT_MAP_FILE,
+            )
+    except ImportError:
+        # 如果导入失败，使用默认值  
+        print(  "Warning: Failed to import glo    bal_config, using default values")
+        DEFAULT_USE_SIM_TIME = True
+        NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+
+
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
-    namespace = LaunchConfiguration('namespace')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    params_file = LaunchConfiguration('params_file')
-    map_yaml_file = LaunchConfiguration('map')
-    autostart = LaunchConfiguration('autostart')
-    log_level = LaunchConfiguration('log_level')
+    use_sim_time = DEFAULT_USE_SIM_TIME
+    params_file = os.path.join(get_package_share_directory('nav2_dog_slam'), 'config', 'nav2_params.yaml')
+    map_yaml_file = NAV2_DEFAULT_MAP_FILE
+    autostart = True
+    log_level = 'info'
 
-    # Create rewritten params so nodes can pick their sections from the single params file
-    param_substitutions = {
-        'use_sim_time': use_sim_time,
-        'yaml_filename': map_yaml_file
-    }
+    ld = LaunchDescription()
 
-    configured_params = ParameterFile(
-        RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites=param_substitutions,
-            convert_types=True
-        ),
-        allow_substs=True
-    )
-
-    # map_server node (use configured_params so it reads map_server: section from params file)
+    # map_server node
     map_server_node = Node(
         package='nav2_map_server',
         executable='map_server',
         name='map_server',
         output='screen',
-        parameters=[configured_params],
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'yaml_filename': map_yaml_file}
+        ],
         remappings=[
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
@@ -55,14 +57,14 @@ def generate_launch_description():
         executable='amcl',
         name='amcl',
         output='screen',
-        parameters=[configured_params],
+        parameters=[params_file],
         remappings=[
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
         ],
         prefix=['taskset -c 6'],   # 绑定 CPU 4
     )
-
+    
     # lifecycle manager node to configure and activate map_server and amcl
     lifecycle_manager = Node(
         package='nav2_lifecycle_manager',
@@ -80,18 +82,16 @@ def generate_launch_description():
     navigation_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
         launch_arguments={
-            'namespace': namespace,
-            'use_sim_time': use_sim_time,
-            'autostart': autostart,
+            'use_sim_time': str(use_sim_time),
+            'autostart': str(autostart),
             'params_file': params_file,
             'use_composition': 'False',  # 显式设置为false以确保costmap能正确发布
             'use_respawn': 'False',  # 确保节点不会意外重启
             'container_name': 'nav2_container',
             'log_level': log_level
-        }.items(),
-        prefix=['taskset -c 0,1,2,3'],   # 绑定 CPU 
+        }.items()
     )
-
+    
     # 网页控制界面节点（ROS2 bridge + Websocket）
     # 这里用 rosbridge + web_video_server 组合
     rosbridge_websocket = Node(
@@ -107,18 +107,6 @@ def generate_launch_description():
         ]
     )
 
-    ld = LaunchDescription()
-
-    # declare args used by lio_sam_nav2 wrapper (these will be passed through)
-    ld.add_action(DeclareLaunchArgument('namespace', default_value=''))
-    ld.add_action(DeclareLaunchArgument('use_sim_time', default_value='false'))
-    # Default to the repo-local nav2 params so users don't need the system copy
-    ld.add_action(DeclareLaunchArgument('params_file', default_value=os.path.join(get_package_share_directory('lio_sam'), 'config', 'nav2_params.yaml')))
-    ld.add_action(DeclareLaunchArgument('map', default_value=''))
-    ld.add_action(DeclareLaunchArgument('autostart', default_value='true'))
-    ld.add_action(DeclareLaunchArgument('use_composition', default_value='False'))
-    ld.add_action(DeclareLaunchArgument('use_respawn', default_value='False'))
-    ld.add_action(DeclareLaunchArgument('log_level', default_value='info'))
 
     # add nodes
     ld.add_action(map_server_node)

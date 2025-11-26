@@ -1,7 +1,7 @@
 /**:
     ros__parameters:
         feature_extract_enable: false
-        point_filter_num: 3                   # 增加过滤点数，减少计算量，提高稳定性
+        point_filter_num: 5                   # 增加过滤点数，减少计算量，提高稳定性
         max_iteration: 5                      # 增加最大迭代次数，提高匹配精度
         filter_size_corner: 0.01               # 角点过滤尺寸（新增参数）
         filter_size_surf: 0.1                 # 增加表面过滤尺寸，减少噪声影响
@@ -32,9 +32,9 @@
             gyr_cov: 0.2
             b_acc_cov: 0.01
             b_gyr_cov: 0.01
-            fov_degree:    270.0
+            fov_degree:    360.0
             det_range:     100.0
-            extrinsic_est_en:  true      # true: enable the online estimation of IMU-LiDAR extrinsic
+            extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
             extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
             extrinsic_R: [ 1., 0., 0.,
                             0., 1., 0.,

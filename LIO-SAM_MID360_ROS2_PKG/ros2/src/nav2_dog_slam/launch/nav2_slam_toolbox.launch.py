@@ -111,7 +111,7 @@ def generate_launch_description():
             }
         ],
         remappings=[
-            ('/scan', '/lio_sam/scan'), 
+            ('/scan', '/scan'), 
             ('/odom', '/lio_sam/mapping/odometry'),
             ('/initialpose', '/initialpose')  # Enable initial pose setting
         ],

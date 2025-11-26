@@ -280,7 +280,7 @@ def generate_launch_description():
                 'use_map_saver': True
             }
         ],
-        remappings=[('/scan', '/lio_sam/scan'), ('/odom', '/lio_sam/mapping/odometry')]
+        remappings=[('/scan', '/scan'), ('/odom', '/lio_sam/mapping/odometry')]
     )
     
     rviz2_node = Node(

@@ -23,7 +23,7 @@ def generate_launch_description():
             DEFAULT_USE_SIM_TIME,
         )
     except ImportError as e:
-        print(f"方法2导入global_config失败: {e2}")
+        print(f"方法2导入global_config失败: {e}")
         # 如果导入失败，使用默认值
         ONLINE_LIDAR = True
         DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
@@ -39,6 +39,10 @@ def generate_launch_description():
 
     livox_share_dir = get_package_share_directory('livox_ros_driver2')
     livox_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
+    lidar_mode = "ONLINE"
+    if not ONLINE_LIDAR:
+        lidar_mode = "OFFLINE"
+
 
     ld = LaunchDescription()
 
@@ -61,7 +65,7 @@ def generate_launch_description():
             {"enable_imu_sync_time": True},
         ],
         prefix=['taskset -c 4,5'],   # 绑定 CPU 4
-        condition=IfCondition(PythonExpression([str(ONLINE_LIDAR), " == 'True'"])),
+        condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
     # 离线模式：rosbag播放
@@ -71,7 +75,7 @@ def generate_launch_description():
         name='rosbag_player',
         output='screen',
         prefix=['taskset -c 4'],   # 绑定 CPU 4
-        condition=IfCondition(PythonExpression([str(ONLINE_LIDAR), " == 'False'"]))
+        condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'OFFLINE'")),
     )
 
     # 根据模式选择启动相应的节点
@@ -84,7 +88,7 @@ def generate_launch_description():
         executable='fastlio_mapping',
         parameters=[PathJoinSubstitution([config_path, config_file]),
                     {'use_sim_time': use_sim_time}],
-        prefix=['taskset -c 7'],   # 绑定 CPU 7
+        prefix=['taskset -c 6,7'],   # 绑定 CPU 7
         output='screen'
     )
 

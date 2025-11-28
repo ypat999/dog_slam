@@ -109,7 +109,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', 'cloud_registered_body'),
+            ('/cloud_in', '/cloud_registered_body'),
             ('/scan', '/scan'),
         ],
         parameters=[{

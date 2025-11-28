@@ -277,12 +277,12 @@ controller_server:
     # 控制器服务器详细日志
     verbose: true
     
-    # 全向移动最小速度阈值
+    # 全向移动最小速度阈值 - 适应机器人结构特性
     min_x_velocity_threshold: 0.05
     min_y_velocity_threshold: 0.1
-    min_theta_velocity_threshold: 0.1
+    min_theta_velocity_threshold: 0.2  # 提高最小角速度阈值，避免低速无法转动
     min_speed_xy: 0.05
-    min_speed_theta: 0.1
+    min_speed_theta: 0.2  # 提高最小角速度阈值
     
     # 进度检查器参数 - 配合新行为树优化
     progress_checker:
@@ -290,16 +290,16 @@ controller_server:
       required_movement_radius: 0.15  # 增加移动半径，从0.1增加到0.15，减少误判
       movement_time_allowance: 20.0  # 减少移动时间容差，从30.0减到20.0，提高响应速度
     
-    # 目标检查器参数 - 配合新行为树优化
+    # 目标检查器参数 - 优化终点减速和停止精度
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.5  # 适当增加容差，从0.25增加到0.3，减少频繁触发恢复行为
-      yaw_goal_tolerance: 0.1  # 适当增加角度容差，从0.2增加到0.25，提高稳定性
+      xy_goal_tolerance: 0.5  # 进一步减小位置容差，提高停止精度
+      yaw_goal_tolerance: 0.2  # 进一步减小角度容差，避免过度修正
       stateful: false
-      velocity_threshold: 0.05  # 降低速度检查阈值，从0.05减到0.03，更快检测停止
-      min_velocity_threshold: 0.005  # 降低最小速度阈值，从0.01减到0.005，提高灵敏度
-      goal_angle_tolerance: 0.1  # 减小目标角度容差，提高方向精度
-      max_goal_pose_distance: 0.5  # 减小最大目标点距离，从0.15减到0.1，提高停止精度
+      velocity_threshold: 0.05  # 降低速度检查阈值，更快检测停止
+      min_velocity_threshold: 0.05  # 最小速度阈值
+      goal_angle_tolerance: 0.08  # 减小目标角度容差，提高方向精度
+      max_goal_pose_distance: 0.5  # 减小最大目标点距离，提高停止精度
 
     
     # MPPI控制器参数 - 全向移动配置（实时性优化）
@@ -310,25 +310,26 @@ controller_server:
       batch_size: 100  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 3.0  # 减少变换容差，提高实时性
       
-      # 全向移动速度限制 - 增加角速度以减小转向半径
-      vx_std: 0.4
-      vy_std: 0.12
-      wz_std: 0.3  # 保持较高的角速度采样标准差，确保转向灵活性
-      vx_max: 0.7
+      # 全向移动速度限制 - 适应机器人结构特性
+      vx_std: 0.2  # 降低线速度采样标准差，减少速度波动
+      vy_std: 0.08  # 降低横移速度采样标准差
+      wz_std: 0.2  # 提高角速度采样标准差，增加转向探索性
+      vx_max: 0.8
       vx_min: -0.06
       vy_max: 0.2
       vy_min: -0.2
-      wz_max: 1.0  # 增加最大角速度，减小转向半径
+      wz_max: 1.2
+      wz_min: 0.2  # 增加最小角速度，确保能克服静摩擦
       
       # 温度参数
-      temperature: 0.05
+      temperature: 0.2
       motion_model: "DiffDrive" 
       # motion_model: "Omni"  # 全向移动模型
-      visualize: false
+      visualize: true
       reset_period: 1.0
       
       # 轨迹可视化
-      trajectory_visualize: false
+      trajectory_visualize: true
       trajectory_visualize_max: 50
       
       # TrajectoryVisualizer参数
@@ -354,32 +355,32 @@ controller_server:
       
       CostCritic:
         enabled: true
-        cost_weight: 30.0
-        cost_power: 1
+        cost_weight: 35.0  # 增加避障成本权重，在接近终点时更谨慎
+        cost_power: 2
         collision_cost: 254.0  # 新增参数
         # consider_footprint: true  # 新增参数
         critical_cost: 254.0  # 新增参数
         # inflation_layer_name: "inflation_layer"  # 新增参数
-        near_goal_distance: 1.5  # 新增参数
+        near_goal_distance: 2.0  # 减小近目标距离，使减速更早开始
         
       PathFollowCritic:
         enabled: true
-        cost_weight: 12.0  # 降低路径跟踪权重，减少过冲
+        cost_weight: 8.0  # 进一步降低路径跟踪权重，减少左右震荡
         cost_power: 1
-        offset_from_furthest: 6  # 大幅减少前瞻距离，从6减到4，提高实时响应
-        threshold_to_consider: 0.5  # 增加阈值，允许更大偏差
+        offset_from_furthest: 3  # 减少前瞻距离，提高实时响应
+        threshold_to_consider: 0.7  # 增加阈值，允许更大路径偏差
       
       PathAngleCritic:
         enabled: true
-        cost_weight: 8.0  # 进一步降低权重，减少方向修正
-        cost_power: 1
-        offset_from_furthest: 4  # 大幅减少前瞻距离，从6减到4，提高响应速度
-        threshold_to_consider: 0.6  # 增加阈值
-        max_angle_to_furthest: 0.1  # 减少最大角度阈值
+        cost_weight: 5.0  # 大幅降低权重，减少方向修正的过度反应
+        cost_power: 3
+        offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
+        threshold_to_consider: 0.8  # 增加阈值，允许更大偏差
+        max_angle_to_furthest: 0.05  # 大幅减少最大角度阈值，避免过度修正
         
       PreferForwardCritic:
         enabled: true
-        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 6.0  # 降低权重，减少直线前进的强制性
       
       # TwirlingCritic:
       #   enabled: true
@@ -389,10 +390,10 @@ controller_server:
         
       GoalCritic:
         enabled: true
-        cost_weight: 18.0  # 目标对齐评价器权重
-        cost_power: 1
-        offset_from_furthest: 4  # 减少前瞻距离，从10减到6，提高停止精度
-        threshold_to_consider: 0.6
+        cost_weight: 25.0  # 增加目标对齐评价器权重，强化终点减速
+        cost_power: 2  # 增加成本幂次，使距离目标越近减速效果越明显
+        offset_from_furthest: 2  # 进一步减少前瞻距离，提高终点减速响应
+        threshold_to_consider: 0.3  # 降低阈值，使减速更早开始
 
 
     # # 安全监控和补偿策略配置（实时性优化）
@@ -441,7 +442,8 @@ local_costmap:
       transform_tolerance: 0.2
       
       # 地图参数
-      robot_radius: 0.3
+      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.1
       rolling_window: true
       width: 5
@@ -495,14 +497,14 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
         observation_sources: scan
-        # combination_method: 1  # 新增参数 - 1表示取最大值
-        # footprint_clearing_enabled: true  # 新增参数
-        # max_obstacle_height: 1.8  # 新增参数
-        # min_obstacle_height: -0.5  # 新增参数
+        combination_method: 1  # 取最大值组合方法
+        footprint_clearing_enabled: true  # 启用footprint清理
+        max_obstacle_height: 100.0
+        min_obstacle_height: -100.0
         scan:
           topic: /scan
-          max_obstacle_height: 1.8
-          min_obstacle_height: -0.5
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
           clearing: true
           marking: true
           data_type: "LaserScan"
@@ -542,7 +544,8 @@ global_costmap:
       robot_base_frame: base_link
       
       # 地图参数
-      robot_radius: 0.3
+      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       track_unknown_space: true
       

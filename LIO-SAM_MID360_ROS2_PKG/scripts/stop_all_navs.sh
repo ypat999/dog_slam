@@ -12,7 +12,7 @@ if [ -z "$ROS_DISTRO" ]; then
 fi
 
 
-
+pkill -f fast_lio
 pkill -f lio_sam
 pkill -f LIO_SAM
 pkill -f run_web_

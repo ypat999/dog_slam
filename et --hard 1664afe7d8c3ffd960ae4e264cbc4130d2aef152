@@ -1,0 +1,654 @@
+[33mcommit fbcde1ece04234471f0def6d546b1bd38d16b75f[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m)[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Nov 26 17:31:20 2025 +0800
+
+    服务脚本更新
+
+[33mcommit 43b2167239fad51ec0f7255cfaab417c6b7924da[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Nov 26 16:54:26 2025 +0800
+
+    fast-lio2稳定导航
+
+[33mcommit a1c22de966d4b99c5d0e7079e87b2af4774dfc49[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 26 15:02:19 2025 +0800
+
+    代码整理
+
+[33mcommit daf7c81a500cbdd6e0c372ed0796c2ab6a102d01[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 26 13:56:22 2025 +0800
+
+    代码整理
+
+[33mcommit b5c7880c815e0bc2bf051d6a632963bef6429c36[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Nov 26 11:47:51 2025 +0800
+
+    指定cpu稳定运行
+
+[33mcommit 2a324985561d4b7cb33a6355e06b3a378ee7b848[m
+Author: rk <rk@ropeok.com>
+Date:   Tue Nov 25 17:45:28 2025 +0800
+
+    修正全局变量名称问题
+
+[33mcommit 75688613c5078460daf28e021b12be8055f0983f[m
+Author: rk <rk@ropeok.com>
+Date:   Tue Nov 25 15:37:26 2025 +0800
+
+    sync
+
+[33mcommit 2e1dabbf95f65529b1a8feb5d5ea85c265858370[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 25 14:15:30 2025 +0800
+
+    camera_init body可配置
+
+[33mcommit 2c64c58c8ea3d105c240874324c08d1744df633e[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 24 10:51:36 2025 +0800
+
+    配置重力常数
+
+[33mcommit 87ab481f600c0a72c5b75c9ea8522e4d90a8e0bd[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 21 21:25:58 2025 +0800
+
+    移植fast-lio2
+
+[33mcommit 82aea15dd68e2f2594b00be1f559f6916f7287fb[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 21 21:21:18 2025 +0800
+
+    add fastlio2 code
+
+[33mcommit 3ed800b16c88f49cd3f1c07d1e0d2c261e7b2b7c[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 21 20:58:17 2025 +0800
+
+    移植fast-lio2
+
+[33mcommit f3be4a02914d067e86c318389d42cc89ac640c8a[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 21 18:09:49 2025 +0800
+
+    修正配置导入问题
+
+[33mcommit b2a7e7be772366b8a24f31fdbeefd6dfb2ebb745[m[33m ([m[1;32mremotes/origin/main[m[33m)[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 21 17:16:58 2025 +0800
+
+    移植fast-lio2
+
+[33mcommit fb7fcd1ac2222ca6621ece2854fe248ad462af64[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Nov 20 16:27:50 2025 +0800
+
+    将大模块拆分，便于组合
+
+[33mcommit 9ed3d2c04baaa2c26ec253570de945d2e2708b5a[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Nov 20 10:02:57 2025 +0800
+
+    stable version
+
+[33mcommit 4edc2a421afdf4f65bbd84b746f133e4de8e5c20[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 18 17:02:42 2025 +0800
+
+    更新后续规划
+
+[33mcommit f93993372ea69ceedd4008471aace2f6a53c2d0f[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 18 16:20:27 2025 +0800
+
+    增加后续规划
+
+[33mcommit 09a39ec10dd891ac115dca124dfcbece9de87636[m
+Author: rk <rk@ropeok.com>
+Date:   Tue Nov 18 14:46:08 2025 +0800
+
+    save
+
+[33mcommit fd724b28daf4533b0f3d79c40aedbf30f3210273[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 18 11:29:34 2025 +0800
+
+    params new
+
+[33mcommit 8fb6adb92be16189e3649be6ef14b723649ffd8a[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 18 11:19:22 2025 +0800
+
+    params
+
+[33mcommit 5b6b44859e0d40027fac4c6ef2290754caf7d858[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 18 10:17:27 2025 +0800
+
+    打开global costmap标记
+
+[33mcommit 3253eb71e1dd4373e2a52bef5093550c017eb88d[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 17 23:36:58 2025 +0800
+
+    change folder name
+
+[33mcommit 9c7d5e54e91f71e5e6374108f1d69e65bc53cb87[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 17 23:31:58 2025 +0800
+
+    stable test version
+
+[33mcommit c2b14e77f9df2399fa12fd12b3485f3382fce9a2[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Nov 17 23:18:10 2025 +0800
+
+    备份
+
+[33mcommit 5cab3a84b13d7d2d20557530902531f76e3b26fe[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 17 21:06:26 2025 +0800
+
+    调整slamtoolbox参数及异常处理
+
+[33mcommit 8be35b344b740222cf477cfa880b15e7c2a914b7[m
+Author: ypat999 <ypat999@gmail.com>
+Date:   Sat Nov 15 18:53:20 2025 +0800
+
+    修正建图位置
+
+[33mcommit cea0b8e0f0a8c6af23d84704174cc73358e3097b[m
+Merge: d95d475 1934dff
+Author: ypat999 <ypat999@gmail.com>
+Date:   Sat Nov 15 14:49:39 2025 +0800
+
+    sync
+
+[33mcommit 1934dff445aacbcb83bd97ba8a8c67ad68b9fdac[m
+Author: ywj <ypat_999@163.com>
+Date:   Sat Nov 15 14:26:28 2025 +0800
+
+    调整liosam的输出frame为lidarlink
+
+[33mcommit d95d475e0456fa1f49ddcc3c45be3b811f403241[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 12 18:35:01 2025 +0800
+
+    sync
+
+[33mcommit 552e9395c4c2607a097830e513eaa35bc0a275f5[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 12 15:45:32 2025 +0800
+
+    调整slamtoolbox稳定性
+
+[33mcommit b82ecc3ad8ee37911138a64e4a732fe14dd1f8a2[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 11 13:42:02 2025 +0800
+
+    调整参数
+
+[33mcommit 53794caf15bb57335c922924dbf5a09d0c5966e6[m
+Author: ywj <ypat_999@163.com>
+Date:   Mon Nov 10 18:14:09 2025 +0800
+
+    调整slamtoolbox建图
+
+[33mcommit fb121a83a77b902d29ce086f7ee8977ce79a367e[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 7 16:54:32 2025 +0800
+
+    web增加方向表示
+
+[33mcommit 1e8b938106dc263ed16ebf91141276f412690054[m
+Author: ypat <ypat999@gmail.com>
+Date:   Fri Nov 7 10:31:53 2025 +0800
+
+    修正web问题
+
+[33mcommit 269e61e7bc3509830eddebe88f806cb9473d4ad9[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Nov 6 23:27:54 2025 +0800
+
+    修正liosam gtsam崩溃问题
+
+[33mcommit 5ccefb5c81d125b5ad302411332dc6b607496fb4[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Nov 6 21:26:58 2025 +0800
+
+    参数稳定优化
+
+[33mcommit 39e32f33c9630db0e52c29fcb3521c8e95957e07[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Nov 6 20:50:05 2025 +0800
+
+    导航已稳定，但是可能定位会突然飘
+
+[33mcommit 8a0e5cb3a620a52230df10c76ec18a3dfe03edeb[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Nov 6 12:05:24 2025 +0800
+
+    增加gazebo（未测试）， 修改行为树
+
+[33mcommit f2f2df8f7c0386938d87156b1d02e081da7a141d[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 5 16:21:57 2025 +0800
+
+    update params
+
+[33mcommit 4709d35feebbbda21c2a6757fae1d710c6517bf6[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 5 09:48:26 2025 +0800
+
+    'sync'
+
+[33mcommit 1b102a8eb56e5f62c9d6fba07402827aed39cbcf[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Nov 5 09:40:50 2025 +0800
+
+    '增强控制实时性'
+
+[33mcommit 10738a2855ae52b1f7d40237dd65474c9f188ed2[m
+Author: rk <rk@ropeok.com>
+Date:   Tue Nov 4 22:33:32 2025 +0800
+
+    adjust control params
+
+[33mcommit 630e4efd30d54a7a2e8003722ca792008170048c[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 4 21:14:59 2025 +0800
+
+    优化baselink高度，使costmap能生成
+
+[33mcommit 6aed26db04b743d3c42e55d47a10b22c24b6c775[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 4 18:59:28 2025 +0800
+
+    去除imu丢失检测
+
+[33mcommit 156df4b31a54416a608973f5f58eea0773c31c9b[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 4 18:12:00 2025 +0800
+
+    修正liosam参数
+
+[33mcommit 0f993de599a10fc9189e5b97f5cf289dd0ef98be[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 4 17:07:06 2025 +0800
+
+    代码整合归并
+
+[33mcommit 35f80f837cbfb451a276b11faa652f24e87ca53e[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Nov 4 16:00:01 2025 +0800
+
+    add slam_toolbox,change costmap param
+
+[33mcommit fb54f779000503938ae0dcba0da7f628ef5824f9[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 3 19:53:33 2025 +0800
+
+    change param
+
+[33mcommit 90ce4a127c1cdd07fd493f02e177d525140bb7fa[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Nov 3 19:41:45 2025 +0800
+
+    param refine
+
+[33mcommit 777720babcd21f1fce1e793201b2969021bb9824[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 3 18:56:48 2025 +0800
+
+    change param
+
+[33mcommit 9d2cc94dad48251e703b34949899b19c3e7d5589[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 3 18:54:35 2025 +0800
+
+    change param
+
+[33mcommit 7879a91450b236afe461a75c9548b631250f5715[m
+Author: ypat <ypat999@gmail.com>
+Date:   Mon Nov 3 18:47:53 2025 +0800
+
+    add notebook config
+
+[33mcommit 56eba46e3e54dfc53f77b60abaf0fbae5a3250d7[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Nov 3 18:33:35 2025 +0800
+
+    sync
+
+[33mcommit b58823e5fb8a7fa859e22bfbf80448a0c089c9e8[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Nov 3 18:26:55 2025 +0800
+
+    sync
+
+[33mcommit 5099cc2814119ce1e988d738b0a47a9ada204613[m
+Author: ypat <ypat999@gmail.com>
+Date:   Sat Nov 1 22:46:55 2025 +0800
+
+    update readme
+
+[33mcommit baf18bbd3aed9d04eac6da76d51ba6301a9ac942[m
+Author: rk <rk@ropeok.com>
+Date:   Fri Oct 31 18:25:23 2025 +0800
+
+    sync
+
+[33mcommit ead71df945ed86666f882590d0c9b1d5f7abaea4[m
+Author: rk <rk@ropeok.com>
+Date:   Fri Oct 31 17:38:35 2025 +0800
+
+    优化运动参数
+
+[33mcommit 0cfbec49f005b195cf7f7f09599f081130f6169d[m
+Author: rk <rk@ropeok.com>
+Date:   Fri Oct 31 11:28:21 2025 +0800
+
+    use new nav2_params
+
+[33mcommit f0817c70259eee00dea2fa886ad68fc433373c08[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 30 14:47:05 2025 +0800
+
+    清理多余文件
+
+[33mcommit 98e8d116e5c8d24b132c3f19150f4303d9653426[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 30 14:45:32 2025 +0800
+
+    优化初始定位，修正启动服务脚本
+
+[33mcommit 1d2961b548dbcbdb3a55757bc6766476372607dc[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Oct 30 11:58:10 2025 +0800
+
+    修正nav dt， 增加buildmap服务
+
+[33mcommit 30af5c0a04dc4cf54e599704b0950b3440836e23[m
+Author: ypat <ypat999@gmail.com>
+Date:   Thu Oct 30 11:31:02 2025 +0800
+
+    更新启停脚本，放宽nav2导航失败条件
+
+[33mcommit 7a613f75caee92c3170541f6a21ae32ebb936c74[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Oct 29 23:17:43 2025 +0800
+
+    增加service定义
+
+[33mcommit 33dbbfb62f007afb6164cf32c9f70dfb59c52c35[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Oct 29 22:46:05 2025 +0800
+
+    update nav2 params
+
+[33mcommit 084c5d290edbf3853fe7a57daa2601f9daec3c96[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Oct 29 21:39:02 2025 +0800
+
+    recover yaml
+
+[33mcommit 5520be5e6226b86489fe5b4d7a09cd48bf642017[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Oct 29 21:37:50 2025 +0800
+
+    bigger tolerance
+
+[33mcommit 6a3d20ada42a3f465577cad0e3aa3ee0325840d9[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Oct 29 17:57:08 2025 +0800
+
+    成功进行精确导航
+
+[33mcommit 6b94bd16f8bfc4e9379389f64873314ec271cb55[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Oct 29 16:48:35 2025 +0800
+
+    调整激光雷达tf角度，存在看不到laserscan的问题，但是数值正确
+
+[33mcommit 85cb0d2a464276852b572d0a198088f9d2c84d72[m
+Author: ypat <ypat999@gmail.com>
+Date:   Wed Oct 29 14:06:22 2025 +0800
+
+    使用beam模型
+
+[33mcommit e51dd8010c962a8ca154e9727dc38681bad32ccf[m
+Author: rk <rk@ropeok.com>
+Date:   Wed Oct 29 10:29:47 2025 +0800
+
+    sync
+
+[33mcommit 93dc530c29a8221a2aeb8480c17348d3100b49fc[m
+Author: rk <rk@ropeok.com>
+Date:   Tue Oct 28 15:24:06 2025 +0800
+
+    根据现场情况优化参数，特别是雷达距离和姿态限制
+
+[33mcommit 832967f9a542ccb8e9f3a954058bfe1bf347cc09[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Oct 27 22:34:18 2025 +0800
+
+    add record command
+
+[33mcommit 00647675a47b0c323e15ea2214267bb9bdd354ee[m
+Author: ywj <ypat_999@163.com>
+Date:   Mon Oct 27 22:07:56 2025 +0800
+
+    大幅调整nav2参数，可能存在风险
+
+[33mcommit 88f747e4f290341916903442dc23586923cb1568[m
+Author: ywj <ypat_999@163.com>
+Date:   Mon Oct 27 14:23:34 2025 +0800
+
+    push rotate msg
+
+[33mcommit d5978acb6836f2aec62a64152e2915f537ffd9e7[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Oct 27 13:57:57 2025 +0800
+
+    change bt tree file
+
+[33mcommit 8da9decb27b4a3023f467fb88efa5f24ce08dd27[m
+Author: rk <rk@ropeok.com>
+Date:   Mon Oct 27 11:55:37 2025 +0800
+
+    map frame to odom
+
+[33mcommit 64dd3a550b7bfc1802b4f1602fe5dcba4d4f096c[m
+Author: rk <rk@ropeok.com>
+Date:   Sat Oct 25 18:18:49 2025 +0800
+
+    修正倾斜角度问题
+
+[33mcommit 59ad4158409f5ac7e47fc9808c8cb6726afc82e0[m
+Author: ywj <ypat_999@163.com>
+Date:   Sat Oct 25 16:53:32 2025 +0800
+
+    添加tf及odom输出延迟
+
+[33mcommit 66df7afdf5ad75296329c381fdfc79ec2cb57773[m
+Author: ywj <ypat_999@163.com>
+Date:   Sat Oct 25 10:03:14 2025 +0800
+
+    微调
+
+[33mcommit 6b1d50461fa76414041c5b70cbe874d08bf1af1e[m
+Author: ywj <ypat_999@163.com>
+Date:   Sat Oct 25 00:22:17 2025 +0800
+
+    优化定位参数
+
+[33mcommit b2c57e8ba54e90276978a0cf02792a67ab829b62[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 24 20:08:34 2025 +0800
+
+    修复任务点不能打断的问题
+
+[33mcommit 912d6afdb0473d8215d61dcfbde0c9be0b364c9a[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: rk <rk@ropeok.com>
+Date:   Fri Oct 24 19:11:48 2025 +0800
+
+    domian 27
+
+[33mcommit 2e270626c4257657c529259ced14c77e0342e641[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 24 19:04:20 2025 +0800
+
+    修复定位问题
+
+[33mcommit c7d7cd5b9891d5fb78b7e4b174766b8dbdca0cdf[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 24 18:14:41 2025 +0800
+
+    stash
+
+[33mcommit 0113ed1295d7116de7774d5b1fca1ffccec1715d[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 24 16:49:39 2025 +0800
+
+    update web
+
+[33mcommit bbc5c2b3ff9ae27fb3b410362f51be06165c69ba[m
+Author: rk <rk@ropeok.com>
+Date:   Fri Oct 24 16:44:32 2025 +0800
+
+    优化
+
+[33mcommit 242093ee9043a74af78a7556a77244dd763a3f42[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 24 13:56:02 2025 +0800
+
+    改进bt navigator参数
+
+[33mcommit e1c10515f321b381cc2660dc5fbfc7d57bc4a64a[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 23 18:48:35 2025 +0800
+
+    sync
+
+[33mcommit beca3158d8807821934db326464effc8bf79fa94[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 23 16:54:41 2025 +0800
+
+    恢复雷达水平放置
+
+[33mcommit 66cff7d13e17105e22acd3e5521800cd443cd70d[m
+Author: ywj <ypat_999@163.com>
+Date:   Thu Oct 23 12:51:08 2025 +0800
+
+    针对不同电脑使用不同配置，恢复雷达角度
+
+[33mcommit 26f1f356c7ce53b03f30f1f8971a4b263f02b951[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 23 12:10:39 2025 +0800
+
+    修正配置文件
+
+[33mcommit 04c59c42781ef532a4b1c557579fc229feaa4043[m
+Author: rk <rk@ropeok.com>
+Date:   Thu Oct 23 10:59:05 2025 +0800
+
+    repair import problem
+
+[33mcommit 53b2d13e4ddc7b721b5fa28756ef0985038bac5a[m
+Author: ywj <ypat_999@163.com>
+Date:   Thu Oct 23 10:50:01 2025 +0800
+
+    调整global_config加载方式
+
+[33mcommit 4b7107712aef1bdad116a5ceb575d4ccffb51c3e[m
+Author: ywj <ypat_999@163.com>
+Date:   Thu Oct 23 09:46:15 2025 +0800
+
+    调整在线离线策略
+
+[33mcommit 4a4636d8078c70ce0b506c7d27e63e810b3425e5[m
+Author: ywj <ypat_999@163.com>
+Date:   Wed Oct 22 18:02:36 2025 +0800
+
+    change to online mode
+
+[33mcommit e77a500f406b5b4ffc7b356382439b925d98cd4e[m
+Author: ywj <ypat_999@163.com>
+Date:   Wed Oct 22 17:16:11 2025 +0800
+
+    统一管理use_sim_time
+
+[33mcommit c6eed388fe996b9f7470ff7dc11a716bfd1a67ec[m
+Author: ywj <ypat_999@163.com>
+Date:   Wed Oct 22 11:55:04 2025 +0800
+
+    update readme
+
+[33mcommit 6588d8119559b38df30f4e398a92a03e5fad7212[m
+Author: ywj <ypat_999@163.com>
+Date:   Wed Oct 22 00:38:05 2025 +0800
+
+    完善amcl与liosam配合实现自动定位
+
+[33mcommit e738b8a287e6fee66c881836565ffc33212ef3cb[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 17 19:46:44 2025 +0800
+
+    add nav2 and web control
+
+[33mcommit 8d9c22b82b0914a90448aa6d65a6f25b2477c097[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 17 14:05:45 2025 +0800
+
+    detele
+
+[33mcommit e81f8740653bca344501a22607633743d96a1034[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 17 13:53:10 2025 +0800
+
+    add main code
+
+[33mcommit 36ada8787487b8a4632a9a558a392cd6776df9df[m
+Author: ywj <ypat_999@163.com>
+Date:   Fri Oct 17 13:48:09 2025 +0800
+
+    改用lio-sam建图
+
+[33mcommit db39c96f6f9c4e3d46e62eb51cd9661bfa698410[m
+Author: ypat999@gmail.com <ypat999@gmail.com>
+Date:   Thu Oct 16 14:41:32 2025 +0800
+
+    refine imu average
+
+[33mcommit 665b5ff2b24b84817c5a7e48c0c8d66d8c4da0bf[m
+Author: ywj <ypat_999@163.com>
+Date:   Thu Oct 16 14:08:46 2025 +0800
+
+    imu refine
+
+[33mcommit c60325d6926c6d749de29685a4108e70437a8ca3[m
+Author: ypat999@gmail.com <ypat999@gmail.com>
+Date:   Wed Oct 15 17:03:22 2025 +0800
+
+    优化imu数据
+
+[33mcommit 5bc8293a4d8c393268ca1f2db053527abdcb76b4[m
+Author: ypat999@gmail.com <ypat999@gmail.com>
+Date:   Thu Oct 9 18:42:44 2025 +0800
+
+    增加nav2
+
+[33mcommit 2311cf74f2538380fa59468d113ab82f111994db[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Sep 30 16:51:21 2025 +0800
+
+    start
+
+[33mcommit 740ec84127889f490871be4a59e5d3304de6cd49[m
+Author: ypat <ypat999@gmail.com>
+Date:   Tue Sep 30 16:17:28 2025 +0800
+
+    Initial commit

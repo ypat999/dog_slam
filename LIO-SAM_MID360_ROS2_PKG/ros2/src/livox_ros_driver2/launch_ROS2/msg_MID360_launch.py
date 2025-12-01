@@ -8,7 +8,7 @@ import launch
 xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
 multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
 data_src      = 0    # 0-lidar, others-Invalid data src
-publish_freq  = 20.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
 output_type   = 0
 frame_id      = 'livox_frame'
 # lvx_file_path = '/home/livox/livox_test.lvx'
@@ -17,7 +17,7 @@ cmdline_bd_code = 'livox0000000001'
 from launch.substitutions import LaunchConfiguration
 cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
 cur_config_path = cur_path + '../config'
-default_user_config_path = os.path.join(cur_config_path, 'MID360_config.json')
+default_user_config_path = os.path.join(cur_config_path, 'MID360_config_tilt.json')
 user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
 ################### user configure parameters for ros2 end #####################
 
@@ -41,7 +41,8 @@ def generate_launch_description():
         executable='livox_ros_driver2_node',
         name='livox_lidar_publisher',
         output='screen',
-        parameters=livox_ros2_params
+        parameters=livox_ros2_params,
+        prefix=['taskset -c 4,5'],   # 绑定 CPU 5
     )
 
     declare_user_config_path = DeclareLaunchArgument(

@@ -1,12 +1,12 @@
 /**:
     ros__parameters:
         feature_extract_enable: false
-        point_filter_num: 5                   # 增加过滤点数，减少计算量，提高稳定性
-        max_iteration: 5                      # 增加最大迭代次数，提高匹配精度
-        filter_size_corner: 0.01               # 角点过滤尺寸（新增参数）
+        point_filter_num: 3                   # 增加过滤点数，减少计算量，提高稳定性
+        max_iteration: 3                      # 增加最大迭代次数，提高匹配精度
+        # filter_size_corner: 0.01               # 角点过滤尺寸（新增参数）
         filter_size_surf: 0.1                 # 增加表面过滤尺寸，减少噪声影响
         filter_size_map: 0.5                  # 增加地图过滤尺寸，减少噪声影响
-        cube_side_length: 100.0               # 减小地图立方体尺寸，提高局部地图精度
+        cube_side_length: 300.0               # 减小地图立方体尺寸，提高局部地图精度
         runtime_pos_log_enable: false          # 启用日志输出
         # map_file_path: "./test.pcd"
 
@@ -34,11 +34,14 @@
             b_gyr_cov: 0.01
             fov_degree:    360.0
             det_range:     100.0
-            extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic
+            extrinsic_est_en:  false         # 保持关闭，避免外参在线估计导致的不稳定
             extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
             extrinsic_R: [ 1., 0., 0.,
                             0., 1., 0.,
                             0., 0., 1.]
+            
+            # 速度限制参数（新增）
+            max_velocity: 3.0               # 最大速度限制 (m/s)
             # extrinsic_T: [ 0.1,  0.0,  0.1 ]
             # extrinsic_R: [0.8660, 0.0, 0.5,
             #                 0.0, 1.0, 0.0,

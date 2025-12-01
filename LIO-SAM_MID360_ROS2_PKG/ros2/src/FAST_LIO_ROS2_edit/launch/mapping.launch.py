@@ -57,12 +57,11 @@ def generate_launch_description():
             {"xfer_format": 1},
             {"multi_topic": 0},
             {"data_src": 0},
-            {"publish_freq": 20.0},
+            {"publish_freq": 10.0},
             {"output_data_type": 0},
             {"frame_id": 'livox_frame'},
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
-            {"enable_imu_sync_time": True},
         ],
         prefix=['taskset -c 4,5'],   # 绑定 CPU 4
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
@@ -89,14 +88,14 @@ def generate_launch_description():
         parameters=[PathJoinSubstitution([config_path, config_file]),
                     {'use_sim_time': use_sim_time}],
         prefix=['taskset -c 6,7'],   # 绑定 CPU 7
-        output='screen'
+        output='screen',
     )
 
     # 使用TimerAction添加延迟启动FAST-LIO节点，确保雷达数据就位
     from launch.actions import TimerAction
     ld.add_action(
         TimerAction(
-            period=3.0,  # 延迟3秒启动FAST-LIO节点
+            period=5.0,  # 延迟3秒启动FAST-LIO节点
             actions=[fast_lio_node]
         )
     )
@@ -109,7 +108,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', 'cloud_registered_body'),
+            ('/cloud_in', '/cloud_registered_body'),
             ('/scan', '/scan'),
         ],
         parameters=[{

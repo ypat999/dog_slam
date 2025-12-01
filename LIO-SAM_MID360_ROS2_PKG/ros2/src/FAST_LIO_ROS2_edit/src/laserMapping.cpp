@@ -91,7 +91,7 @@ double res_mean_last = 0.05, total_residual = 0.0;
 double last_timestamp_lidar = 0, last_timestamp_imu = -1.0;
 double gyr_cov = 0.1, acc_cov = 0.1, b_gyr_cov = 0.0001, b_acc_cov = 0.0001;
 double filter_size_corner_min = 0, filter_size_surf_min = 0, filter_size_map_min = 0, fov_deg = 0;
-double G_m_s2 = 1.0;  // 重力常数，默认为1.0以适配mid360归一化IMU数据
+double G_m_s2 = 9.81;  // 重力常数，默认为1.0以适配mid360归一化IMU数据
 double cube_len = 0, HALF_FOV_COS = 0, FOV_DEG = 0, total_distance = 0, lidar_end_time = 0, first_lidar_time = 0.0;
 int    effct_feat_num = 0, time_log_counter = 0, scan_count = 0, publish_count = 0;
 int    iterCount = 0, feats_down_size = 0, NUM_MAX_ITERATIONS = 0, laserCloudValidNum = 0, pcd_save_interval = -1, pcd_index = 0;
@@ -839,6 +839,7 @@ public:
         this->declare_parameter<double>("common.gravity_constant", 1.0);  // 重力常数，默认为1.0以适配mid360归一化IMU数据
         this->declare_parameter<string>("common.frame_id_camera_init", "camera_init");  // 初始坐标系名称
         this->declare_parameter<string>("common.frame_id_body", "body");               // 机器人身体坐标系名称
+        this->declare_parameter<double>("mapping.max_velocity", 10.0);                  // 最大速度限制(m/s)
 
         this->get_parameter_or<bool>("publish.path_en", path_en, true);
         this->get_parameter_or<bool>("publish.effect_map_en", effect_pub_en, false);
@@ -875,7 +876,7 @@ public:
         this->get_parameter_or<int>("pcd_save.interval", pcd_save_interval, -1);
         this->get_parameter_or<vector<double>>("mapping.extrinsic_T", extrinT, vector<double>());
   this->get_parameter_or<vector<double>>("mapping.extrinsic_R", extrinR, vector<double>());
-  this->get_parameter_or<double>("common.gravity_constant", G_m_s2, 1.0);  // 重力常数，默认为1.0以适配mid360归一化IMU数据
+  this->get_parameter_or<double>("common.gravity_constant", G_m_s2, 9.81);  // 重力常数，默认为1.0以适配mid360归一化IMU数据
   this->get_parameter_or<string>("common.frame_id_camera_init", frame_id_camera_init, "camera_init");  // 初始坐标系名称
   this->get_parameter_or<string>("common.frame_id_body", frame_id_body, "body");               // 机器人身体坐标系名称
 
@@ -929,13 +930,13 @@ public:
         /*** ROS subscribe initialization ***/
         if (p_pre->lidar_type == AVIA)
         {
-            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, 20, livox_pcl_cbk);
+            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), livox_pcl_cbk);
         }
         else
         {
-            sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::SensorDataQoS(), standard_pcl_cbk);
+            sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), standard_pcl_cbk);
         }
-        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 10, imu_cbk);
+        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(rclcpp::KeepLast(400)).best_effort(), imu_cbk);
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);

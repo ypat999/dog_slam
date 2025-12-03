@@ -133,7 +133,7 @@ amcl:
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
     beam_skip_distance: 0.8  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
-    beam_skip_threshold: 0.6   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
     
     # # QoS覆盖参数 - 新增
     # qos_overrides:
@@ -295,9 +295,9 @@ controller_server:
     # MPPI控制器参数 - 全向移动配置（实时性优化）
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 20  # 大幅减少时间步数，从40减到20，降低计算延迟
+      time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
       model_dt: 0.03
-      batch_size: 300  # 大幅减少批量大小，从1500减到800，提高计算速度
+      batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
@@ -317,7 +317,7 @@ controller_server:
       # motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
 
-      visualize: true
+      visualize: false
       publish_optimal_trajectory: false
       # TrajectoryVisualizer参数
       TrajectoryVisualizer:

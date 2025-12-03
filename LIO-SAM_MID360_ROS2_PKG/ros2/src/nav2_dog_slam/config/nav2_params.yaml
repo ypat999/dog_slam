@@ -12,7 +12,7 @@
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
@@ -20,7 +20,7 @@ lifecycle_manager:
 # 单独的定位生命周期管理器配置
 lifecycle_manager_localization:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
     node_names: ['map_server', 'amcl']
     bond_timeout_ms: 10000
@@ -30,7 +30,7 @@ lifecycle_manager_localization:
 # =============================================================================
 amcl:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     
     # 基础参数 - 两个模型共用
     min_particles: 500
@@ -90,7 +90,6 @@ amcl:
     max_beams: 180
     
     # odom_topic: /lio_sam/mapping/odometry
-    # scan_topic: /scan
 
     # =============================================================================
     # BEAM MODEL 参数 - 适用于结构化环境
@@ -148,7 +147,7 @@ amcl:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     global_frame: map
     robot_base_frame: base_link
     bt_loop_duration: 10
@@ -254,7 +253,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     controller_frequency: 40.0  # 保持10Hz控制器频率
     failure_tolerance: 5.0
 
@@ -404,7 +403,7 @@ velocity_smoother:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
     
-    use_sim_time: false
+    use_sim_time: true
     smoothing_frequency: 40.0
     scale_velocities: false
     feedback: "OPEN_LOOP" 
@@ -434,7 +433,7 @@ local_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 10.0
       publish_frequency: 10.0
       global_frame: odom
@@ -537,7 +536,7 @@ global_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 0.5
       publish_frequency: 0.5
       global_frame: map
@@ -618,15 +617,15 @@ global_costmap:
 # =============================================================================
 map_server:
   ros__parameters:
-    use_sim_time: false
-    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
+    use_sim_time: true
+    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
 
 # =============================================================================
 # Planner Server Configuration
 # =============================================================================
 planner_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     expected_planner_frequency: 2.0
     planner_plugins: ["GridBased"]
 
@@ -634,7 +633,7 @@ planner_server:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
       tolerance: 0.25
       planner_timeout: 3.0
-      allow_unknown: false
+      allow_unknown: true
       max_iterations: 100000
       minimum_turning_radius: 0.2
       angle_quantization_bins: 72
@@ -650,7 +649,7 @@ smoother_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     # footprint_topic: "local_costmap/published_footprint"  # 新增参数
     # robot_base_frame: "base_link"  # 新增参数
@@ -673,7 +672,7 @@ smoother_server:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     log_level: "debug"  # 启用debug级别日志输出
     
     # 缺失参数 - 根据系统输出添加
@@ -738,7 +737,7 @@ waypoint_follower:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
     loop_rate: 40
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -779,10 +778,10 @@ waypoint_follower:
 
 
 
-slam_toolbox_localization:
+slam_toolbox_node:
   ros__parameters:
     # 基本设置
-    use_sim_time: false
+    use_sim_time: true
 
     # 模式 - "mapping" 或 "localization" 模式，用于 Ceres 问题创建的性能优化
     #     工作原理与使用场景
@@ -822,7 +821,7 @@ slam_toolbox_localization:
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
     scan_topic: /scan
     # 里程计话题
-    odom_topic: /lio_sam/mapping/odometry
+    # odom_topic: /Odometry
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
@@ -835,7 +834,7 @@ slam_toolbox_localization:
     min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: false
+    use_scan_matching: true
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
@@ -961,13 +960,13 @@ slam_toolbox_localization:
     use_response_expansion: true
     
     # # 是否启用调试日志
-    debug_logging: false
+    debug_logging: true
     
     # # 限制扫描频率
-    # throttle_scans: 1
+    throttle_scans: 1
     
     # # 变换超时
-    transform_timeout: 10.0
+    transform_timeout: 0.5
     
     # # TF缓冲区持续时间
     tf_buffer_duration: 5.0

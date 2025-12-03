@@ -15,11 +15,11 @@ import sys, os
 try:
     global_config_path = get_package_share_directory('global_config')
     sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
-    from global_config.global_config import (
+    from global_config import (
         BUILD_MAP, BUILD_TOOL, RECORD_ONLY, ONLINE_LIDAR as ONLINE_LIDAR, 
         LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
         DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
-        LIO_SAM_DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
+        DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR, MAP_FRAME,
         ODOM_FRAME, BASE_LINK_FRAME, LIVOX_FRAME, NAV2_DEFAULT_MAP_FILE as DEFAULT_MAP_FILE
@@ -102,7 +102,7 @@ def generate_launch_description():
     slam_toolbox_node = Node(
         package='slam_toolbox',
         executable='sync_slam_toolbox_node',
-        name='slam_toolbox_localization',
+        name='slam_toolbox_node',
         output='screen',
         parameters=[
             slam_toolbox_params,
@@ -112,7 +112,8 @@ def generate_launch_description():
         ],
         remappings=[
             ('/scan', '/scan'), 
-            ('/odom', '/lio_sam/mapping/odometry'),
+            # ('/odom', '/lio_sam/mapping/odometry'),
+            ('/odom', '/Odometry'),  # FAST-LIO 的 odometry 话题
             ('/initialpose', '/initialpose')  # Enable initial pose setting
         ],
         respawn=True,  # 启用自动重启，防止崩溃后系统停止运行
@@ -143,7 +144,7 @@ def generate_launch_description():
         # Start nav2 (map_server) first so /map is available, then start slam_toolbox after a short delay
         delayed_map_server = TimerAction(period=0.5, actions=[map_server_node])
         delayed_nav = TimerAction(period=1.0, actions=[navigation_include])
-        delayed_slam = TimerAction(period=5.0, actions=[slam_toolbox_node])
+        delayed_slam = TimerAction(period=15.0, actions=[slam_toolbox_node])
         launch_actions.append(delayed_map_server)
         launch_actions.append(delayed_nav)
         launch_actions.append(delayed_slam)

@@ -1,10 +1,11 @@
 import os.path
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from ament_index_python.packages import get_package_share_directory
 import sys, os
@@ -20,7 +21,7 @@ def generate_launch_description():
         sys.path.insert(0, global_config_path)
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
-            DEFAULT_USE_SIM_TIME,
+            DEFAULT_USE_SIM_TIME, BUILD_MAP, BUILD_TOOL, RECORD_ONLY
         )
     except ImportError as e:
         print(f"方法2导入global_config失败: {e}")
@@ -29,6 +30,9 @@ def generate_launch_description():
         DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
         DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
         DEFAULT_USE_SIM_TIME = False
+        BUILD_MAP = False
+        BUILD_TOOL = 'octomap_server'
+        RECORD_ONLY = False
     
     package_path = get_package_share_directory('fast_lio')
     config_path = os.path.join(package_path, 'config')
@@ -147,6 +151,28 @@ def generate_launch_description():
     ld.add_action(pointcloud_to_laserscan_node)
 
 
+
+    static_transform_map_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_map_to_odom',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        output='screen'
+    )
+    ld.add_action(static_transform_map_to_odom)
+
+    # odom -> base_link (里程计到机器人基坐标系的静态变换)
+    static_transform_odom_to_base_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_odom_to_base_link',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        output='screen'
+    )
+    ld.add_action(static_transform_odom_to_base_link)
+
     base_link_to_livox_frame_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -154,5 +180,85 @@ def generate_launch_description():
         output='screen'
     )
     ld.add_action(base_link_to_livox_frame_tf)
+
+    # 根据模式添加相应的节点（按照LIO-SAM的逻辑）
+    if RECORD_ONLY:
+        # 仅录制模式：只启动雷达驱动
+        return ld
+
+    # 获取nav2_dog_slam包的路径
+    nav2_dog_slam_path = get_package_share_directory('nav2_dog_slam')
+    
+    # 添加slam_toolbox节点（按照LIO-SAM的模式）
+    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
+    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
+        'slam_toolbox_params',
+        default_value=os.path.join(nav2_dog_slam_path, 'config', 'nav2_params.yaml'),
+        description='Full path to slam_toolbox parameters file'
+    )
+    
+    
+    slam_toolbox_node = Node(
+        package='slam_toolbox',
+        executable='sync_slam_toolbox_node',
+        name='slam_toolbox_node',
+        output='screen',
+        parameters=[
+            slam_toolbox_params,
+            {
+                'use_sim_time': use_sim_time,
+                # force-disable map publishing/updating to keep nav2 map_server as authoritative
+                'map_update_interval': 1.0,
+                'publish_occupancy_map': True,
+                'use_map_saver': True
+            }
+        ],
+        remappings=[('/scan', '/scan'), ('/odom', '/Odometry')]  # 使用FAST-LIO的odometry话题
+    )
+    
+    # 添加octomap_server节点（按照LIO-SAM的模式）
+    octomap_server_node = Node(
+        package='octomap_server',
+        executable='octomap_server_node',
+        name='octomap_server',
+        output='screen',
+        parameters=[{
+            'frame_id': 'map',                   # 地图坐标系
+            'sensor_model/max_range': 100.0,     # 最大感测距离
+            'sensor_model/min_range': 0.4,       # 最小感测距离
+            'sensor_model/insert_free_space': True,
+            'resolution': 0.05,                  # OctoMap 分辨率（5cm）
+            'occupancy_min_z': -0.2,             # 投影高度下限
+            'occupancy_max_z': 1.5,              # 投影高度上限
+            'publish_2d_map': True,              # 输出2D occupancy grid
+            'use_sim_time': use_sim_time,
+        }],
+        remappings=[
+            ('/cloud_in', '/cloud_registered_body')  # 输入点云
+        ]
+    )
+
+    # 根据模式添加相应的节点
+    if BUILD_MAP:
+        if BUILD_TOOL == 'slam_toolbox':
+            # 建图模式 + slam_toolbox
+            ld.add_action(declare_slam_toolbox_params_cmd)
+            ld.add_action(
+                TimerAction(
+                    period=5.0,  # 延迟20秒启动slam_toolbox
+                    actions=[slam_toolbox_node]
+                )
+            )
+        else:
+            # 建图模式：添加octomap server
+            ld.add_action(
+                TimerAction(
+                    period=15.0,  # 延迟15秒启动octomap_server
+                    actions=[octomap_server_node]
+                )
+            )
+    else:
+        # 非建图模式：只添加pointcloud_to_laserscan节点
+        pass
 
     return ld

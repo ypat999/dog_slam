@@ -28,12 +28,12 @@ try:
         LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, 
         DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
         DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
-        LIO_SAM_DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
+        DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
         NAV2_DEFAULT_BT_XML_PATH, 
-        NAV2_DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
+        DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME
     )
 except Exception as e:
@@ -117,23 +117,23 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'amcl'"]))
         )
 
-        # nav2_slam_include = IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource([os.path.join(
-        #         current_dir, 'nav2_slam_toolbox.launch.py')]),
-        #     launch_arguments={
-        #         'use_sim_time': use_sim_time,
-        #         'map': map_file,
-        #         'params_file': os.path.join(package_dir, 'config', 'nav2_params.yaml'),
-        #         'slam_toolbox_params': os.path.join(package_dir, 'config', 'nav2_params.yaml')
-        #     }.items(),
-        #     condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
-        # )
+        nav2_slam_include = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                current_dir, 'nav2_slam_toolbox.launch.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time,
+                'map': map_file,
+                'params_file': os.path.join(package_dir, 'config', 'nav2_params.yaml'),
+                'slam_toolbox_params': os.path.join(package_dir, 'config', 'nav2_params.yaml')
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+        )
 
         # 延迟启动Nav2的launch文件（两个 include 都会被放入延迟动作中，条件决定实际生效的那个）
         # Append both include actions; each include has its own condition so only the
         # matching one (amcl or slam_toolbox) will actually be executed at runtime.
         nav2_and_web_actions.append(nav2_amcl_include)
-        # nav2_and_web_actions.append(nav2_slam_include)
+        nav2_and_web_actions.append(nav2_slam_include)
         
         # # 延迟调用AMCL的全局定位服务
         # nav2_and_web_actions.append(TimerAction(

@@ -131,8 +131,6 @@ NAV2_DEFAULT_BT_XML_PATH = selected_config['NAV2_DEFAULT_BT_XML_PATH']
 # ========== 导出FAST-LIO配置参数 ==========
 FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
-DEFAULT_USE_SIM_TIME = selected_config['DEFAULT_USE_SIM_TIME']
-DEFAULT_USE_SIM_TIME_STRING = 'true' if DEFAULT_USE_SIM_TIME else 'false'
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'

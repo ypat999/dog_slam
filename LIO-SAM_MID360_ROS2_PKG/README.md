@@ -103,7 +103,7 @@ sudo apt install ros-humble-ros2topic=0.18.14-1jammy.20251008.030
 sudo apt install ros-humble-rqt  
 
 ## slam_toolbox
-apt install ros-eloquent-slam-toolbox
+apt install ros-humble-slam-toolbox
 
 
 ## 项目说明

@@ -23,11 +23,16 @@ def generate_launch_description():
         global_config_path = os .path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
         from global_config import (
+            BUILD_MAP, BUILD_TOOL, RECORD_ONLY, ONLINE_LIDAR,
             NAV2_DEFAULT_WEB_SCRIPT_PATH,
             )
     except ImportError:
         # 如果导入失败，使用默认值  
         print(  "Warning: Failed to import glo    bal_config, using default values")
+        BUILD_MAP = False
+        BUILD_TOOL = 'octomap_server'
+        RECORD_ONLY = False
+        ONLINE_LIDAR = False
         NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
 
 
@@ -63,7 +68,20 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'amcl'"]))
     )
 
+    nav2_slam_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            current_dir, 'nav2_slam_toolbox.launch.py')]),
+        launch_arguments={
+            'use_sim_time': 'true',
+            'map': '/home/ztl/slam_data/grid_map/map.yaml',
+            'params_file': os.path.join(current_dir, '../config', 'nav2_params.yaml'),
+            'slam_toolbox_params': os.path.join(current_dir, '../config', 'nav2_params.yaml')
+        }.items(),
+        condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+    )
+
     nav2_and_web_actions.append(nav2_amcl_include)
+    nav2_and_web_actions.append(nav2_slam_include)
     
     # 调用web控制脚本
     nav2_and_web_actions.append(ExecuteProcess(
@@ -82,11 +100,17 @@ def generate_launch_description():
     ]
     
     # 3. 添加Nav2和Web控制动作（延迟5秒启动）
-    if nav2_and_web_actions:
+
+    # 3. 根据模式添加相应的节点
+    if  BUILD_MAP:
+        # 建图模式：添加octomap server
+        pass
+    elif nav2_and_web_actions:
+        # 导航模式：添加nav2和web
         delayed_nav2_launch = TimerAction(
             period=5.0,  # 延迟5秒启动Nav2，确保fast_lio已初始化
             actions=nav2_and_web_actions
         )
         launch_actions.append(delayed_nav2_launch)
-    
+
     return LaunchDescription(launch_actions)

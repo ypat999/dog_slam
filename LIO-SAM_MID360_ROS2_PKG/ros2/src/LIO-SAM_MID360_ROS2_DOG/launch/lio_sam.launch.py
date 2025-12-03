@@ -37,13 +37,14 @@ def generate_launch_description():
     xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
     multi_topic   = 0    # 0-All LiDARs share the same topic, 1-One LiDAR one topic
     data_src      = 0    # 0-lidar, others-Invalid data src
-    publish_freq  = 50.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
+    publish_freq  = 10.0 # freqency of publish, 5.0, 10.0, 20.0, 50.0, etc.
     output_type   = 0    # 0-PointCloud2格式输出
     frame_id      = 'livox_frame'  # LiDAR坐标系名称
     # lvx_file_path = '/home/livox/livox_test.lvx'
     cmdline_bd_code = 'livox0000000001'
 
     share_dir = get_package_share_directory('lio_sam')
+    nav2_dir  = get_package_share_directory('nav2_dog_slam')
     livox_share_dir = get_package_share_directory('livox_ros_driver2')
     
     # 根据USE_TILT_CONFIG选择配置文件
@@ -263,12 +264,12 @@ def generate_launch_description():
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(share_dir, 'config', 'nav2_params.yaml'),
+        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
         description='Full path to slam_toolbox parameters file')
     slam_toolbox_node = Node(
         package='slam_toolbox',
         executable='sync_slam_toolbox_node',
-        name='slam_toolbox_localization',
+        name='slam_toolbox_node',
         output='screen',
         parameters=[
             slam_toolbox_params,

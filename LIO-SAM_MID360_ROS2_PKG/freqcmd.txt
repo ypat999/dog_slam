@@ -8,7 +8,8 @@ sudo systemctl stop robot_control.service
 sudo systemctl start lio_sam_buildmap.service
 
 # 或  使用slamtoolbox建图
-BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch lio_sam lio_sam_nav2.launch.py localization:=slam_toolbox
+BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
+BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
 
 # 保存二维地图(amcl)：
 source ros2/install/setup.bash 
@@ -92,7 +93,7 @@ cd ros2
 export DISPLAY=localhost:10.0
 
 colcon build --symlink-install --packages-select lio_sam && source install/setup.bash &&BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
-colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch lio_sam nav2.launch.py
+colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch nav2_dog_slam nav2.launch.py
 
 /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web.sh
 
@@ -131,7 +132,7 @@ ros2 lifecycle set /static_transform_publisher_odom_base shutdown
 
 
 source install/setup.bash
-nohup ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/ > record.log &
+nohup ros2 launch nav2_dog_slam lio_sam_nav2.launch.py ns:=/ > record.log &
 tail -f record.log
 
 

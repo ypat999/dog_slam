@@ -40,6 +40,11 @@ sudo systemctl stop lio_sam_buildmap.service
 
 
 
+
+
+
+
+
 # 启动导航：
 sudo systemctl start lio_sam_nav2.service
 

@@ -1,4 +1,4 @@
-# LIO-SAM_MID360_ROS2_PKG
+# FAST-LIO2 & LIO-SAM MID360 ROS2 Package
 
 推荐使用阿里源：
 deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] https://mirrors.aliyun.com/ros2/ubuntu/ jammy main
@@ -59,9 +59,22 @@ sudo apt install -y libgtsam-dev libgtsam-unstable-dev
 运行 `build_ros2.sh` 进行首次构建。它会正确构建 Livox 包。
 
 ## 运行
+
+### FAST-LIO2 启动方式（推荐）
 ```bash
+# 启动Livox MID360雷达驱动
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
+# 启动FAST-LIO2 SLAM系统
+ros2 launch fast_lio mapping.launch.py
+```
+
+### LIO-SAM 启动方式
+```bash
+# 启动Livox MID360雷达驱动
+ros2 launch livox_ros_driver2 msg_MID360_launch.py
+
+# 启动LIO-SAM SLAM系统
 ros2 launch lio_sam run.launch.py
 ```
 
@@ -95,9 +108,31 @@ apt install ros-eloquent-slam-toolbox
 
 ## 项目说明
 
+本项目是一个集成了FAST-LIO2和LIO-SAM两种SLAM算法的ROS2软件包，专门针对Livox MID360激光雷达优化。项目提供了完整的SLAM建图、定位和导航解决方案。
+
+### 核心SLAM算法对比
+
+#### FAST-LIO2 (推荐使用)
+- **算法特点**：基于迭代卡尔曼滤波的紧耦合激光-惯性里程计
+- **优势**：计算效率高、内存占用低、实时性强、抗震性好
+- **适用场景**：实时建图、高频定位、资源受限环境
+
+#### LIO-SAM (备选方案)
+- **算法特点**：基于因子图的松耦合激光-惯性里程计
+- **优势**：回环检测能力强、全局优化精度高
+- **适用场景**：需要高精度全局地图、回环检测的场景
+
 ### 项目提供了多种启动脚本和配置：
 
-#### 1. lio_sam.launch.py
+#### 1. fast_lio_mapping.launch.py
+这是FAST-LIO2 SLAM系统的核心启动文件，包含以下主要组件：
+- **IMU预处理节点**：处理IMU数据，进行预积分
+- **点云预处理节点**：对激光点云进行滤波和特征提取
+- **激光-惯性里程计节点**：基于迭代卡尔曼滤波的紧耦合SLAM
+- **地图构建节点**：实时构建并更新3D点云地图
+- **RViz2可视化工具**：提供SLAM过程的可视化界面
+
+#### 2. lio_sam.launch.py
 这是LIO-SAM SLAM系统的核心启动文件，包含以下主要组件：
 - **IMU预积分节点** (`imuPreintegration`)：处理IMU数据，提供IMU预积分 odometry
 - **点云投影节点** (`imageProjection`)：将3D点云投影到range image和bev map，提取特征点
@@ -162,23 +197,55 @@ apt install ros-eloquent-slam-toolbox
 4. 如果使用MobaXterm进行远程访问，需要先获取$DISPLAY变量值
 
 ### 启动系统
-#### 方法一：使用集成启动脚本（推荐）
-在MobaXterm中使用前，需要先获取$DISPLAY变量值：
-```bash
-# 在MobaXterm中获取DISPLAY变量值
-echo $DISPLAY
-```
-然后修改`run_lio_sam_nav2.sh`脚本中的`export DISPLAY=localhost:10.0`行，将`localhost:10.0`替换为实际的DISPLAY值。
 
-运行集成启动脚本：
+#### FAST-LIO2 + Nav2 集成启动（推荐）
 ```bash
 # 进入项目根目录
-cd /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG
+cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG
 
-# 运行集成启动脚本
+# 运行FAST-LIO2集成启动脚本
+./run_fast_lio_nav2.sh
+```
+
+#### LIO-SAM + Nav2 集成启动
+```bash
+# 进入项目根目录
+cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG
+
+# 运行LIO-SAM集成启动脚本
 ./run_lio_sam_nav2.sh
 ```
-此脚本会自动设置环境变量、编译项目并启动LIO-SAM SLAM和Nav2导航系统。
+
+#### 分别启动各组件
+1. 启动FAST-LIO2 SLAM系统：
+   ```bash
+   # 进入ROS2工作空间
+   cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG/ros2
+   
+   # 编译项目
+   colcon build --packages-select fast_lio
+   
+   # 设置环境变量
+   source install/setup.bash
+   
+   # 启动FAST-LIO2 SLAM系统
+   ros2 launch fast_lio mapping.launch.py
+   ```
+
+2. 启动LIO-SAM SLAM系统：
+   ```bash
+   # 进入ROS2工作空间
+   cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG/ros2
+   
+   # 编译项目
+   colcon build --packages-select lio_sam
+   
+   # 设置环境变量
+   source install/setup.bash
+   
+   # 启动LIO-SAM SLAM系统
+   ros2 launch lio_sam lio_sam.launch.py
+   ```
 
 #### 方法二：分别启动各组件
 1. 启动SLAM系统：
@@ -255,19 +322,28 @@ ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: 
 ```
 
 ### 系统参数调整
+
+#### FAST-LIO2参数
+修改`fast_lio/config/mid360.yaml`文件可调整FAST-LIO2系统参数：
+- **传感器配置**：雷达类型、IMU话题、坐标系设置
+- **预处理参数**：点云过滤、盲区设置、扫描线数
+- **建图参数**：噪声协方差、视野范围、外参设置
+- **发布参数**：路径发布、点云输出、地图保存
+- **性能优化**：迭代次数、过滤尺寸、立方体尺寸
+
 #### LIO-SAM参数
-修改`config/liosam_params.yaml`文件可调整SLAM系统参数：
-- 传感器配置：雷达和IMU参数
-- 特征提取：阈值和算法参数
-- 回环检测：使能开关和检测参数
-- 优化设置：滑动窗口大小和优化频率
+修改`lio_sam/config/liosam_params.yaml`文件可调整SLAM系统参数：
+- **传感器配置**：雷达和IMU参数
+- **特征提取**：阈值和算法参数
+- **回环检测**：使能开关和检测参数
+- **优化设置**：滑动窗口大小和优化频率
 
 #### Nav2参数
-修改`config/nav2_params.yaml`文件可调整导航系统参数：
-- 代价地图：尺寸、分辨率、障碍物处理
-- 路径规划：规划器类型和参数
-- 控制器：运动控制算法和参数
-- 行为服务器：恢复行为配置
+修改`nav2_dog_slam/config/nav2_params.yaml`文件可调整导航系统参数：
+- **代价地图**：尺寸、分辨率、障碍物处理
+- **路径规划**：规划器类型和参数
+- **控制器**：运动控制算法和参数
+- **行为服务器**：恢复行为配置
 
 ### 故障排除
 1. **无法连接雷达**：

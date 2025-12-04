@@ -106,6 +106,23 @@ sudo apt install ros-humble-rqt
 apt install ros-humble-slam-toolbox
 
 
+# gazebo
+sudo apt install \
+  ros-humble-gazebo-* \          
+  ros-humble-ros2-control* \    
+  ros-humble-robot-state-publisher \ 
+  ros-humble-joint-state-publisher \ 
+  ros-humble-xacro  
+
+#############################################
+# 若Gazebo缺少基础模型，可手动克隆官方模型库
+#############################################
+cd ~/.gazebo/
+git clone https://github.com/osrf/gazebo_models.git models
+
+
+sudo chmod 777 ~/.gazebo/models
+sudo chmod 777 ~/.gazebo/models/*
 ## 项目说明
 
 本项目是一个集成了FAST-LIO2和LIO-SAM两种SLAM算法的ROS2软件包，专门针对Livox MID360激光雷达优化。项目提供了完整的SLAM建图、定位和导航解决方案。

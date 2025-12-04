@@ -18,6 +18,6 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:$(pwd)/ros2/src/gazebo/models
 
 # Launch Gazebo simulation
 echo "Launching Gazebo simulation..."
-ros2 launch gazebo gazebo_simulation.launch.py
+ros2 launch ros2_livox_simulation livox_simulation.launch.py
 
 echo "Gazebo simulation started. Use Ctrl+C to stop."

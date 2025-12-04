@@ -605,7 +605,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
         inflation_radius: 0.5
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 2.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -631,6 +631,20 @@ planner_server:
 
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
+
+      # ---- 启用方向模型（必需，否则没倒车）----
+      motion_model_for_search: "REEDS_SHEPP"
+
+      # ---- 倒车代价（越高越不愿倒车）----
+      # 建议：1.5～3.0：允许倒车但倾向前进
+      reverse_penalty: 2.5
+
+      # ---- 切换前进/倒车的代价 ----
+      change_penalty: 0.5
+
+      # ---- 转弯代价（可稍微提高让路径更自然）----
+      non_straight_penalty: 1.2
+
       tolerance: 0.25
       planner_timeout: 3.0
       allow_unknown: true

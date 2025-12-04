@@ -44,6 +44,9 @@ config_by_machine = {
         'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': False,
+        
+        # RK3588主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_tilt.json',
     },
     'jqr001': {
         # jqr001主机配置 - LIO-SAM
@@ -63,10 +66,13 @@ config_by_machine = {
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
+        
+        # jqr001主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - LIO-SAM
-        'ONLINE_LIDAR': False,
+        'ONLINE_LIDAR': True,
         'LIO_SAM_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
@@ -81,7 +87,10 @@ config_by_machine = {
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
-        'DEFAULT_USE_SIM_TIME': True,
+        'DEFAULT_USE_SIM_TIME': False,
+        
+        # DESKTOP-4LS1SSN主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
     }
 }
 
@@ -104,6 +113,9 @@ default_config = {
     'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
     'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
     'DEFAULT_USE_SIM_TIME': True,
+    
+    # Livox MID360 默认配置
+    'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
 }
 
 # 根据当前主机名选择配置
@@ -121,6 +133,10 @@ DEFAULT_USE_SIM_TIME_STRING = 'true'
 if ONLINE_LIDAR:
     DEFAULT_USE_SIM_TIME = False
     DEFAULT_USE_SIM_TIME_STRING = 'false'
+
+
+# 导出 Livox MID360 配置参数
+LIVOX_MID360_CONFIG = selected_config['LIVOX_MID360_CONFIG']
 
 # ========== 导出Nav2配置参数 ==========
 NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']
@@ -175,3 +191,4 @@ def update_nav2_params():
 
 # 导入时自动更新Nav2参数
 update_nav2_params()
+

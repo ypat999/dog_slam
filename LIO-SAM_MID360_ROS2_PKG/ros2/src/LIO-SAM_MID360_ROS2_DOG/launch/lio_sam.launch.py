@@ -47,19 +47,18 @@ def generate_launch_description():
     nav2_dir  = get_package_share_directory('nav2_dog_slam')
     livox_share_dir = get_package_share_directory('livox_ros_driver2')
     
+    # 使用全局配置路径
+    default_user_config_path = LIVOX_MID360_CONFIG
+    
     # 根据USE_TILT_CONFIG选择配置文件
     if 'USE_TILT_CONFIG' in globals() and USE_TILT_CONFIG:
         print("使用雷达倾斜配置文件")
         default_params_file = os.path.join(share_dir, 'config', 'liosam_params_tilt.yaml')
         xacro_path = os.path.join(share_dir, 'config', 'robot.urdf_tilt.xacro')
-        # 选择MID360配置文件
-        default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
     else:
         print("使用默认配置文件")
         default_params_file = os.path.join(share_dir, 'config', 'liosam_params.yaml')
         xacro_path = os.path.join(share_dir, 'config', 'robot.urdf.xacro')
-        # 选择MID360配置文件
-        default_user_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config.json')
     
     user_config_path = LaunchConfiguration('user_config_path', default=default_user_config_path)
     

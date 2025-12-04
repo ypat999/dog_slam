@@ -41,8 +41,10 @@ def generate_launch_description():
     config_path = config_path
     config_file = 'mid360.yaml'
 
-    livox_share_dir = get_package_share_directory('livox_ros_driver2')
-    livox_config_path = os.path.join(livox_share_dir, 'config', 'MID360_config_tilt.json')
+    # 导入全局配置
+    from global_config import LIVOX_MID360_CONFIG
+    
+    livox_config_path = LIVOX_MID360_CONFIG
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"

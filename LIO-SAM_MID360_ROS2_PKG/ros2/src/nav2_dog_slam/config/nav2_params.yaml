@@ -618,7 +618,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: false
-    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
+    yaml_filename: /mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml
 
 # =============================================================================
 # Planner Server Configuration

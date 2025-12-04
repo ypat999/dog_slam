@@ -117,7 +117,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.1,
-            'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
             'angle_max': 3.1,         # 180度
@@ -128,10 +128,10 @@ def generate_launch_description():
             'scan_time': 0.1,             # 扫描时间
             
             'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 200.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
+            'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             
-            'inf_epsilon': 10000.0,           # 无穷大值的替代值
+            'inf_epsilon': 40.0,           # 无穷大值的替代值
             
             # # QoS设置，确保与rviz2订阅者兼容
             # 'qos_overrides./scan.publisher.reliability': 'reliable',
@@ -200,7 +200,7 @@ def generate_launch_description():
     
     slam_toolbox_node = Node(
         package='slam_toolbox',
-        executable='sync_slam_toolbox_node',
+        executable='async_slam_toolbox_node',
         name='slam_toolbox_node',
         output='screen',
         parameters=[
@@ -228,8 +228,8 @@ def generate_launch_description():
             'sensor_model/min_range': 0.4,       # 最小感测距离
             'sensor_model/insert_free_space': True,
             'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -0.2,             # 投影高度下限
-            'occupancy_max_z': 1.5,              # 投影高度上限
+            'occupancy_min_z': -0.1,             # 投影高度下限
+            'occupancy_max_z': 1.0,              # 投影高度上限
             'publish_2d_map': True,              # 输出2D occupancy grid
             'use_sim_time': use_sim_time,
         }],

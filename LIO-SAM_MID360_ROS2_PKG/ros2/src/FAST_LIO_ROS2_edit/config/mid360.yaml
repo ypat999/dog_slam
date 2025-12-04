@@ -8,7 +8,7 @@
         filter_size_map: 0.5                  # 增加地图过滤尺寸，减少噪声影响
         cube_side_length: 300.0               # 减小地图立方体尺寸，提高局部地图精度
         runtime_pos_log_enable: false          # 启用日志输出
-        # map_file_path: "./test.pcd"
+        map_file_path: "/home/ztl/slam_data/pcd/test.pcd"
 
         common:
             lid_topic:  "/livox/lidar"
@@ -25,7 +25,7 @@
             scan_line:  4
             blind: 0.3                   # 减小盲区范围，增加有效点数量
             timestamp_unit: 3
-            scan_rate: 20
+            scan_rate: 10
 
         mapping:
             acc_cov: 0.2
@@ -33,7 +33,7 @@
             b_acc_cov: 0.01
             b_gyr_cov: 0.01
             fov_degree:    360.0
-            det_range:     100.0
+            det_range:     40.0
             extrinsic_est_en:  false         # 保持关闭，避免外参在线估计导致的不稳定
             extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
             extrinsic_R: [ 1., 0., 0.,
@@ -53,12 +53,13 @@
         publish:
             path_en: true                # true: publish Path
             effect_map_en: false         # true: publish Effects
-            map_en: false                 # true: publish Map cloud
+            map_en: true                 # true: publish Map cloud
             scan_publish_en:  true       # false: close all the point cloud output
-            dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
+            dense_publish_en: true      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
 
         pcd_save:
-            pcd_save_en: false
-            interval: -1                 # how many LiDAR frames saved in each pcd file; 
+            pcd_save_en: true
+            interval: 5                 # how many LiDAR frames saved in each pcd file; 
                                         # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+            map_file_path: "/home/ztl/slam_data/pcd/test.pcd"

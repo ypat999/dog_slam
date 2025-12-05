@@ -85,7 +85,7 @@ def generate_launch_description():
 
     # 根据模式选择启动相应的节点
     ld.add_action(rosbag_player)
-    ld.add_action(livox_driver_node)
+    # ld.add_action(livox_driver_node)
 
 
     fast_lio_node = Node(
@@ -119,7 +119,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.1,
-            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': 0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
             'angle_max': 3.1,         # 180度

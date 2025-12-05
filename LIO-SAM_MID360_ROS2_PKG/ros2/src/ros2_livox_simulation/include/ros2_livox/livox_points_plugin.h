@@ -111,8 +111,9 @@ namespace gazebo
       int64_t currStartIndex = 0;
       int64_t maxPointSize = 1000;
       int64_t downSample = 1;
+      int xfer_format = 0;  // 数据格式：0=PointCloud2, 1=Livox私有格式
 
-      double maxDist = 400.0;
+      double maxDist = 40.0;
       double minDist = 0.1;
    };
 

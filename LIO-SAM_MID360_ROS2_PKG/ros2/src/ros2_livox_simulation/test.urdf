@@ -227,7 +227,7 @@
         <samples>30000</samples>
         <downsample>1</downsample>
         <csv_file_name>/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install/ros2_livox_simulation/share/ros2_livox_simulation/scan_mode/mid360.csv</csv_file_name>
-        <topic>/livox</topic>
+        <topic>/livox/lidar</topic>
       </plugin>
     </sensor>
   </gazebo>

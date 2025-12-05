@@ -6,7 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1
+        - /PointCloud21
       Splitter Ratio: 0.5
     Tree Height: 708
   - Class: rviz_common/Selection
@@ -26,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
@@ -109,7 +109,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -151,30 +150,33 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
+        base_footprint:
+          base_link:
+            ahead_left_wheel:
+              {}
+            ahead_right_wheel:
+              {}
+            bhind_left_wheel:
+              {}
+            bhind_right_wheel:
+              {}
+            camera_link:
+              {}
+            imu_link:
+              {}
+            livox_frame:
+              {}
         map:
-          odom:
-            base_link:
-              ahead_left_wheel:
-                {}
-              ahead_right_wheel:
-                {}
-              bhind_left_wheel:
-                {}
-              bhind_right_wheel:
-                {}
-              camera_link:
-                {}
-              imu_link:
-                {}
-              livox_frame:
-                {}
+          {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.3429043292999268
-        Min Value: -0.13907058537006378
+        Max Value: 2.4862639904022217
+        Min Value: -0.1464720517396927
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -200,9 +202,78 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /livox/lidar
+        Value: /cloud_registered
       Use Fixed Frame: true
       Use rainbow: true
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /map_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /goal_pose
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /plan
       Value: true
   Enabled: true
   Global Options:
@@ -250,7 +321,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.283743143081665
+      Distance: 18.18128204345703
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -265,10 +336,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7703984379768372
+      Pitch: 1.4903985261917114
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.095406532287598
+      Yaw: 3.6904056072235107
     Saved: ~
 Window Geometry:
   Displays:
@@ -286,5 +357,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1908
-  X: 0
-  Y: 0
+  X: -31
+  Y: -26

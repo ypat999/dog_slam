@@ -10,7 +10,6 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 # Gazebo资源路径配置 - Python风格的设置
 # Gazebo资源路径配置
-models_path = "/mnt/d/projects/git/models"
 models_path = "~/models"
 
 # 设置GAZEBO_RESOURCE_PATH
@@ -68,13 +67,20 @@ def generate_launch_description():
     # ============================================================================
 
     # ============================================================================
-    #给GAZEBO_MODEL_PATH添加 mid360.stl的路径
+    # 设置ROS_PACKAGE_PATH以便Gazebo能解析package://URI
+    ros_package_path = os.environ.get('ROS_PACKAGE_PATH', '')
+    ros2_livox_simulation_pkg_path = os.path.dirname(pkg_ros2_livox_simulation)
+    if ros2_livox_simulation_pkg_path not in ros_package_path:
+        os.environ['ROS_PACKAGE_PATH'] = f"{ros2_livox_simulation_pkg_path}:{ros_package_path}"
+
+    # 给GAZEBO_MODEL_PATH添加 mid360.stl的路径
+    pkg_meshes_path = os.path.join(pkg_ros2_livox_simulation, 'meshes')
     if 'GAZEBO_MODEL_PATH' in os.environ:
-        os.environ['GAZEBO_MODEL_PATH'] += pkg_share
+        os.environ['GAZEBO_MODEL_PATH'] += f":{pkg_meshes_path}"
     else:
-        os.environ['GAZEBO_MODEL_PATH'] = pkg_share
+        os.environ['GAZEBO_MODEL_PATH'] = pkg_meshes_path
     # ============================================================================
-    
+
     
     # ============================================================================
     #gazebo
@@ -153,7 +159,6 @@ def generate_launch_description():
 
 
     ld = LaunchDescription()
-    # 暂时禁用rviz以减少显示相关问题
     ld.add_action(rviz)
     ld.add_action(gazebo_launch)
     ld.add_action(robot_state_publisher)

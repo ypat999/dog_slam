@@ -64,6 +64,13 @@ namespace gazebo
         auto curr_scan_topic = sdf->Get<std::string>("topic");
         RCLCPP_INFO(rclcpp::get_logger("LivoxPointsPlugin"), "ros topic name: %s", curr_scan_topic.c_str());
 
+        // 读取xfer_format参数，默认为0（PointCloud2格式）
+        xfer_format = 0;
+        if (sdf->HasElement("xfer_format")) {
+            xfer_format = sdf->Get<int>("xfer_format");
+        }
+        RCLCPP_INFO(rclcpp::get_logger("LivoxPointsPlugin"), "xfer_format: %d", xfer_format);
+
         child_name = raySensor->Name();
         parent_name = raySensor->ParentName();
         size_t delimiter_pos = parent_name.find("::");
@@ -71,10 +78,21 @@ namespace gazebo
 
         node = transport::NodePtr(new transport::Node());
         node->Init(raySensor->WorldName());
-        // PointCloud2 publisher
-        cloud2_pub = node_->create_publisher<sensor_msgs::msg::PointCloud2>(curr_scan_topic + "/lidar", 10);
-        // CustomMsg publisher
-        custom_pub = node_->create_publisher<livox_ros_driver2::msg::CustomMsg>(curr_scan_topic, 10);
+        
+        // 根据xfer_format参数决定发布哪种格式
+        if (xfer_format == 0) {
+            // PointCloud2格式
+            cloud2_pub = node_->create_publisher<sensor_msgs::msg::PointCloud2>(curr_scan_topic, 10);
+            RCLCPP_INFO(rclcpp::get_logger("LivoxPointsPlugin"), "Publishing PointCloud2 format on topic: %s", curr_scan_topic.c_str());
+        } else if (xfer_format == 1) {
+            // Livox私有格式
+            custom_pub = node_->create_publisher<livox_ros_driver2::msg::CustomMsg>(curr_scan_topic, 10);
+            RCLCPP_INFO(rclcpp::get_logger("LivoxPointsPlugin"), "Publishing Livox CustomMsg format on topic: %s", curr_scan_topic.c_str());
+        } else {
+            // 默认使用PointCloud2格式
+            cloud2_pub = node_->create_publisher<sensor_msgs::msg::PointCloud2>(curr_scan_topic, 10);
+            RCLCPP_INFO(rclcpp::get_logger("LivoxPointsPlugin"), "Invalid xfer_format, defaulting to PointCloud2 format on topic: %s", curr_scan_topic.c_str());
+        }
 
         scanPub = node->Advertise<msgs::LaserScanStamped>(curr_scan_topic+"laserscan", 50);
 
@@ -135,47 +153,55 @@ void LivoxPointsPlugin::OnNewLaserScans()
         msgs::LaserScan *scan = laserMsg.mutable_scan();
         InitializeScan(scan);
 
-        // 初始化 Livox CustomMsg（不变）
-        livox_ros_driver2::msg::CustomMsg pp_livox;
-        pp_livox.header.stamp = node_->get_clock()->now();
-        pp_livox.header.frame_id = raySensor->Name();
         int count = 0;
         boost::chrono::high_resolution_clock::time_point start_time = boost::chrono::high_resolution_clock::now();
 
-        // 初始化 PointCloud2（新代码）
+        // 根据xfer_format参数决定初始化哪种消息格式
+        livox_ros_driver2::msg::CustomMsg pp_livox;
         sensor_msgs::msg::PointCloud2 cloud2;
-        cloud2.header.stamp = pp_livox.header.stamp;
-        cloud2.header.frame_id = pp_livox.header.frame_id;
-        cloud2.height = 1;
-        cloud2.width = 0;
-        cloud2.is_dense = false;
+        
+        if (xfer_format == 0) {
+            // PointCloud2格式
+            cloud2.header.stamp = node_->get_clock()->now();
+            cloud2.header.frame_id = raySensor->Name();
+            cloud2.height = 1;
+            cloud2.width = 0;
+            cloud2.is_dense = false;
 
-        // 定义字段（x, y, z, intensity）
-        sensor_msgs::msg::PointField field_x, field_y, field_z, field_intensity;
-        field_x.name = "x";
-        field_x.offset = 0;
-        field_x.datatype = sensor_msgs::msg::PointField::FLOAT32;
-        field_x.count = 1;
+            // 定义字段（x, y, z, intensity）
+            sensor_msgs::msg::PointField field_x, field_y, field_z, field_intensity;
+            field_x.name = "x";
+            field_x.offset = 0;
+            field_x.datatype = sensor_msgs::msg::PointField::FLOAT32;
+            field_x.count = 1;
 
-        field_y.name = "y";
-        field_y.offset = 4;
-        field_y.datatype = sensor_msgs::msg::PointField::FLOAT32;
-        field_y.count = 1;
+            field_y.name = "y";
+            field_y.offset = 4;
+            field_y.datatype = sensor_msgs::msg::PointField::FLOAT32;
+            field_y.count = 1;
 
-        field_z.name = "z";
-        field_z.offset = 8;
-        field_z.datatype = sensor_msgs::msg::PointField::FLOAT32;
-        field_z.count = 1;
+            field_z.name = "z";
+            field_z.offset = 8;
+            field_z.datatype = sensor_msgs::msg::PointField::FLOAT32;
+            field_z.count = 1;
 
-        field_intensity.name = "intensity";
-        field_intensity.offset = 12;
-        field_intensity.datatype = sensor_msgs::msg::PointField::FLOAT32;
-        field_intensity.count = 1;
+            field_intensity.name = "intensity";
+            field_intensity.offset = 12;
+            field_intensity.datatype = sensor_msgs::msg::PointField::FLOAT32;
+            field_intensity.count = 1;
 
-        cloud2.fields = {field_x, field_y, field_z, field_intensity};
-        cloud2.point_step = 16;
+            cloud2.fields = {field_x, field_y, field_z, field_intensity};
+            cloud2.point_step = 16;
+        } else if (xfer_format == 1) {
+            // Livox私有格式
+            pp_livox.header.stamp = node_->get_clock()->now();
+            pp_livox.header.frame_id = raySensor->Name();
+        }
+
         std::vector<uint8_t> cloud_data;
-        cloud_data.reserve(points_pair.size() * cloud2.point_step);
+        if (xfer_format == 0) {
+            cloud_data.reserve(points_pair.size() * cloud2.point_step);
+        }
 
         // 循环处理每个点
         for (auto &pair : points_pair)
@@ -193,46 +219,57 @@ void LivoxPointsPlugin::OnNewLaserScans()
             auto axis = ray * ignition::math::Vector3d(1.0, 0.0, 0.0);
             auto point = range * axis;
 
-            // 填充 CustomMsg
-            livox_ros_driver2::msg::CustomPoint p;  // 确保 p 在此处声明
-            p.x = point.X();
-            p.y = point.Y();
-            p.z = point.Z();
-            p.reflectivity = intensity;
+            // 根据xfer_format参数填充相应的数据格式
+            if (xfer_format == 0) {
+                // 填充 PointCloud2 数据
+                float x = point.X();
+                float y = point.Y();
+                float z = point.Z();
+                float inten = intensity;
 
-            // 计算时间偏移
-            boost::chrono::high_resolution_clock::time_point end_time = boost::chrono::high_resolution_clock::now();
-            boost::chrono::nanoseconds elapsed_time = boost::chrono::duration_cast<boost::chrono::nanoseconds>(end_time - start_time);
-            p.offset_time = elapsed_time.count();  // 现在 p 已声明，可正常使用
-            pp_livox.points.push_back(p);
+                auto write_float = [&](float val) {
+                    const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&val);
+                    cloud_data.insert(cloud_data.end(), ptr, ptr + 4);
+                };
+                write_float(x);
+                write_float(y);
+                write_float(z);
+                write_float(inten);
+                cloud2.width++;
+            } else if (xfer_format == 1) {
+                // 填充 CustomMsg
+                livox_ros_driver2::msg::CustomPoint p;
+                p.x = point.X();
+                p.y = point.Y();
+                p.z = point.Z();
+                p.reflectivity = intensity;
+
+                // 计算时间偏移
+                boost::chrono::high_resolution_clock::time_point end_time = boost::chrono::high_resolution_clock::now();
+                boost::chrono::nanoseconds elapsed_time = boost::chrono::duration_cast<boost::chrono::nanoseconds>(end_time - start_time);
+                p.offset_time = elapsed_time.count();
+                pp_livox.points.push_back(p);
+            }
             count++;
-
-            // 填充 PointCloud2 数据
-            float x = point.X();
-            float y = point.Y();
-            float z = point.Z();
-            float inten = intensity;
-
-            auto write_float = [&](float val) {
-                const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&val);
-                cloud_data.insert(cloud_data.end(), ptr, ptr + 4);
-            };
-            write_float(x);
-            write_float(y);
-            write_float(z);
-            write_float(inten);
-            cloud2.width++;
         }
 
         // 发布消息
         if (scanPub && scanPub->HasConnections()) 
             scanPub->Publish(laserMsg);
-        pp_livox.point_num = count;
-        custom_pub->publish(pp_livox);
-
-        cloud2.row_step = cloud2.point_step * cloud2.width;
-        cloud2.data = cloud_data;
-        cloud2_pub->publish(cloud2);
+            
+        // 根据xfer_format参数发布相应的消息格式
+        if (xfer_format == 0) {
+            cloud2.row_step = cloud2.point_step * cloud2.width;
+            cloud2.data = cloud_data;
+            if (cloud2_pub) {
+                cloud2_pub->publish(cloud2);
+            }
+        } else if (xfer_format == 1) {
+            pp_livox.point_num = count;
+            if (custom_pub) {
+                custom_pub->publish(pp_livox);
+            }
+        }
     }
 }
 

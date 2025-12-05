@@ -74,7 +74,7 @@
 
 
 <!-- =============== mid360 ============ -->
-  <xacro:mid360  name="livox_frame" parent="base_link" topic="/livox">
+  <xacro:mid360  name="livox_frame" parent="base_link" topic="/livox/lidar">
     <origin xyz="0.0 0.0 0.06" rpy="0.0 0 0.0"/>
   </xacro:mid360> 
 <!-- =============== mid360 ============ -->

@@ -2,7 +2,7 @@ import os
 import launch
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -11,6 +11,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 # Gazebo资源路径配置 - Python风格的设置
 # Gazebo资源路径配置
 models_path = "/mnt/d/projects/git/models"
+models_path = "~/models"
 
 # 设置GAZEBO_RESOURCE_PATH
 if 'GAZEBO_RESOURCE_PATH' in os.environ:
@@ -132,23 +133,35 @@ def generate_launch_description():
     # ============================================================================
 
     # ============================================================================
-    #机器人加载完毕后执行加载控制器 事件处理
+    # 机器人加载完毕后执行加载控制器 事件处理
     load_controller_event = launch.actions.RegisterEventHandler(
         event_handler=launch.event_handlers.OnProcessExit(
             target_action=spawn_entity,
             on_exit=[load_joint_state_controller]
         )
     )
+    
+    # ============================================================================
+    # 创建一个延迟执行spawn_entity的动作，确保Gazebo有足够时间加载
+    delayed_spawn_entity = launch.actions.TimerAction(
+        period=10.0,  # 延迟5秒，给Gazebo足够时间初始化
+        actions=[spawn_entity],
+        condition=launch.conditions.IfCondition(launch.substitutions.PythonExpression(['True']))
+    )
     # ============================================================================
 
 
 
     ld = LaunchDescription()
+    # 暂时禁用rviz以减少显示相关问题
+    ld.add_action(rviz)
     ld.add_action(gazebo_launch)
     ld.add_action(robot_state_publisher)
     ld.add_action(joint_state_publisher)
-    ld.add_action(spawn_entity)
-    ld.add_action(rviz) 
+    
+    # 使用延迟动作确保Gazebo加载完成后再spawn
+    ld.add_action(delayed_spawn_entity)
     ld.add_action(load_controller_event)
+
     return ld
 

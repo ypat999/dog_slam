@@ -91,6 +91,28 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/mnt/d/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+    },
+    'DESKTOP-ypat': {
+        # DESKTOP-ypat主机配置 - LIO-SAM
+        'ONLINE_LIDAR': True,
+        'LIO_SAM_BASE_CODE_PATH': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'DEFAULT_BAG_PATH': '/mnt/d/work/robot/livox_record_tilt_test2/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/mnt/d/work/LOAM/',
+        
+        # DESKTOP-ypat主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': "/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_notebook.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+        
+        # DESKTOP-ypat主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/mnt/d/work/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'DEFAULT_USE_SIM_TIME': True,
+        
+        # DESKTOP-ypat主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
     }
 }
 
@@ -128,10 +150,9 @@ DEFAULT_BAG_PATH = selected_config['DEFAULT_BAG_PATH']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
 LIO_SAM_DEFAULT_LOAM_SAVE_DIR = selected_config['LIO_SAM_DEFAULT_LOAM_SAVE_DIR']
 
-DEFAULT_USE_SIM_TIME = True
+DEFAULT_USE_SIM_TIME = selected_config['DEFAULT_USE_SIM_TIME']
 DEFAULT_USE_SIM_TIME_STRING = 'true'
-if ONLINE_LIDAR:
-    DEFAULT_USE_SIM_TIME = False
+if not DEFAULT_USE_SIM_TIME:
     DEFAULT_USE_SIM_TIME_STRING = 'false'
 
 

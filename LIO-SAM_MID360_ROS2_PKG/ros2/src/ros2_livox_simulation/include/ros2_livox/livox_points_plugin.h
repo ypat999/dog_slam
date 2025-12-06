@@ -111,10 +111,55 @@ namespace gazebo
       int64_t currStartIndex = 0;
       int64_t maxPointSize = 1000;
       int64_t downSample = 1;
-      int xfer_format = 0;  // 数据格式：0=PointCloud2, 1=Livox私有格式
+      int xfer_format = 1;  // 数据格式：0=PointCloud2, 1=Livox私有格式
 
       double maxDist = 40.0;
       double minDist = 0.1;
+      
+      // 缓存变量，避免频繁创建和销毁大型对象
+      std::vector<std::pair<int, AviaRotateInfo>> points_pair_cache;
+      livox_ros_driver2::msg::CustomMsg livox_msg;  // 预分配的Livox消息对象
+      sensor_msgs::msg::PointCloud2 cloud2_msg;    // 预分配的PointCloud2消息对象
+      
+      // 运行时长统计相关变量
+      struct PerformanceStats {
+          uint64_t count = 0;
+          double total_time = 0.0;
+          double min_time = 0.0;
+          double max_time = 0.0;
+          double avg_time = 0.0;
+          
+          void update(double time) {
+              count++;
+              total_time += time;
+              if (count == 1 || time < min_time) min_time = time;
+              if (count == 1 || time > max_time) max_time = time;
+              avg_time = total_time / count;
+          }
+          
+          void reset() {
+              count = 0;
+              total_time = 0.0;
+              min_time = 0.0;
+              max_time = 0.0;
+              avg_time = 0.0;
+          }
+      };
+      
+      // 主要阶段统计
+      PerformanceStats on_new_laser_scans_stats;   // OnNewLaserScans函数总统计
+      PerformanceStats initialize_rays_stats;      // InitializeRays函数耗时统计
+      PerformanceStats ray_update_stats;           // rayShape->Update()耗时统计
+      PerformanceStats message_init_stats;         // 消息初始化耗时统计
+      PerformanceStats process_points_stats;       // 点云处理总耗时统计
+      PerformanceStats message_publish_stats;      // 消息发布耗时统计
+      
+      // 点云处理细分阶段统计
+      PerformanceStats points_calculation_stats;   // 点坐标计算耗时统计
+      PerformanceStats message_assemble_stats;     // 消息组装耗时统计
+      PerformanceStats thread_synchronize_stats;   // 线程同步耗时统计
+      
+      std::chrono::steady_clock::time_point last_stats_print;  // 上次输出统计结果的时间
    };
 
 } // namespace gazebo

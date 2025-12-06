@@ -87,7 +87,7 @@
           </ray>
           <visualize>false</visualize>
           <samples>${samples}</samples>
-          <downsample>1</downsample>
+          <downsample>10</downsample>
           <csv_file_name>$(find ros2_livox_simulation)/scan_mode/mid360.csv</csv_file_name>
           <topic>${topic}</topic>
         </plugin>

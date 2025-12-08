@@ -10,7 +10,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 # Gazebo资源路径配置 - Python风格的设置
 # Gazebo资源路径配置
-models_path = "~/models"
+models_path = "~/.gazebo/models"
 
 # 设置GAZEBO_RESOURCE_PATH
 if 'GAZEBO_RESOURCE_PATH' in os.environ:
@@ -27,6 +27,12 @@ if 'GAZEBO_MODEL_PATH' in os.environ:
 else:
     os.environ['GAZEBO_MODEL_PATH'] = "/usr/share/gazebo/models:/usr/share/gazebo-11/models"
 
+pkg_meshes_path = os.path.join(
+    get_package_share_directory('ros2_livox_simulation'),
+    'models'
+)
+os.environ['GAZEBO_MODEL_PATH'] = os.environ.get('GAZEBO_MODEL_PATH', '') + ':' + pkg_meshes_path    
+
 # 设置GAZEBO_PLUGIN_PATH
 if 'GAZEBO_PLUGIN_PATH' in os.environ:
     os.environ['GAZEBO_PLUGIN_PATH'] += ":/usr/lib/x86_64-linux-gnu/gazebo-11/plugins"
@@ -39,7 +45,7 @@ os.environ['GAZEBO_RESOURCE_PATH'] += ":/usr/share/gazebo:/usr/share/gazebo-11"
 # （可选）阻止Gazebo从互联网自动下载模型（加速本地加载）
 os.environ['GAZEBO_MODEL_DATABASE_URI'] = ""
 
-
+print(os.environ['GAZEBO_MODEL_PATH'])
 
 
 def generate_launch_description():
@@ -73,12 +79,6 @@ def generate_launch_description():
     if ros2_livox_simulation_pkg_path not in ros_package_path:
         os.environ['ROS_PACKAGE_PATH'] = f"{ros2_livox_simulation_pkg_path}:{ros_package_path}"
 
-    # 给GAZEBO_MODEL_PATH添加 mid360.stl的路径
-    pkg_meshes_path = os.path.join(pkg_ros2_livox_simulation, 'meshes')
-    if 'GAZEBO_MODEL_PATH' in os.environ:
-        os.environ['GAZEBO_MODEL_PATH'] += f":{pkg_meshes_path}"
-    else:
-        os.environ['GAZEBO_MODEL_PATH'] = pkg_meshes_path
     # ============================================================================
 
     

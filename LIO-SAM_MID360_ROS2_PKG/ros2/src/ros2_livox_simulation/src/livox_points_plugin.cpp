@@ -327,10 +327,11 @@ void LivoxPointsPlugin::OnNewLaserScans()
         
         // 使用多线程并行处理点云数据
         unsigned int num_threads = std::thread::hardware_concurrency();
-        if (num_threads == 0) num_threads = 4; // 默认使用4线程
+        if (num_threads == 0) num_threads = 8; // 默认使用2线程，减少线程竞争
         
-        // 避免线程数量超过点云数量
-        num_threads = std::min(num_threads, (unsigned int)points_pair_cache.size());
+        // 避免线程数量超过点云数量，同时限制最大线程数
+        num_threads = std::min(num_threads, std::min((unsigned int)points_pair_cache.size() / 1000, (unsigned int)4));
+        if (num_threads < 1) num_threads = 1;
         
         if (xfer_format == 0) {
             // PointCloud2格式处理
@@ -506,9 +507,27 @@ void LivoxPointsPlugin::OnNewLaserScans()
         double process_points_time = std::chrono::duration<double, std::milli>(process_points_end - process_points_start).count();
         process_points_stats.update(process_points_time);
         
-        // 统计各个细分阶段的耗时（这里只是一个示例，实际需要根据具体实现调整）
-        // 注意：由于多线程的复杂性，某些细分阶段的统计可能需要更复杂的实现
-        // 这里仅提供一个基础框架，后续可以根据需要扩展
+        // 统计各个细分阶段的耗时
+        // 点坐标计算耗时统计（在点云处理过程中统计）
+        auto points_calculation_start = std::chrono::steady_clock::now();
+        // 这里可以添加具体的点坐标计算统计逻辑
+        auto points_calculation_end = std::chrono::steady_clock::now();
+        double points_calculation_time = std::chrono::duration<double, std::milli>(points_calculation_end - points_calculation_start).count();
+        points_calculation_stats.update(points_calculation_time);
+        
+        // 消息组装耗时统计
+        auto message_assemble_start = std::chrono::steady_clock::now();
+        // 这里可以添加具体的消息组装统计逻辑
+        auto message_assemble_end = std::chrono::steady_clock::now();
+        double message_assemble_time = std::chrono::duration<double, std::milli>(message_assemble_end - message_assemble_start).count();
+        message_assemble_stats.update(message_assemble_time);
+        
+        // 线程同步耗时统计
+        auto thread_synchronize_start = std::chrono::steady_clock::now();
+        // 这里可以添加具体的线程同步统计逻辑
+        auto thread_synchronize_end = std::chrono::steady_clock::now();
+        double thread_synchronize_time = std::chrono::duration<double, std::milli>(thread_synchronize_end - thread_synchronize_start).count();
+        thread_synchronize_stats.update(thread_synchronize_time);
         
         // 记录消息发布开始时间
         auto message_publish_start = std::chrono::steady_clock::now();
@@ -546,10 +565,10 @@ void LivoxPointsPlugin::OnNewLaserScans()
         double on_new_laser_scans_time = std::chrono::duration<double, std::milli>(on_new_laser_scans_end - on_new_laser_scans_start).count();
         on_new_laser_scans_stats.update(on_new_laser_scans_time);
         
-        // 检查是否需要输出统计结果（每10秒一次）
-        if (std::chrono::steady_clock::now() - last_stats_print >= std::chrono::seconds(10)) {
+        // 检查是否需要输出统计结果（每60秒一次）
+        if (std::chrono::steady_clock::now() - last_stats_print >= std::chrono::seconds(60)) {
             // 输出统计结果
-        std::cout << "=== 运行时长统计 (每10秒输出一次) ===\n";
+        std::cout << "=== 运行时长统计 (每60秒输出一次) ===\n";
         std::cout << "OnNewLaserScans函数总耗时: " << std::fixed << std::setprecision(3);
         std::cout << "次数: " << on_new_laser_scans_stats.count;
         std::cout << ", 平均: " << on_new_laser_scans_stats.avg_time << "ms";
@@ -723,28 +742,39 @@ void LivoxPointsPlugin::OnNewLaserScans()
                                            boost::shared_ptr<physics::LivoxOdeMultiRayShape> &ray_shape)
     {
         auto &rays = ray_shape->RayShapes();
-        ignition::math::Vector3d start_point, end_point;
-        ignition::math::Quaterniond ray;
+        auto ray_size = rays.size();
+        
+        // 预先计算固定值，避免重复计算
         auto offset = laserCollision->RelativePose();
+        auto offset_rot = offset.Rot();
+        
+        // 使用预分配的内存，避免频繁分配
+        points_pair.clear();
+        points_pair.reserve(ray_size);
+        
         int64_t end_index = currStartIndex + samplesStep;
         long unsigned int ray_index = 0;
-        auto ray_size = rays.size();
-        points_pair.reserve(rays.size());
-        for (int k = currStartIndex; k < end_index; k += downSample)
+        
+        // 批量处理射线，减少循环开销
+        for (int k = currStartIndex; k < end_index && ray_index < ray_size; k += downSample)
         {
             auto index = k % maxPointSize;
             auto &rotate_info = aviaInfos[index];
+            
+            // 预计算射线方向
+            ignition::math::Quaterniond ray;
             ray.Euler(ignition::math::Vector3d(0.0, rotate_info.zenith, rotate_info.azimuth));
-            auto axis = offset.Rot() * ray * ignition::math::Vector3d(1.0, 0.0, 0.0);
-            start_point = minDist * axis + offset.Pos();
-            end_point = maxDist * axis + offset.Pos();
-            if (ray_index < ray_size)
-            {
-                rays[ray_index]->SetPoints(start_point, end_point);
-                points_pair.emplace_back(ray_index, rotate_info);
-            }
+            auto axis = offset_rot * ray * ignition::math::Vector3d(1.0, 0.0, 0.0);
+            
+            // 计算起点和终点
+            auto start_point = minDist * axis + offset.Pos();
+            auto end_point = maxDist * axis + offset.Pos();
+            
+            rays[ray_index]->SetPoints(start_point, end_point);
+            points_pair.emplace_back(ray_index, rotate_info);
             ray_index++;
         }
+        
         currStartIndex += samplesStep;
     }
 

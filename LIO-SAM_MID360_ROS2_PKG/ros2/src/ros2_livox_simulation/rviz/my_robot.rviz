@@ -26,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -140,36 +140,13 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        base_footprint:
-          base_link:
-            ahead_left_wheel:
-              {}
-            ahead_right_wheel:
-              {}
-            bhind_left_wheel:
-              {}
-            bhind_right_wheel:
-              {}
-            camera_link:
-              {}
-            imu_link:
-              {}
-            livox_frame:
-              {}
-        map:
-          {}
-        odom:
-          {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -357,5 +334,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1908
-  X: -31
+  X: -29
   Y: -26

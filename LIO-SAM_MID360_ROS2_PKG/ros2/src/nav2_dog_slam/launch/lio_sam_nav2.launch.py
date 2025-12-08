@@ -123,8 +123,8 @@ def generate_launch_description():
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': map_file,
-                'params_file': os.path.join(package_dir, 'config', 'nav2_params.yaml'),
-                'slam_toolbox_params': os.path.join(package_dir, 'config', 'nav2_params.yaml')
+                'params_file': os.path.join(current_dir, '../config', 'nav2_params.yaml'),
+                'slam_toolbox_params': os.path.join(current_dir, '../config', 'nav2_params.yaml')
             }.items(),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
         )

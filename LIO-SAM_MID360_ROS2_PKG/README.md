@@ -107,8 +107,25 @@ apt install ros-humble-slam-toolbox
 
 
 # gazebo
+sudo apt update
+sudo apt install lsb-release curl gnupg
+
+# 添加 GZ Sim GPG key
+curl -sSL https://packages.osrfoundation.org/gazebo.gpg | sudo tee /etc/apt/trusted.gpg.d/gazebo.gpg > /dev/null
+
+# 添加 Harmonic 软件源（Ubuntu 22.04 用 jammy）
+echo "deb http://packages.osrfoundation.org/gz-harmonic/ubuntu `lsb_release -cs` main" | \
+  sudo tee /etc/apt/sources.list.d/gz-harmonic.list > /dev/null
+
+sudo apt update
+sudo apt install mesa-vulkan-drivers vulkan-tools -y
+
+
 sudo apt install \
   ros-humble-gazebo-* \          
+  <!-- sudo apt install ros-humble-ros-gz
+  sudo apt install gz-harmonic -->
+
   ros-humble-ros2-control* \    
   ros-humble-robot-state-publisher \ 
   ros-humble-joint-state-publisher \ 

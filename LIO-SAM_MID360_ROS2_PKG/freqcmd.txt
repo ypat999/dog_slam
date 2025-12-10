@@ -158,5 +158,12 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 ros2 launch ros2_livox_simulation livox_simulation.launch.py
 ros2 run ros2_livox_simulation omni_teleop.py
 
+BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
+
+export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA   #使用独显
+glxinfo | grep "OpenGL renderer"
+export GAZEBO_GPU_RENDERING=1
+
+
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash

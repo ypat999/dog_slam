@@ -87,7 +87,7 @@ config_by_machine = {
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
-        'DEFAULT_USE_SIM_TIME': False,
+        'DEFAULT_USE_SIM_TIME': True,
         
         # DESKTOP-4LS1SSN主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',

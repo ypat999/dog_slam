@@ -23,7 +23,7 @@
 
 <!-- =============== 轮子配置 =============== -->
     <xacro:cylinder_xacro 
-    name="bhind_left_wheel" 
+    name="behind_left_wheel" 
     length="0.032" 
     radius="0.04" 
     color="${black}" 
@@ -35,7 +35,7 @@
     axis_xyz="0 1 0"/>
 
     <xacro:cylinder_xacro 
-    name="bhind_right_wheel" 
+    name="behind_right_wheel" 
     length="0.032" 
     radius="0.04" 
     color="${black}" 
@@ -113,6 +113,13 @@
 
 <xacro:my_robot_ros2_control_planar />   <!-- 如果gazebo_control更改名字，请修改此处 -->
 <xacro:gazebo_sensor_plugin />
+
+<!-- gazebo_ros2_control plugin -->
+<gazebo>
+  <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+    <parameters>/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install/ros2_livox_simulation/share/ros2_livox_simulation/config/myrobot_ros2_controller.yaml</parameters>
+  </plugin>
+</gazebo>
 
 
 </robot>    

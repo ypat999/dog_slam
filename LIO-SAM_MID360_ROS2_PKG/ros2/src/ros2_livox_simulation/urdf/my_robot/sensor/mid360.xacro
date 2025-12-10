@@ -54,21 +54,21 @@
         <visualize>true</visualize>
         <update_rate>10</update_rate>
         <plugin name="${name}_plugin" filename="libros2_livox.so">
-        <topic>${topic}</topic>
-        <xfer_format>1</xfer_format>  <!-- 设置为1表示Livox私有格式 -->
-        <enable_intensity>true</enable_intensity>
-        <intensity_mean>100</intensity_mean>  <!-- 强度均值（0-255，根据需求调整） -->
-      <intensity_stddev>5</intensity_stddev>  <!-- 强度噪声（模拟真实波动） -->
+          <topic>${topic}</topic>
+          <xfer_format>1</xfer_format>  <!-- 设置为1表示Livox私有格式 -->
+          <enable_intensity>true</enable_intensity>
+          <intensity_mean>100</intensity_mean>  <!-- 强度均值（0-255，根据需求调整） -->
+          <intensity_stddev>0</intensity_stddev>  <!-- 强度噪声（模拟真实波动） -->
           <ray>
             <scan>
               <horizontal>
-                <samples>100</samples>
+                <samples>10</samples>
                 <resolution>1</resolution>
                 <min_angle>${0}</min_angle>
                 <max_angle>${2*M_PI}</max_angle>
               </horizontal>
               <vertical>
-                <samples>360</samples>
+                <samples>36</samples>
                 <resolution>1</resolution>
                 <min_angle>${-7.22/180*M_PI}</min_angle>
                 <max_angle>${55.22/180*M_PI}</max_angle>
@@ -87,7 +87,7 @@
           </ray>
           <visualize>false</visualize>
           <samples>${samples}</samples>
-          <downsample>10</downsample>
+          <downsample>5</downsample>
           <csv_file_name>$(find ros2_livox_simulation)/scan_mode/mid360.csv</csv_file_name>
           <topic>${topic}</topic>
         </plugin>

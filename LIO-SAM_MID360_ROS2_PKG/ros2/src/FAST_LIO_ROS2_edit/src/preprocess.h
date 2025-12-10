@@ -16,7 +16,8 @@ enum LID_TYPE
   AVIA = 1,
   VELO16,
   OUST64,
-  MID360
+  MID360,
+  OTHER
 };  //{1, 2, 3}
 enum TIME_UNIT
 {

@@ -41,7 +41,9 @@ config_by_machine = {
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # RK3588主机配置 - FAST-LIO
-        'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ztl/slam_data/pcd/',
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': False,
         
@@ -63,7 +65,9 @@ config_by_machine = {
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # jqr001主机配置 - FAST-LIO
-        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ywj/projects/pcd/',
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
         
@@ -85,7 +89,9 @@ config_by_machine = {
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
-        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/',
+        'FAST_LIO_LIDAR_TYPE': 5,  # DESKTOP-4LS1SSN主机lidar_type为5
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
         
@@ -107,7 +113,9 @@ config_by_machine = {
         'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # DESKTOP-ypat主机配置 - FAST-LIO
-        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/',
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
         
@@ -132,7 +140,9 @@ default_config = {
     'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
     
     # FAST-LIO 默认配置
-    'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2/',
+    'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+    'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ztl/slam_data/pcd/',
+    'FAST_LIO_LIDAR_TYPE': 1,  # 默认lidar_type为1
     'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
     'DEFAULT_USE_SIM_TIME': True,
     
@@ -167,6 +177,8 @@ NAV2_DEFAULT_BT_XML_PATH = selected_config['NAV2_DEFAULT_BT_XML_PATH']
 
 # ========== 导出FAST-LIO配置参数 ==========
 FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']
+FAST_LIO_DEFAULT_PCD_SAVE_DIR = selected_config['FAST_LIO_DEFAULT_PCD_SAVE_DIR']
+FAST_LIO_LIDAR_TYPE = selected_config['FAST_LIO_LIDAR_TYPE']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
 
 # ========== 坐标系名称配置 ==========
@@ -210,6 +222,26 @@ def update_nav2_params():
         except Exception as e:
             print(f"更新Nav2参数文件时出错: {e}")
 
+# ========== FAST-LIO参数文件自动更新 ==========
+def update_fast_lio_params():
+    """自动更新FAST-LIO的mid360.yaml配置文件"""
+    fast_lio_mid360_path = os.path.join(FAST_LIO_BASE_CODE_PATH, 'config/mid360.yaml')
+    if os.path.exists(fast_lio_mid360_path):
+        try:
+            with open(fast_lio_mid360_path, 'r') as file:
+                lines = file.readlines()
+            with open(fast_lio_mid360_path, 'w') as file:
+                for line in lines:
+                    if 'lidar_type:' in line:
+                        file.write(f'            lidar_type: {FAST_LIO_LIDAR_TYPE}\n')
+                    else:
+                        file.write(line)
+            print(f"FAST-LIO参数文件已更新: {fast_lio_mid360_path}")
+        except Exception as e:
+            print(f"更新FAST-LIO参数文件时出错: {e}")
+
 # 导入时自动更新Nav2参数
 update_nav2_params()
 
+# 导入时自动更新FAST-LIO参数
+update_fast_lio_params()

@@ -295,23 +295,25 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
-      model_dt: 0.03
+      model_dt: 0.025
       batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 2.0
       ax_min: -5.0
+      az_max: 5.0
+      az_min: -5.0
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       vy_std: 0.0  # 降低横移速度采样标准差
-      wz_std: 0.2  # 提高角速度采样标准差，增加转向探索性
+      wz_std: 0.3  # 提高角速度采样标准差，增加转向探索性
       vx_max: 1.2
       vx_min: -0.06
       vy_max: 0.0
       wz_max: 1.2
       
       # 温度参数
-      temperature: 0.1
+      temperature: 0.2
       motion_model: "DiffDrive" 
       # motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
@@ -413,12 +415,12 @@ velocity_smoother:
     # odom_duration: 0.1
     
     # 移动速度限制
-    max_velocity: [1.5, 1.0, 3.5]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.06, -1.0, -3.5]  # [vx_min, vy_min, vtheta_min]
+    max_velocity: [2.5, 1.0, 1.5]  # [vx_max, vy_max, vtheta_max]
+    min_velocity: [-0.06, -1.0, -1.5]  # [vx_min, vy_min, vtheta_min]
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
-    max_accel: [1.0, 1.5, 2.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
-    max_decel: [-20.0, -1.5, -2.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
+    max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
+    max_decel: [-20.0, -1.5, -3.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
     
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略

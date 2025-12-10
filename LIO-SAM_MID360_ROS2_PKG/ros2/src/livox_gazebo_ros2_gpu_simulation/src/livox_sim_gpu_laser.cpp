@@ -244,12 +244,14 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
     cloud_msg.height = 1;
     cloud_msg.is_dense = true;
     cloud_msg.is_bigendian = false;
+    cloud_msg.point_step = 16; // 4 fields * 4 bytes each
  
      sensor_msgs::PointCloud2Modifier modifier(cloud_msg);
-     modifier.setPointCloud2Fields(3,
+     modifier.setPointCloud2Fields(4,
          "x", 1, sensor_msgs::msg::PointField::FLOAT32,
          "y", 1, sensor_msgs::msg::PointField::FLOAT32,
-         "z", 1, sensor_msgs::msg::PointField::FLOAT32);
+         "z", 1, sensor_msgs::msg::PointField::FLOAT32,
+         "intensity", 1, sensor_msgs::msg::PointField::FLOAT32);
  
     // 2. Process samples_per_update_ points in the CSV loop
     const int points_to_process = this->samples_per_update_;
@@ -258,6 +260,7 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
     // Use a temporary container to collect valid points, to avoid iterator invalidation issues
     struct Point3D {
         float x, y, z;
+        float intensity; // 添加intensity字段
     };
     std::vector<Point3D> valid_points;
     valid_points.reserve(points_to_process / this->downsample_);
@@ -318,7 +321,7 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
     int invalid_distance_count = 0;  // Invalid distance points
     
     // 从当前索引开始，处理samples_per_update_个点，在CSV中循环
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i = 0; i < points_to_process; ++i) {
         size_t current_index = (this->scan_pattern_index_ + i) % pattern_size;
         const auto& target_point = this->scan_pattern_[current_index];
@@ -345,6 +348,11 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
         // 4. Get range from depth map directly
         int index = v * ray_count + u;
         double range = _msg->scan().ranges(index);
+        // 获取强度信息
+        float intensity = 0.0;
+        if (_msg->scan().intensities_size() > index) {
+            intensity = _msg->scan().intensities(index);
+        }
 
         if (range < this->parent_ray_sensor_->RangeMax() && std::isfinite(range)) {
             // 5. Convert spherical coordinates to Cartesian coordinates
@@ -353,7 +361,7 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
             double z = range * sin(target_point.zenith);
 
             // Add to valid points container
-            valid_points.push_back({static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)});
+            valid_points.push_back({static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), intensity});
         } else {
             invalid_range_count++;
             invalid_distance_count++;
@@ -382,12 +390,14 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
         sensor_msgs::PointCloud2Iterator<float> iter_x(cloud_msg, "x");
         sensor_msgs::PointCloud2Iterator<float> iter_y(cloud_msg, "y");
         sensor_msgs::PointCloud2Iterator<float> iter_z(cloud_msg, "z");
+        sensor_msgs::PointCloud2Iterator<float> iter_intensity(cloud_msg, "intensity");
         
         for (const auto& pt : valid_points) {
             *iter_x = pt.x;
             *iter_y = pt.y;
             *iter_z = pt.z;
-            ++iter_x; ++iter_y; ++iter_z;
+            *iter_intensity = pt.intensity;
+            ++iter_x; ++iter_y; ++iter_z; ++iter_intensity;
         }
     }
 

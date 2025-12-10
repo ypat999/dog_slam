@@ -2,7 +2,9 @@
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
+from ament_index_python.packages import get_package_share_directory
+from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -28,18 +30,44 @@ def generate_launch_description():
         '/usr/lib/x86_64-linux-gnu/OGRE-1.9.0'
     )
     
-    # 声明启动参数
-    world_file_arg = DeclareLaunchArgument(
-        'world_file',
-        default_value='',
-        description='Path to the world file'
+    # 添加GPU渲染优化环境变量
+    mesa_adapter = SetEnvironmentVariable(
+        'MESA_D3D12_DEFAULT_ADAPTER_NAME',
+        'NVIDIA'
     )
     
-    # 启动Gazebo（如果world_file为空，只启动空世界）
-    gazebo_process = ExecuteProcess(
-        cmd=['gazebo', '--verbose', LaunchConfiguration('world_file')],
-        output='screen',
-        shell=False
+    gazebo_gpu_rendering = SetEnvironmentVariable(
+        'GAZEBO_GPU_RENDERING',
+        '1'
+    )
+
+
+
+    
+    package_name = 'livox_gazebo_ros2_gpu_simulation'
+    robot_name = 'my_robot'
+    world_file_name = 'bigHHH.world'
+    use_sim_time = True
+    gui = True
+
+    pkg_livox_gazebo_ros2_gpu_simulation = get_package_share_directory(package_name)
+    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
+
+    gui_arg = LaunchConfiguration('gui', default=gui)
+    
+
+
+
+    gazebo_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_gazebo_ros, 'launch', 'gazebo.launch.py')
+        ),
+        #empty   standardrobots_factory
+        launch_arguments={
+            'world': os.path.join(pkg_livox_gazebo_ros2_gpu_simulation, 'worlds', world_file_name),
+            'gui': gui_arg,
+            'verbose': 'true'
+        }.items()
     )
     
     # 启动激光雷达数据监听节点
@@ -56,8 +84,9 @@ def generate_launch_description():
         gazebo_plugin_path,
         gazebo_model_path,
         ogre_resource_path,
+        mesa_adapter,
+        gazebo_gpu_rendering,
         # 启动参数和进程
-        world_file_arg,
-        gazebo_process,
+        gazebo_launch,
         laser_listener,
     ])

@@ -86,7 +86,7 @@ install(TARGETS
   laser_listener
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install header files
@@ -94,31 +94,12 @@ install(DIRECTORY include/
   DESTINATION include
 )
 
-# Install plugin description file
-install(FILES
-  livox_sim_gpu_laser.xml
+
+
+# Install rviz configuration files
+install(
+  DIRECTORY launch rviz urdf worlds meshes scan_mode config livox_sim_gpu_laser.xml
   DESTINATION share/${PROJECT_NAME}
-)
-
-# Install urdf files
-install(DIRECTORY urdf/
-  DESTINATION share/${PROJECT_NAME}/urdf
-)
-
-# Install scan mode files
-install(DIRECTORY scan_mode/
-  DESTINATION share/${PROJECT_NAME}/scan_mode
-)
-
-# Install meshes
-install(DIRECTORY meshes/
-  DESTINATION share/${PROJECT_NAME}/meshes
-)
-
-# Install launch files if they exist
-install(DIRECTORY launch/
-  DESTINATION share/${PROJECT_NAME}/launch
-  OPTIONAL
 )
 
 if(BUILD_TESTING)

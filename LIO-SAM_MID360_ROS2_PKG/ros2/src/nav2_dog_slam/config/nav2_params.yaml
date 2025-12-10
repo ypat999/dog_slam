@@ -295,7 +295,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
-      model_dt: 0.025
+      model_dt: 0.03
       batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
@@ -382,7 +382,8 @@ controller_server:
         enabled: true
         cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
         cost_power: 1
-        deadband_velocities: [0.05, 0.1, 0.1]
+        # deadband_velocities: [0.05, 0.1, 0.1]
+        deadband_velocities: [0.2, 0.5, 0.5]
         
       GoalCritic:
         enabled: true

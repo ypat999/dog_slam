@@ -115,7 +115,7 @@ config_by_machine = {
         # DESKTOP-ypat主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
         'FAST_LIO_DEFAULT_PCD_SAVE_DIR': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/',
-        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
+        'FAST_LIO_LIDAR_TYPE': 5,  # 其他主机lidar_type为1
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
         

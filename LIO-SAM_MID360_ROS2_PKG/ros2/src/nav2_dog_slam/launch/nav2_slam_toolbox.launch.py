@@ -101,7 +101,7 @@ def generate_launch_description():
     # after a short delay so it can receive the /map topic.
     slam_toolbox_node = Node(
         package='slam_toolbox',
-        executable='sync_slam_toolbox_node',
+        executable='async_slam_toolbox_node',
         name='slam_toolbox_node',
         output='screen',
         parameters=[

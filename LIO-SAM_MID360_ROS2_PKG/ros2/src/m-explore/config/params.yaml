@@ -10,5 +10,5 @@
     potential_scale: 3.0
     orientation_scale: 0.0
     gain_scale: 1.0
-    transform_tolerance: 0.3
+    transform_tolerance: 1.0
     min_frontier_size: 0.75

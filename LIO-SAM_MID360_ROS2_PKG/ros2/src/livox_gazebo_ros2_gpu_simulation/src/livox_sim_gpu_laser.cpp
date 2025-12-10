@@ -26,6 +26,7 @@
  #include <assert.h>
  #include <fstream>
  #include <sstream>
+ #include <iomanip>
  
  #include <sdf/sdf.hh>
  #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -47,9 +48,60 @@
  {
  GZ_REGISTER_SENSOR_PLUGIN(GazeboRosLaser)
  
- GazeboRosLaser::GazeboRosLaser() {}
+ GazeboRosLaser::GazeboRosLaser() {
+  // 初始化时间统计
+  last_print_time_ = std::chrono::steady_clock::now();
+  stats_initialized_ = true;
+}
  
- GazeboRosLaser::~GazeboRosLaser()
+ // 时间统计辅助函数
+void GazeboRosLaser::StartTiming(const std::string& method_name) {
+  auto now = std::chrono::steady_clock::now();
+  method_time_stats_[method_name] = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+}
+
+double GazeboRosLaser::EndTiming(const std::string& method_name) {
+  auto now = std::chrono::steady_clock::now();
+  double start_time = method_time_stats_[method_name];
+  double end_time = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count();
+  double elapsed_ms = (end_time - start_time) / 1000.0; // 转换为毫秒
+  
+  // 累加时间统计
+  if (method_time_stats_.find(method_name + "_total") == method_time_stats_.end()) {
+    method_time_stats_[method_name + "_total"] = 0.0;
+    method_call_count_[method_name] = 0;
+  }
+  
+  method_time_stats_[method_name + "_total"] += elapsed_ms;
+  method_call_count_[method_name]++;
+  
+  return elapsed_ms;
+}
+
+void GazeboRosLaser::PrintTimingStats() {
+  auto now = std::chrono::steady_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - last_print_time_).count();
+  
+  // 每60秒打印一次统计信息
+  if (duration >= 60) {
+    RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "===== GPU Laser Timing Statistics =====");
+    
+    for (const auto& entry : method_call_count_) {
+      const std::string& method_name = entry.first;
+      int call_count = entry.second;
+      double total_time = method_time_stats_[method_name + "_total"];
+      double avg_time = call_count > 0 ? total_time / call_count : 0.0;
+      
+      RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), 
+                  "Method: %-20s | Calls: %6d | Total: %8.2f ms | Avg: %6.2f ms",
+                  method_name.c_str(), call_count, total_time, avg_time);
+    }
+    
+    last_print_time_ = now;
+  }
+}
+
+GazeboRosLaser::~GazeboRosLaser()
  {
    RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Shutting down GPU Laser");
    if (this->rosnode_) {
@@ -60,6 +112,7 @@
  
 void GazeboRosLaser::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
 {
+ StartTiming("Load");
  RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Loading GazeboRosLaser plugin..."); 
  // Save SDF pointer
  this->sdf = _sdf;
@@ -101,10 +154,14 @@ void GazeboRosLaser::Load(sensors::SensorPtr _parent, sdf::ElementPtr _sdf)
    }
  
    this->deferred_load_thread_ = std::thread(std::bind(&GazeboRosLaser::LoadThread, this));
+ 
+ double elapsed = EndTiming("Load");
+ RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Load method took %.2f ms", elapsed);
  }
  
 void GazeboRosLaser::LoadThread()
 {
+  StartTiming("LoadThread");
   RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Initializing Livox GPU Laser plugin...");
   
   this->gazebo_node_ = gazebo::transport::NodePtr(new gazebo::transport::Node());
@@ -126,6 +183,9 @@ void GazeboRosLaser::LoadThread()
   RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Parent ray sensor activated");
 
   RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Livox GPU Laser Plugin fully loaded and ready.");
+  
+  double elapsed = EndTiming("LoadThread");
+  RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "LoadThread method took %.2f ms", elapsed);
 }
 
 void GazeboRosLaser::OnNewLaserFrame(const float */*_image*/,
@@ -161,6 +221,7 @@ std::string ResolvePackageURI(const std::string& uri)
  
 void GazeboRosLaser::LoadCsvPattern()
 {
+    StartTiming("LoadCsvPattern");
     RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "Loading CSV pattern from: %s", this->csv_file_name_.c_str());
     
     std::string resolved_path = ResolvePackageURI(this->csv_file_name_);
@@ -208,13 +269,18 @@ void GazeboRosLaser::LoadCsvPattern()
     file.close();
     RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), 
         "Successfully loaded %zu scan pattern points from CSV", this->scan_pattern_.size());
+        
+    double elapsed = EndTiming("LoadCsvPattern");
+    RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "LoadCsvPattern method took %.2f ms", elapsed);
 }
  
 void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
 {
+    StartTiming("OnScan");
   // RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "OnScan called, pattern index: %zu/%zu", this->scan_pattern_index_, this->scan_pattern_.size());
     if (!_msg) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), "Received null laser scan message!");
+        EndTiming("OnScan"); // 仍然需要结束计时
         return;
     }
 
@@ -223,11 +289,13 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
         //     *rclcpp::Clock::make_shared(), 5000, 
         //     "Scan pattern is empty, skipping OnScan");
         RCLCPP_WARN(rclcpp::get_logger("gpu_laser"), "Scan pattern is empty, skipping OnScan");
+        EndTiming("OnScan"); // 仍然需要结束计时
         return;
     }
 
     if (!this->parent_ray_sensor_) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), "Parent ray sensor is null!");
+        EndTiming("OnScan"); // 仍然需要结束计时
         return;
     }
 
@@ -279,6 +347,7 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
     if (horz_angle_res <= 0 || vert_angle_res <= 0) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), 
             "Invalid angle resolution: horz=%.6f, vert=%.6f", horz_angle_res, vert_angle_res);
+        EndTiming("OnScan"); // 仍然需要结束计时
         return;
     }
     
@@ -416,9 +485,17 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
     
     } catch (const std::exception& e) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), "Exception in OnScan: %s", e.what());
+        EndTiming("OnScan"); // 仍然需要结束计时
     } catch (...) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), "Unknown exception in OnScan");
+        EndTiming("OnScan"); // 仍然需要结束计时
     }
+    
+    double elapsed = EndTiming("OnScan");
+    RCLCPP_DEBUG(rclcpp::get_logger("gpu_laser"), "OnScan method took %.2f ms", elapsed);
+    
+    // 定期打印统计信息
+    PrintTimingStats();
 }
 
  }

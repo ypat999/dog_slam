@@ -2,8 +2,8 @@
 controller_manager:
   # 控制器管理器的ROS参数配置块
   ros__parameters:
-    # 控制器的更新频率，单位为Hz（此处表示每秒更新100次）
-    update_rate: 100  
+    # 控制器的更新频率，单位为Hz（此处表示每秒更新200次）
+    update_rate: 200 
     # 是否使用仿真时间（true表示使用仿真时间，通常在gazebo等仿真环境中启用）
     use_sim_time: true  
     

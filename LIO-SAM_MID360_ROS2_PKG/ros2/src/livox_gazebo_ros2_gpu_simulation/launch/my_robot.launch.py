@@ -16,7 +16,7 @@ def generate_launch_description():
     # 声明启动参数
     gui_arg = DeclareLaunchArgument(
         'gui',
-        default_value='true',
+        default_value='false',
         description='Set to "false" to run gazebo headless')
         
     verbose_arg = DeclareLaunchArgument(

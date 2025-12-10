@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <unordered_map>
 
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/plugins/GpuRayPlugin.hh>
@@ -52,6 +54,11 @@ namespace gazebo
     virtual void OnNewLaserFrame(const float *_image,
                 unsigned int _width, unsigned int _height,
                 unsigned int _depth, const std::string &_format);
+                
+    // 时间统计辅助函数
+    void StartTiming(const std::string& method_name);
+    double EndTiming(const std::string& method_name);
+    void PrintTimingStats();
 
   protected:
     void OnScan(ConstLaserScanStampedPtr &_msg);
@@ -82,6 +89,12 @@ namespace gazebo
     // 新增: 存储扫描模式和当前索引
     std::vector<ScanPatternPoint> scan_pattern_;
     size_t scan_pattern_index_ = 0;
+    
+    // 时间统计相关成员变量
+    std::unordered_map<std::string, double> method_time_stats_;
+    std::unordered_map<std::string, int> method_call_count_;
+    std::chrono::steady_clock::time_point last_print_time_;
+    bool stats_initialized_ = false;
   };
 }
 #endif  // LIVOX_SIM_PLUGINS_LIVOXSIMGPULASER_HH_

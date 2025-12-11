@@ -19,7 +19,7 @@ except ImportError:
 def generate_launch_description():
     ld = LaunchDescription()
     config = os.path.join(
-        get_package_share_directory("explore_lite"), "config", "params_costmap.yaml"
+        get_package_share_directory("explore_lite"), "config", "params.yaml"
     )
     use_sim_time = LaunchConfiguration("use_sim_time")
     namespace = LaunchConfiguration("namespace")

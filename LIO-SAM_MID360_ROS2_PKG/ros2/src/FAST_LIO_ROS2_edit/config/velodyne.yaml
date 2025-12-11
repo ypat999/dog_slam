@@ -7,7 +7,7 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        map_file_path: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/test.pcd"
+        map_file_path: "/home/ywj/pcd/test.pcd"
 
         common:
             lid_topic:  "/velodyne_points"

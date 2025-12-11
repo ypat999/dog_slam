@@ -859,11 +859,11 @@ slam_toolbox_node:
     min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: true
+    use_scan_matching: false
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
-    use_map_saver: true
+    use_map_saver: false
 
     # =============================================================================
     # 新增重要参数配置 - 根据 ros2 param list 添加

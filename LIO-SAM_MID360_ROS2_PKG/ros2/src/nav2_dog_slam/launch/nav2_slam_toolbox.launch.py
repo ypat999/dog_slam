@@ -1,125 +1,109 @@
-from launch.actions import DeclareLaunchArgument, TimerAction, ExecuteProcess
-from launch.substitutions import LaunchConfiguration
-from ament_index_python.packages import get_package_share_directory
-import os
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction
+from launch.substitutions import LaunchConfiguration, FindExecutable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription
-from launch import LaunchDescription
-
-# 导入全局配置
 from ament_index_python.packages import get_package_share_directory
-import sys, os
-
-# 添加global_config包的路径到Python路径
-try:
-    global_config_path = get_package_share_directory('global_config')
-    sys.path.insert(0, os.path.join(global_config_path, '..', '..', 'src', 'global_config'))
-    from global_config import (
-        BUILD_MAP, BUILD_TOOL, RECORD_ONLY, ONLINE_LIDAR as ONLINE_LIDAR, 
-        LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
-        DEFAULT_USE_SIM_TIME_STRING as DEFAULT_USE_SIM_TIME_STRING, 
-        DEFAULT_BAG_PATH as DEFAULT_BAG_PATH,
-        DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
-        LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR, MAP_FRAME,
-        ODOM_FRAME, BASE_LINK_FRAME, LIVOX_FRAME, NAV2_DEFAULT_MAP_FILE as DEFAULT_MAP_FILE
-    )
-except Exception as e:
-    print(f"导入global_config失败: {e}")
-    # 如果导入失败，使用默认值
-    BUILD_MAP = False
-    BUILD_TOOL = 'octomap_server'
-    RECORD_ONLY = False
-    ONLINE_LIDAR = False
-    BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/'
-    DEFAULT_USE_SIM_TIME = True
-    DEFAULT_USE_SIM_TIME_STRING = 'true'
-    DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
-    DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
-    DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
-    MAP_FRAME = 'map'
-    ODOM_FRAME = 'odom'
-    BASE_LINK_FRAME = 'base_link'
-    LIVOX_FRAME = 'livox_frame'
-    DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+from nav2_common.launch import RewrittenYaml
+from launch_ros.descriptions import ParameterFile
+import os, sys
 
 
 def generate_launch_description():
-    map_dir = LaunchConfiguration('map')
-    params_file = LaunchConfiguration('params_file')
-    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
-    use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
+    try:
+        global_config_path = os .path.join(get_package_share_directory('global_config'), '../../src/global_config')
+        sys.path.insert(0, global_config_path)
+        from global_config import (
+            DEFAULT_USE_SIM_TIME,
+            NAV2_DEFAULT_MAP_FILE,
+            )
+    except ImportError:
+        # 如果导入失败，使用默认值  
+        print(  "Warning: Failed to import global_config, using default values")
+        DEFAULT_USE_SIM_TIME = True
+        NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
 
-    nav2_dir = get_package_share_directory('nav2_dog_slam')
-    nav2_bringup_dir = get_package_share_directory('nav2_bringup')
 
-    declare_map_cmd = DeclareLaunchArgument(
-        'map', default_value=DEFAULT_MAP_FILE,
-        description='Full path to map file to load')
+    bringup_dir = get_package_share_directory('nav2_bringup')
+    launch_dir = os.path.join(bringup_dir, 'launch')
 
-    declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes')
+    use_sim_time = DEFAULT_USE_SIM_TIME
+    params_file = os.path.join(get_package_share_directory('nav2_dog_slam'), 'config', 'nav2_params.yaml')
+    map_yaml_file = NAV2_DEFAULT_MAP_FILE
+    autostart = True
+    log_level = 'info'
 
-    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
-        'slam_toolbox_params',
-        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
-        description='Full path to slam_toolbox parameters file')
+    ld = LaunchDescription()
 
-    # Instead of including the top-level bringup (which will start localization/amcl by default),
-    # include the map_server and navigation brings separately and pass the no-amcl params file.
-    # Some installations don't provide a packaged map_server_launch.py script at
-    # /opt/ros/.../share/nav2_map_server/launch. To avoid filesystem-dependence,
-    # start the map_server node directly here with the required parameters.
+    # map_server node
     map_server_node = Node(
         package='nav2_map_server',
         executable='map_server',
         name='map_server',
         output='screen',
-        parameters=[{ 'yaml_filename': map_dir, 'use_sim_time': use_sim_time }]
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'yaml_filename': map_yaml_file}
+        ],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ]
     )
 
-    navigation_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(nav2_bringup_dir, 'launch', 'navigation_launch.py')]),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'params_file': params_file,
-            'autostart': 'True',
-            'use_composition': 'False',
-            'use_respawn': 'False',
-            'container_name': 'nav2_container',
-            'use_namespace': 'False',
-            'log_level': 'INFO'
-        }.items()
-    )
-
-    # Start slam_toolbox in localization/relocalization mode to provide pose estimates instead of AMCL
-    # Note: do NOT pass the raw map yaml/pgm file as `map_file_name` here — that parameter is for
-    # serialized pose-graph files. Instead let slam_toolbox subscribe to the map coming from
-    # the map_server (/map topic). We will start nav2/map_server first, then start slam_toolbox
-    # after a short delay so it can receive the /map topic.
+    # slam toolbox node (替代 amcl node)
     slam_toolbox_node = Node(
         package='slam_toolbox',
-        executable='async_slam_toolbox_node',
+        executable='sync_slam_toolbox_node',
         name='slam_toolbox_node',
         output='screen',
         parameters=[
-            slam_toolbox_params,
+            params_file,
             {
                 'use_sim_time': use_sim_time,
             }
         ],
         remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
             ('/scan', '/scan'), 
             # ('/odom', '/lio_sam/mapping/odometry'),
             ('/odom', '/Odometry'),  # FAST-LIO 的 odometry 话题
             ('/initialpose', '/initialpose')  # Enable initial pose setting
         ],
         respawn=True,  # 启用自动重启，防止崩溃后系统停止运行
-        respawn_delay=1.0  # 重启延迟10秒，给系统足够时间稳定
+        respawn_delay=2.0  # 重启延迟2秒
+    )
+    
+    # lifecycle manager node to configure and activate map_server and slam_toolbox
+    lifecycle_manager = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_localization',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': autostart,
+            'node_names': ['map_server']
+        }]
     )
 
+    # include the rest of navigation stack
+    navigation_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+        launch_arguments={
+            'use_sim_time': str(use_sim_time),
+            'autostart': str(autostart),
+            'params_file': params_file,
+            'use_composition': 'False',  # 显式设置为false以确保costmap能正确发布
+            'use_respawn': 'True',  # 允许节点重启
+            'container_name': 'nav2_container',
+            'log_level': log_level
+        }.items()
+    )
+    
+    # 网页控制界面节点（ROS2 bridge + Websocket）
+    # 这里用 rosbridge + web_video_server 组合
     rosbridge_websocket = Node(
         package='rosbridge_server',
         executable='rosbridge_websocket',
@@ -133,23 +117,17 @@ def generate_launch_description():
         ]
     )
 
-    launch_actions = [
-        declare_map_cmd,
-        declare_params_file_cmd,
-        declare_slam_toolbox_params_cmd,
-        rosbridge_websocket,  # 添加 rosbridge_websocket 节点
-    ]
+    # 使用定时器确保正确的启动顺序
+    delayed_map_server = TimerAction(period=1.0, actions=[map_server_node])
+    delayed_slam = TimerAction(period=2.0, actions=[slam_toolbox_node])
+    delayed_lifecycle = TimerAction(period=3.0, actions=[lifecycle_manager])
+    delayed_navigation = TimerAction(period=4.0, actions=[navigation_include])
 
-    if not BUILD_MAP:
-        # Start nav2 (map_server) first so /map is available, then start slam_toolbox after a short delay
-        delayed_map_server = TimerAction(period=0.5, actions=[map_server_node])
-        delayed_nav = TimerAction(period=1.0, actions=[navigation_include])
-        delayed_slam = TimerAction(period=15.0, actions=[slam_toolbox_node])
-        launch_actions.append(delayed_map_server)
-        launch_actions.append(delayed_nav)
-        launch_actions.append(delayed_slam)
-        # Note: initial pose publisher removed; prefer remapping odom/scan so slam_toolbox
-        # receives correct odometry and can compute odom pose. If needed, set initial
-        # pose from an external tool (rviz) or re-add a publisher that matches your runtime.
+    # add nodes
+    ld.add_action(delayed_map_server)
+    ld.add_action(delayed_slam)
+    ld.add_action(delayed_lifecycle)
+    ld.add_action(delayed_navigation)
+    ld.add_action(rosbridge_websocket)  # 添加 rosbridge_websocket 节点
 
-    return LaunchDescription(launch_actions)
+    return ld

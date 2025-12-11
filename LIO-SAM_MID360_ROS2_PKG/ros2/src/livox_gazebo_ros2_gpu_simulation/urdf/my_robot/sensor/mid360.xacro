@@ -5,7 +5,7 @@
   <xacro:property name="laser_min_range" value="0.1"/>
   <xacro:property name="laser_max_range" value="100.0"/>
   <xacro:property name="samples" value="10000"/>
-  <xacro:property name="resolution" value="0.002"/>
+  <xacro:property name="resolution" value="0.005"/>
   <xacro:property name="noise_mean" value="0.0"/>
   <xacro:property name="noise_stddev" value="0.002"/>
   
@@ -58,26 +58,26 @@
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
         <update_rate>10</update_rate>
-        <use_strict_rate>true</use_strict_rate>
+        <use_strict_rate>false</use_strict_rate>
         
         <plugin name="${name}_plugin" filename="liblivox_sim_gpu_laser.so">
           <visualize>false</visualize>
           <frameName>${name}</frameName> 
-          <samples>${samples}</samples>
-          <downsample>1</downsample>
+          <samples>10000</samples>
+          <downsample>10</downsample>
           <csv_file_name>package://livox_gazebo_ros2_gpu_simulation/scan_mode/mid360.csv</csv_file_name>
           <topic>${topic}</topic>
         </plugin>
         <ray>
           <scan>
             <horizontal>
-              <samples>180</samples>
+              <samples>360</samples>
               <resolution>1</resolution>
               <min_angle>${0}</min_angle>
               <max_angle>${2*M_PI}</max_angle>
             </horizontal>
             <vertical>
-              <samples>30</samples>
+              <samples>59</samples>
               <resolution>1</resolution>
               <min_angle>${-7.22/180*M_PI}</min_angle>
               <max_angle>${55.22/180*M_PI}</max_angle>
@@ -88,11 +88,11 @@
             <max>${laser_max_range}</max>
             <resolution>${resolution}</resolution>
           </range>
-          <noise>
+          <!-- <noise>
             <type>gaussian</type>
             <mean>${noise_mean}</mean>
             <stddev>${noise_stddev}</stddev>
-          </noise>
+          </noise> -->
         </ray>
       </sensor>
       

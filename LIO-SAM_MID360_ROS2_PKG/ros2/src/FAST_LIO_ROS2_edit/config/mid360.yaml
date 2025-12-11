@@ -8,7 +8,7 @@
         filter_size_map: 0.5                  # 增加地图过滤尺寸，减少噪声影响
         cube_side_length: 300.0               # 减小地图立方体尺寸，提高局部地图精度
         runtime_pos_log_enable: false          # 启用日志输出
-        map_file_path: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/test.pcd"
+        map_file_path: "/home/ywj/pcd/test.pcd" 
 
         common:
             lid_topic:  "/livox/lidar"
@@ -64,4 +64,3 @@
             pcd_save_en: true
             interval: 5                 # how many LiDAR frames saved in each pcd file; 
                                         # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
-            map_file_path: "/home/ywj/pcd/test.pcd" 

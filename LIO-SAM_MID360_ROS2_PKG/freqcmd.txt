@@ -166,6 +166,8 @@ export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA   #使用独显
 glxinfo | grep "OpenGL renderer"
 export GAZEBO_GPU_RENDERING=1
 
+ros2 service call /map_save std_srvs/srv/Trigger {}
+
 
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash

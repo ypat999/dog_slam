@@ -7,7 +7,7 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        map_file_path: "./test.pcd"
+        map_file_path: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/test.pcd"
 
         common:
             lid_topic:  "/os_cloud_node/points"
@@ -17,7 +17,7 @@
                                         # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
             
         preprocess:
-            lidar_type: 3                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 
+            lidar_type: 5
             scan_line: 64
             timestamp_unit: 3                 # 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
             blind: 4.0

@@ -10,5 +10,5 @@ fi
 cd ./ros2
 colcon build --symlink-install --packages-select lio_sam
 colcon build --symlink-install --packages-select fast_lio
-colcon build --symlink-install
+colcon build --symlink-install --packages-skip livox_gazebo_ros2_gpu_simulation
 source install/setup.bash

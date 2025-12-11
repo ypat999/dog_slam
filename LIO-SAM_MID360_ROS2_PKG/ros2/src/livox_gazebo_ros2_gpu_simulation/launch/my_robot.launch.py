@@ -57,6 +57,14 @@ def generate_launch_description():
         value='1'
     )
 
+
+
+
+
+
+
+
+
     package_name = 'livox_gazebo_ros2_gpu_simulation'
     robot_name = 'my_robot'
     world_file_name = 'bigHHH.world'

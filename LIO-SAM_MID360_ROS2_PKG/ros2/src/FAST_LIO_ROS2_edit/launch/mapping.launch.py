@@ -73,19 +73,19 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
-    # 离线模式：rosbag播放
-    from launch.actions import ExecuteProcess
-    rosbag_player = ExecuteProcess(
-        cmd=['ros2', 'bag', 'play', DEFAULT_BAG_PATH, '--qos-profile-overrides-path', DEFAULT_RELIABILITY_OVERRIDE, '--clock', '--rate', '1.0'],
-        name='rosbag_player',
-        output='screen',
-        prefix=['taskset -c 4'],   # 绑定 CPU 4
-        condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'OFFLINE'")),
-    )
+    # # 离线模式：rosbag播放
+    # from launch.actions import ExecuteProcess
+    # rosbag_player = ExecuteProcess(
+    #     cmd=['ros2', 'bag', 'play', DEFAULT_BAG_PATH, '--qos-profile-overrides-path', DEFAULT_RELIABILITY_OVERRIDE, '--clock', '--rate', '1.0'],
+    #     name='rosbag_player',
+    #     output='screen',
+    #     prefix=['taskset -c 4'],   # 绑定 CPU 4
+    #     condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'OFFLINE'")),
+    # )
 
     # 根据模式选择启动相应的节点
-    ld.add_action(rosbag_player)
-    # ld.add_action(livox_driver_node)
+    # ld.add_action(rosbag_player)
+    ld.add_action(livox_driver_node)
 
 
     fast_lio_node = Node(

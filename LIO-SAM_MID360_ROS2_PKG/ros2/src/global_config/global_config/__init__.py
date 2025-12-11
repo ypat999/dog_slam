@@ -76,7 +76,7 @@ config_by_machine = {
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - LIO-SAM
-        'ONLINE_LIDAR': True,
+        'ONLINE_LIDAR': False,
         'LIO_SAM_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/mnt/d/projects/robot/livox_record_tilt_test2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
@@ -100,7 +100,7 @@ config_by_machine = {
     },
     'DESKTOP-ypat': {
         # DESKTOP-ypat主机配置 - LIO-SAM
-        'ONLINE_LIDAR': True,
+        'ONLINE_LIDAR': False,
         'LIO_SAM_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
         'DEFAULT_BAG_PATH': '/mnt/d/work/robot/livox_record_tilt_test2/',
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',

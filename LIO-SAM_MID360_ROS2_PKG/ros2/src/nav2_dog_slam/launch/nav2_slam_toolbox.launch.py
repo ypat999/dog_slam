@@ -50,7 +50,7 @@ def generate_launch_description():
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
 
-    share_dir = get_package_share_directory('lio_sam')
+    nav2_dir = get_package_share_directory('nav2_dog_slam')
     nav2_bringup_dir = get_package_share_directory('nav2_bringup')
 
     declare_map_cmd = DeclareLaunchArgument(
@@ -59,12 +59,12 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(share_dir, 'config', 'nav2_params.yaml'),
+        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
 
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(share_dir, 'config', 'nav2_params.yaml'),
+        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
         description='Full path to slam_toolbox parameters file')
 
     # Instead of including the top-level bringup (which will start localization/amcl by default),

@@ -4,11 +4,11 @@
     return_to_init: true
     costmap_topic: map
     costmap_updates_topic: map_updates
-    visualize: true
+    visualize: false
     planner_frequency: 0.15
-    progress_timeout: 30.0
+    progress_timeout: 60.0
     potential_scale: 3.0
     orientation_scale: 0.0
     gain_scale: 1.0
-    transform_tolerance: 1.0
-    min_frontier_size: 0.75
+    transform_tolerance: 0.2
+    min_frontier_size: 0.5

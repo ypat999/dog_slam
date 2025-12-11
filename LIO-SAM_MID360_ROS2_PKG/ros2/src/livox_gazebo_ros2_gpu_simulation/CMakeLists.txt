@@ -98,9 +98,22 @@ install(DIRECTORY include/
 
 # Install rviz configuration files
 install(
-  DIRECTORY launch rviz urdf worlds meshes scan_mode config livox_sim_gpu_laser.xml
+  DIRECTORY launch rviz urdf worlds meshes scan_mode config
   DESTINATION share/${PROJECT_NAME}
 )
+
+file(GLOB PYTHON_SCRIPTS 
+  "${CMAKE_CURRENT_SOURCE_DIR}/python_scripts/*.py"  
+)
+
+install(
+  FILES ${PYTHON_SCRIPTS}  # 要安装的文件：所有Python脚本
+  DESTINATION lib/${PROJECT_NAME}  # 安装目标路径（ROS 2标准，PROJECT_NAME即你的包名）
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ  # 所有者权限（执行/写/读）
+              GROUP_EXECUTE GROUP_READ              # 组用户权限（执行/读）
+              WORLD_EXECUTE WORLD_READ              # 其他用户权限（执行/读）
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

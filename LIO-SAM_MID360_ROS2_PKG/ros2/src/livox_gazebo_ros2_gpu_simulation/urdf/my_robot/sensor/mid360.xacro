@@ -9,7 +9,7 @@
   <xacro:property name="noise_mean" value="0.0"/>
   <xacro:property name="noise_stddev" value="0.002"/>
   
-  <xacro:property name="imu_update_rate" value="40"/> 
+  <xacro:property name="imu_update_rate" value="100"/> 
   <xacro:property name="gyro_noise_stddev" value="2e-4"/>
   <xacro:property name="accel_noise_stddev" value="1.7e-2"/>
   <xacro:property name="mass" value="0.4" />
@@ -58,26 +58,26 @@
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
         <update_rate>10</update_rate>
-        <use_strict_rate>false</use_strict_rate>
+        <use_strict_rate>true</use_strict_rate>
         
         <plugin name="${name}_plugin" filename="liblivox_sim_gpu_laser.so">
           <visualize>false</visualize>
           <frameName>${name}</frameName> 
           <samples>${samples}</samples>
-          <downsample>10</downsample>
+          <downsample>1</downsample>
           <csv_file_name>package://livox_gazebo_ros2_gpu_simulation/scan_mode/mid360.csv</csv_file_name>
           <topic>${topic}</topic>
         </plugin>
         <ray>
           <scan>
             <horizontal>
-              <samples>360</samples>
+              <samples>180</samples>
               <resolution>1</resolution>
               <min_angle>${0}</min_angle>
               <max_angle>${2*M_PI}</max_angle>
             </horizontal>
             <vertical>
-              <samples>59</samples>
+              <samples>30</samples>
               <resolution>1</resolution>
               <min_angle>${-7.22/180*M_PI}</min_angle>
               <max_angle>${55.22/180*M_PI}</max_angle>
@@ -97,7 +97,8 @@
       </sensor>
       
       <sensor name="${name}_imu" type="imu">
-        <pose>0 0 0 0 0 0</pose> <always_on>true</always_on>
+        <pose>0 0 0 0 0 0</pose> 
+        <always_on>true</always_on>
         <update_rate>${imu_update_rate}</update_rate> 
         <visualize>false</visualize>
         

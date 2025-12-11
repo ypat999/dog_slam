@@ -59,7 +59,7 @@
                 </ros>
 
                 <!-- 频率 -->
-                <update_rate>40</update_rate>  
+                <update_rate>100</update_rate>  
                 <!-- 里程计frame id -->
                 <odometry_frame>odom</odometry_frame>   
                   <!-- 是否发布里程计 -  -->
@@ -67,7 +67,7 @@
                 <!-- 是否发布里程计tf -->
                 <publish_odom_tf>false</publish_odom_tf>
                 
-                <robot_base_frame>base_footprint</robot_base_frame>  
+                <robot_base_frame>base_link</robot_base_frame>  
                 
                 <!-- 最大速度 -->
                 <max_vel_x>5.0</max_vel_x>                 

@@ -526,10 +526,10 @@ local_costmap:
           clearing: true
           marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 4.0
-          raytrace_min_range: 0.5
-          obstacle_max_range: 3.0
-          obstacle_min_range: 0.2
+          raytrace_max_range: 5.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 5.0
+          obstacle_min_range: 0.0
           # expected_update_rate: 0.0  # 新增参数
           # inf_is_valid: false  # 新增参数
           # observation_persistence: 0.0  # 新增参数
@@ -832,7 +832,7 @@ slam_toolbox_node:
     # 发布频率与变换发布
     # 禁止 slam_toolbox 输出/更新 2D occupancy map（避免覆盖 nav2 的 /map）
     # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
-    map_update_interval: 0.0
+    map_update_interval: 1.0
     publish_occupancy_map: true
 
     # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
@@ -862,7 +862,7 @@ slam_toolbox_node:
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
-    transform_publish_period: 0.1
+    transform_publish_period: 0.0
 
     # 传感器范围与匹配参数（可按需调优）
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围

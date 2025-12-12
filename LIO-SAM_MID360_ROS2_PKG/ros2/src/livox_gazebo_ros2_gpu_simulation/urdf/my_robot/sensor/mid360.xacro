@@ -9,9 +9,9 @@
   <xacro:property name="noise_mean" value="0.0"/>
   <xacro:property name="noise_stddev" value="0.002"/>
   
-  <xacro:property name="imu_update_rate" value="100"/> 
-  <xacro:property name="gyro_noise_stddev" value="2e-4"/>
-  <xacro:property name="accel_noise_stddev" value="1.7e-2"/>
+  <xacro:property name="imu_update_rate" value="200"/> 
+  <xacro:property name="gyro_noise_stddev" value="2e-40"/>
+  <xacro:property name="accel_noise_stddev" value="1.7e-20"/>
   <xacro:property name="mass" value="0.4" />
   <xacro:property name="length" value="0.1" />
   <xacro:property name="width" value="0.06" />
@@ -57,14 +57,14 @@
       <sensor type="gpu_ray" name="${name}_lidar">
         <pose>0 0 0 0 0 0</pose>
         <visualize>false</visualize>
-        <update_rate>10</update_rate>
+        <update_rate>99</update_rate>
         <use_strict_rate>false</use_strict_rate>
         
         <plugin name="${name}_plugin" filename="liblivox_sim_gpu_laser.so">
           <visualize>false</visualize>
           <frameName>${name}</frameName> 
           <samples>10000</samples>
-          <downsample>10</downsample>
+          <downsample>3</downsample>
           <csv_file_name>package://livox_gazebo_ros2_gpu_simulation/scan_mode/mid360.csv</csv_file_name>
           <topic>${topic}</topic>
         </plugin>
@@ -88,11 +88,11 @@
             <max>${laser_max_range}</max>
             <resolution>${resolution}</resolution>
           </range>
-          <!-- <noise>
+          <noise>
             <type>gaussian</type>
             <mean>${noise_mean}</mean>
             <stddev>${noise_stddev}</stddev>
-          </noise> -->
+          </noise>
         </ray>
       </sensor>
       

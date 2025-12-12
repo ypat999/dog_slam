@@ -76,6 +76,8 @@ ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {va
 # 关闭控制服务
 sudo systemctl stop robot_control.service
 
+#保存点云
+ros2 service call /map_save std_srvs/srv/Trigger {}
 
 # 关闭导航：
 sudo systemctl stop lio_sam_nav2.service
@@ -155,7 +157,6 @@ ros2 launch fast_lio mapping.launch.py
 ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
-ros2 launch ros2_livox_simulation livox_simulation.launch.py
 ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
 ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
 
@@ -166,7 +167,50 @@ export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA   #使用独显
 glxinfo | grep "OpenGL renderer"
 export GAZEBO_GPU_RENDERING=1
 
-ros2 service call /map_save std_srvs/srv/Trigger {}
+
+
+# 查看当前生命周期节点状态
+ros2 lifecycle list /fastlio_mapping
+
+# 查看节点当前状态
+ros2 lifecycle get /fastlio_mapping
+
+# 重启节点（完整的生命周期转换）
+ros2 lifecycle set /fastlio_mapping configure
+ros2 lifecycle set /fastlio_mapping activate
+
+# 查看节点服务列表
+ros2 service list | grep fastlio_mapping
+
+# 通过生命周期管理器服务重启
+ros2 service call /lifecycle_manager_fastlio/manage_nodes lifecycle_msgs/srv/ManageNodes "{command: 1}"
+
+# 停止当前节点
+ros2 lifecycle set /fastlio_mapping shutdown
+
+# 重新启动launch文件
+ros2 launch fast_lio mapping.launch.py
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/

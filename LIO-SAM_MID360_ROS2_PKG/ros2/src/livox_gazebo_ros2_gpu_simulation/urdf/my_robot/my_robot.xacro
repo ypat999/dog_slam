@@ -91,7 +91,7 @@
         parent_link="base_link"
         xyz="0 0 0.02" />
 
-    <xacro:box_xacro 
+    <!-- <xacro:box_xacro 
         name="camera_link" 
         length="0.02" 
         width="0.10" 
@@ -99,7 +99,7 @@
         color="${black}" 
         is_child="true"
         parent_link="base_link"
-        xyz="0.1 0.0 0.05"/>
+        xyz="0.1 0.0 0.05"/> -->
   <!-- =============== 传感器 ============ -->
 
 <!-- =============== 导入gazebo插件 ============ -->

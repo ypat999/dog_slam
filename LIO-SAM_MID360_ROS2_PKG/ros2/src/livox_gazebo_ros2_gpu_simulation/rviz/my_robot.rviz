@@ -98,11 +98,6 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        camera_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         imu_link:
           Alpha: 1
           Show Axes: false
@@ -138,15 +133,9 @@ Visualization Manager:
           Value: true
         behind_right_wheel:
           Value: true
-        camera_link:
-          Value: true
         imu_link:
           Value: true
         livox_frame:
-          Value: true
-        map:
-          Value: true
-        odom:
           Value: true
       Marker Scale: 0.5
       Name: TF
@@ -154,30 +143,27 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_link:
-              ahead_left_wheel:
-                {}
-              ahead_right_wheel:
-                {}
-              behind_left_wheel:
-                {}
-              behind_right_wheel:
-                {}
-              camera_link:
-                {}
-              imu_link:
-                {}
-              livox_frame:
-                {}
+        base_footprint:
+          base_link:
+            ahead_left_wheel:
+              {}
+            ahead_right_wheel:
+              {}
+            behind_left_wheel:
+              {}
+            behind_right_wheel:
+              {}
+            imu_link:
+              {}
+            livox_frame:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.3118793964385986
-        Min Value: -0.45730113983154297
+        Max Value: 4.494500637054443
+        Min Value: -0.5525684952735901
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -203,7 +189,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /cloud_registered
+        Value: /livox/lidar
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -355,7 +341,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: map
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -398,25 +384,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 4.8298749923706055
+      Distance: 25.194927215576172
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -3.601158380508423
-        Y: 1.2040536403656006
-        Z: 1.267473816871643
+        X: 1.4024851322174072
+        Y: -1.1578688621520996
+        Z: 1.0312840938568115
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 0.4997965097427368
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.43358850479126
+      Yaw: 4.3785881996154785
     Saved: ~
 Window Geometry:
   Displays:
@@ -434,5 +420,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1844
-  X: -32
-  Y: 1052
+  X: -19
+  Y: -2

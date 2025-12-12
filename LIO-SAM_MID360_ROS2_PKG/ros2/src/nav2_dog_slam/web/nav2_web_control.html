@@ -36,13 +36,25 @@
       height: 100%;
       background-color: #ffffff;
     }
+    .marker {
+      background: none;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      content: "";
+    }
+    
     #robot-marker {
       position: absolute;
-      width: 20px;
-      height: 20px;
-      background-color: #ff0000;
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 20px solid #ff0000;
+      transform: translate(-50%, -50%) rotate(0deg);
       display: none;
       z-index: 10;
     }
@@ -109,6 +121,9 @@
         <label for="goal-yaw">目标点朝向(yaw)：</label>
         <input type="number" id="goal-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
       </div>
+      <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
+        操作提示：在地图上点击并拖动来设置目标位置和方向
+      </div>
     </div>
     <div style="margin-top: 10px;">
       <button onclick="setInitialPose()">设置初始点</button>
@@ -117,6 +132,9 @@
       <div style="margin-top: 5px;">
         <label for="initial-pose-yaw">初始点朝向(yaw)：</label>
         <input type="number" id="initial-pose-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
+      </div>
+      <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
+        操作提示：点击"设置初始点"按钮后，在地图上点击并拖动来设置位置和方向
       </div>
     </div>
     <div style="margin-top: 10px;">
@@ -151,9 +169,9 @@
   </div>
   <div id="map-container">
     <canvas id="map-canvas"></canvas>
-    <div id="robot-marker"></div>
-    <div id="goal-marker"></div>
-    <div id="initial-pose-marker"></div>
+    <div id="robot-marker" class="marker"></div>
+    <div id="goal-marker" class="marker"></div>
+    <div id="initial-pose-marker" class="marker"></div>
   </div>
 
   <script type="text/javascript">
@@ -182,7 +200,7 @@
     // 地图渲染相关变量
     let canvas, ctx;
     let currentMap = null;
-    let robotPosition = { x: 0, y: 0 };
+    let robotPosition = { x: 0, y: 0, theta: 0 }; // 添加theta表示机器人朝向
     let goalPosition = null;
     let initialPosePosition = null;
     let scale = 1.0; // 缩放比例
@@ -202,13 +220,14 @@
       canvas.width = mapContainer.clientWidth;
       canvas.height = mapContainer.clientHeight;
       
-      // 添加鼠标事件处理
+      // 添加鼠标事件处理 - 只保留缩放功能，禁用拖动
       canvas.addEventListener('wheel', handleWheel);
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('mouseleave', handleMouseUp);
       canvas.addEventListener('click', handleCanvasClick);
+      
+      // 添加方向设置相关的事件处理
+      canvas.addEventListener('mousedown', handleMouseDownForDirection);
+      canvas.addEventListener('mousemove', handleMouseMoveForDirection);
+      canvas.addEventListener('mouseup', handleMouseUpForDirection);
     }
 
     // 更新主机名
@@ -279,56 +298,173 @@
       drawMap();
     }
     
-    // 处理鼠标按下
-    function handleMouseDown(event) {
-      isDragging = true;
-      lastMouseX = event.clientX;
-      lastMouseY = event.clientY;
-      canvas.style.cursor = 'grabbing';
-    }
-    
-    // 处理鼠标移动（拖动）
-    function handleMouseMove(event) {
-      if (isDragging) {
-        const deltaX = event.clientX - lastMouseX;
-        const deltaY = event.clientY - lastMouseY;
-        
-        offsetX += deltaX;
-        offsetY += deltaY;
-        
-        lastMouseX = event.clientX;
-        lastMouseY = event.clientY;
-        
-        drawMap();
-      }
-    }
-    
-    // 处理鼠标释放
-    function handleMouseUp() {
-      isDragging = false;
-      canvas.style.cursor = 'default';
-    }
+
     
     // 处理Canvas点击事件（设置目标点或初始点）
      function handleCanvasClick(event) {
-       if (isDragging) return; // 如果正在拖动，则不处理点击
+       // 如果正在设置方向，则不处理点击事件
+       if (isSettingDirection) return;
        
        const rect = canvas.getBoundingClientRect();
        const mouseX = event.clientX - rect.left;
        const mouseY = event.clientY - rect.top;
        
        // 转换为地图坐标
-       // 从Canvas坐标转换到世界坐标，原点为左下角
        const worldX = (mouseX - offsetX) / scale;
        const worldY = (offsetY - mouseY) / scale;
        
-       // 根据当前模式决定是设置目标点还是初始点
        if (window.settingInitialPose) {
-         // 设置初始点模式
-         publishInitialPose(worldX, worldY);
+         // 在设置初始点模式下，点击即设置初始点（无方向）
+         publishInitialPose(worldX, worldY, 0);
+         window.settingInitialPose = false;
+         canvas.style.cursor = 'default';
+         
+         // 恢复按钮状态
+         const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
+         if (setInitialPoseButton) {
+           setInitialPoseButton.textContent = '设置初始点';
+           setInitialPoseButton.onclick = setInitialPose;
+         }
        } else {
-         // 正常模式 - 设置目标点
-         publishGoal(worldX, worldY);
+         // 正常模式下，点击即设置目标点（无方向）
+         publishGoal(worldX, worldY, 0);
+       }
+     }
+     
+     // 添加鼠标按下事件用于拖动设置方向
+     let dragStartX, dragStartY, isSettingDirection = false;
+     
+     function handleMouseDownForDirection(event) {
+       // 只有在设置初始点模式下或者按住Ctrl/Shift键时才启用方向设置
+       if (window.settingInitialPose || event.ctrlKey || event.shiftKey) {
+         // 检查是否是在地图上点击（而不是在控件上）
+         const rect = canvas.getBoundingClientRect();
+         const mouseX = event.clientX - rect.left;
+         const mouseY = event.clientY - rect.top;
+         
+         // 转换为地图坐标
+         const worldX = (mouseX - offsetX) / scale;
+         const worldY = (offsetY - mouseY) / scale;
+         
+         // 检查坐标是否在有效范围内
+         if (currentMap) {
+           const mapWidth = currentMap.info.width * currentMap.info.resolution;
+           const mapHeight = currentMap.info.height * currentMap.info.resolution;
+           
+           if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
+             dragStartX = event.clientX - rect.left;
+             dragStartY = event.clientY - rect.top;
+             isSettingDirection = true;
+             canvas.style.cursor = 'crosshair';
+             event.preventDefault();
+           }
+         }
+       }
+     }
+     
+     function handleMouseMoveForDirection(event) {
+       if (isSettingDirection) {
+         // 添加视觉反馈，显示一条线表示方向
+         // 清除之前的绘制
+         drawMap();
+         
+         // 绘制方向线
+         const rect = canvas.getBoundingClientRect();
+         const currentX = event.clientX - rect.left;
+         const currentY = event.clientY - rect.top;
+         
+         ctx.beginPath();
+         ctx.moveTo(dragStartX, dragStartY);
+         ctx.lineTo(currentX, currentY);
+         ctx.strokeStyle = '#ff0000';
+         ctx.lineWidth = 2;
+         ctx.stroke();
+         
+         // 绘制箭头头部
+         const angle = Math.atan2(currentY - dragStartY, currentX - dragStartX);
+         const arrowSize = 10;
+         
+         ctx.beginPath();
+         ctx.moveTo(currentX, currentY);
+         ctx.lineTo(
+           currentX - arrowSize * Math.cos(angle - Math.PI/6),
+           currentY - arrowSize * Math.sin(angle - Math.PI/6)
+         );
+         ctx.moveTo(currentX, currentY);
+         ctx.lineTo(
+           currentX - arrowSize * Math.cos(angle + Math.PI/6),
+           currentY - arrowSize * Math.sin(angle + Math.PI/6)
+         );
+         ctx.stroke();
+         
+         event.preventDefault();
+       }
+     }
+     
+     function handleMouseUpForDirection(event) {
+       if (isSettingDirection) {
+         const rect = canvas.getBoundingClientRect();
+         const endX = event.clientX - rect.left;
+         const endY = event.clientY - rect.top;
+         
+         // 只有当拖动距离足够大时才设置方向
+         const distance = Math.sqrt(Math.pow(endX - dragStartX, 2) + Math.pow(endY - dragStartY, 2));
+         if (distance > 5) { // 至少拖动5像素才认为是有效的方向设置
+           // 转换为地图坐标
+           const startX = (dragStartX - offsetX) / scale;
+           const startY = (offsetY - dragStartY) / scale;
+           const endXWorld = (endX - offsetX) / scale;
+           const endYWorld = (offsetY - endY) / scale;
+           
+           // 计算方向角度
+           const dx = endXWorld - startX;
+           const dy = endYWorld - startY;
+           const angle = Math.atan2(dy, dx);
+           
+           // 根据当前模式决定是设置目标点还是初始点
+           if (window.settingInitialPose) {
+             // 设置初始点模式
+             publishInitialPose(startX, startY, angle);
+             window.settingInitialPose = false;
+             canvas.style.cursor = 'default';
+             
+             // 恢复按钮状态
+             const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
+             if (setInitialPoseButton) {
+               setInitialPoseButton.textContent = '设置初始点';
+               setInitialPoseButton.onclick = setInitialPose;
+             }
+           } else {
+             // 正常模式 - 设置目标点
+             publishGoal(startX, startY, angle);
+           }
+         } else {
+           // 如果拖动距离太小，就当作普通点击处理
+           const worldX = (dragStartX - offsetX) / scale;
+           const worldY = (offsetY - dragStartY) / scale;
+           
+           if (window.settingInitialPose) {
+             // 设置初始点模式
+             publishInitialPose(worldX, worldY, 0);
+             window.settingInitialPose = false;
+             canvas.style.cursor = 'default';
+             
+             // 恢复按钮状态
+             const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
+             if (setInitialPoseButton) {
+               setInitialPoseButton.textContent = '设置初始点';
+               setInitialPoseButton.onclick = setInitialPose;
+             }
+           } else {
+             // 正常模式 - 设置目标点
+             publishGoal(worldX, worldY, 0);
+           }
+         }
+         
+         isSettingDirection = false;
+         canvas.style.cursor = 'default';
+         drawMap(); // 重新绘制地图以清除方向线
+         event.preventDefault();
        }
      }
     
@@ -453,9 +589,10 @@
          const canvasX = offsetX + robotPosition.x * scale;
          const canvasY = offsetY - robotPosition.y * scale;
          
-         // 设置标记位置
+         // 设置标记位置和旋转角度
          marker.style.left = canvasX + 'px';
          marker.style.top = canvasY + 'px';
+         marker.style.transform = 'translate(-50%, -50%) rotate(' + (robotPosition.theta * 180 / Math.PI) + 'deg)';
          marker.style.display = 'block';
        } else {
          marker.style.display = 'none';
@@ -581,13 +718,31 @@
         messageType: 'nav_msgs/Odometry'
       });
       
+      // 四元数转欧拉角（yaw）的函数
+      function quaternionToYaw(orientation) {
+        // 使用四元数到欧拉角的转换公式计算yaw
+        const x = orientation.x;
+        const y = orientation.y;
+        const z = orientation.z;
+        const w = orientation.w;
+        
+        // 计算yaw (绕Z轴旋转)
+        const siny_cosp = 2 * (w * z + x * y);
+        const cosy_cosp = 1 - 2 * (y * y + z * z);
+        const yaw = Math.atan2(siny_cosp, cosy_cosp);
+        
+        return yaw;
+      }
+      
       lioSamOdomTopic.subscribe(function(odomMsg) {
         // 只有当位置源设置为lio_sam时才使用这些数据
         if (positionSource === 'lio_sam') {
-          // 更新机器人位置
+          // 更新机器人位置和朝向
           robotPosition.x = odomMsg.pose.pose.position.x;
           // 注意：这里保持原始Y坐标，因为在updateRobotMarker中已经处理了翻转
           robotPosition.y = odomMsg.pose.pose.position.y;
+          // 提取朝向信息
+          robotPosition.theta = quaternionToYaw(odomMsg.pose.pose.orientation);
           
           // 重绘地图以更新机器人位置
           drawMap();
@@ -604,10 +759,12 @@
       amclPoseTopic.subscribe(function(poseMsg) {
         // 只有当位置源设置为amcl时才使用这些数据
         if (positionSource === 'amcl') {
-          // 更新机器人位置
+          // 更新机器人位置和朝向
           robotPosition.x = poseMsg.pose.pose.position.x;
           // 注意：这里保持原始Y坐标，因为在updateRobotMarker中已经处理了翻转
           robotPosition.y = poseMsg.pose.pose.position.y;
+          // 提取朝向信息
+          robotPosition.theta = quaternionToYaw(poseMsg.pose.pose.orientation);
           
           // 重绘地图以更新机器人位置
           drawMap();
@@ -624,9 +781,11 @@
       slamToolboxPoseTopic.subscribe(function(poseMsg) {
         // 只有当位置源设置为 slam_toolbox 时才使用这些数据
         if (positionSource === 'slam_toolbox') {
-          // 更新机器人位置
+          // 更新机器人位置和朝向
           robotPosition.x = poseMsg.pose.pose.position.x;
           robotPosition.y = poseMsg.pose.pose.position.y;
+          // 提取朝向信息
+          robotPosition.theta = quaternionToYaw(poseMsg.pose.pose.orientation);
           
           // 重绘地图以更新机器人位置
           drawMap();
@@ -637,15 +796,11 @@
     }
     
     // 发布初始点
-    function publishInitialPose(x, y) {
+    function publishInitialPose(x, y, theta = 0) {
       if (!window.ros || !currentMap) {
-        alert('请先确保ROS连接正常且已收到地图数据');
+        showMessage('请先确保ROS连接正常且已收到地图数据');
         return;
       }
-      
-      // 获取yaw值
-      const yawInput = document.getElementById('initial-pose-yaw');
-      const theta = yawInput ? parseFloat(yawInput.value) * Math.PI / 180 : 0; // 转换为弧度
       
       // 保存初始点位置用于显示
       initialPosePosition = { x: x, y: y, theta: theta };
@@ -704,18 +859,70 @@
       // 退出初始点设置模式
       window.settingInitialPose = false;
       
-      alert(`初始点已设置：(${x.toFixed(2)}, ${y.toFixed(2)})`);
+      showMessage(`初始点已设置：(${x.toFixed(2)}, ${y.toFixed(2)})`);
     }
 
     // 设置初始点模式
     function setInitialPose() {
       if (!window.ros || !currentMap) {
-        alert('请先确保ROS连接正常且已收到地图数据');
+        showMessage('请先确保ROS连接正常且已收到地图数据');
         return;
       }
       
       window.settingInitialPose = true;
-      alert('请点击地图上的任意位置来设置初始点');
+      canvas.style.cursor = 'crosshair';
+      showMessage('请在地图上点击并拖动来设置初始点和方向');
+      
+      // 更新按钮状态
+      const button = event.target;
+      button.textContent = '取消设置';
+      button.onclick = cancelSetInitialPose;
+    }
+    
+    // 取消设置初始点
+    function cancelSetInitialPose() {
+      window.settingInitialPose = false;
+      canvas.style.cursor = 'default';
+      showMessage('已取消初始点设置');
+      
+      // 恢复按钮状态
+      const button = event.target;
+      button.textContent = '设置初始点';
+      button.onclick = setInitialPose;
+    }
+    
+    // 显示消息函数
+    function showMessage(message) {
+      // 创建消息显示元素
+      const messageElement = document.createElement('div');
+      messageElement.textContent = message;
+      messageElement.style.position = 'fixed';
+      messageElement.style.top = '20px';
+      messageElement.style.left = '50%';
+      messageElement.style.transform = 'translateX(-50%)';
+      messageElement.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+      messageElement.style.color = 'white';
+      messageElement.style.padding = '10px 20px';
+      messageElement.style.borderRadius = '5px';
+      messageElement.style.zIndex = '1000';
+      messageElement.style.fontSize = '14px';
+      messageElement.id = 'message-display';
+      
+      // 移除已存在的消息元素
+      const existingMessage = document.getElementById('message-display');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+      
+      // 添加新消息元素
+      document.body.appendChild(messageElement);
+      
+      // 3秒后自动移除消息
+      setTimeout(() => {
+        if (messageElement.parentNode) {
+          messageElement.parentNode.removeChild(messageElement);
+        }
+      }, 3000);
     }
     
     // 清除初始点
@@ -724,7 +931,7 @@
       updateInitialPoseMarker();
       document.getElementById('initial-pose-status').textContent = '未设置';
       console.log('初始点已清除');
-      alert('初始点已清除');
+      showMessage('初始点已清除');
     }
     
     // 更新初始点标记位置
@@ -786,15 +993,11 @@
     }
     
     // 发布目标点
-    function publishGoal(x, y) {
+    function publishGoal(x, y, yaw = 0) {
       if (!window.ros || !currentMap) {
-        alert('请先确保ROS连接正常且已收到地图数据');
+        showMessage('请先确保ROS连接正常且已收到地图数据');
         return;
       }
-      
-      // 获取yaw值
-      const yawInput = document.getElementById('goal-yaw');
-      const yaw = yawInput ? parseFloat(yawInput.value) * Math.PI / 180 : 0; // 转换为弧度
       
       // 保存目标位置用于显示
       goalPosition = { x: x, y: y, theta: yaw };
@@ -836,6 +1039,9 @@
       
       // 更新目标标记
       updateGoalMarker();
+      
+      // 显示成功消息
+      showMessage(`目标点已设置：(${x.toFixed(2)}, ${y.toFixed(2)})`);
     }
     
     // 清除目标点
@@ -967,6 +1173,8 @@
       const statusElement = document.getElementById('position-source-status');
       if (source === 'amcl') {
         statusElement.textContent = '当前：使用AMCL定位';
+      } else if (source === 'slam_toolbox') {
+        statusElement.textContent = '当前：使用SLAM Toolbox定位';
       } else if (source === 'lio_sam') {
         statusElement.textContent = '当前：使用LIO-SAM里程计';
       }

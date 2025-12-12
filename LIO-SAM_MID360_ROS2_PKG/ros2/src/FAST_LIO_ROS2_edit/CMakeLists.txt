@@ -51,6 +51,7 @@ find_path(MATPLOTLIB_CPP_INCLUDE_DIRS "matplotlibcpp.h")
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -65,6 +66,7 @@ find_package(rosidl_default_generators REQUIRED)
 set(dependencies
   rclcpp
   rclcpp_components
+  rclcpp_lifecycle
   geometry_msgs
   nav_msgs
   sensor_msgs

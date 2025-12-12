@@ -37,7 +37,7 @@ config_by_machine = {
         # RK3588主机配置 - Nav2
         'NAV2_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
-        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_150.sh',
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # RK3588主机配置 - FAST-LIO
@@ -61,7 +61,7 @@ config_by_machine = {
         # jqr001主机配置 - Nav2
         'NAV2_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
         'NAV2_DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',
-        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_137.sh',
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # jqr001主机配置 - FAST-LIO
@@ -85,7 +85,7 @@ config_by_machine = {
         # DESKTOP-4LS1SSN主机配置 - Nav2
         'NAV2_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
-        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_notebook.sh',
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
@@ -109,7 +109,7 @@ config_by_machine = {
         # DESKTOP-ypat主机配置 - Nav2
         'NAV2_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
-        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web_notebook.sh',
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
         
         # DESKTOP-ypat主机配置 - FAST-LIO
@@ -246,6 +246,7 @@ def update_fast_lio_params():
                 print(f"FAST-LIO参数文件已更新: {yaml_file}")
             except Exception as e:
                 print(f"更新FAST-LIO参数文件 {yaml_file} 时出错: {e}")
+
 
 # 导入时自动更新Nav2参数
 update_nav2_params()

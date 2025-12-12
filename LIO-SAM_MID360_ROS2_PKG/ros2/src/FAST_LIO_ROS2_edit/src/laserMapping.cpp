@@ -43,6 +43,9 @@
 #include <Python.h>
 #include <so3_math.h>
 #include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_node.hpp>
+#include <lifecycle_msgs/msg/state.hpp>
+#include <lifecycle_msgs/msg/transition.hpp>
 #include <Eigen/Core>
 #include "IMU_Processing.hpp"
 #include <nav_msgs/msg/odometry.hpp>
@@ -99,6 +102,15 @@ bool   point_selected_surf[100000] = {0};
 bool   lidar_pushed, flg_first_scan = true, flg_exit = false, flg_EKF_inited;
 bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false;
 bool    is_first_lidar = true;
+bool    sensor_lost = false; // 传感器丢失标志
+int     sensor_lost_count = 0; // 传感器丢失计数器
+const int MAX_SENSOR_LOST_COUNT = 10; // 最大允许丢失次数
+
+// 调试信息计数器
+static int debug_info_count = 0;
+const int DEBUG_INFO_INTERVAL = 100; // 每100次输出一次调试信息
+rclcpp::Time last_lidar_time; // 最后接收到的激光雷达时间
+rclcpp::Time last_imu_time; // 最后接收到的IMU时间
 string  frame_id_camera_init = "camera_init";  // 初始坐标系名称
 string  frame_id_body = "body";               // 机器人身体坐标系名称
 
@@ -304,6 +316,15 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::UniquePtr msg)
     lidar_buffer.push_back(ptr);
     time_buffer.push_back(cur_time);
     last_timestamp_lidar = cur_time;
+    last_lidar_time = msg->header.stamp; // 记录最后激光雷达时间
+    
+    // 重置传感器丢失标志
+    if (sensor_lost) {
+        sensor_lost = false;
+        sensor_lost_count = 0;
+        std::cout << "Lidar sensor data recovered!" << std::endl;
+    }
+    
     s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
     mtx_buffer.unlock();
     sig_buffer.notify_all();
@@ -375,6 +396,7 @@ void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
     }
 
     last_timestamp_imu = timestamp;
+    last_imu_time = msg->header.stamp; // 记录最后IMU时间
 
     imu_buffer.push_back(msg);
     mtx_buffer.unlock();
@@ -385,8 +407,49 @@ double lidar_mean_scantime = 0.0;
 int    scan_num = 0;
 bool sync_packages(MeasureGroup &meas)
 {
+    // 检查传感器数据丢失
     if (lidar_buffer.empty() || imu_buffer.empty()) {
+        // 检查是否已经丢失传感器数据
+        double current_time = get_time_sec(rclcpp::Clock().now());
+        
+        // 如果激光雷达数据丢失超过1秒，标记为传感器丢失
+        if (!lidar_buffer.empty()) {
+            last_lidar_time = get_ros_time(last_timestamp_lidar);
+        }
+        
+        if (!imu_buffer.empty()) {
+            last_imu_time = get_ros_time(last_timestamp_imu);
+        }
+        
+        double lidar_time_diff = current_time - last_timestamp_lidar;
+        double imu_time_diff = current_time - last_timestamp_imu;
+        
+        // 如果激光雷达或IMU数据丢失超过1秒，标记为传感器丢失
+        if (lidar_time_diff > 1.0 || imu_time_diff > 1.0) {
+            sensor_lost_count++;
+            if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
+                sensor_lost = true;
+                std::cout << "Sensor data lost! Lidar diff: " << lidar_time_diff 
+                          << "s, IMU diff: " << imu_time_diff << "s" << std::endl;
+            }
+        }
+        
+        static int sync_empty_count = 0;
+        sync_empty_count++;
+        if (sync_empty_count % 50 == 0) {
+            std::cout << "sync_packages: buffers empty (count: " << sync_empty_count 
+                      << ", lidar_buffer: " << lidar_buffer.size() 
+                      << ", imu_buffer: " << imu_buffer.size() 
+                      << ", sensor_lost: " << sensor_lost 
+                      << ")" << std::endl;
+        }
+        
         return false;
+    }
+    
+    // 重置传感器丢失计数器
+    if (sensor_lost_count > 0) {
+        sensor_lost_count = 0;
     }
 
     /*** push a lidar scan ***/
@@ -747,10 +810,25 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
         }
     }
 
+    static int no_effective_count = 0;
+    no_effective_count++;
+    
     if (effct_feat_num < 1)
     {
         ekfom_data.valid = false;
-        std::cerr << "No Effective Points!" << std::endl;
+        
+        // 每10次输出一次详细调试信息
+        if (no_effective_count % 10 == 1) {
+            std::cerr << "No Effective Points! - Detailed Info [" << no_effective_count << "]: " << std::endl;
+            std::cerr << "  effct_feat_num: " << effct_feat_num << std::endl;
+            std::cerr << "  sensor_lost: " << sensor_lost << std::endl;
+            std::cerr << "  lidar_buffer.size(): " << lidar_buffer.size() << std::endl;
+            std::cerr << "  imu_buffer.size(): " << imu_buffer.size() << std::endl;
+            std::cerr << "  feats_down_size: " << feats_down_size << std::endl;
+        } else {
+            std::cerr << "No Effective Points! [" << no_effective_count << "]" << std::endl;
+        }
+        
         // ROS_WARN("No Effective Points! \n");
         return;
     }
@@ -796,10 +874,10 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     solve_time += omp_get_wtime() - solve_start_;
 }
 
-class LaserMappingNode : public rclcpp::Node
+class LaserMappingNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:
-    LaserMappingNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : Node("laser_mapping", options)
+    LaserMappingNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions()) : LifecycleNode("laser_mapping", options)
     {
         this->declare_parameter<bool>("publish.path_en", true);
         this->declare_parameter<bool>("publish.effect_map_en", false);
@@ -919,13 +997,16 @@ public:
         fp = fopen(pos_log_dir.c_str(),"w");
 
         // ofstream fout_pre, fout_out, fout_dbg;
-        fout_pre.open(DEBUG_FILE_DIR("mat_pre.txt"),ios::out);
-        fout_out.open(DEBUG_FILE_DIR("mat_out.txt"),ios::out);
-        fout_dbg.open(DEBUG_FILE_DIR("dbg.txt"),ios::out);
-        if (fout_pre && fout_out)
-            cout << "~~~~"<<ROOT_DIR<<" file opened" << endl;
-        else
-            cout << "~~~~"<<ROOT_DIR<<" doesn't exist" << endl;
+        if (runtime_pos_log)
+        {
+            fout_pre.open(DEBUG_FILE_DIR("mat_pre.txt"),ios::out);
+            fout_out.open(DEBUG_FILE_DIR("mat_out.txt"),ios::out);
+            fout_dbg.open(DEBUG_FILE_DIR("dbg.txt"),ios::out);
+            if (fout_pre && fout_out)
+                cout << "~~~~"<<ROOT_DIR<<" file opened" << endl;
+            else
+                cout << "~~~~"<<ROOT_DIR<<" doesn't exist" << endl;
+        }
 
         /*** ROS subscribe initialization ***/
         if (p_pre->lidar_type == AVIA)
@@ -959,14 +1040,49 @@ public:
 
     ~LaserMappingNode()
     {
-        fout_out.close();
-        fout_pre.close();
+        if (runtime_pos_log)
+        {
+            fout_out.close();
+            fout_pre.close();
+        }
         fclose(fp);
     }
 
 private:
     void timer_callback()
     {
+        // 周期性输出系统状态信息
+        // debug_info_count++;
+        // if (debug_info_count % DEBUG_INFO_INTERVAL == 0) {
+        //     std::cout << "=== FAST-LIO System Status [" << debug_info_count << "] ===" << std::endl;
+        //     std::cout << "  sensor_lost: " << sensor_lost << std::endl;
+        //     std::cout << "  sensor_lost_count: " << sensor_lost_count << std::endl;
+        //     std::cout << "  lidar_buffer.size(): " << lidar_buffer.size() << std::endl;
+        //     std::cout << "  imu_buffer.size(): " << imu_buffer.size() << std::endl;
+        //     std::cout << "  scan_count: " << scan_count << std::endl;
+        //     std::cout << "  publish_count: " << publish_count << std::endl;
+        //     std::cout << "  flg_EKF_inited: " << flg_EKF_inited << std::endl;
+        //     std::cout << "  flg_first_scan: " << flg_first_scan << std::endl;
+        //     std::cout << "========================================" << std::endl;
+        // }
+        
+        // 检查传感器是否丢失
+        if (sensor_lost) {
+            static int sensor_lost_print_count = 0;
+            if (sensor_lost_print_count % 100 == 0) {
+                RCLCPP_WARN(this->get_logger(), "Sensor data lost, pausing state estimation...");
+            }
+            sensor_lost_print_count++;
+            
+            // 在传感器丢失期间，只发布最后一次有效的位姿，避免漂移
+            if (flg_EKF_inited) {
+                // 发布最后一次有效的位姿，但标记为不可靠
+                publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
+                if (path_en) publish_path(pubPath_);
+            }
+            return;
+        }
+        
         if(sync_packages(Measures))
         {
             if (flg_first_scan)
@@ -992,7 +1108,12 @@ private:
 
             if (feats_undistort->empty() || (feats_undistort == NULL))
             {
-                RCLCPP_WARN(this->get_logger(), "No point, skip this scan!\n");
+                static int no_point_count = 0;
+                no_point_count++;
+                if (no_point_count % 10 == 0) {
+                    RCLCPP_WARN(this->get_logger(), "No point, skip this scan! (count: %d, sensor_lost: %d, lidar_buffer: %zu, imu_buffer: %zu)\n", 
+                                no_point_count, sensor_lost, lidar_buffer.size(), imu_buffer.size());
+                }
                 return;
             }
 
@@ -1030,7 +1151,12 @@ private:
             /*** ICP and iterated Kalman filter update ***/
             if (feats_down_size < 5)
             {
-                RCLCPP_WARN(this->get_logger(), "No point, skip this scan!\n");
+                static int few_point_count = 0;
+                few_point_count++;
+                if (few_point_count % 10 == 0) {
+                    RCLCPP_WARN(this->get_logger(), "Too few points (%d), skip this scan! (count: %d, original points: %zu)\n", 
+                                feats_down_size, few_point_count, feats_undistort->points.size());
+                }
                 return;
             }
             
@@ -1138,13 +1264,68 @@ private:
         }
     }
 
+    // Lifecycle node callbacks
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+    on_configure(const rclcpp_lifecycle::State & previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node configuring...");
+        // Initialize resources here
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+    on_activate(const rclcpp_lifecycle::State & previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node activating...");
+        // Activate publishers and timers
+        pubLaserCloudFull_->on_activate();
+        pubLaserCloudFull_body_->on_activate();
+        pubLaserCloudEffect_->on_activate();
+        pubLaserCloudMap_->on_activate();
+        pubOdomAftMapped_->on_activate();
+        pubPath_->on_activate();
+        
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+    on_deactivate(const rclcpp_lifecycle::State & previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node deactivating...");
+        // Deactivate publishers
+        pubLaserCloudFull_->on_deactivate();
+        pubLaserCloudFull_body_->on_deactivate();
+        pubLaserCloudEffect_->on_deactivate();
+        pubLaserCloudMap_->on_deactivate();
+        pubOdomAftMapped_->on_deactivate();
+        pubPath_->on_deactivate();
+        
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+    on_cleanup(const rclcpp_lifecycle::State & previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node cleaning up...");
+        // Clean up resources
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+    on_shutdown(const rclcpp_lifecycle::State & previous_state)
+    {
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node shutting down...");
+        // Shutdown resources
+        return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
+    }
+
 private:
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFull_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFull_body_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudEffect_;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap_;
-    rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped_;
-    rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
+    rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFull_;
+    rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFull_body_;
+    rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudEffect_;
+    rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap_;
+    rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped_;
+    rclcpp_lifecycle::LifecyclePublisher<nav_msgs::msg::Path>::SharedPtr pubPath_;
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_pcl_pc_;
     rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_pcl_livox_;
@@ -1170,7 +1351,11 @@ int main(int argc, char** argv)
 
     signal(SIGINT, SigHandle);
 
-    rclcpp::spin(std::make_shared<LaserMappingNode>());
+    // Create lifecycle node
+    auto node = std::make_shared<LaserMappingNode>();
+
+    // Use standard spin for lifecycle node
+    rclcpp::spin(node->get_node_base_interface());
 
     if (rclcpp::ok())
         rclcpp::shutdown();

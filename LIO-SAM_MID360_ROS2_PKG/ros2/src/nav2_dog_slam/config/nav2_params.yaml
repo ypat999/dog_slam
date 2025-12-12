@@ -297,24 +297,28 @@ controller_server:
       time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
       model_dt: 0.03
       batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.2  # 减少变换容差，提高实时性
+      transform_tolerance: 0.5  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 2.0
       ax_min: -5.0
-      az_max: 1.0
-      az_min: -1.0
+      az_max: 3.0
+      az_min: -3.0
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
-      vy_std: 0.1  # 降低横移速度采样标准差
+      
       wz_std: 0.25  # 提高角速度采样标准差，增加转向探索性
-      vy_max: 0.0
+      
 
-      vx_max: 1.2
-      vx_min: -0.06
+      # vx_max: 1.2
+      # vy_max: 0.0
+      # vy_std: 0.1  # 降低横移速度采样标准差
+      # vx_min: -0.06
       wz_max: 1.2
 
-      # vx_max: 0.4
-      # vx_min: -0.1
+      vx_max: 0.5
+      vy_max: 0.5
+      vy_std: 0.3  # 降低横移速度采样标准差
+      vx_min: -0.5
       # wz_max: 0.4
       
       
@@ -367,7 +371,7 @@ controller_server:
         enabled: true
         cost_weight: 20.0  # 进一步降低路径跟踪权重，减少左右震荡
         cost_power: 1
-        offset_from_furthest: 4  # 减少前瞻距离，提高实时响应
+        offset_from_furthest: 2  # 减少前瞻距离，提高实时响应
         threshold_to_consider: 1.0  # Distance (m) between robot and goal to stop considering path following and allow goal critics to take over. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the goal critic.
       
       # PathAngleCritic:
@@ -382,7 +386,7 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 20.0  # 降低权重，减少直线前进的强制性
         threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:
@@ -394,7 +398,7 @@ controller_server:
         cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
         cost_power: 1
         deadband_velocities: [0.05, 0.1, 0.1]
-        # deadband_velocities: [0.1, 0.3, 0.3]
+        # deadband_velocities: [0.3, 0.3, 0.3]
         
       GoalCritic:
         enabled: true
@@ -427,8 +431,9 @@ velocity_smoother:
     # odom_duration: 0.1
     
     # 移动速度限制
-    max_velocity: [2.5, 1.0, 1.5]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.06, -1.0, -1.5]  # [vx_min, vy_min, vtheta_min]
+    max_velocity: [2.5, 2.5, 1.5]  # [vx_max, vy_max, vtheta_max]
+    # min_velocity: [-0.06, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
+    min_velocity: [-2.5, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
     max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
@@ -436,7 +441,7 @@ velocity_smoother:
     
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
-    velocity_timeout: 0.1
+    velocity_timeout: 1.0
 
 
 # =============================================================================
@@ -452,7 +457,7 @@ local_costmap:
       publish_frequency: 10.0
       global_frame: odom
       robot_base_frame: base_link
-      transform_tolerance: 0.2
+      transform_tolerance: 0.5
       
       # 地图参数
       footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
@@ -555,6 +560,7 @@ global_costmap:
       publish_frequency: 0.5
       global_frame: map
       robot_base_frame: base_link
+      transform_tolerance: 0.5
       
       # 地图参数
       footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
@@ -646,25 +652,26 @@ planner_server:
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
 
-      # ---- 启用方向模型（必需，否则没倒车）----
-      motion_model_for_search: "REEDS_SHEPP"
+      # # ---- 启用方向模型（必需，否则没倒车）----
+      # motion_model_for_search: "REEDS_SHEPP"
 
-      # ---- 倒车代价（越高越不愿倒车）----
-      # 建议：1.5～3.0：允许倒车但倾向前进
-      reverse_penalty: 5.0
+      # # ---- 倒车代价（越高越不愿倒车）----
+      # # 建议：1.5～3.0：允许倒车但倾向前进
+      # reverse_penalty: 5.0
 
-      # ---- 切换前进/倒车的代价 ----
-      change_penalty: 9.9
+      # # ---- 切换前进/倒车的代价 ----
+      # change_penalty: 9.9
 
-      # ---- 转弯代价（可稍微提高让路径更自然）----
+      # # ---- 转弯代价（可稍微提高让路径更自然）----
       non_straight_penalty: 1.2
 
       # retrospective_penalty: 10.0
 
-      tolerance: 0.25
+      tolerance: 0.5
       planner_timeout: 3.0
       allow_unknown: true
-      max_iterations: 100000
+      max_iterations: 1000000
+      max_on_approach_iterations: 10000
       minimum_turning_radius: 0.2
       angle_quantization_bins: 72
       cache_obstacle_heuristic: true
@@ -683,7 +690,7 @@ smoother_server:
     # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     # footprint_topic: "local_costmap/published_footprint"  # 新增参数
     # robot_base_frame: "base_link"  # 新增参数
-    transform_tolerance: 0.2  # 新增参数
+    transform_tolerance: 0.5  # 新增参数
     smoother_plugins: ["simple_smoother"]  # 新增参数
     
     # 路径平滑器参数 - 增强平滑效果
@@ -864,11 +871,11 @@ slam_toolbox_node:
     min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: true
+    use_scan_matching: false
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
-    use_map_saver: true
+    use_map_saver: false
 
     # =============================================================================
     # 新增重要参数配置 - 根据 ros2 param list 添加
@@ -924,7 +931,7 @@ slam_toolbox_node:
     minimum_travel_heading: 0.08
     
     # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
-    scan_buffer_size: 100
+    scan_buffer_size: 200
     
     # 扫描队列大小 - 控制扫描数据的处理队列
     scan_queue_size: 10
@@ -987,10 +994,10 @@ slam_toolbox_node:
     use_scan_barycenter: true
     
     # 是否使用响应扩展 - 如果未找到可行匹配，是否自动增加搜索网格大小，重定位时建议启用
-    use_response_expansion: true
+    use_response_expansion: false
     
     # # 是否启用调试日志
-    debug_logging: true
+    debug_logging: false
     
     # # 限制扫描频率
     throttle_scans: 1

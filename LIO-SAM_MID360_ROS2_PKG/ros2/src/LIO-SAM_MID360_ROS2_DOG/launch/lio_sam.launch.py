@@ -228,7 +228,7 @@ def generate_launch_description():
             ('/scan', '/scan'),
         ],
         parameters=[{
-            'transform_tolerance': 0.1,
+            'transform_tolerance': 0.5,
             'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度

@@ -137,33 +137,38 @@ Visualization Manager:
           Value: true
         livox_frame:
           Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
       Marker Scale: 0.5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        base_footprint:
-          base_link:
-            ahead_left_wheel:
-              {}
-            ahead_right_wheel:
-              {}
-            behind_left_wheel:
-              {}
-            behind_right_wheel:
-              {}
-            imu_link:
-              {}
-            livox_frame:
-              {}
+        map:
+          odom:
+            base_link:
+              ahead_left_wheel:
+                {}
+              ahead_right_wheel:
+                {}
+              behind_left_wheel:
+                {}
+              behind_right_wheel:
+                {}
+              imu_link:
+                {}
+              livox_frame:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 4.494500637054443
-        Min Value: -0.5525684952735901
+        Max Value: -0.15329314768314362
+        Min Value: -0.5633665919303894
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -189,7 +194,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /livox/lidar
+        Value: /cloud_registered_body
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -341,7 +346,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -384,25 +389,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 25.194927215576172
+      Distance: 27.921043395996094
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.4024851322174072
-        Y: -1.1578688621520996
-        Z: 1.0312840938568115
+        X: 18.594493865966797
+        Y: 18.207942962646484
+        Z: 3.827984571456909
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4997965097427368
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.3785881996154785
+      Yaw: 2.90358829498291
     Saved: ~
 Window Geometry:
   Displays:
@@ -420,5 +425,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1844
-  X: -19
-  Y: -2
+  X: 201
+  Y: 572

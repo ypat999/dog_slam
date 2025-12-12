@@ -43,7 +43,7 @@
             </contact>
             <bounce/>
           </surface>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
         </collision>
         <visual name='visual'>
           <cast_shadows>0</cast_shadows>
@@ -75,7 +75,7 @@
       <ode>
         <solver>
           <type>quick</type>
-          <iters>3</iters>
+          <iters>5</iters>
           <precon_iters>0</precon_iters>
         </solver>
         <constraints>
@@ -112,7 +112,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -157,7 +157,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -202,7 +202,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -247,7 +247,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -292,7 +292,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -337,7 +337,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -382,7 +382,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -427,7 +427,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -472,7 +472,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -517,7 +517,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -562,7 +562,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -607,7 +607,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -652,7 +652,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -697,7 +697,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -742,7 +742,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -787,7 +787,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -832,7 +832,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -877,7 +877,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -922,7 +922,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -967,7 +967,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1012,7 +1012,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1057,7 +1057,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1102,7 +1102,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1147,7 +1147,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1192,7 +1192,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1237,7 +1237,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1282,7 +1282,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1327,7 +1327,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1372,7 +1372,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1417,7 +1417,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1462,7 +1462,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1507,7 +1507,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1552,7 +1552,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1597,7 +1597,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1642,7 +1642,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1687,7 +1687,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1732,7 +1732,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1777,7 +1777,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1822,7 +1822,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1867,7 +1867,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1912,7 +1912,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -1957,7 +1957,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -2002,7 +2002,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -2047,7 +2047,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -2092,7 +2092,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>
@@ -2137,7 +2137,7 @@
             </box>
           </geometry>
           <pose>0 0 1.25 0 -0 0</pose>
-          <max_contacts>5</max_contacts>
+          <max_contacts>1</max_contacts>
           <surface>
             <contact>
               <ode/>

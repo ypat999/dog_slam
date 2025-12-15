@@ -24,7 +24,7 @@ def generate_launch_description():
         sys.path.insert(0, global_config_path)
         from global_config import (
             BUILD_MAP, BUILD_TOOL, RECORD_ONLY, ONLINE_LIDAR,
-            NAV2_DEFAULT_WEB_SCRIPT_PATH,
+            NAV2_DEFAULT_WEB_SCRIPT_PATH, NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_MAP_FILE,
             )
     except ImportError:
         # 如果导入失败，使用默认值  
@@ -34,6 +34,8 @@ def generate_launch_description():
         RECORD_ONLY = False
         ONLINE_LIDAR = False
         NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
+        NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+        NAV2_DEFAULT_MAP_FILE = '/home/ztl/slam_data/grid_map/map.yaml'
 
 
     ns = LaunchConfiguration('ns', default='/')  # 默认 robot1
@@ -73,9 +75,9 @@ def generate_launch_description():
             current_dir, 'nav2_slam_toolbox.launch.py')]),
         launch_arguments={
             'use_sim_time': 'true',
-            'map': '/home/ztl/slam_data/grid_map/map.yaml',
-            'params_file': os.path.join(current_dir, '../config', 'nav2_params.yaml'),
-            'slam_toolbox_params': os.path.join(current_dir, '../config', 'nav2_params.yaml')
+            'map': NAV2_DEFAULT_MAP_FILE,
+            'params_file': NAV2_DEFAULT_PARAMS_FILE,
+            'slam_toolbox_params': NAV2_DEFAULT_PARAMS_FILE
         }.items(),
         condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
     )

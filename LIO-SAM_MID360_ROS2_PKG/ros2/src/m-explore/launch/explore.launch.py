@@ -14,6 +14,7 @@ try:
 except ImportError:
     print("Warning: Failed to import global_config, using default values")
     DEFAULT_USE_SIM_TIME = False
+    NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
 
 
 def generate_launch_description():
@@ -44,7 +45,7 @@ def generate_launch_description():
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
+        default_value=NAV2_DEFAULT_PARAMS_FILE,
         description='Full path to slam_toolbox parameters file')
     slam_toolbox_node = Node(
         package='slam_toolbox',

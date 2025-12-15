@@ -21,7 +21,8 @@ def generate_launch_description():
         sys.path.insert(0, global_config_path)
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
-            DEFAULT_USE_SIM_TIME, BUILD_MAP, BUILD_TOOL, RECORD_ONLY
+            DEFAULT_USE_SIM_TIME, BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
+            NAV2_DEFAULT_PARAMS_FILE
         )
     except ImportError as e:
         print(f"方法2导入global_config失败: {e}")
@@ -33,6 +34,7 @@ def generate_launch_description():
         BUILD_MAP = False
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
+        NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
     
     package_path = get_package_share_directory('fast_lio')
     config_path = os.path.join(package_path, 'config')
@@ -97,10 +99,11 @@ def generate_launch_description():
                     {'use_sim_time': use_sim_time}],
         prefix=['taskset -c 6,7'],   # 绑定 CPU 7
         output='screen',
-        # 启用生命周期管理
         namespace='',
-        # 添加生命周期配置
+        # 启用生命周期管理
         arguments=['--ros-args', '--log-level', 'info'],
+        # 配置为生命周期节点
+        emulate_tty=True,
     )
 
     # 创建生命周期管理器节点
@@ -114,7 +117,10 @@ def generate_launch_description():
             'autostart': True,
             'node_names': ['fastlio_mapping'],
             'bond_timeout': 10.0,
-        }]
+        }],
+        # 确保生命周期管理器能够正确管理FAST-LIO节点
+        namespace='',
+        arguments=['--ros-args', '--log-level', 'info'],
     )
 
     # 使用TimerAction添加延迟启动FAST-LIO节点，确保雷达数据就位
@@ -215,7 +221,7 @@ def generate_launch_description():
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(nav2_dog_slam_path, 'config', 'nav2_params.yaml'),
+        default_value=NAV2_DEFAULT_PARAMS_FILE,
         description='Full path to slam_toolbox parameters file'
     )
     

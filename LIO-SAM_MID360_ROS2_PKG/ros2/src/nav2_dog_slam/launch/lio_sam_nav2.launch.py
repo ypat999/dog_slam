@@ -32,7 +32,7 @@ try:
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
-        NAV2_DEFAULT_BT_XML_PATH, 
+        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE,
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME
     )
@@ -51,9 +51,10 @@ except Exception as e:
     DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
     DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
     NAV2_BASE_CODE_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/'
-    NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+    NAV2_DEFAULT_MAP_FILE = '/home/ztl/slam_data/grid_map/map.yaml'
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
     NAV2_DEFAULT_BT_XML_PATH = '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml'
+    NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'
     BASE_LINK_FRAME = 'base_link'
@@ -78,7 +79,7 @@ def generate_launch_description():
     
     declare_nav2_params_file_cmd = DeclareLaunchArgument(
         'nav2_params_file',
-        default_value=os.path.join(current_dir, '../config', 'nav2_params.yaml'),
+        default_value=NAV2_DEFAULT_PARAMS_FILE,
         description='Full path to the Nav2 parameters file')
 
     declare_localization_cmd = DeclareLaunchArgument(
@@ -123,8 +124,8 @@ def generate_launch_description():
             launch_arguments={
                 'use_sim_time': use_sim_time,
                 'map': map_file,
-                'params_file': os.path.join(current_dir, '../config', 'nav2_params.yaml'),
-                'slam_toolbox_params': os.path.join(current_dir, '../config', 'nav2_params.yaml')
+                'params_file': NAV2_DEFAULT_PARAMS_FILE,
+                'slam_toolbox_params': NAV2_DEFAULT_PARAMS_FILE
             }.items(),
             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
         )

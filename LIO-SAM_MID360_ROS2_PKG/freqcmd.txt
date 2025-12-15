@@ -157,6 +157,10 @@ ros2 launch fast_lio mapping.launch.py
 ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
+
+
+
+
 ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
 ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
 
@@ -169,15 +173,21 @@ export GAZEBO_GPU_RENDERING=1
 
 
 
+
+
+
 # 查看当前生命周期节点状态
-ros2 lifecycle list /fastlio_mapping
+ros2 lifecycle list fastlio_mapping
 
 # 查看节点当前状态
-ros2 lifecycle get /fastlio_mapping
+ros2 lifecycle get fastlio_mapping
 
 # 重启节点（完整的生命周期转换）
-ros2 lifecycle set /fastlio_mapping configure
-ros2 lifecycle set /fastlio_mapping activate
+ros2 lifecycle set fastlio_mapping deactivate
+ros2 lifecycle set fastlio_mapping cleanup
+ros2 lifecycle set fastlio_mapping configure
+ros2 lifecycle set fastlio_mapping activate
+
 
 # 查看节点服务列表
 ros2 service list | grep fastlio_mapping

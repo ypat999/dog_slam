@@ -27,6 +27,7 @@ except Exception as e:
     DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
     DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
     DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+    NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
     USE_TILT_CONFIG = False
     BUILD_MAP = False  # 默认不使用建图模式
     BUILD_TOOL = 'octomap'
@@ -103,6 +104,7 @@ def generate_launch_description():
         executable='livox_ros_driver2_node',
         name='livox_lidar_publisher',
         output='screen',
+        prefix=['taskset -c 4,5'],
         parameters=livox_ros2_params
     )
 
@@ -165,6 +167,7 @@ def generate_launch_description():
         name='lio_sam_imuPreintegration',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
+        prefix=['taskset -c 6,7'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -174,6 +177,7 @@ def generate_launch_description():
         name='lio_sam_imageProjection',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
+        prefix=['taskset -c 6,7'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -183,6 +187,7 @@ def generate_launch_description():
         name='lio_sam_featureExtraction',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
+        prefix=['taskset -c 6,7'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -192,6 +197,7 @@ def generate_launch_description():
         name='lio_sam_mapOptimization',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
+        prefix=['taskset -c 6,7'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -263,7 +269,7 @@ def generate_launch_description():
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
-        default_value=os.path.join(nav2_dir, 'config', 'nav2_params.yaml'),
+        default_value=NAV2_DEFAULT_PARAMS_FILE,
         description='Full path to slam_toolbox parameters file')
     slam_toolbox_node = Node(
         package='slam_toolbox',

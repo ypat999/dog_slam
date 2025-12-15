@@ -10,25 +10,24 @@ import os, sys
 
 
 def generate_launch_description():
+    # 导入全局配置
     try:
-        global_config_path = os .path.join(get_package_share_directory('global_config'), '../../src/global_config')
+        global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
-        from global_config import (
-            DEFAULT_USE_SIM_TIME,
-            NAV2_DEFAULT_MAP_FILE,
-            )
+        from global_config import DEFAULT_USE_SIM_TIME, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_PARAMS_FILE 
     except ImportError:
         # 如果导入失败，使用默认值  
-        print(  "Warning: Failed to import glo    bal_config, using default values")
+        print("Warning: Failed to import global_config, using default values")
         DEFAULT_USE_SIM_TIME = True
         NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
+        NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
 
 
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     use_sim_time = DEFAULT_USE_SIM_TIME
-    params_file = os.path.join(get_package_share_directory('nav2_dog_slam'), 'config', 'nav2_params.yaml')
+    params_file = NAV2_DEFAULT_PARAMS_FILE
     map_yaml_file = NAV2_DEFAULT_MAP_FILE
     autostart = True
     log_level = 'info'

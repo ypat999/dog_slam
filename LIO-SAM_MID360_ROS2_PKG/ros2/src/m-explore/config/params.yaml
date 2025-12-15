@@ -6,7 +6,7 @@
     costmap_updates_topic: map_updates
     visualize: false
     planner_frequency: 0.05
-    progress_timeout: 60.0
+    progress_timeout: 300.0
     potential_scale: 3.0
     orientation_scale: 0.0
     gain_scale: 1.0

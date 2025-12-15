@@ -43,6 +43,14 @@ find_package(map_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(nav2_costmap_2d REQUIRED)
 
+# Find message generation packages
+find_package(rosidl_default_generators REQUIRED)
+
+# Generate custom messages
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/ExploreStatus.msg"
+  DEPENDENCIES std_msgs
+)
 
 set(DEPENDENCIES
   rclcpp
@@ -60,6 +68,7 @@ set(DEPENDENCIES
 
 include_directories(
     include
+    ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
 )
 
 install(
@@ -87,13 +96,26 @@ target_include_directories(explore PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-
-target_link_libraries(explore ${rclcpp_LIBRARIES})
-
 ament_target_dependencies(explore ${DEPENDENCIES})
+
+# Add dependency on generated messages
+target_link_libraries(explore
+  ${rclcpp_LIBRARIES}
+  ${PROJECT_NAME}__rosidl_generator_c
+  ${PROJECT_NAME}__rosidl_typesupport_c
+  ${PROJECT_NAME}__rosidl_typesupport_cpp
+)
 
 install(TARGETS explore
   DESTINATION lib/${PROJECT_NAME})
+
+# Install type support libraries
+install(TARGETS
+  ${PROJECT_NAME}__rosidl_generator_c
+  ${PROJECT_NAME}__rosidl_typesupport_c
+  ${PROJECT_NAME}__rosidl_typesupport_cpp
+  DESTINATION lib
+)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
@@ -116,5 +138,6 @@ ament_target_dependencies(test_explore ${DEPENDENCIES})
 endif()
 
 
+ament_export_dependencies(rosidl_default_runtime)
 ament_export_include_directories(include)
 ament_package()

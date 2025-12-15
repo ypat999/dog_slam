@@ -54,6 +54,7 @@
 #include <string>
 #include <vector>
 #include <visualization_msgs/msg/marker_array.hpp>
+#include "explore_lite/msg/explore_status.hpp"
 
 #include "nav2_msgs/action/navigate_to_pose.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
@@ -110,6 +111,8 @@ private:
 
     rclcpp::Publisher < visualization_msgs::msg::MarkerArray > ::SharedPtr
     marker_array_publisher_;
+    rclcpp::Publisher < explore_lite::msg::ExploreStatus > ::SharedPtr
+    status_publisher_;
     rclcpp::Logger logger_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
@@ -119,6 +122,7 @@ private:
     move_base_client_;
     frontier_exploration::FrontierSearch search_;
     rclcpp::TimerBase::SharedPtr exploring_timer_;
+    rclcpp::TimerBase::SharedPtr status_timer_;
     // rclcpp::TimerBase::SharedPtr oneshot_;
 
     rclcpp::Subscription < std_msgs::msg::Bool > ::SharedPtr resume_subscription_;
@@ -141,6 +145,11 @@ private:
     bool return_to_init_;
     std::string robot_base_frame_;
     bool resuming_ = false;
+    
+    // Status publishing methods
+    void publishStatus();
+    void publishStartStatus();
+    void publishStopStatus(bool finished_exploring);
   };
 }  // namespace explore
 

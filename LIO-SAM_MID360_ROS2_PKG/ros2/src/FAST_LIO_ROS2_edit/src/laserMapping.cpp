@@ -1277,7 +1277,15 @@ private:
     on_activate(const rclcpp_lifecycle::State & previous_state)
     {
         RCLCPP_INFO(this->get_logger(), "FAST-LIO node activating...");
-        // Activate publishers and timers
+        
+        // 重新创建定时器 - 这是关键修复！
+        auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0));
+        timer_ = rclcpp::create_timer(this, this->get_clock(), period_ms, std::bind(&LaserMappingNode::timer_callback, this));
+
+        auto map_period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0));
+        map_pub_timer_ = rclcpp::create_timer(this, this->get_clock(), map_period_ms, std::bind(&LaserMappingNode::map_publish_callback, this));
+        
+        // Activate publishers
         pubLaserCloudFull_->on_activate();
         pubLaserCloudFull_body_->on_activate();
         pubLaserCloudEffect_->on_activate();
@@ -1285,6 +1293,7 @@ private:
         pubOdomAftMapped_->on_activate();
         pubPath_->on_activate();
         
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node activated successfully with timers restarted.");
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
 
@@ -1292,6 +1301,15 @@ private:
     on_deactivate(const rclcpp_lifecycle::State & previous_state)
     {
         RCLCPP_INFO(this->get_logger(), "FAST-LIO node deactivating...");
+        
+        // 停止定时器 - 这是关键修复！
+        if (timer_) {
+            timer_->cancel();
+        }
+        if (map_pub_timer_) {
+            map_pub_timer_->cancel();
+        }
+        
         // Deactivate publishers
         pubLaserCloudFull_->on_deactivate();
         pubLaserCloudFull_body_->on_deactivate();
@@ -1306,8 +1324,57 @@ private:
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
     on_cleanup(const rclcpp_lifecycle::State & previous_state)
     {
-        RCLCPP_INFO(this->get_logger(), "FAST-LIO node cleaning up...");
-        // Clean up resources
+        RCLCPP_INFO(this->get_logger(), "FAST-LIO node cleaning up... Resetting SLAM state...");
+        
+        // 清空所有缓存数据
+        if (_featsArray != nullptr) {
+            _featsArray->clear();
+        }
+        
+        // 重置关键变量
+        last_timestamp_lidar = 0.0;
+        last_timestamp_imu = -1.0;
+        
+        // 清空点云数据
+        if (laserCloudOri != nullptr) {
+            laserCloudOri->clear();
+        }
+        if (normvec != nullptr) {
+            normvec->clear();
+        }
+        if (feats_undistort != nullptr) {
+            feats_undistort->clear();
+        }
+        if (feats_down_body != nullptr) {
+            feats_down_body->clear();
+        }
+        if (feats_down_world != nullptr) {
+            feats_down_world->clear();
+        }
+        if (pcl_wait_save != nullptr) {
+            pcl_wait_save->clear();
+        }
+        
+        // 重置IMU和里程计数据
+        // 这些变量在代码中未找到，暂时注释掉
+        // imu_shift_x = 0.0;
+        // imu_shift_y = 0.0;
+        // imu_shift_z = 0.0;
+        
+        // 重置状态估计
+        state_point.pos.setZero();
+        state_point.rot.setIdentity();
+        state_point.vel.setZero();
+        state_point.bg.setZero();
+        state_point.ba.setZero();
+        
+        // 重置IKD-Tree - 通过设置Root_Node为nullptr来清空
+        ikdtree.Root_Node = nullptr;
+        
+        // 重置计数器
+        frame_num = 0;
+        
+        RCLCPP_INFO(this->get_logger(), "SLAM state reset complete.");
         return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
     }
 

@@ -87,7 +87,7 @@ def generate_launch_description():
         }.items()
     )
     
-    # Robot State Publisher
+    # Robot State Publisher - 限制发布频率
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -95,18 +95,20 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'robot_description': robot_desc,
-            'use_sim_time': use_sim_time
+            'use_sim_time': use_sim_time,
+            'publish_frequency': 10.0,  # 限制为30Hz
         }],
     )
     
-    # Joint State Publisher
+    # Joint State Publisher - 限制发布频率
     joint_state_publisher = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
         name='joint_state_publisher',
         output='screen',
         parameters=[{
-            'use_sim_time': use_sim_time
+            'use_sim_time': use_sim_time,
+            'rate': 10.0,  # 限制为30Hz
         }],
     )
     

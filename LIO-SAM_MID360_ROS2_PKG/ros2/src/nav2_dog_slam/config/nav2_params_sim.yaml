@@ -300,18 +300,27 @@ controller_server:
       transform_tolerance: 0.5  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
-      ax_max: 1.0
+      ax_max: 2.0
       ax_min: -5.0
       az_max: 3.0
       az_min: -3.0
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
+      
       wz_std: 0.25  # 提高角速度采样标准差，增加转向探索性
       
-      vx_max: 1.2
-      vy_max: 0.0
-      vy_std: 0.2  # 降低横移速度采样标准差
-      vx_min: -0.06
+
+      # vx_max: 1.2
+      # vy_max: 0.0
+      # vy_std: 0.1  # 降低横移速度采样标准差
+      # vx_min: -0.06
       wz_max: 1.2
+
+      vx_max: 0.5
+      vy_max: 0.5
+      vy_std: 0.3  # 降低横移速度采样标准差
+      vx_min: -0.5
+      # wz_max: 0.4
+      
       
       
       # 温度参数
@@ -329,8 +338,8 @@ controller_server:
       
       # # 缺失的MPPI参数
       enforce_path_inversion: false  # 强制变向
-      # inversion_xy_tolerance: 0.4
-      # inversion_yaw_tolerance: 0.4
+      inversion_xy_tolerance: 0.4
+      inversion_yaw_tolerance: 0.4
       # gamma: 0.015  # 新增参数
       # iteration_count: 1  # 新增参数
       max_robot_pose_search_dist: 0.5  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
@@ -389,6 +398,7 @@ controller_server:
         cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
         cost_power: 1
         deadband_velocities: [0.05, 0.1, 0.1]
+        # deadband_velocities: [0.3, 0.3, 0.3]
         
       GoalCritic:
         enabled: true
@@ -422,8 +432,8 @@ velocity_smoother:
     
     # 移动速度限制
     max_velocity: [2.5, 2.5, 1.5]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.06, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
-    # min_velocity: [-2.5, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
+    # min_velocity: [-0.06, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
+    min_velocity: [-2.5, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
     max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
@@ -529,8 +539,8 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
-        inflation_radius: 3.0     # 增加膨胀半径，让机器人更远地避开障碍物
-        cost_scaling_factor: 0.3  # 增加成本缩放因子，使靠近障碍物的路径代价更高
+        cost_scaling_factor: 3.0  # 增加成本缩放因子，使靠近障碍物的路径代价更高
+        inflation_radius: 0.3     # 增加膨胀半径，让机器人更远地避开障碍物
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -614,7 +624,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
-        inflation_radius: 2.0
+        inflation_radius: 3.0
         cost_scaling_factor: 1.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
@@ -642,15 +652,15 @@ planner_server:
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
 
-      # ---- 启用方向模型（必需，否则没倒车）----
-      motion_model_for_search: "REEDS_SHEPP"
+      # # ---- 启用方向模型（必需，否则没倒车）----
+      # motion_model_for_search: "REEDS_SHEPP"
 
-      # ---- 倒车代价（越高越不愿倒车）----
-      # 建议：1.5～3.0：允许倒车但倾向前进
-      reverse_penalty: 5.0
+      # # ---- 倒车代价（越高越不愿倒车）----
+      # # 建议：1.5～3.0：允许倒车但倾向前进
+      # reverse_penalty: 5.0
 
-      # ---- 切换前进/倒车的代价 ----
-      change_penalty: 9.9
+      # # ---- 切换前进/倒车的代价 ----
+      # change_penalty: 9.9
 
       # # ---- 转弯代价（可稍微提高让路径更自然）----
       non_straight_penalty: 1.2

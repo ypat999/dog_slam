@@ -101,6 +101,10 @@ Explore::Explore()
       10);
   }
 
+  // Create status publisher for exploration status
+  status_publisher_ = this->create_publisher<explore_lite::msg::ExploreStatus>(
+    "explore/status", 10);
+
   // Subscription to resume or stop exploration
   resume_subscription_ = this->create_subscription<std_msgs::msg::Bool>(
     "explore/resume", 10,
@@ -133,6 +137,14 @@ Explore::Explore()
     [this]() {makePlan();});
   // Start exploration right away
   makePlan();
+  
+  // Create status timer for publishing status every second
+  status_timer_ = this->create_wall_timer(
+    std::chrono::seconds(1),
+    [this]() { publishStatus(); });
+  
+  // Publish initial start status
+  publishStartStatus();
 }
 
 Explore::~Explore()
@@ -401,6 +413,12 @@ void Explore::reachedGoal(
 void Explore::start()
 {
   RCLCPP_INFO(logger_, "Exploration started.");
+  // Publish start status
+  publishStartStatus();
+  // Start status timer if not already running
+  if (status_timer_ && status_timer_->is_canceled()) {
+    status_timer_->reset();
+  }
 }
 
 void Explore::stop(bool finished_exploring)
@@ -408,6 +426,14 @@ void Explore::stop(bool finished_exploring)
   RCLCPP_INFO(logger_, "Exploration stopped.");
   move_base_client_->async_cancel_all_goals();
   exploring_timer_->cancel();
+  
+  // Stop status timer
+  if (status_timer_) {
+    status_timer_->cancel();
+  }
+  
+  // Publish stop status
+  publishStopStatus(finished_exploring);
 
   if (return_to_init_ && finished_exploring) {
     returnToInitialPose();
@@ -420,8 +446,113 @@ void Explore::resume()
   RCLCPP_INFO(logger_, "Exploration resuming.");
   // Reactivate the timer
   exploring_timer_->reset();
+  // Resume status timer
+  if (status_timer_) {
+    status_timer_->reset();
+  }
+  // Publish start status
+  publishStartStatus();
   // Resume immediately
   makePlan();
+}
+
+void Explore::publishStatus()
+{
+  auto status_msg = explore_lite::msg::ExploreStatus();
+  status_msg.header.stamp = this->now();
+  status_msg.header.frame_id = costmap_client_.getGlobalFrameID();
+  
+  // Determine current state
+  if (exploring_timer_->is_canceled()) {
+    status_msg.state = explore_lite::msg::ExploreStatus::STATE_STOPPED;
+    status_msg.state_description = "Exploration stopped";
+  } else {
+    status_msg.state = explore_lite::msg::ExploreStatus::STATE_EXPLORING;
+    status_msg.state_description = "Exploring environment";
+  }
+  
+  // Get current frontiers information
+  auto pose = costmap_client_.getRobotPose();
+  auto frontiers = search_.searchFrom(pose.position);
+  
+  // Filter out blacklisted frontiers
+  size_t valid_frontiers = 0;
+  for (const auto& frontier : frontiers) {
+    if (!goalOnBlacklist(frontier.centroid)) {
+      valid_frontiers++;
+    }
+  }
+  
+  status_msg.frontiers_explored = frontier_blacklist_.size();
+  status_msg.frontiers_remaining = valid_frontiers;
+  
+  // Calculate progress percentage
+  size_t total_frontiers = status_msg.frontiers_explored + status_msg.frontiers_remaining;
+  if (total_frontiers > 0) {
+    status_msg.progress_percentage = static_cast<float>(status_msg.frontiers_explored) / total_frontiers * 100.0;
+  } else {
+    status_msg.progress_percentage = 0.0;
+  }
+  
+  status_msg.returning_to_init = return_to_init_;
+  
+  status_publisher_->publish(status_msg);
+}
+
+void Explore::publishStartStatus()
+{
+  auto status_msg = explore_lite::msg::ExploreStatus();
+  status_msg.header.stamp = this->now();
+  status_msg.header.frame_id = costmap_client_.getGlobalFrameID();
+  status_msg.state = explore_lite::msg::ExploreStatus::STATE_STARTING;
+  status_msg.state_description = "Exploration starting";
+  status_msg.frontiers_explored = 0;
+  status_msg.frontiers_remaining = 0;
+  status_msg.progress_percentage = 0.0;
+  status_msg.returning_to_init = return_to_init_;
+  
+  status_publisher_->publish(status_msg);
+}
+
+void Explore::publishStopStatus(bool finished_exploring)
+{
+  auto status_msg = explore_lite::msg::ExploreStatus();
+  status_msg.header.stamp = this->now();
+  status_msg.header.frame_id = costmap_client_.getGlobalFrameID();
+  
+  if (finished_exploring) {
+    status_msg.state = explore_lite::msg::ExploreStatus::STATE_COMPLETED;
+    status_msg.state_description = "Exploration completed";
+  } else {
+    status_msg.state = explore_lite::msg::ExploreStatus::STATE_STOPPED;
+    status_msg.state_description = "Exploration stopped";
+  }
+  
+  // Get final frontier counts
+  auto pose = costmap_client_.getRobotPose();
+  auto frontiers = search_.searchFrom(pose.position);
+  
+  size_t valid_frontiers = 0;
+  for (const auto& frontier : frontiers) {
+    if (!goalOnBlacklist(frontier.centroid)) {
+      valid_frontiers++;
+    }
+  }
+  
+  status_msg.frontiers_explored = frontier_blacklist_.size();
+  status_msg.frontiers_remaining = valid_frontiers;
+  
+  // Calculate final progress percentage
+  size_t total_frontiers = status_msg.frontiers_explored + status_msg.frontiers_remaining;
+  if (total_frontiers > 0) {
+    status_msg.progress_percentage = static_cast<float>(status_msg.frontiers_explored) / total_frontiers * 100.0;
+  } else {
+    status_msg.progress_percentage = 0.0;
+  }
+  
+  status_msg.returning_to_init = return_to_init_;
+  
+  status_publisher_->publish(status_msg);
 }
 
 }  // namespace explore

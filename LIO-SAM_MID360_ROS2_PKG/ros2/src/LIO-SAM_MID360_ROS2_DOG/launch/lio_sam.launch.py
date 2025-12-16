@@ -23,7 +23,7 @@ except Exception as e:
     ONLINE_LIDAR = True
     DEFAULT_USE_SIM_TIME = False
     DEFAULT_USE_SIM_TIME_STRING = 'FALSE'
-    DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+    # DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
     DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
     DEFAULT_LOAM_SAVE_DIR = '/home/ztl/slam_data/loam/'
     DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
@@ -66,7 +66,7 @@ def generate_launch_description():
     parameter_file = LaunchConfiguration('params_file', default=default_params_file)
     rviz_config_file = os.path.join(share_dir, 'config', 'rviz2.rviz')
 
-    bag_path = DEFAULT_BAG_PATH
+    # bag_path = DEFAULT_BAG_PATH
     reliability_file_path = DEFAULT_RELIABILITY_OVERRIDE
 
     # 参数声明部分不再需要，因为我们已经在上面设置了默认值
@@ -78,12 +78,12 @@ def generate_launch_description():
 
     print("urdf_file_name : {}".format(xacro_path))
 
-    #请另开窗口，source install/setup.sh后使用命令行录制，在launch内录制会缺少meta文件
-    rosbag_record = ExecuteProcess(
-            cmd=['ros2', 'bag', 'record', '-o', '/home/ztl/slam_data/livox_record_tilt_new/', 
-                 '/livox/lidar', '/livox/imu',],
-            output='screen'
-        )
+    # #请另开窗口，source install/setup.sh后使用命令行录制，在launch内录制会缺少meta文件
+    # rosbag_record = ExecuteProcess(
+    #         cmd=['ros2', 'bag', 'record', '-o', '/home/ztl/slam_data/livox_record_tilt_new/', 
+    #              '/livox/lidar', '/livox/imu',],
+    #         output='screen'
+    #     )
 
 
     # Livox LiDAR驱动参数
@@ -97,7 +97,6 @@ def generate_launch_description():
         # {"lvx_file_path": lvx_file_path},
         {"user_config_path": user_config_path},
         {"cmdline_input_bd_code": cmdline_bd_code},
-        {"enable_imu_sync_time": True},
     ]
     livox_driver_node = Node(
         package='livox_ros_driver2',
@@ -218,6 +217,7 @@ def generate_launch_description():
             'publish_2d_map': True,               # 输出2D occupancy grid（布尔类型，不使用引号）
             'use_sim_time': DEFAULT_USE_SIM_TIME,
         }],
+        prefix=['taskset -c 5,6'],
         remappings=[
             ('/cloud_in', '/lio_sam/mapping/cloud_registered')  # 输入点云
         ]
@@ -263,6 +263,7 @@ def generate_launch_description():
             'target_frame': 'base_link',
             'concurrency_level': 1,       # 处理并发级别
         }],
+        prefix=['taskset -c 5'],   # 绑定 CPU 5
         output='screen'
     )
 
@@ -286,7 +287,8 @@ def generate_launch_description():
                 'use_map_saver': True
             }
         ],
-        remappings=[('/scan', '/scan'), ('/odom', '/lio_sam/mapping/odometry')]
+        prefix=['taskset -c 5,6'],
+        remappings=[('/scan', '/scan'), ('/Odometry', '/lio_sam/mapping/odometry')]
     )
     
     rviz2_node = Node(
@@ -308,15 +310,15 @@ def generate_launch_description():
             livox_driver_node,
             # rosbag_record,
         ])
-    else:
-        launch_nodes.extend([
+    # else:
+        # launch_nodes.extend([
             # Bag 数据播放，添加QoS配置覆盖、开始时间和时钟参数
-            ExecuteProcess(
-                cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '1.0'],
-                name='rosbag_player',
-                output='screen'
-            )
-        ])
+            # ExecuteProcess(
+            #     cmd=['ros2', 'bag', 'play', bag_path, '--qos-profile-overrides-path', reliability_file_path, '--clock', '--rate', '1.0'],
+            #     name='rosbag_player',
+            #     output='screen'
+            # )
+        # ])
 
 
     # 添加坐标系转换节点

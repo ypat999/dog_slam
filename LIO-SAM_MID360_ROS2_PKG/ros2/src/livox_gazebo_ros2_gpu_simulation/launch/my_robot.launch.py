@@ -78,11 +78,11 @@ def generate_launch_description():
     
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gazebo.launch.py')
+            os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
         ),
         launch_arguments={
             'world': os.path.join(pkg_livox_gazebo_ros2_gpu_simulation, 'worlds', world_file_name),
-            'gui': LaunchConfiguration('gui'),
+            # 'gui': LaunchConfiguration('gui'),
             'verbose': LaunchConfiguration('verbose')
         }.items()
     )
@@ -96,7 +96,7 @@ def generate_launch_description():
         parameters=[{
             'robot_description': robot_desc,
             'use_sim_time': use_sim_time,
-            'publish_frequency': 2.0,  # 限制为30Hz
+            'publish_frequency': 1.0,  # 限制为30Hz
         }],
     )
     
@@ -108,7 +108,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
-            'rate': 2.0,  # 限制为30Hz
+            'rate': 1.0,  # 限制为30Hz
         }],
     )
     

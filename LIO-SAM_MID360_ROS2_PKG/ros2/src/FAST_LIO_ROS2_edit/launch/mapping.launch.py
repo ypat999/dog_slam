@@ -241,6 +241,7 @@ def generate_launch_description():
                 'use_map_saver': True
             }
         ],
+        prefix=['taskset -c 5,6'],
         remappings=[('/scan', '/scan'), ('/odom', '/Odometry')]  # 使用FAST-LIO的odometry话题
     )
     
@@ -261,6 +262,7 @@ def generate_launch_description():
             'publish_2d_map': True,              # 输出2D occupancy grid
             'use_sim_time': use_sim_time,
         }],
+        prefix=['taskset -c 4,5'],
         remappings=[
             ('/cloud_in', '/cloud_registered_body')  # 输入点云
         ]

@@ -25,7 +25,7 @@ ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "{name: {data:
 
 
 
-# 保存点云 （不使用）
+# 保存lio-sam点云 （不使用）
 source ros2/install/setup.bash 
 ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: '/projects/LOAM/'}"
 
@@ -76,7 +76,7 @@ ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {va
 # 关闭控制服务
 sudo systemctl stop robot_control.service
 
-#保存点云
+#保存fastlio点云
 ros2 service call /map_save std_srvs/srv/Trigger {}
 
 # 关闭导航：
@@ -86,6 +86,50 @@ sudo systemctl stop lio_sam_nav2.service
 ps -ef | grep rosbridge
 ps -ef | grep rclcpp
 lsof -i:8083
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 启动模拟
+ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
+
+# 手动控制
+ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
+
+# slam_toolbox + nav2 + fastlio建图导航
+BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
+
+# slam_toolbox + nav2 + liosam建图导航
+BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
+
+# 自动探索建图
+ros2 launch explore_lite explore.launch.py
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -105,35 +149,16 @@ colcon build --symlink-install --packages-select lio_sam && source install/setup
 
 
 
-source install/setup.bash && ros2 launch livox_ros_driver2 msg_MID360_launch.py
-
-
-
-
-
-
-
-
 ros2 topic list
 ros2 node list
-
-
 
 pkill -f ros
 ros2 daemon stop && ros2 daemon start
 
 
-
-
-
-
-
 ros2 run tf2_ros tf2_monitor map odom
 
-
 ros2 lifecycle set /static_transform_publisher_odom_base shutdown
-
-
 
 
 source install/setup.bash
@@ -142,14 +167,9 @@ tail -f record.log
 
 
 
-
-
-
-
-
 ps -ef | grep ros
 
-colcon build --symlink-install --packages-select lio_sam
+
 
 BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 BUILD_MAP=False ros2 launch nav2_dog_slam lio_sam_nav2.launch.py
@@ -161,11 +181,10 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 
 
-ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
-ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
 
-BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
-ros2 launch explore_lite explore.launch.py
+
+
+
 
 export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA   #使用独显
 glxinfo | grep "OpenGL renderer"
@@ -221,7 +240,7 @@ ros2 launch fast_lio mapping.launch.py
 
 
 
-
+colcon build --symlink-install --packages-skip livox_gazebo_ros2_gpu_simulation
 
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash

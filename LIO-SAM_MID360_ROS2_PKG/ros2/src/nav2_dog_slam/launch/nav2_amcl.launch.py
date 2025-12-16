@@ -61,7 +61,7 @@ def generate_launch_description():
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
         ],
-        prefix=['taskset -c 6'],   # 绑定 CPU 4
+        prefix=['taskset -c 5,6'],   # 绑定 CPU 4
     )
     
     # lifecycle manager node to configure and activate map_server and amcl

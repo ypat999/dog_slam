@@ -367,9 +367,9 @@ controller_server:
         
       PathFollowCritic:
         enabled: true
-        cost_weight: 15.0  # 降低路径跟踪权重，让避障优先级更高
+        cost_weight: 30.0  # 降低路径跟踪权重，让避障优先级更高
         cost_power: 1
-        offset_from_furthest: 3  # 增加前瞻距离，提前规划拐弯路径
+        offset_from_furthest: 8  # 增加前瞻距离，提前规划拐弯路径
         threshold_to_consider: 1.5  # 增加阈值，使路径跟踪在更远距离生效，提前规划
       
       # PathAngleCritic:
@@ -384,7 +384,7 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 20.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
         threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:
@@ -395,8 +395,8 @@ controller_server:
         enabled: true
         cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
         cost_power: 1
-        deadband_velocities: [0.05, 0.1, 0.1]
-        # deadband_velocities: [0.3, 0.3, 0.3]
+        # deadband_velocities: [0.05, 0.1, 0.1]
+        deadband_velocities: [0.3, 0.3, 0.3]
         
       GoalCritic:
         enabled: true
@@ -429,9 +429,9 @@ velocity_smoother:
     # odom_duration: 0.1
     
     # 移动速度限制
-    max_velocity: [2.5, 2.5, 1.5]  # [vx_max, vy_max, vtheta_max]
+    max_velocity: [2.5, 2.5, 2.5]  # [vx_max, vy_max, vtheta_max]
     # min_velocity: [-0.06, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
-    min_velocity: [-2.5, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
+    min_velocity: [-2.5, -2.5, -2.5]  # [vx_min, vy_min, vtheta_min]
     
     # 加速度限制 - 增加角加速度以提高转向响应速度
     max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
@@ -538,7 +538,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         cost_scaling_factor: 0.5  # 调整成本缩放因子，使靠近障碍物的路径代价更高
-        inflation_radius: 2.0     # 增加膨胀半径，让拐弯时更安全
+        inflation_radius: 1.0     # 增加膨胀半径，让拐弯时更安全
         # inflate_unknown: false
         # inflate_around_unknown: false
       
@@ -670,7 +670,7 @@ planner_server:
       allow_unknown: true
       max_iterations: 1000000
       max_on_approach_iterations: 10000
-      minimum_turning_radius: 0.2
+      minimum_turning_radius: 0.00001
       angle_quantization_bins: 72
       cache_obstacle_heuristic: true
       cache_analytic_expansion: false

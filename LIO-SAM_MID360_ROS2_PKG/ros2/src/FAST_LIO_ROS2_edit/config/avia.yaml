@@ -7,7 +7,7 @@
         filter_size_map: 0.5
         cube_side_length: 1000.0
         runtime_pos_log_enable: false
-        map_file_path: "/home/ywj/pcd/test.pcd"
+        map_file_path: "/home/ztl/slam_data/pcd/test.pcd"
 
         common:
             lid_topic:  "/livox/lidar"
@@ -17,7 +17,7 @@
                                         # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
 
         preprocess:
-            lidar_type: 5
+            lidar_type: 1
             scan_line: 6
             blind: 4.0
 

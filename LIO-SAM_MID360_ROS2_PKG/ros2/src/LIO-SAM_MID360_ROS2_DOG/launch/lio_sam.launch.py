@@ -166,7 +166,7 @@ def generate_launch_description():
         name='lio_sam_imuPreintegration',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
-        prefix=['taskset -c 6,7'],
+        prefix=['taskset -c 4'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -176,7 +176,7 @@ def generate_launch_description():
         name='lio_sam_imageProjection',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
-        prefix=['taskset -c 6,7'],
+        prefix=['taskset -c 5'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -186,7 +186,7 @@ def generate_launch_description():
         name='lio_sam_featureExtraction',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
-        prefix=['taskset -c 6,7'],
+        prefix=['taskset -c 6'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -196,7 +196,7 @@ def generate_launch_description():
         name='lio_sam_mapOptimization',
         parameters=[parameter_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         output='screen',
-        prefix=['taskset -c 6,7'],
+        prefix=['taskset -c 4,5,6,7'],
         respawn=True,  # 启用自动重启
         respawn_delay=5.0  # 重启延迟5秒
     )
@@ -235,7 +235,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.5,
-            'min_height': -0.2,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
             'angle_max': 3.1,         # 180度

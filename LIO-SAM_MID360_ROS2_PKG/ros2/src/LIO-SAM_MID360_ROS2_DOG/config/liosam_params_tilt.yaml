@@ -72,7 +72,7 @@
 
     # CPU Params - 优化以减轻处理负担，避免IMU数据丢失
 
-    numberOfCores: 2                              # 减少使用的核心数，避免CPU过载
+    numberOfCores: 4                              # 减少使用的核心数，避免CPU过载
 
     mappingProcessInterval: 0.05                  # 增加映射处理间隔，减少CPU负担
 

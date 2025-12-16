@@ -96,7 +96,7 @@ def generate_launch_description():
         parameters=[{
             'robot_description': robot_desc,
             'use_sim_time': use_sim_time,
-            'publish_frequency': 10.0,  # 限制为30Hz
+            'publish_frequency': 2.0,  # 限制为30Hz
         }],
     )
     
@@ -108,7 +108,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
-            'rate': 10.0,  # 限制为30Hz
+            'rate': 2.0,  # 限制为30Hz
         }],
     )
     

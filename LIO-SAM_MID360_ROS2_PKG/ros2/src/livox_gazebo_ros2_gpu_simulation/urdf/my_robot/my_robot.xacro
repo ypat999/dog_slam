@@ -74,14 +74,14 @@
 
 
 <!-- =============== mid360 ============ -->
-  <xacro:mid360  name="livox_frame" parent="base_link" topic="/livox/lidar">
+  <xacro:mid360  name="livox_frame" parent="base_link" topic="/livox/lidar" imu_topic="/livox/imu" >
     <origin xyz="0.07 0.0 0.10" rpy="0 0 0"/>
   </xacro:mid360> 
 <!-- =============== mid360 ============ -->
 
 
   <!-- =============== 传感器 ============ -->
-    <xacro:box_xacro
+    <!-- <xacro:box_xacro
         name="imu_link" 
         length="0.02" 
         width="0.02" 
@@ -89,7 +89,7 @@
         color="${yellow}" 
         is_child="true"
         parent_link="base_link"
-        xyz="0 0 0.02" />
+        xyz="0 0 0.02" /> -->
 
     <!-- <xacro:box_xacro 
         name="camera_link" 

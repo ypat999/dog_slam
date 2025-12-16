@@ -51,6 +51,7 @@
  GazeboRosLaser::GazeboRosLaser() {
   // 初始化时间统计
   last_print_time_ = std::chrono::steady_clock::now();
+  last_check_time_ = std::chrono::steady_clock::now();
   stats_initialized_ = true;
 }
  
@@ -264,17 +265,13 @@ void GazeboRosLaser::LoadCsvPattern()
  
 void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
 {
-    StartTiming("OnScan");
-  // RCLCPP_INFO(rclcpp::get_logger("gpu_laser"), "OnScan called, pattern index: %zu/%zu", this->scan_pattern_index_, this->scan_pattern_.size());
+    // 第一步：快速检查是否需要处理
     if (!_msg) {
         RCLCPP_ERROR(rclcpp::get_logger("gpu_laser"), "Received null laser scan message!");
         return;
     }
 
     if (this->scan_pattern_.empty()) {
-        // RCLCPP_WARN_THROTTLE(rclcpp::get_logger("gpu_laser"), 
-        //     *rclcpp::Clock::make_shared(), 5000, 
-        //     "Scan pattern is empty, skipping OnScan");
         RCLCPP_WARN(rclcpp::get_logger("gpu_laser"), "Scan pattern is empty, skipping OnScan");
         return;
     }
@@ -284,28 +281,7 @@ void GazeboRosLaser::OnScan(ConstLaserScanStampedPtr &_msg)
         return;
     }
 
-    // Frequency limiting: use configured update rate from URDF
-    static auto last_publish_time = std::chrono::steady_clock::now();
-    auto now = std::chrono::steady_clock::now();
-    auto time_since_last_publish = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_publish_time);
-    
-    // Get configured update rate from sensor (default to 10Hz if not available)
-    double update_rate = this->parent_ray_sensor_->UpdateRate();
-    if (update_rate <= 0) {
-        update_rate = 10.0; // Default to 10Hz if not configured
-    }
-    
-    // Calculate minimum interval in milliseconds
-    double min_interval_ms = 1000.0 / update_rate;
-    
-    // Skip if less than the configured interval has passed
-    if (time_since_last_publish.count() < min_interval_ms) {
-        RCLCPP_DEBUG(rclcpp::get_logger("gpu_laser"), "Skipping scan due to frequency limit (%.1fms since last, required %.1fms)", 
-                    time_since_last_publish.count(), min_interval_ms);
-        return;
-    }
-    
-    last_publish_time = now;
+    StartTiming("OnScan");
 
     // RCLCPP_INFO_THROTTLE(rclcpp::get_logger("gpu_laser"), 
     //     *rclcpp::Clock::make_shared(), 1000, 

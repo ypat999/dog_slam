@@ -95,6 +95,9 @@ namespace gazebo
     std::unordered_map<std::string, int> method_call_count_;
     std::chrono::steady_clock::time_point last_print_time_;
     bool stats_initialized_ = false;
+    
+    // 频率控制相关成员变量
+    std::chrono::steady_clock::time_point last_check_time_;
   };
 }
 #endif  // LIVOX_SIM_PLUGINS_LIVOXSIMGPULASER_HH_

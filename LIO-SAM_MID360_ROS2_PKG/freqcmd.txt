@@ -240,7 +240,7 @@ ros2 launch fast_lio mapping.launch.py
 
 
 
-colcon build --symlink-install --packages-skip livox_gazebo_ros2_gpu_simulation
+colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_ros2_gpu_simulation
 
 cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash

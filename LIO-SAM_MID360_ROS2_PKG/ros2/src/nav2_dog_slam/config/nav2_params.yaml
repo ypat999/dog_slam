@@ -331,9 +331,9 @@ controller_server:
         trajectory_step: 10  # 新增参数
       
       # # 缺失的MPPI参数
-      enforce_path_inversion: true  # 强制变向
-      inversion_xy_tolerance: 0.3
-      inversion_yaw_tolerance: 0.2
+      enforce_path_inversion: false  # 强制变向
+      # inversion_xy_tolerance: 0.3
+      # inversion_yaw_tolerance: 0.2
       # gamma: 0.015  # 新增参数
       # iteration_count: 1  # 新增参数
       max_robot_pose_search_dist: 0.5  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
@@ -353,11 +353,11 @@ controller_server:
         enabled: true
         cost_weight: 30.0  # 增加避障成本权重，在接近终点时更谨慎
         cost_power: 1
-        # collision_cost: 254.0  # 新增参数
-        collision_cost: 20.0  # 新增参数
+        collision_cost: 254.0  # 新增参数
+        # collision_cost: 20.0  # 新增参数
         consider_footprint: true  # 新增参数
-        # critical_cost: 254.0  # 新增参数
-        critical_cost: 25.0  # 新增参数
+        critical_cost: 254.0  # 新增参数
+        # critical_cost: 25.0  # 新增参数
         inflation_layer_name: "inflation_layer_local"  # 新增参数
         near_goal_distance: 1.0  # 减小近目标距离，使减速更早开始
         
@@ -454,7 +454,7 @@ local_costmap:
       
       # 地图参数
       footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
-      footprint_padding: 0.1  # footprint膨胀填充
+      footprint_padding: 0.2  # footprint膨胀填充
       resolution: 0.05
       rolling_window: true
       width: 8
@@ -533,7 +533,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
         inflation_radius: 1.0     # 增加膨胀半径，让机器人更远地避开障碍物
-        cost_scaling_factor: 1.0  # 增加成本缩放因子，使靠近障碍物的路径代价更高
+        cost_scaling_factor: 3.0  # 增加成本缩放因子，使靠近障碍物的路径代价更高
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -604,14 +604,14 @@ global_costmap:
         scan:
           topic: /scan
           max_obstacle_height: 1.8
-          min_obstacle_height: -0.5
-          clearing: false
-          marking: false
+          min_obstacle_height: -0.1
+          clearing: true
+          marking: true
           data_type: "LaserScan"
-          raytrace_max_range: 4.0
-          raytrace_min_range: 1.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 1.0
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.0
       
       # 膨胀层参数
       inflation_layer:

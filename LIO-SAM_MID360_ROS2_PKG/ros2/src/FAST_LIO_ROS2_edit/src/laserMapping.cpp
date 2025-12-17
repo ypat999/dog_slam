@@ -407,12 +407,13 @@ double lidar_mean_scantime = 0.0;
 int    scan_num = 0;
 bool sync_packages(MeasureGroup &meas)
 {
+    static int sync_empty_count = 0;
     // 检查传感器数据丢失
     if (lidar_buffer.empty() || imu_buffer.empty()) {
         // 检查是否已经丢失传感器数据
         double current_time = get_time_sec(rclcpp::Clock().now());
         
-        // 如果激光雷达数据丢失超过1秒，标记为传感器丢失
+        // 如果激光雷达数据丢失超过5秒，标记为传感器丢失
         if (!lidar_buffer.empty()) {
             last_lidar_time = get_ros_time(last_timestamp_lidar);
         }
@@ -424,8 +425,8 @@ bool sync_packages(MeasureGroup &meas)
         double lidar_time_diff = current_time - last_timestamp_lidar;
         double imu_time_diff = current_time - last_timestamp_imu;
         
-        // 如果激光雷达或IMU数据丢失超过1秒，标记为传感器丢失
-        if (lidar_time_diff > 1.0 || imu_time_diff > 1.0) {
+        // 如果激光雷达或IMU数据丢失超过5秒，标记为传感器丢失
+        if (lidar_time_diff > 5.0 and imu_time_diff > 5.0) {
             sensor_lost_count++;
             if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
                 sensor_lost = true;
@@ -434,9 +435,9 @@ bool sync_packages(MeasureGroup &meas)
             }
         }
         
-        static int sync_empty_count = 0;
+        
         sync_empty_count++;
-        if (sync_empty_count % 50 == 0) {
+        if (sync_empty_count % 60 == 0) {
             std::cout << "sync_packages: buffers empty (count: " << sync_empty_count 
                       << ", lidar_buffer: " << lidar_buffer.size() 
                       << ", imu_buffer: " << imu_buffer.size() 
@@ -446,6 +447,8 @@ bool sync_packages(MeasureGroup &meas)
         
         return false;
     }
+
+    sync_empty_count = 1;
     
     // 重置传感器丢失计数器
     if (sensor_lost_count > 0) {

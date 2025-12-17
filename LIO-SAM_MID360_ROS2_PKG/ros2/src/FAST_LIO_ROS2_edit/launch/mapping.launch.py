@@ -119,7 +119,6 @@ def generate_launch_description():
             'bond_timeout': 10.0,
         }],
         # 确保生命周期管理器能够正确管理FAST-LIO节点
-        namespace='',
         arguments=['--ros-args', '--log-level', 'info'],
     )
 

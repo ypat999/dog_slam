@@ -235,7 +235,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.5,
-            'min_height': -0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
+            'min_height': -0.3,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
             'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
             'angle_min': -3.1,        # -180度
             'angle_max': 3.1,         # 180度
@@ -245,7 +245,7 @@ def generate_launch_description():
             'angle_increment': 0.00869347338,
             'scan_time': 0.1,             # 扫描时间
             
-            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
+            'range_min': 0.1,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
             'range_max': 200.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
             'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
             

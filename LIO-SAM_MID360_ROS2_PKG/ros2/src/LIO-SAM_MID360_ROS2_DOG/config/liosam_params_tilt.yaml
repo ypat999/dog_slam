@@ -33,7 +33,7 @@
     N_SCAN: 4                                   # number of lidar channels (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
     Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
 # 传感器设置
-    downsampleRate: 2                           # 增加下采样率，减少数据处理量，避免IMU数据积压
+    downsampleRate: 3                           # 增加下采样率，减少数据处理量，避免IMU数据积压
     # points. i.e., 16 = 64 / 4, 16 = 16 / 1
     lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
     lidarMaxRange: 50.0                        # default: 1000.0, maximum lidar range to be used
@@ -72,7 +72,7 @@
 
     # CPU Params - 优化以减轻处理负担，避免IMU数据丢失
 
-    numberOfCores: 4                              # 减少使用的核心数，避免CPU过载
+    numberOfCores: 2                              # 减少使用的核心数，避免CPU过载
 
     mappingProcessInterval: 0.05                  # 增加映射处理间隔，减少CPU负担
 

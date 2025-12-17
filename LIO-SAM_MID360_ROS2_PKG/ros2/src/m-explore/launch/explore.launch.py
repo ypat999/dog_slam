@@ -64,6 +64,7 @@ def generate_launch_description():
             ('/odom', '/Odometry'),  # FAST-LIO 的 odometry 话题
             ('/initialpose', '/initialpose')  # Enable initial pose setting
         ],
+        prefix=['taskset -c 5,6'],   # 绑定 CPU 4
         respawn=True,  # 启用自动重启，防止崩溃后系统停止运行
         respawn_delay=1.0  # 重启延迟10秒，给系统足够时间稳定
     )
@@ -78,6 +79,7 @@ def generate_launch_description():
         parameters=[config, {"use_sim_time": use_sim_time}],
         output="screen",
         remappings=remappings,
+        prefix=['taskset -c 0,1,2,3'],   # 绑定 CPU 4
     )
     ld.add_action(declare_use_sim_time_argument)
     ld.add_action(declare_namespace_argument)

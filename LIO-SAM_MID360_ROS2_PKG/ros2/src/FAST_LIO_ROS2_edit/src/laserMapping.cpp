@@ -111,6 +111,8 @@ static int debug_info_count = 0;
 const int DEBUG_INFO_INTERVAL = 100; // 每100次输出一次调试信息
 rclcpp::Time last_lidar_time; // 最后接收到的激光雷达时间
 rclcpp::Time last_imu_time; // 最后接收到的IMU时间
+rclcpp::Time last_lidar_receive_time; // 最后实际接收到激光雷达数据的时间
+rclcpp::Time last_imu_receive_time; // 最后实际接收到IMU数据的时间
 string  frame_id_camera_init = "camera_init";  // 初始坐标系名称
 string  frame_id_body = "body";               // 机器人身体坐标系名称
 
@@ -317,6 +319,7 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::UniquePtr msg)
     time_buffer.push_back(cur_time);
     last_timestamp_lidar = cur_time;
     last_lidar_time = msg->header.stamp; // 记录最后激光雷达时间
+    last_lidar_receive_time = rclcpp::Clock().now(); // 记录实际接收时间
     
     // 重置传感器丢失标志
     if (sensor_lost) {
@@ -397,6 +400,7 @@ void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
 
     last_timestamp_imu = timestamp;
     last_imu_time = msg->header.stamp; // 记录最后IMU时间
+    last_imu_receive_time = rclcpp::Clock().now(); // 记录实际接收时间
 
     imu_buffer.push_back(msg);
     mtx_buffer.unlock();
@@ -422,8 +426,22 @@ bool sync_packages(MeasureGroup &meas)
             last_imu_time = get_ros_time(last_timestamp_imu);
         }
         
-        double lidar_time_diff = current_time - last_timestamp_lidar;
-        double imu_time_diff = current_time - last_timestamp_imu;
+        // 使用实际接收时间差来判断数据断流
+        double lidar_time_diff = 0.0;
+        double imu_time_diff = 0.0;
+        
+        // 获取当前ROS时间
+        rclcpp::Time current_ros_time = rclcpp::Clock().now();
+        
+        // 计算激光雷达时间差（使用实际接收时间）
+        if (last_lidar_receive_time.nanoseconds() > 0) {  // 确保时间已初始化
+            lidar_time_diff = (current_ros_time - last_lidar_receive_time).seconds();
+        }
+        
+        // 计算IMU时间差（使用实际接收时间）
+        if (last_imu_receive_time.nanoseconds() > 0) {  // 确保时间已初始化
+            imu_time_diff = (current_ros_time - last_imu_receive_time).seconds();
+        }
         
         // 如果激光雷达或IMU数据丢失超过5秒，标记为传感器丢失
         if (lidar_time_diff > 5.0 and imu_time_diff > 5.0) {
@@ -1337,6 +1355,8 @@ private:
         // 重置关键变量
         last_timestamp_lidar = 0.0;
         last_timestamp_imu = -1.0;
+        last_lidar_receive_time = rclcpp::Time(); // 重置为默认时间
+        last_imu_receive_time = rclcpp::Time();   // 重置为默认时间
         
         // 清空点云数据
         if (laserCloudOri != nullptr) {

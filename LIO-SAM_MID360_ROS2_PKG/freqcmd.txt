@@ -3,11 +3,25 @@ cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash
 colcon build --symlink-install --parallel-workers 8 --packages-skip livox_gazebo_ros2_gpu_simulation
 
-# 启动可视化（在导航前启动，占cpu多可考虑设置初始点后关闭）：
-rviz2
+
+
+# 机器狗站立：
+ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 1}}"
+
+# 机器狗半蹲：
+ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 2}}"
+
+# 机器狗趴下：
+ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 0}}"
 
 # 关闭控制服务
 sudo systemctl stop robot_control.service
+
+
+
+
+# 启动可视化（在导航前启动，占cpu多可考虑设置初始点后关闭）：
+rviz2
 
 # 启动建图：
 sudo systemctl start lio_sam_buildmap.service
@@ -71,15 +85,6 @@ ros2 service call /map_server/load_map nav2_msgs/srv/LoadMap "{map_url: '/home/z
 
 # 定位模块全局自动重定位：
 ros2 service call /reinitialize_global_localization std_srvs/srv/Empty {}
-
-# 机器狗站立：
-ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 1}}"
-
-# 机器狗趴下：
-ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 0}}"
-
-# 关闭控制服务
-sudo systemctl stop robot_control.service
 
 #保存fastlio点云
 ros2 service call /map_save std_srvs/srv/Trigger {}

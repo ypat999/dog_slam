@@ -312,9 +312,9 @@ controller_server:
       vx_max: 0.5
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
-      vx_min: -0.06
+      vx_min: -0.1
       # wz_max: 1.2
-      wz_max: 0.4
+      wz_max: 0.5
       
       
       # 温度参数
@@ -351,15 +351,13 @@ controller_server:
       
       CostCritic:
         enabled: true
-        cost_weight: 30.0  # 增加避障成本权重，在接近终点时更谨慎
-        cost_power: 1
-        collision_cost: 254.0  # 新增参数
-        # collision_cost: 20.0  # 新增参数
-        consider_footprint: true  # 新增参数
-        critical_cost: 254.0  # 新增参数
-        # critical_cost: 25.0  # 新增参数
-        inflation_layer_name: "inflation_layer_local"  # 新增参数
-        near_goal_distance: 1.0  # 减小近目标距离，使减速更早开始
+        cost_weight: 50.0  # 大幅增加避障成本权重，强制避障
+        cost_power: 3      # 大幅增加成本幂次，使靠近障碍物时成本急剧增加
+        collision_cost: 254.0  # 碰撞成本设为最大值
+        consider_footprint: true  # 考虑机器人轮廓
+        critical_cost: 254.0  # 临界成本设为最大值
+        inflation_layer_name: "inflation_layer_local"
+        near_goal_distance: 1.0  # 近目标距离
         
       PathFollowCritic:
         enabled: true
@@ -423,14 +421,13 @@ velocity_smoother:
     # odom_topic: "/Odometry"
     # odom_duration: 0.1
     
-    # 移动速度限制
-    max_velocity: [2.5, 2.5, 1.5]  # [vx_max, vy_max, vtheta_max]
-    min_velocity: [-0.2, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
-    # min_velocity: [-2.5, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
+    # 移动速度限制 - 降低速度避免过于激进
+    max_velocity: [1.5, 1.5, 1.0]  # [vx_max, vy_max, vtheta_max] - 降低最大速度
+    min_velocity: [-0.1, -1.5, -1.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
     
-    # 加速度限制 - 增加角加速度以提高转向响应速度
-    max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
-    max_decel: [-20.0, -1.5, -3.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
+    # 加速度限制 - 降低加速度避免急转急停
+    max_accel: [0.8, 1.0, 2.0]  # [ax_max, ay_max, atheta_max] - 降低加速度
+    max_decel: [-10.0, -1.0, -2.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
     
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
@@ -528,12 +525,12 @@ local_costmap:
           # observation_persistence: 0.0  # 新增参数
           # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
       
-      # 膨胀层参数 - 增加膨胀半径使路径远离障碍物
+      # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
-        enabled: true  # 新增参数
-        inflation_radius: 0.5     # 增加膨胀半径，让机器人更远地避开障碍物
-        cost_scaling_factor: 1.0  # 增加成本缩放因子，使靠近障碍物的路径代价更高
+        enabled: true
+        inflation_radius: 0.8     # 大幅增加局部膨胀半径，避免贴边行走
+        cost_scaling_factor: 3.0  # 大幅增加成本缩放因子，使靠近障碍物的路径代价急剧增加
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       

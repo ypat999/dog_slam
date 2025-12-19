@@ -33,7 +33,7 @@ echo "启动建图模式..."
 echo "BUILD_MAP=$BUILD_MAP"
 # taskset -c 4-7  ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/
 # BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
-AUTO_BUILD_MAP=true ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
+AUTO_BUILD_MAP=true ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
 
 #export DISPLAY=localhost:10.0
 # colcon build --symlink-install --packages-select lio_sam --executor sequential --parallel-workers 2 && source install/setup.bash && ros2 launch lio_sam lio_sam_nav2.launch.py ns:=/

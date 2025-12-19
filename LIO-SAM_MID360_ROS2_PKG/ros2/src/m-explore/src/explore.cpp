@@ -601,6 +601,18 @@ bool Explore::saveMapFromTopic(const std::string& topic_name, const std::string&
 {
   RCLCPP_INFO(logger_, "Attempting to save map from topic: %s", topic_name.c_str());
   
+  // Delete existing map files before saving
+  std::string png_file = file_path + ".png";
+  std::string yaml_file = file_path + ".yaml";
+  
+  if (std::remove(png_file.c_str()) == 0) {
+    RCLCPP_INFO(logger_, "Deleted existing PNG file: %s", png_file.c_str());
+  }
+  
+  if (std::remove(yaml_file.c_str()) == 0) {
+    RCLCPP_INFO(logger_, "Deleted existing YAML file: %s", yaml_file.c_str());
+  }
+  
   // Execute map_saver_cli command
   std::string command = "ros2 run nav2_map_server map_saver_cli -t " + topic_name + 
                         " -f " + file_path + " --fmt " + map_save_format_;

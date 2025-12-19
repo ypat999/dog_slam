@@ -71,6 +71,11 @@ Explore::Explore()
   this->declare_parameter<float>("gain_scale", 1.0);
   this->declare_parameter<float>("min_frontier_size", 0.5);
   this->declare_parameter<bool>("return_to_init", false);
+  
+  // Map saving parameters
+  this->declare_parameter<bool>("enable_map_saving", true);
+  this->declare_parameter<std::string>("map_save_path", "/home/ztl/slam_data/map");
+  this->declare_parameter<std::string>("map_save_format", "png");
 
   this->get_parameter("planner_frequency", planner_frequency_);
   this->get_parameter("progress_timeout", timeout);
@@ -81,6 +86,12 @@ Explore::Explore()
   this->get_parameter("min_frontier_size", min_frontier_size);
   this->get_parameter("return_to_init", return_to_init_);
   this->get_parameter("robot_base_frame", robot_base_frame_);
+  
+  // Get map saving parameters
+  this->get_parameter("enable_map_saving", enable_map_saving_);
+  this->get_parameter("map_save_path", map_save_path_);
+  this->get_parameter("map_save_format", map_save_format_);
+  map_save_completed_ = false;
 
   progress_timeout_ = timeout;
   move_base_client_ =
@@ -327,6 +338,11 @@ void Explore::makePlan()
   goal.pose.header.frame_id = costmap_client_.getGlobalFrameID();
   goal.pose.header.stamp = this->now();
 
+  // 打印发布的目标点信息
+  RCLCPP_INFO(logger_, "发布目标点: 位置(%.2f, %.2f, %.2f), 坐标系: %s", 
+              target_position.x, target_position.y, target_position.z,
+              costmap_client_.getGlobalFrameID().c_str());
+
   auto send_goal_options =
     rclcpp_action::Client<nav2_msgs::action::NavigateToPose>::SendGoalOptions();
   // send_goal_options.goal_response_callback =
@@ -523,6 +539,11 @@ void Explore::publishStopStatus(bool finished_exploring)
   if (finished_exploring) {
     status_msg.state = explore_lite::msg::ExploreStatus::STATE_COMPLETED;
     status_msg.state_description = "Exploration completed";
+    
+    // Save map on completion if enabled
+    if (enable_map_saving_ && !map_save_completed_) {
+      saveMapOnCompletion();
+    }
   } else {
     status_msg.state = explore_lite::msg::ExploreStatus::STATE_STOPPED;
     status_msg.state_description = "Exploration stopped";
@@ -553,6 +574,48 @@ void Explore::publishStopStatus(bool finished_exploring)
   status_msg.returning_to_init = return_to_init_;
   
   status_publisher_->publish(status_msg);
+}
+
+void Explore::saveMapOnCompletion()
+{
+  RCLCPP_INFO(logger_, "Starting map saving process...");
+  
+  // Try to save map from /projected_map topic first
+  bool success = saveMapFromTopic("/projected_map", map_save_path_);
+  
+  // If failed, try to save from /map topic
+  if (!success) {
+    RCLCPP_WARN(logger_, "Failed to save map from /projected_map, trying /map topic...");
+    success = saveMapFromTopic("/map", map_save_path_);
+  }
+  
+  if (success) {
+    RCLCPP_INFO(logger_, "Map saved successfully to: %s", map_save_path_.c_str());
+    map_save_completed_ = true;
+  } else {
+    RCLCPP_ERROR(logger_, "Failed to save map from both /projected_map and /map topics");
+  }
+}
+
+bool Explore::saveMapFromTopic(const std::string& topic_name, const std::string& file_path)
+{
+  RCLCPP_INFO(logger_, "Attempting to save map from topic: %s", topic_name.c_str());
+  
+  // Execute map_saver_cli command
+  std::string command = "ros2 run nav2_map_server map_saver_cli -t " + topic_name + 
+                        " -f " + file_path + " --fmt " + map_save_format_;
+  
+  RCLCPP_DEBUG(logger_, "Executing command: %s", command.c_str());
+  
+  int result = std::system(command.c_str());
+  
+  if (result == 0) {
+    RCLCPP_INFO(logger_, "Map saved successfully from topic %s", topic_name.c_str());
+    return true;
+  } else {
+    RCLCPP_WARN(logger_, "Failed to save map from topic %s (exit code: %d)", topic_name.c_str(), result);
+    return false;
+  }
 }
 
 }  // namespace explore

@@ -27,7 +27,7 @@ ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "{name: {data:
 
 # 保存lio-sam点云 （不使用）
 source ros2/install/setup.bash 
-ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.2, destination: '/projects/LOAM/'}"
+ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{}"
 
 # 录制点云信息供离线调试：
 cd dog_slam
@@ -219,7 +219,6 @@ ros2 lifecycle set /fastlio_mapping shutdown
 
 # 重新启动launch文件
 ros2 launch fast_lio mapping.launch.py
-
 
 
 

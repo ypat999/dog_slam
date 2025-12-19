@@ -23,7 +23,7 @@ try:
     if global_config_path not in sys.path:
         sys.path.insert(0, global_config_path)
     from global_config import (
-        BUILD_MAP, BUILD_TOOL, RECORD_ONLY, NAVIGATION_MODE, 
+        BUILD_MAP, BUILD_TOOL, AUTO_BUILD_MAP, RECORD_ONLY, NAVIGATION_MODE, 
         ONLINE_LIDAR as ONLINE_LIDAR, 
         LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, 
         DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
@@ -41,6 +41,7 @@ except Exception as e:
     # 如果导入失败，使用默认值
     BUILD_MAP = False
     BUILD_TOOL = 'octomap_server'
+    AUTO_BUILD_MAP = False
     RECORD_ONLY = False
     NAVIGATION_MODE = 'standalone'
     ONLINE_LIDAR = False
@@ -182,5 +183,18 @@ def generate_launch_description():
     elif 'delayed_nav2_launch' in locals():
         # 导航模式：添加nav2和web
         launch_actions.append(delayed_nav2_launch)
+    
+    # 4. 如果AUTO_BUILD_MAP为True，延迟20秒启动explore_lite
+    if AUTO_BUILD_MAP and not BUILD_MAP:
+        explore_lite_package_dir = get_package_share_directory('explore_lite')
+        explore_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                explore_lite_package_dir, 'launch', 'explore.launch.py')])
+        )
+        delayed_explore_launch = TimerAction(
+            period=60.0,  # 延迟20秒启动explore_lite
+            actions=[explore_launch]
+        )
+        launch_actions.append(delayed_explore_launch)
     
     return LaunchDescription(launch_actions)

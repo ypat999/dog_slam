@@ -23,7 +23,7 @@ def generate_launch_description():
         global_config_path = os .path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
         from global_config import (
-            BUILD_MAP, BUILD_TOOL, RECORD_ONLY, ONLINE_LIDAR,
+            BUILD_MAP, BUILD_TOOL, AUTO_BUILD_MAP, RECORD_ONLY, ONLINE_LIDAR,
             NAV2_DEFAULT_WEB_SCRIPT_PATH, NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_MAP_FILE,
             )
     except ImportError:
@@ -31,6 +31,7 @@ def generate_launch_description():
         print(  "Warning: Failed to import glo    bal_config, using default values")
         BUILD_MAP = False
         BUILD_TOOL = 'octomap_server'
+        AUTO_BUILD_MAP = False
         RECORD_ONLY = False
         ONLINE_LIDAR = False
         NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
@@ -114,5 +115,18 @@ def generate_launch_description():
             actions=nav2_and_web_actions
         )
         launch_actions.append(delayed_nav2_launch)
+
+    # 4. 如果AUTO_BUILD_MAP为True，延迟20秒启动explore_lite
+    if AUTO_BUILD_MAP and not BUILD_MAP:
+        explore_lite_package_dir = get_package_share_directory('explore_lite')
+        explore_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                explore_lite_package_dir, 'launch', 'explore.launch.py')])
+        )
+        delayed_explore_launch = TimerAction(
+            period=60.0,  # 延迟20秒启动explore_lite
+            actions=[explore_launch]
+        )
+        launch_actions.append(delayed_explore_launch)
 
     return LaunchDescription(launch_actions)

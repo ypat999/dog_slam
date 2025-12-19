@@ -1,3 +1,8 @@
+# 编译（狗里面，排除gazebo模拟环境，如果要模拟则去掉--packages-skip livox_gazebo_ros2_gpu_simulation）
+cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
+source install/setup.bash
+colcon build --symlink-install --parallel-workers 8 --packages-skip livox_gazebo_ros2_gpu_simulation
+
 # 启动可视化（在导航前启动，占cpu多可考虑设置初始点后关闭）：
 rviz2
 
@@ -239,7 +244,6 @@ ros2 launch fast_lio mapping.launch.py
 
 
 
-colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_ros2_gpu_simulation
 
-cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
-source install/setup.bash
+
+

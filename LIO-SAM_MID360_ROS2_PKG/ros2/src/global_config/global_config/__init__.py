@@ -23,6 +23,10 @@ AUTO_BUILD_MAP = os.environ.get('AUTO_BUILD_MAP', 'False').lower() == 'true'  # 
 # 仅记录模式开关
 RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
 
+# ========== LIO 算法选择 ==========
+# 可选值: 'lio_sam', 'fast_lio', 'point_lio', 'faster_lio', 'dlio'
+LIO_ALGORITHM = os.environ.get('LIO_ALGORITHM', 'fast_lio').lower()  # 默认使用fast_lio
+
 # ========== Nav2 相关配置 ==========
 # 导航模式配置
 NAVIGATION_MODE = os.environ.get('NAVIGATION_MODE', 'standalone').lower()  # standalone: 独立模式, integrated: 集成模式

@@ -67,6 +67,10 @@ bool LaserMapping::LoadParams(rclcpp::Node::SharedPtr nh) {
     nh->declare_parameter("publish.scan_effect_pub_en", false);
     nh->declare_parameter("publish.tf_imu_frame", "body");
     nh->declare_parameter("publish.tf_world_frame", "camera_init");
+    nh->declare_parameter("publish.tf_lidar_frame", "lidar_link");
+    nh->declare_parameter("publish.tf_camera_init_frame", "camera_init");
+    nh->declare_parameter("publish.tf_map_frame", "map");
+    nh->declare_parameter("publish.tf_odom_frame", "odom");
     nh->declare_parameter("max_iteration", 4);
     nh->declare_parameter("esti_plane_threshold", 0.1f);
     nh->declare_parameter("map_file_path", "");
@@ -102,6 +106,10 @@ bool LaserMapping::LoadParams(rclcpp::Node::SharedPtr nh) {
     nh->get_parameter("publish.scan_effect_pub_en", scan_effect_pub_en_);
     nh->get_parameter("publish.tf_imu_frame", tf_imu_frame_);
     nh->get_parameter("publish.tf_world_frame", tf_world_frame_);
+    nh->get_parameter("publish.tf_lidar_frame", tf_lidar_frame_);
+    nh->get_parameter("publish.tf_camera_init_frame", tf_camera_init_frame_);
+    nh->get_parameter("publish.tf_map_frame", tf_map_frame_);
+    nh->get_parameter("publish.tf_odom_frame", tf_odom_frame_);
     nh->get_parameter("max_iteration", options::NUM_MAX_ITERATIONS);
     nh->get_parameter("esti_plane_threshold", options::ESTI_PLANE_THRESHOLD);
     nh->get_parameter("map_file_path", map_file_path_);
@@ -143,8 +151,8 @@ bool LaserMapping::LoadParams(rclcpp::Node::SharedPtr nh) {
         preprocess_->SetLidarType(LidarType::HESAIxt32);
         LOG(INFO) << "Using Hesai Pandar 32 Lidar";
     } else if (lidar_type == 5) {
-        preprocess_->SetLidarType(LidarType::MID360);
-        LOG(INFO) << "Using MID360 Lidar";
+        preprocess_->SetLidarType(LidarType::OTHER);
+        LOG(INFO) << "Using OTHER Lidar";
     } else {
         LOG(WARNING) << "unknown lidar_type";
         return false;
@@ -164,7 +172,7 @@ bool LaserMapping::LoadParams(rclcpp::Node::SharedPtr nh) {
     }
 
     path_.header.stamp = nh->now();
-    path_.header.frame_id = tf_world_frame_;
+    path_.header.frame_id = tf_map_frame_;
 
     voxel_scan_.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
 
@@ -196,6 +204,10 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
         scan_effect_pub_en_ = yaml["publish"]["scan_effect_pub_en"].as<bool>();
         tf_imu_frame_ = yaml["publish"]["tf_imu_frame"].as<std::string>("body");
         tf_world_frame_ = yaml["publish"]["tf_world_frame"].as<std::string>("camera_init");
+        tf_lidar_frame_ = yaml["publish"]["tf_lidar_frame"].as<std::string>("lidar_link");
+        tf_camera_init_frame_ = yaml["publish"]["tf_camera_init_frame"].as<std::string>("camera_init");
+        tf_map_frame_ = yaml["publish"]["tf_map_frame"].as<std::string>("map");
+        tf_odom_frame_ = yaml["publish"]["tf_odom_frame"].as<std::string>("odom");
         path_save_en_ = yaml["path_save_en"].as<bool>();
 
         options::NUM_MAX_ITERATIONS = yaml["max_iteration"].as<int>();
@@ -243,8 +255,8 @@ bool LaserMapping::LoadParamsFromYAML(const std::string &yaml_file) {
         preprocess_->SetLidarType(LidarType::HESAIxt32);
         LOG(INFO) << "Using Hesai Pandar 32 Lidar";
     } else if (lidar_type == 5) {
-        preprocess_->SetLidarType(LidarType::MID360);
-        LOG(INFO) << "Using MID360 Lidar";
+        preprocess_->SetLidarType(LidarType::OTHER);
+        LOG(INFO) << "Using OTHER Lidar";
     } else {
         LOG(WARNING) << "unknown lidar_type";
         return false;
@@ -286,7 +298,7 @@ void LaserMapping::SubAndPubToROS(rclcpp::Node::SharedPtr nh) {
 
     if (preprocess_->GetLidarType() == LidarType::AVIA) {
         sub_pcl_livox_ = nh->create_subscription<livox_ros_driver2::msg::CustomMsg>(
-            lidar_topic, rclcpp::QoS(rclcpp::KeepLast(200000)), 
+            lidar_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), 
             [this](const livox_ros_driver2::msg::CustomMsg::SharedPtr msg) { LivoxPCLCallBack(msg); });
     } else {
         sub_pcl_standard_ = nh->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -313,8 +325,9 @@ LaserMapping::LaserMapping() {
     preprocess_.reset(new PointCloudPreprocess());
     p_imu_.reset(new ImuProcess());
     
-    // Initialize path and pose stamped
-    path_.header.frame_id = "world";
+    // Initialize path and pose stamped with default values
+    // These will be updated with actual configured values in LoadParams
+    path_.header.frame_id = "map";
     msg_body_pose_.header.frame_id = "body";
 }
 
@@ -729,7 +742,7 @@ void LaserMapping::ObsModel(state_ikfom &s, esekfom::dyn_share_datastruct<double
 void LaserMapping::PublishPath(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_path) {
     SetPosestamp(msg_body_pose_);
     msg_body_pose_.header.stamp = rclcpp::Time(static_cast<int64_t>(lidar_end_time_ * 1e9));
-    msg_body_pose_.header.frame_id = tf_world_frame_;
+    msg_body_pose_.header.frame_id = tf_map_frame_;
 
     /*** if path is too large, the rvis will crash ***/
     path_.header.stamp = msg_body_pose_.header.stamp;
@@ -740,7 +753,7 @@ void LaserMapping::PublishPath(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr
 }
 
 void LaserMapping::PublishOdometry(rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_aft_mapped) {
-    odom_aft_mapped_.header.frame_id = tf_world_frame_;
+    odom_aft_mapped_.header.frame_id = tf_map_frame_;
     odom_aft_mapped_.child_frame_id = tf_imu_frame_;
     odom_aft_mapped_.header.stamp = rclcpp::Time(static_cast<int64_t>(lidar_end_time_ * 1e9));  // ros::Time().fromSec(lidar_end_time_);
     SetPosestamp(odom_aft_mapped_.pose);
@@ -759,7 +772,7 @@ void LaserMapping::PublishOdometry(rclcpp::Publisher<nav_msgs::msg::Odometry>::S
     if (tf_broadcaster_) {
         geometry_msgs::msg::TransformStamped transform;
         transform.header.stamp = odom_aft_mapped_.header.stamp;
-        transform.header.frame_id = tf_world_frame_;
+        transform.header.frame_id = tf_map_frame_;
         transform.child_frame_id = tf_imu_frame_;
         transform.transform.translation.x = odom_aft_mapped_.pose.pose.position.x;
         transform.transform.translation.y = odom_aft_mapped_.pose.pose.position.y;
@@ -790,7 +803,7 @@ void LaserMapping::PublishFrameWorld() {
         sensor_msgs::msg::PointCloud2 laserCloudmsg;
         pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
         laserCloudmsg.header.stamp = rclcpp::Time(static_cast<int64_t>(lidar_end_time_ * 1e9));
-        laserCloudmsg.header.frame_id = tf_world_frame_;
+        laserCloudmsg.header.frame_id = tf_map_frame_;
         pub_laser_cloud_world_->publish(laserCloudmsg);
         publish_count_ -= options::PUBFRAME_PERIOD;
     }
@@ -827,7 +840,7 @@ void LaserMapping::PublishFrameBody(rclcpp::Publisher<sensor_msgs::msg::PointClo
     sensor_msgs::msg::PointCloud2 laserCloudmsg;
     pcl::toROSMsg(*laser_cloud_imu_body, laserCloudmsg);
     laserCloudmsg.header.stamp = rclcpp::Time(static_cast<int64_t>(lidar_end_time_ * 1e9));
-    laserCloudmsg.header.frame_id = "body";
+    laserCloudmsg.header.frame_id = tf_imu_frame_;
     pub_laser_cloud_body->publish(laserCloudmsg);
     publish_count_ -= options::PUBFRAME_PERIOD;
 }
@@ -842,7 +855,7 @@ void LaserMapping::PublishFrameEffectWorld(rclcpp::Publisher<sensor_msgs::msg::P
     sensor_msgs::msg::PointCloud2 laserCloudmsg;
     pcl::toROSMsg(*laser_cloud, laserCloudmsg);
     laserCloudmsg.header.stamp = rclcpp::Time(static_cast<int64_t>(lidar_end_time_ * 1e9));
-    laserCloudmsg.header.frame_id = tf_world_frame_;
+    laserCloudmsg.header.frame_id = tf_map_frame_;
     pub_laser_cloud_effect_world->publish(laserCloudmsg);
     publish_count_ -= options::PUBFRAME_PERIOD;
 }

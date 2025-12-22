@@ -122,6 +122,10 @@ class LaserMapping {
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_path_;
     std::string tf_imu_frame_;
     std::string tf_world_frame_;
+    std::string tf_lidar_frame_;
+    std::string tf_camera_init_frame_;
+    std::string tf_map_frame_;
+    std::string tf_odom_frame_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     std::mutex mtx_buffer_;

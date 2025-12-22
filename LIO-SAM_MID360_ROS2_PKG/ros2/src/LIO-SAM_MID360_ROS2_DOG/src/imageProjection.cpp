@@ -131,7 +131,7 @@ public:
             std::bind(&ImageProjection::odometryHandler, this, std::placeholders::_1),
             odomOpt);
         subLaserCloud = create_subscription<livox_ros_driver2::msg::CustomMsg>(
-            pointCloudTopic, qos_lidar,
+            pointCloudTopic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(),
             std::bind(&ImageProjection::cloudHandler, this, std::placeholders::_1),
             lidarOpt);
 

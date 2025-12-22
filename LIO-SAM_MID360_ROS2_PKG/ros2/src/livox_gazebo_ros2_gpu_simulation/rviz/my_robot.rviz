@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -103,7 +103,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -117,23 +116,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        ahead_left_wheel:
-          Value: true
-        ahead_right_wheel:
-          Value: true
         base_footprint:
           Value: true
         base_link:
           Value: true
-        behind_left_wheel:
-          Value: true
-        behind_right_wheel:
-          Value: true
         livox_frame:
-          Value: true
-        map:
-          Value: true
-        odom:
           Value: true
       Marker Scale: 0.5
       Name: TF
@@ -143,20 +130,8 @@ Visualization Manager:
       Tree:
         base_footprint:
           base_link:
-            ahead_left_wheel:
-              {}
-            ahead_right_wheel:
-              {}
-            behind_left_wheel:
-              {}
-            behind_right_wheel:
-              {}
             livox_frame:
               {}
-        map:
-          {}
-        odom:
-          {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -341,7 +316,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: livox_frame
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -420,5 +395,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1844
-  X: 914
-  Y: 139
+  X: 11
+  Y: 11

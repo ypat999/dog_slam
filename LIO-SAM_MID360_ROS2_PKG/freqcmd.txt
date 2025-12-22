@@ -26,8 +26,12 @@ rviz2
 # 启动建图：
 sudo systemctl start lio_sam_buildmap.service
 
+sudo systemctl start auto_buildmap.service
+
 # 查看日志（启动后尽快运行，避免错过ERROR）：
 sudo journalctl -u lio_sam_buildmap.service -f
+
+sudo journalctl -u auto_buildmap.service -f
 
 # 或  使用slamtoolbox建图
 BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
@@ -47,6 +51,9 @@ ros2 service call /slam_toolbox/save_map slam_toolbox/srv/SaveMap "{name: {data:
 # 保存lio-sam点云 （不使用）
 source ros2/install/setup.bash 
 ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{}"
+
+# 从pcd点云截取2d栅格地图
+scripts/pcd_to_png_and_yaml.py
 
 # 录制点云信息供离线调试：
 cd dog_slam
@@ -183,7 +190,13 @@ ps -ef | grep ros
 
 BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 BUILD_MAP=False ros2 launch nav2_dog_slam lio_sam_nav2.launch.py
+
 ros2 launch fast_lio mapping.launch.py
+ros2 launch lio_sam lio_sam.launch.py
+ros2 launch direct_lidar_inertial_odometry dlio.launch.py
+ros2 launch faster_lio fasterlio_launch.py
+ros2 launch point_lio pointlio_launch.py
+
 ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
@@ -229,26 +242,6 @@ ros2 lifecycle set /fastlio_mapping shutdown
 
 # 重新启动launch文件
 ros2 launch fast_lio mapping.launch.py
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

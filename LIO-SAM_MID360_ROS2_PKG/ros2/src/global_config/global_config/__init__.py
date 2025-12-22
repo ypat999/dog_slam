@@ -99,7 +99,7 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 5,  # DESKTOP-4LS1SSN主机lidar_type为5
+        'FAST_LIO_LIDAR_TYPE': 1,  # DESKTOP-4LS1SSN主机lidar_type为5
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/pcd/test.pcd',  # 添加的地图文件路径
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
@@ -238,13 +238,13 @@ def update_nav2_params():
             print(f"更新Nav2参数文件时出错: {e}")
 
 # ========== FAST-LIO参数文件自动更新 ==========
-def update_fast_lio_params():
+def update_lio_params():
     """自动更新FAST-LIO的所有配置文件"""
     import glob
     # 获取所有yaml配置文件
     config_dir = os.path.join(FAST_LIO_BASE_CODE_PATH, 'config')
     if os.path.exists(config_dir):
-        yaml_files = glob.glob(os.path.join(config_dir, "*.yaml"))
+        yaml_files = glob.glob(os.path.join(config_dir, "mid360.yaml"))
         for yaml_file in yaml_files:
             try:
                 with open(yaml_file, 'r') as file:
@@ -262,9 +262,46 @@ def update_fast_lio_params():
             except Exception as e:
                 print(f"更新FAST-LIO参数文件 {yaml_file} 时出错: {e}")
 
+    config_dir = os.path.join(FAST_LIO_BASE_CODE_PATH, '../faster-lio_edit/config')
+    if os.path.exists(config_dir):
+        yaml_files = glob.glob(os.path.join(config_dir, "mid360.yaml"))
+        for yaml_file in yaml_files:
+            try:
+                with open(yaml_file, 'r') as file:
+                    lines = file.readlines()
+                with open(yaml_file, 'w') as file:
+                    for line in lines:
+                        if 'lidar_type:' in line:
+                            file.write(f'           lidar_type: {FAST_LIO_LIDAR_TYPE}\n')
+                        elif 'map_file_path:' in line:
+                            # 更新所有的map_file_path
+                            file.write(f'      map_file_path: "{FAST_LIO_MAP_FILE_PATH}"\n')
+                        else:
+                            file.write(line)
+                print(f"FASTER-LIO参数文件已更新: {yaml_file}")
+            except Exception as e:
+                print(f"更新FASTER-LIO参数文件 {yaml_file} 时出错: {e}")
+
+    config_dir = os.path.join(FAST_LIO_BASE_CODE_PATH, '../point_lio_ros2/config')
+    if os.path.exists(config_dir):
+        yaml_files = glob.glob(os.path.join(config_dir, "mid360.yaml"))
+        for yaml_file in yaml_files:
+            try:
+                with open(yaml_file, 'r') as file:
+                    lines = file.readlines()
+                with open(yaml_file, 'w') as file:
+                    for line in lines:
+                        if 'lidar_type:' in line:
+                            file.write(f'      lidar_type: {FAST_LIO_LIDAR_TYPE}\n')
+                        else:
+                            file.write(line)
+                print(f"FASTER-LIO参数文件已更新: {yaml_file}")
+            except Exception as e:
+                print(f"更新FASTER-LIO参数文件 {yaml_file} 时出错: {e}")
+
 
 # 导入时自动更新Nav2参数
 update_nav2_params()
 
 # 导入时自动更新FAST-LIO参数
-update_fast_lio_params()
+update_lio_params()

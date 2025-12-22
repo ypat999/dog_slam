@@ -98,7 +98,7 @@ def generate_launch_description():
     try:
         point_lio_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('point_lio'), 'launch_ros2', 'pointlio_launch.py')]),
+                get_package_share_directory('point_lio'), 'launch', 'mapping_mid360.launch.py')]),
             launch_arguments={
                 'use_sim_time': use_sim_time
             }.items(),
@@ -130,7 +130,7 @@ def generate_launch_description():
     try:
         dlio_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('direct_lidar_inertial_odometry'), 'launch_ros2', 'dlio_launch.py')]),
+                get_package_share_directory('direct_lidar_inertial_odometry'), 'launch_ros2', 'dlio.launch.py')]),
             launch_arguments={
                 'use_sim_time': use_sim_time
             }.items(),

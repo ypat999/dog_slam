@@ -76,7 +76,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(hesai_ros::Point,
 
 namespace faster_lio {
 
-enum class LidarType { AVIA = 1, VELO32, OUST64,  HESAIxt32, MID360 = 5}; //{1, 2, 3, 4, 5}
+enum class LidarType { AVIA = 1, VELO32, OUST64,  HESAIxt32, OTHER = 5}; //{1, 2, 3, 4, 5}
 
 /**
  * point cloud preprocess

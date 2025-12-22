@@ -29,6 +29,13 @@ publish:
     scan_effect_pub_en: true    # true: publish the pointscloud of effect point
     dense_publish_en: false       # false: low down the points number in a global-frame point clouds scan.
     scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+    tf_imu_frame: "body"
+    tf_world_frame: "camera_init"
+    tf_lidar_frame: "lidar_link"
+    tf_camera_init_frame: "camera_init"
+    tf_map_frame: "map"
+    tf_odom_frame: "odom"
+    scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
 
 path_save_en: true                 # 保存轨迹，用于精度计算和比较
 

@@ -122,7 +122,7 @@ install(DIRECTORY
 
 # Install new launch file
 install(PROGRAMS
-  launch_ros2/fasterlio_launch_fixed.py
+  launch_ros2/fasterlio_launch.py
   DESTINATION share/${PROJECT_NAME}/launch_ros2/
 )
 

@@ -15,8 +15,8 @@
         frames:
             odom: odom
             baselink: base_link
-            lidar: lidar
-            imu: imu
+            lidar: livox_frame
+            imu: livox_frame
 
         map:
             waitUntilMove: true

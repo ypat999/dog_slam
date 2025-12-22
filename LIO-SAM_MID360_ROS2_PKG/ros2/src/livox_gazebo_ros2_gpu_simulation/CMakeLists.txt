@@ -22,6 +22,11 @@ find_package(ament_index_cpp REQUIRED)
 find_package(gazebo_dev REQUIRED)
 find_package(gazebo_ros REQUIRED)
 
+# cpu mid360
+find_package(rosidl_default_generators REQUIRED)
+find_package(livox_ros_driver2 REQUIRED)
+find_package(Boost REQUIRED COMPONENTS chrono)
+
 # Get gazebo_ros install prefix
 get_filename_component(GAZEBO_ROS_PREFIX "${gazebo_ros_DIR}/../../../" ABSOLUTE)
 
@@ -88,6 +93,27 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
+
+
+
+#cpu mid360
+add_library(ros2_livox SHARED src/livox_points_plugin.cpp src/livox_ode_multiray_shape.cpp)
+target_link_libraries(ros2_livox ${GAZEBO_LIBRARIES} RayPlugin GpuRayPlugin)
+ament_target_dependencies(ros2_livox rclcpp std_msgs sensor_msgs geometry_msgs gazebo_dev gazebo_ros tf2_ros livox_ros_driver2 )
+target_link_libraries(ros2_livox libprotobuf.so.9)
+target_link_libraries(ros2_livox libboost_chrono.so.1.71.0)
+target_include_directories(ros2_livox PRIVATE include)
+
+#install(TARGETS ros2_livox DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS ros2_livox
+    LIBRARY DESTINATION lib)
+
+ament_export_libraries(
+  ros2_livox
+)
+
+
 
 # Install header files
 install(DIRECTORY include/

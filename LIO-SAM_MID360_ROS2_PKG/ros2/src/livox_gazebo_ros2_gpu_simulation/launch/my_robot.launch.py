@@ -78,11 +78,11 @@ def generate_launch_description():
     
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
+            os.path.join(pkg_gazebo_ros, 'launch', 'gazebo.launch.py')
         ),
         launch_arguments={
             'world': os.path.join(pkg_livox_gazebo_ros2_gpu_simulation, 'worlds', world_file_name),
-            # 'gui': LaunchConfiguration('gui'),
+            'gui': LaunchConfiguration('gui'),
             'verbose': LaunchConfiguration('verbose')
         }.items()
     )

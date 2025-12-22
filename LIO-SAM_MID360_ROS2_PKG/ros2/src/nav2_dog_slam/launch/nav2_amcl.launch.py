@@ -23,7 +23,8 @@ def generate_launch_description():
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
 
 
-    bringup_dir = get_package_share_directory('nav2_bringup')
+    # bringup_dir = get_package_share_directory('nav2_bringup')
+    bringup_dir = get_package_share_directory('nav2_dog_slam')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     use_sim_time = DEFAULT_USE_SIM_TIME

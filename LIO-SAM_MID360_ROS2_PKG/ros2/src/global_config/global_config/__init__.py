@@ -17,15 +17,14 @@ BUILD_MAP = os.environ.get('BUILD_MAP', 'False').lower() == 'true'  # True: 建�
 # 建图工具选择
 BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式工具选择
 
+# SLAM算法选择
+SLAM_ALGORITHM = os.environ.get('SLAM_ALGORITHM', 'fast_lio').lower()  # SLAM算法选择: fast_lio, point_lio, faster_lio, dlio, lio_sam
+
 # 自动建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
 AUTO_BUILD_MAP = os.environ.get('AUTO_BUILD_MAP', 'False').lower() == 'true'  # True: 自动建图模式（延迟启动explore_lite）, False: 正常模式
 
 # 仅记录模式开关
 RECORD_ONLY = False  # True: 仅记录数据，不建图（不运行nav2和web）, False: 导航模式
-
-# ========== LIO 算法选择 ==========
-# 可选值: 'lio_sam', 'fast_lio', 'point_lio', 'faster_lio', 'dlio'
-LIO_ALGORITHM = os.environ.get('LIO_ALGORITHM', 'fast_lio').lower()  # 默认使用fast_lio
 
 # ========== Nav2 相关配置 ==========
 # 导航模式配置
@@ -125,7 +124,7 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 5,  # 其他主机lidar_type为1
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/pcd/test.pcd',  # 添加的地图文件路径
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,
@@ -180,6 +179,9 @@ if not DEFAULT_USE_SIM_TIME:
 
 # 导出 Livox MID360 配置参数
 LIVOX_MID360_CONFIG = selected_config['LIVOX_MID360_CONFIG']
+
+# 导出SLAM算法选择参数
+SLAM_ALGORITHM = SLAM_ALGORITHM
 
 # ========== 导出Nav2配置参数 ==========
 NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']

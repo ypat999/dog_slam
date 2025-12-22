@@ -67,7 +67,7 @@ def generate_launch_description():
 
     package_name = 'livox_gazebo_ros2_gpu_simulation'
     robot_name = 'my_robot'
-    world_file_name = 'standardrobots_factory.world' #'bigHHH.world'
+    world_file_name = 'test_zone.world' #'bigHHH.world'
     use_sim_time = True
 
     pkg_livox_gazebo_ros2_gpu_simulation = get_package_share_directory(package_name)

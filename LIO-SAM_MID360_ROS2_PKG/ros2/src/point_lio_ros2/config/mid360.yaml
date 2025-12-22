@@ -11,7 +11,7 @@
             # the timestamp of IMU is transferred from the current timeline to LiDAR's timeline by subtracting this value
 
         preprocess:
-            lidar_type: 1      # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR
+      lidar_type: 5
             scan_line: 4
             timestamp_unit: 3   # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
             blind: 0.5

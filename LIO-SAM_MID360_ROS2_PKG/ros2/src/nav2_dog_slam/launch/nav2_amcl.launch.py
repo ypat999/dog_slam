@@ -32,7 +32,7 @@ def generate_launch_description():
     use_sim_time = DEFAULT_USE_SIM_TIME
     params_file = NAV2_DEFAULT_PARAMS_FILE
     map_yaml_file = NAV2_DEFAULT_MAP_FILE
-    autostart = False
+    autostart = True
     log_level = 'info'
 
     ld = LaunchDescription()
@@ -68,10 +68,10 @@ def generate_launch_description():
     )
     
     # lifecycle manager node to configure and activate map_server and amcl
-    lifecycle_manager = Node(
+    lifecycle_manager_amcl = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
-        name='lifecycle_manager_localization',
+        name='lifecycle_manager_amcl',
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
@@ -128,7 +128,7 @@ def generate_launch_description():
         ld.add_action(map_server_node)
         ld.add_action(lifecycle_manager_map_server)
     ld.add_action(amcl_node)
-    ld.add_action(lifecycle_manager)
+    ld.add_action(lifecycle_manager_amcl)
     ld.add_action(navigation_include)
     ld.add_action(rosbridge_websocket)  # 添加 rosbridge_websocket 节点
 

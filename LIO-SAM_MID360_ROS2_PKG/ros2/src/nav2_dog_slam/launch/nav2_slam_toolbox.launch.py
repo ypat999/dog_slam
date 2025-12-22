@@ -133,8 +133,8 @@ def generate_launch_description():
     # add nodes
     if not BUILD_MAP and not AUTO_BUILD_MAP:
         ld.add_action(delayed_map_server)
+        ld.add_action(delayed_lifecycle)
     ld.add_action(delayed_slam)
-    ld.add_action(delayed_lifecycle)
     ld.add_action(delayed_navigation)
     ld.add_action(rosbridge_websocket)  # 添加 rosbridge_websocket 节点
 

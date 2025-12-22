@@ -76,9 +76,22 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': use_sim_time,
             'autostart': autostart,
-            'node_names': ['map_server', 'amcl']
+            'node_names': ['amcl']
         }]
     )
+
+    lifecycle_manager_map_server = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_map_server',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': autostart,
+            'node_names': ['map_server']
+        }]
+    )
+    
 
     # include the rest of navigation stack
     navigation_include = IncludeLaunchDescription(
@@ -113,6 +126,7 @@ def generate_launch_description():
     # add nodes
     if not BUILD_MAP and not AUTO_BUILD_MAP:
         ld.add_action(map_server_node)
+        ld.add_action(lifecycle_manager_map_server)
     ld.add_action(amcl_node)
     ld.add_action(lifecycle_manager)
     ld.add_action(navigation_include)

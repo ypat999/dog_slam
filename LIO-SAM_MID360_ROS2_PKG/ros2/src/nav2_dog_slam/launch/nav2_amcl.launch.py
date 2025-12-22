@@ -14,13 +14,15 @@ def generate_launch_description():
     try:
         global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
-        from global_config import DEFAULT_USE_SIM_TIME, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_PARAMS_FILE 
+        from global_config import DEFAULT_USE_SIM_TIME, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_PARAMS_FILE, BUILD_MAP, AUTO_BUILD_MAP
     except ImportError:
         # 如果导入失败，使用默认值  
         print("Warning: Failed to import global_config, using default values")
         DEFAULT_USE_SIM_TIME = True
         NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+        BUILD_MAP = False
+        AUTO_BUILD_MAP = False
 
 
     # bringup_dir = get_package_share_directory('nav2_bringup')
@@ -30,7 +32,7 @@ def generate_launch_description():
     use_sim_time = DEFAULT_USE_SIM_TIME
     params_file = NAV2_DEFAULT_PARAMS_FILE
     map_yaml_file = NAV2_DEFAULT_MAP_FILE
-    autostart = True
+    autostart = False
     log_level = 'info'
 
     ld = LaunchDescription()
@@ -109,7 +111,8 @@ def generate_launch_description():
 
 
     # add nodes
-    ld.add_action(map_server_node)
+    if not BUILD_MAP and not AUTO_BUILD_MAP:
+        ld.add_action(map_server_node)
     ld.add_action(amcl_node)
     ld.add_action(lifecycle_manager)
     ld.add_action(navigation_include)

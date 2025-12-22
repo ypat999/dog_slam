@@ -580,14 +580,24 @@ void Explore::saveMapOnCompletion()
 {
   RCLCPP_INFO(logger_, "Starting map saving process...");
   
-  // Try to save map from /projected_map topic first
-  bool success = saveMapFromTopic("/projected_map", map_save_path_);
   
-  // If failed, try to save from /map topic
-  if (!success) {
-    RCLCPP_WARN(logger_, "Failed to save map from /projected_map, trying /map topic...");
+  bool success = false;
+  
+  for (int i = 0; i < 5; i++) {
+    // Try to save map from /projected_map topic first
     success = saveMapFromTopic("/map", map_save_path_);
+    // If failed, try to save from /map topic
+    if (!success) {
+      RCLCPP_WARN(logger_, "Failed to save map from /map, trying /projected_map topic...");
+      success = saveMapFromTopic("/projected_map", map_save_path_);
+    }
+
+    if (success) {
+      break;
+    }
   }
+  
+  
   
   if (success) {
     RCLCPP_INFO(logger_, "Map saved successfully to: %s", map_save_path_.c_str());

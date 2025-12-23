@@ -69,16 +69,16 @@ class OmniTeleopNode(Node):
             
             # 有有效按键时，发布对应速度
             if key in KEY_MAPPING:
-                vel_msg.linear.x = KEY_MAPPING[key][0]
-                vel_msg.linear.y = KEY_MAPPING[key][1]
-                vel_msg.angular.z = KEY_MAPPING[key][2]
+                vel_msg.linear.x += KEY_MAPPING[key][0] * 0.01
+                vel_msg.linear.y += KEY_MAPPING[key][1] * 0.01
+                vel_msg.angular.z += KEY_MAPPING[key][2] * 0.03
                 self.vel_publisher.publish(vel_msg)
             
             # 无按键输入（超时）或无效按键时，发布停止指令
             else:
-                vel_msg.linear.x = 0.0
-                vel_msg.linear.y = 0.0
-                vel_msg.angular.z = 0.0
+                vel_msg.linear.x *= 0.9
+                vel_msg.linear.y *= 0.9
+                vel_msg.angular.z *= 0.99
                 self.vel_publisher.publish(vel_msg)
 
 def main(args=None):

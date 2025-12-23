@@ -8,6 +8,7 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 from ament_index_python.packages import get_package_share_directory
+from launch.conditions import IfCondition
 import sys, os
 
 def generate_launch_description():
@@ -43,6 +44,7 @@ def generate_launch_description():
     # Create the launch description and populate
     ld = LaunchDescription()
 
+    use_sim_time = LaunchConfiguration('use_sim_time', default=str(DEFAULT_USE_SIM_TIME))
     package_name = 'faster_lio'
     package_dir = get_package_share_directory(package_name)
     
@@ -158,7 +160,7 @@ def generate_launch_description():
     )
     
     # RVIZ node
-    from launch.conditions import IfCondition
+    
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',

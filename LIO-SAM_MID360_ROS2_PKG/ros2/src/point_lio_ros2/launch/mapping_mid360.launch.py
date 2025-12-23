@@ -38,6 +38,8 @@ def generate_launch_description():
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
 
+    use_sim_time = LaunchConfiguration('use_sim_time', default=str(DEFAULT_USE_SIM_TIME))
+
     # Declare the RViz argument
     rviz_arg = DeclareLaunchArgument(
         'rviz', default_value='true',

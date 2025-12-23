@@ -137,7 +137,7 @@ def generate_launch_description():
     
     # 延迟启动spawn_entity节点，确保Gazebo完全启动
     delayed_spawn_entity = TimerAction(
-        period=5.0,
+        period=10.0,
         actions=[spawn_entity]
     )
     

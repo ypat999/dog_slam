@@ -48,6 +48,8 @@ def generate_launch_description():
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
 
+    use_sim_time = LaunchConfiguration('use_sim_time', default=str(DEFAULT_USE_SIM_TIME))
+    
     current_pkg = FindPackageShare('direct_lidar_inertial_odometry')
 
     # Set default arguments

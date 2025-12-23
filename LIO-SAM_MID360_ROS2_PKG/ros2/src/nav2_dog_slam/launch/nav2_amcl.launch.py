@@ -47,6 +47,7 @@ def generate_launch_description():
             {'use_sim_time': use_sim_time},
             {'yaml_filename': map_yaml_file}
         ],
+        prefix=['taskset -c 0,1,2,3'],   # 绑定 CPU 4
         remappings=[
             ('/tf', 'tf'),
             ('/tf_static', 'tf_static')
@@ -127,8 +128,8 @@ def generate_launch_description():
     if not BUILD_MAP and not AUTO_BUILD_MAP:
         ld.add_action(map_server_node)
         ld.add_action(lifecycle_manager_map_server)
-    ld.add_action(amcl_node)
-    ld.add_action(lifecycle_manager_amcl)
+    # ld.add_action(amcl_node)
+    # ld.add_action(lifecycle_manager_amcl)
     ld.add_action(navigation_include)
     ld.add_action(rosbridge_websocket)  # 添加 rosbridge_websocket 节点
 

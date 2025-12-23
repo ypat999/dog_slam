@@ -30,7 +30,8 @@ def generate_launch_description():
         AUTO_BUILD_MAP = False
 
 
-    bringup_dir = get_package_share_directory('nav2_bringup')
+    # bringup_dir = get_package_share_directory('nav2_bringup')
+    bringup_dir = get_package_share_directory('nav2_dog_slam')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     use_sim_time = DEFAULT_USE_SIM_TIME

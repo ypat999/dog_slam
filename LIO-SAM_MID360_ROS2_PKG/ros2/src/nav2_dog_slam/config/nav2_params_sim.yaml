@@ -537,8 +537,8 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        cost_scaling_factor: 0.5  # 调整成本缩放因子，使靠近障碍物的路径代价更高
-        inflation_radius: 1.0     # 增加膨胀半径，让拐弯时更安全
+        cost_scaling_factor: 1.0  # 调整成本缩放因子，使靠近障碍物的路径代价更高
+        inflation_radius: 0.5     # 增加膨胀半径，让拐弯时更安全
         # inflate_unknown: false
         # inflate_around_unknown: false
       
@@ -622,7 +622,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
-        inflation_radius: 3.0
+        inflation_radius: 2.0
         cost_scaling_factor: 1.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
@@ -650,15 +650,15 @@ planner_server:
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
 
-      # # ---- 启用方向模型（必需，否则没倒车）----
-      # motion_model_for_search: "REEDS_SHEPP"
+      # ---- 启用方向模型（必需，否则没倒车）----
+      motion_model_for_search: "REEDS_SHEPP"
 
-      # # ---- 倒车代价（越高越不愿倒车）----
-      # # 建议：1.5～3.0：允许倒车但倾向前进
-      # reverse_penalty: 5.0
+      # ---- 倒车代价（越高越不愿倒车）----
+      # 建议：1.5～3.0：允许倒车但倾向前进
+      reverse_penalty: 5.0
 
-      # # ---- 切换前进/倒车的代价 ----
-      # change_penalty: 9.9
+      # ---- 切换前进/倒车的代价 ----
+      change_penalty: 9.9
 
       # # ---- 转弯代价（可稍微提高让路径更自然）----
       non_straight_penalty: 1.2
@@ -668,8 +668,8 @@ planner_server:
       tolerance: 0.5
       planner_timeout: 3.0
       allow_unknown: true
-      max_iterations: 1000000
-      max_on_approach_iterations: 10000
+      max_iterations: 100000
+      max_on_approach_iterations: 1000
       minimum_turning_radius: 0.00001
       angle_quantization_bins: 72
       cache_obstacle_heuristic: true

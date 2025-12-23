@@ -48,12 +48,12 @@
     imuRPYWeight: 0.1  # IMU姿态权重，提高姿态稳定性
 
     extrinsicTrans:  [ 0.1,  0.0,  -0.3 ] #能否保持机器人在地面以上
-    extrinsicRot: [0.8660, 0.0, 0.5,
-                   0.0, 1.0, 0.0,
-                   -0.5, 0.0, 0.8660]
-    # extrinsicRot: [1.0, 0.0, 0.0,
+    # extrinsicRot: [0.8660, 0.0, 0.5,
     #                0.0, 1.0, 0.0,
-    #                0.0, 0.0, 1.0]
+    #                -0.5, 0.0, 0.8660]
+    extrinsicRot: [1.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0]
 
     # LOAM feature threshold
     edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
@@ -109,10 +109,10 @@
     globalMapVisualizationLeafSize: 0.2          # meters, global map visualization cloud density
 
     # TF Delay Parameters (TF延迟发布参数)
-    tfDelayEnabled: false                        # 启用TF延迟发布功能
-    tfDelaySeconds: 2.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
-    odometryDelayEnabled: false                        # 启用里程计延迟发布功能
-    odometryDelaySeconds: 2.0
+    tfDelayEnabled: true                        # 启用TF延迟发布功能
+    tfDelaySeconds: 3.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
+    odometryDelayEnabled: true                        # 启用里程计延迟发布功能
+    odometryDelaySeconds: 3.0
 
     # IMU Failure Detection Parameters (IMU失败检测参数)
     imuFailureDetectionEnabled: false             # 启用IMU失败检测

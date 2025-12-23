@@ -6,11 +6,11 @@ Panels:
       Expanded:
         - /Global Options1
         - /Grid1/Offset1
-        - /PointCloud21
         - /LaserScan1/Topic1
         - /Map2/Update Topic1
         - /Map3/Topic1
         - /Map3/Update Topic1
+        - /PoseWithCovariance1
       Splitter Ratio: 0.5
     Tree Height: 687
   - Class: rviz_common/Selection
@@ -30,7 +30,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Visualization Manager:
   Class: ""
   Displays:
@@ -103,6 +103,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -116,11 +117,23 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        ahead_left_wheel:
+          Value: true
+        ahead_right_wheel:
+          Value: true
         base_footprint:
           Value: true
         base_link:
           Value: true
+        behind_left_wheel:
+          Value: true
+        behind_right_wheel:
+          Value: true
         livox_frame:
+          Value: true
+        map:
+          Value: true
+        odom:
           Value: true
       Marker Scale: 0.5
       Name: TF
@@ -128,17 +141,26 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        base_footprint:
-          base_link:
-            livox_frame:
-              {}
+        map:
+          odom:
+            base_link:
+              ahead_left_wheel:
+                {}
+              ahead_right_wheel:
+                {}
+              behind_left_wheel:
+                {}
+              behind_right_wheel:
+                {}
+              livox_frame:
+                {}
       Update Interval: 0
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 3.6649010181427
-        Min Value: -0.27523431181907654
+        Max Value: 2.348020553588867
+        Min Value: -1.399523377418518
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -249,7 +271,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -270,8 +292,8 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
-    - Alpha: 0.699999988079071
+      Value: false
+    - Alpha: 0.20000000298023224
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
@@ -292,7 +314,7 @@ Visualization Manager:
         Value: /global_costmap/costmap_updates
       Use Timestamp: false
       Value: true
-    - Alpha: 0.699999988079071
+    - Alpha: 0.20000000298023224
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
@@ -313,10 +335,100 @@ Visualization Manager:
         Value: /local_costmap/costmap_updates
       Use Timestamp: false
       Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /projected_map
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /projected_map_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 0
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initial_map
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz_default_plugins/PoseWithCovariance
+      Color: 255; 25; 0
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: PoseWithCovariance
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /pcl_pose
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -359,25 +471,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 11.910175323486328
+      Distance: 25.108718872070312
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.444733738899231
-        Y: -1.2645337581634521
-        Z: -0.69520103931427
+        X: 0.7398085594177246
+        Y: 0.3718893527984619
+        Z: -5.951144218444824
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8847962617874146
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.838584542274475
+      Yaw: 3.203582763671875
     Saved: ~
 Window Geometry:
   Displays:
@@ -395,5 +507,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1844
-  X: 11
-  Y: 11
+  X: 27
+  Y: -4

@@ -130,7 +130,7 @@ def generate_launch_description():
     try:
         dlio_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('direct_lidar_inertial_odometry'), 'launch_ros2', 'dlio.launch.py')]),
+                get_package_share_directory('direct_lidar_inertial_odometry'), 'launch', 'dlio.launch.py')]),
             launch_arguments={
                 'use_sim_time': use_sim_time
             }.items(),
@@ -176,7 +176,7 @@ def generate_launch_description():
                 'use_respawn': 'False',
                 'log_level': 'info'
             }.items(),
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'amcl'"]))
+            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
         )
 
         nav2_slam_include = IncludeLaunchDescription(

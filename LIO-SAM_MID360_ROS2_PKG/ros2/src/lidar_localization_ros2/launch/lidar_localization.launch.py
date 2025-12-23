@@ -47,7 +47,8 @@ def generate_launch_description():
         package='lidar_localization_ros2',
         executable='lidar_localization_node',
         parameters=[localization_param_dir],
-        remappings=[('/cloud','/velodyne_points')],
+        remappings=[('/cloud','/cloud_registered_body'),
+                    ('/imu','/livox/imu')],
         output='screen')
 
     to_inactive = launch.actions.EmitEvent(
@@ -90,7 +91,7 @@ def generate_launch_description():
     ld.add_action(from_inactive_to_active)
 
     ld.add_action(lidar_localization)
-    ld.add_action(lidar_tf)
+    # ld.add_action(lidar_tf)
     ld.add_action(to_inactive)
 
     return ld

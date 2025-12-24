@@ -49,6 +49,7 @@ def generate_launch_description():
         parameters=[localization_param_dir],
         remappings=[('/cloud','/cloud_registered_body'),
                     ('/imu','/livox/imu')],
+        prefix=['taskset -c 5,6'],   # 绑定 CPU 4
         output='screen')
 
     to_inactive = launch.actions.EmitEvent(

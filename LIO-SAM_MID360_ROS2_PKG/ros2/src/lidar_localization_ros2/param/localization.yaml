@@ -4,19 +4,19 @@
       score_threshold: 0.1
       ndt_resolution: 1.0
       ndt_step_size: 0.5
-      ndt_num_threads: 4
-      ndt_max_iterations: 20000
+      ndt_num_threads: 2
+      ndt_max_iterations: 320
       transform_epsilon: 0.0001
       voxel_leaf_size: 0.2
-      scan_max_range: 10000.0
-      scan_min_range: 1.0
-      scan_period: 0.0001
+      scan_max_range: 50.0
+      scan_min_range: 0.1
+      scan_period: 1.0
       use_pcd_map: true
-      map_path: "/home/ywj/pcd/test.pcd"
-      set_initial_pose: true
-      initial_pose_x: 0.0
-      initial_pose_y: 0.0
-      initial_pose_z: 0.0
+      map_path: "/home/ztl/slam_data/3d_map/3dmap.pcd" #"/home/ywj/pcd/test.pcd"
+      set_initial_pose: false
+      initial_pose_x: 20.0
+      initial_pose_y: 20.0
+      initial_pose_z: 1.0
       initial_pose_qx: 0.0
       initial_pose_qy: 0.0
       initial_pose_qz: 0.0
@@ -28,5 +28,5 @@
       global_frame_id: map
       odom_frame_id: odom
       base_frame_id: base_link
-      enable_timer_publishing: false
+      enable_timer_publishing: true
       pose_publish_frequency: 1.0

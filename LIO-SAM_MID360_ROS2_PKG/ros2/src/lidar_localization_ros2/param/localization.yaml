@@ -1,16 +1,16 @@
 /**:
     ros__parameters:
       registration_method: "NDT_OMP"   #"GICP_OMP" 
-      score_threshold: 0.1
+      score_threshold: 0.5
       ndt_resolution: 1.0
-      ndt_step_size: 0.5
+      ndt_step_size: 0.1
       ndt_num_threads: 2
-      ndt_max_iterations: 320
+      ndt_max_iterations: 32
       transform_epsilon: 0.0001
       voxel_leaf_size: 0.2
-      scan_max_range: 50.0
+      scan_max_range: 5.0
       scan_min_range: 0.1
-      scan_period: 1.0
+      scan_period: 0.05
       use_pcd_map: true
       map_path: "/home/ztl/slam_data/3d_map/3dmap.pcd" #"/home/ywj/pcd/test.pcd"
       set_initial_pose: false

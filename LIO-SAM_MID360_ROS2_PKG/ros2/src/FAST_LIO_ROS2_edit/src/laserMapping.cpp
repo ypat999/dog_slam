@@ -411,10 +411,11 @@ double lidar_mean_scantime = 0.0;
 int    scan_num = 0;
 bool sync_packages(MeasureGroup &meas)
 {
+
     static int sync_empty_count = 0;
-    
-        // 传感器丢失判断已改为基于No Effective Points计数
-        
+    // 检查传感器数据丢失
+    if (lidar_buffer.empty() || imu_buffer.empty()) {
+        // 检查是否已经丢失传感器数据
         
         sync_empty_count++;
         if (sync_empty_count % 60 == 0) {
@@ -424,16 +425,11 @@ bool sync_packages(MeasureGroup &meas)
                       << ", sensor_lost: " << sensor_lost 
                       << ")" << std::endl;
         }
-        
+
         return false;
     }
 
     sync_empty_count = 1;
-    
-    // 重置传感器丢失计数器
-    if (sensor_lost_count > 0) {
-        sensor_lost_count = 0;
-    }
 
     /*** push a lidar scan ***/
     if(!lidar_pushed)
@@ -804,7 +800,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
         sensor_lost_count++;
         if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
             sensor_lost = true;
-            std::cout << "Sensor data lost! No effective points count: " << sensor_lost_count << std::endl;
+            ROS_WARN("Sensor data lost! No effective points count: %d", sensor_lost_count);
         }
         
         // 每10次输出一次详细调试信息
@@ -820,7 +816,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
             std::cerr << "No Effective Points! [" << no_effective_count << "]" << std::endl;
         }
         
-        // ROS_WARN("No Effective Points! \n");
+        ROS_WARN("No Effective Points! \n");
         return;
     }
     

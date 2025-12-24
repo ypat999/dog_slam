@@ -117,6 +117,8 @@ def generate_launch_description():
             'autostart': True,
             'node_names': ['fastlio_mapping'],
             'bond_timeout': 10.0,
+            # 禁用bond心跳超时机制，避免与FAST-LIO节点连接失败
+            'bond_disable_heartbeat_timeout': True,
         }],
         # 确保生命周期管理器能够正确管理FAST-LIO节点
         arguments=['--ros-args', '--log-level', 'info'],

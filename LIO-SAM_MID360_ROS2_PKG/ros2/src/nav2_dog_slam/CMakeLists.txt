@@ -37,23 +37,29 @@ install(
   DESTINATION share/${PROJECT_NAME}/
 )
 
-# Install Python scripts
+# # Install Python scripts with symlink support
+# install(
+#   DIRECTORY scripts
+#   DESTINATION lib/${PROJECT_NAME}/
+#   PATTERN "*.py"
+# )
+
+# Install Python scripts as executables with symlink support
 install(
-  DIRECTORY scripts
-  DESTINATION lib/${PROJECT_NAME}/
-  PATTERN "*.py"
+  PROGRAMS scripts/publish_initial_pose.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the new SURF map matching script as executable
+install(
+  PROGRAMS scripts/surf_map_matching.py
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install web interface files
 install(
   DIRECTORY web
   DESTINATION share/${PROJECT_NAME}/
-)
-
-# Install Python script as executable
-install(
-  PROGRAMS scripts/publish_initial_pose.py
-  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)

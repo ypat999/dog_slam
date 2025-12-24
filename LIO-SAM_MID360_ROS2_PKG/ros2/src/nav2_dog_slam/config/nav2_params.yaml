@@ -314,11 +314,11 @@ controller_server:
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
       # wz_max: 1.2
-      wz_max: 0.5
+      wz_max: 0.8
       
       
       # 温度参数
-      temperature: 0.2
+      temperature: 0.1
       motion_model: "DiffDrive" 
       # motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
@@ -361,9 +361,9 @@ controller_server:
         
       PathFollowCritic:
         enabled: true
-        cost_weight: 10.0  # 进一步降低路径跟踪权重，减少左右震荡
+        cost_weight: 20.0  # 进一步降低路径跟踪权重，减少左右震荡
         cost_power: 1
-        offset_from_furthest: 2  # 减少前瞻距离，提高实时响应
+        offset_from_furthest: 4  # 减少前瞻距离，提高实时响应
         threshold_to_consider: 1.0  # Distance (m) between robot and goal to stop considering path following and allow goal critics to take over. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the goal critic.
       
       # PathAngleCritic:
@@ -465,7 +465,7 @@ planner_server:
       planner_timeout: 3.0
       allow_unknown: true
       max_iterations: 100000
-      max_on_approach_iterations: 1000
+      max_on_approach_iterations: 10000
       minimum_turning_radius: 0.2
       angle_quantization_bins: 72
       cache_obstacle_heuristic: true

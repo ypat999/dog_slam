@@ -132,13 +132,20 @@ file(GLOB PYTHON_SCRIPTS
   "${CMAKE_CURRENT_SOURCE_DIR}/python_scripts/*.py"  
 )
 
-install(
-  FILES ${PYTHON_SCRIPTS}  # 要安装的文件：所有Python脚本
-  DESTINATION lib/${PROJECT_NAME}  # 安装目标路径（ROS 2标准，PROJECT_NAME即你的包名）
-  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ  # 所有者权限（执行/写/读）
-              GROUP_EXECUTE GROUP_READ              # 组用户权限（执行/读）
-              WORLD_EXECUTE WORLD_READ              # 其他用户权限（执行/读）
-)
+# Install Python scripts with symlink support for colcon --symlink-install
+if(AMENT_CMAKE_SYMLINK_INSTALL)
+  ament_cmake_symlink_install_files(FILES ${PYTHON_SCRIPTS}
+    DESTINATION "lib/${PROJECT_NAME}"
+  )
+else()
+  install(
+    FILES ${PYTHON_SCRIPTS}  # 要安装的文件：所有Python脚本
+    DESTINATION lib/${PROJECT_NAME}  # 安装目标路径（ROS 2标准，PROJECT_NAME即你的包名）
+    PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ  # 所有者权限（执行/写/读）
+                GROUP_EXECUTE GROUP_READ              # 组用户权限（执行/读）
+                WORLD_EXECUTE WORLD_READ              # 其他用户权限（执行/读）
+  )
+endif()
 
 
 if(BUILD_TESTING)

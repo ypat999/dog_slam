@@ -412,46 +412,8 @@ int    scan_num = 0;
 bool sync_packages(MeasureGroup &meas)
 {
     static int sync_empty_count = 0;
-    // 检查传感器数据丢失
-    if (lidar_buffer.empty() || imu_buffer.empty()) {
-        // 检查是否已经丢失传感器数据
-        double current_time = get_time_sec(rclcpp::Clock().now());
-        
-        // 如果激光雷达数据丢失超过5秒，标记为传感器丢失
-        if (!lidar_buffer.empty()) {
-            last_lidar_time = get_ros_time(last_timestamp_lidar);
-        }
-        
-        if (!imu_buffer.empty()) {
-            last_imu_time = get_ros_time(last_timestamp_imu);
-        }
-        
-        // 使用实际接收时间差来判断数据断流
-        double lidar_time_diff = 0.0;
-        double imu_time_diff = 0.0;
-        
-        // 获取当前ROS时间
-        rclcpp::Time current_ros_time = rclcpp::Clock().now();
-        
-        // 计算激光雷达时间差（使用实际接收时间）
-        if (last_lidar_receive_time.nanoseconds() > 0) {  // 确保时间已初始化
-            lidar_time_diff = (current_ros_time - last_lidar_receive_time).seconds();
-        }
-        
-        // 计算IMU时间差（使用实际接收时间）
-        if (last_imu_receive_time.nanoseconds() > 0) {  // 确保时间已初始化
-            imu_time_diff = (current_ros_time - last_imu_receive_time).seconds();
-        }
-        
-        // 如果激光雷达或IMU数据丢失超过5秒，标记为传感器丢失
-        if (lidar_time_diff > 5.0 and imu_time_diff > 5.0) {
-            sensor_lost_count++;
-            if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
-                sensor_lost = true;
-                std::cout << "Sensor data lost! Lidar diff: " << lidar_time_diff 
-                          << "s, IMU diff: " << imu_time_diff << "s" << std::endl;
-            }
-        }
+    
+        // 传感器丢失判断已改为基于No Effective Points计数
         
         
         sync_empty_count++;
@@ -838,11 +800,19 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
     {
         ekfom_data.valid = false;
         
+        // 传感器丢失计数：在No Effective Points时增加计数
+        sensor_lost_count++;
+        if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
+            sensor_lost = true;
+            std::cout << "Sensor data lost! No effective points count: " << sensor_lost_count << std::endl;
+        }
+        
         // 每10次输出一次详细调试信息
         if (no_effective_count % 10 == 1) {
             std::cerr << "No Effective Points! - Detailed Info [" << no_effective_count << "]: " << std::endl;
             std::cerr << "  effct_feat_num: " << effct_feat_num << std::endl;
             std::cerr << "  sensor_lost: " << sensor_lost << std::endl;
+            std::cerr << "  sensor_lost_count: " << sensor_lost_count << std::endl;
             std::cerr << "  lidar_buffer.size(): " << lidar_buffer.size() << std::endl;
             std::cerr << "  imu_buffer.size(): " << imu_buffer.size() << std::endl;
             std::cerr << "  feats_down_size: " << feats_down_size << std::endl;
@@ -853,6 +823,9 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
         // ROS_WARN("No Effective Points! \n");
         return;
     }
+    
+    // 有有效点时清空传感器丢失计数
+    sensor_lost_count = 0;
 
     res_mean_last = total_residual / effct_feat_num;
     match_time  += omp_get_wtime() - match_start;

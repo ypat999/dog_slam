@@ -66,9 +66,17 @@ class OmniTeleopNode(Node):
                 vel_msg.angular.z = 0.0
                 self.vel_publisher.publish(vel_msg)
                 break
+
+            # 处理空格键（停止所有运动）
+            if key == ' ':
+                self.get_logger().info("传入空格，停止小车运动")
+                vel_msg.linear.x = 0.0
+                vel_msg.linear.y = 0.0
+                vel_msg.angular.z = 0.0
+                self.vel_publisher.publish(vel_msg)
             
-            # 有有效按键时，发布对应速度
-            if key in KEY_MAPPING:
+            # 有有效按键时（排除空格键），发布对应速度
+            elif key in KEY_MAPPING and key != ' ':
                 vel_msg.linear.x += KEY_MAPPING[key][0] * 0.01
                 vel_msg.linear.y += KEY_MAPPING[key][1] * 0.01
                 vel_msg.angular.z += KEY_MAPPING[key][2] * 0.03

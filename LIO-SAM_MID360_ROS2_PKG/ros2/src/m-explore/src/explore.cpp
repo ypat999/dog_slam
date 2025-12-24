@@ -447,13 +447,13 @@ void Explore::stop(bool finished_exploring)
   if (status_timer_) {
     status_timer_->cancel();
   }
-  
-  // Publish stop status
-  publishStopStatus(finished_exploring);
 
   if (return_to_init_ && finished_exploring) {
     returnToInitialPose();
   }
+  
+  // Publish stop status
+  publishStopStatus(finished_exploring);
 }
 
 void Explore::resume()
@@ -547,6 +547,10 @@ void Explore::publishStopStatus(bool finished_exploring)
   } else {
     status_msg.state = explore_lite::msg::ExploreStatus::STATE_STOPPED;
     status_msg.state_description = "Exploration stopped";
+    // Save map on completion if enabled
+    if (enable_map_saving_ && !map_save_completed_) {
+      saveMapOnCompletion();
+    }
   }
   
   // Get final frontier counts

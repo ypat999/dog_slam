@@ -136,6 +136,10 @@ ros2 launch explore_lite explore.launch.py
 
 
 
+# 全局定位
+ros2 launch lidar_localization_ros2 lidar_localization.launch.py
+
+
 
 
 

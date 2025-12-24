@@ -5,13 +5,13 @@
     costmap_topic: map
     costmap_updates_topic: map_updates
     visualize: true
-    planner_frequency: 0.2
-    progress_timeout: 60.0
+    planner_frequency: 1.0
+    progress_timeout: 30.0
     potential_scale: 10.0    #3.0
     orientation_scale: 0.0
     gain_scale: 1.0
     transform_tolerance: 0.5
-    min_frontier_size: 20.0
+    min_frontier_size: 2.0
     
     # Map saving parameters
     enable_map_saving: true

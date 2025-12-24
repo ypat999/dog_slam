@@ -5,15 +5,15 @@
       ndt_resolution: 1.0
       ndt_step_size: 0.5
       ndt_num_threads: 2
-      ndt_max_iterations: 320
-      transform_epsilon: 0.0001
+      ndt_max_iterations: 32
+      transform_epsilon: 0.001
       voxel_leaf_size: 0.2
-      scan_max_range: 50.0
+      scan_max_range: 5.0
       scan_min_range: 0.1
-      scan_period: 1.0
+      scan_period: 0.05
       use_pcd_map: true
       map_path: "/home/ztl/slam_data/3d_map/3dmap.pcd" #"/home/ywj/pcd/test.pcd"
-      set_initial_pose: false
+      set_initial_pose: true
       initial_pose_x: 20.0
       initial_pose_y: 20.0
       initial_pose_z: 1.0
@@ -28,5 +28,5 @@
       global_frame_id: map
       odom_frame_id: odom
       base_frame_id: base_link
-      enable_timer_publishing: true
+      enable_timer_publishing: false
       pose_publish_frequency: 1.0

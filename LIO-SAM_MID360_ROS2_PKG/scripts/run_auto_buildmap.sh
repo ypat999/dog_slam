@@ -7,7 +7,7 @@ systemctl stop lio_sam_nav2.service
 
 
 # 设置建图模式
-export BUILD_MAP=True
+export BUILD_MAP=False
 export ROS_DOMAIN_ID=27
 export ROS_LOCALHOST_ONLY=0
 # echo "显示输出：$DISPLAY"

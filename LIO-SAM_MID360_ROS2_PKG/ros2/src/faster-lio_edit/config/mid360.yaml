@@ -35,6 +35,7 @@
             map_en: false
             scan_publish_en:  true
             dense_publish_en: true
+            
             scan_bodyframe_pub_en: true
             tf_imu_frame: "base_link" #"body"
             tf_world_frame: "odom" #"camera_init"

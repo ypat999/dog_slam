@@ -62,6 +62,7 @@ def generate_launch_description():
             'filter_size_map': 0.5,  # Options: 0.5, 0.3, 0.15, 0.1
             'cube_side_length': 1000.0,  # Option: 1000
             'runtime_pos_log_enable': False,  # Option: True
+            'use_sim_time': DEFAULT_USE_SIM_TIME,
         }
     ]
 
@@ -151,6 +152,15 @@ def generate_launch_description():
         output='screen'
     )
 
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_link_to_livox_frame_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+
 
 
 
@@ -185,6 +195,7 @@ def generate_launch_description():
         pointcloud_to_laserscan_node,
         static_transform_map_to_odom,
         static_transform_odom_to_base_link,
+        base_link_to_livox_frame_tf,
         laser_mapping_node,
         # GroupAction(
         #     actions=[rviz_node],

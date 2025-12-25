@@ -84,10 +84,10 @@ def generate_launch_description():
     )
     
     # lifecycle manager node to configure and activate map_server and slam_toolbox
-    lifecycle_manager = Node(
+    lifecycle_manager_map_server = Node(
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
-        name='lifecycle_manager_localization',
+        name='lifecycle_manager_map_server',
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
@@ -128,7 +128,7 @@ def generate_launch_description():
     # 使用定时器确保正确的启动顺序
     delayed_map_server = TimerAction(period=1.0, actions=[map_server_node])
     delayed_slam = TimerAction(period=2.0, actions=[slam_toolbox_node])
-    delayed_lifecycle = TimerAction(period=3.0, actions=[lifecycle_manager])
+    delayed_lifecycle = TimerAction(period=3.0, actions=[lifecycle_manager_map_server])
     delayed_navigation = TimerAction(period=4.0, actions=[navigation_include])
 
     # add nodes

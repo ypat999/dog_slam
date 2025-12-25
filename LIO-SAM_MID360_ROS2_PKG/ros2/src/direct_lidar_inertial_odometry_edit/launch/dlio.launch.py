@@ -166,6 +166,8 @@ def generate_launch_description():
     base_link_to_livox_frame_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
+        name='base_link_to_livox_frame_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
         output='screen'
     )
@@ -176,7 +178,7 @@ def generate_launch_description():
         package='direct_lidar_inertial_odometry',
         executable='dlio_odom_node',
         output='screen',
-        parameters=[dlio_yaml_path, dlio_params_yaml_path],
+        parameters=[dlio_yaml_path, dlio_params_yaml_path, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         remappings=[
             ('pointcloud', pointcloud_topic),
             ('imu', imu_topic),

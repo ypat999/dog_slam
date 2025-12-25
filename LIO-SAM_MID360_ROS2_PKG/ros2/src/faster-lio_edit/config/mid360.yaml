@@ -9,7 +9,7 @@
             gravity_constant: 9.8066
         
         preprocess:
-            lidar_type: 5
+            lidar_type: 1
             scan_line:  4
             blind: 0.3
             timestamp_unit: 3
@@ -40,7 +40,7 @@
             tf_world_frame: "odom" #"camera_init"
             tf_lidar_frame: "livox_frame" #"lidar_link"
             tf_camera_init_frame: "odom" #"camera_init"
-            tf_map_frame: "map"
+            tf_map_frame: "odom"
             tf_odom_frame: "odom"
         
         pcd_save:

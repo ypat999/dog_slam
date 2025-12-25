@@ -99,7 +99,7 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 5,  # DESKTOP-4LS1SSN主机lidar_type为5
+        'FAST_LIO_LIDAR_TYPE': 1,  # DESKTOP-4LS1SSN主机lidar_type为5
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/pcd/test.pcd',  # 添加的地图文件路径
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,

@@ -2,7 +2,7 @@
 
 <robot name="mid360_robot" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:include filename="$(find livox_gazebo_ros2_gpu_simulation)/urdf/my_robot/sensor/mid360_gpu.xacro"/>  
+  <xacro:include filename="$(find livox_gazebo_ros2_gpu_simulation)/urdf/my_robot/sensor/mid360_cpu.xacro"/>  
   <xacro:include filename="$(find livox_gazebo_ros2_gpu_simulation)/urdf/my_robot/commons/common_macros.xacro"/>
 
   

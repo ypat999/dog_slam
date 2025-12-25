@@ -171,7 +171,7 @@ def generate_launch_description():
             # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
             # 'use_latest_timestamp': 'True',
             # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
-            'target_frame': 'base_link',
+            'target_frame': 'livox_frame',
             'concurrency_level': 1,       # 处理并发级别
         }],
         output='screen',
@@ -202,13 +202,15 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_odom_to_base_link)
 
+    # base_link -> livox_frame (机器人基坐标系到雷达坐标系的静态变换)
     base_link_to_livox_frame_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
         output='screen'
     )
-    # ld.add_action(base_link_to_livox_frame_tf)
+    ld.add_action(base_link_to_livox_frame_tf)
 
     # 根据模式添加相应的节点（按照LIO-SAM的逻辑）
     if RECORD_ONLY:

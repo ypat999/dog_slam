@@ -29,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -102,7 +102,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -269,7 +268,7 @@ Visualization Manager:
       Class: rviz_default_plugins/LaserScan
       Color: 255; 255; 255
       Color Transformer: Intensity
-      Decay Time: 1
+      Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -506,5 +505,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1844
-  X: 12
-  Y: 17
+  X: -20
+  Y: -15

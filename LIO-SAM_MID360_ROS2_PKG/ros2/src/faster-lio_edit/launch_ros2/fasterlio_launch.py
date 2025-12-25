@@ -137,6 +137,7 @@ def generate_launch_description():
     ld.add_action(static_transform_map_to_odom)
 
     # odom -> base_link (里程计到机器人基坐标系的静态变换)
+    # 注释掉静态TF变换，让Faster-LIO发布动态TF变换
     static_transform_odom_to_base_link = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -147,6 +148,15 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_odom_to_base_link)
 
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_link_to_livox_frame_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+    ld.add_action(base_link_to_livox_frame_tf)
 
     
     # Faster-LIO node
@@ -155,7 +165,7 @@ def generate_launch_description():
         executable='run_mapping_online',
         name='fasterlio_mapping',
         output='screen',
-        parameters=[config_file],
+        parameters=[config_file, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         prefix=['taskset -c 7'],   # 绑定 CPU 7
     )
     

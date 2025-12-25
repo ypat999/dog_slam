@@ -151,6 +151,13 @@ def generate_launch_description():
         output='screen'
     )
 
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+
 
 
 
@@ -185,6 +192,7 @@ def generate_launch_description():
         pointcloud_to_laserscan_node,
         static_transform_map_to_odom,
         static_transform_odom_to_base_link,
+        base_link_to_livox_frame_tf,
         laser_mapping_node,
         # GroupAction(
         #     actions=[rviz_node],

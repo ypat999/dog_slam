@@ -423,7 +423,7 @@ bool sync_packages(MeasureGroup &meas)
         }
         
         sync_empty_count++;
-        if (sync_empty_count % 60 == 0) {
+        if (sync_empty_count % 500 == 0) {
             std::cerr << "sync_packages: buffers empty (count: " << sync_empty_count 
                       << ", lidar_buffer: " << lidar_buffer.size() 
                       << ", imu_buffer: " << imu_buffer.size() 
@@ -1223,7 +1223,7 @@ private:
         }        
         else
         {
-            RCLCPP_INFO(this->get_logger(), "sync data false, lidar_buffer: %zu, imu_buffer: %zu", lidar_buffer.size(), imu_buffer.size());
+            // RCLCPP_INFO(this->get_logger(), "sync data false, lidar_buffer: %zu, imu_buffer: %zu", lidar_buffer.size(), imu_buffer.size());
             // 检查传感器是否丢失
             if (sensor_lost) {
                 static int sensor_lost_print_count = 0;

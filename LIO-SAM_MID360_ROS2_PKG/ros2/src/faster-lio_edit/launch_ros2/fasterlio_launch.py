@@ -147,6 +147,14 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_odom_to_base_link)
 
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+    ld.add_action(base_link_to_livox_frame_tf)
+
 
     
     # Faster-LIO node

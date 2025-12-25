@@ -11,7 +11,7 @@
             # the timestamp of IMU is transferred from the current timeline to LiDAR's timeline by subtracting this value
 
         preprocess:
-            lidar_type: 5
+            lidar_type: 1
             scan_line: 4
             timestamp_unit: 3   # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
             blind: 0.5
@@ -52,10 +52,10 @@
             path_en: true                 # false: close the path output
             scan_publish_en: true         # false: close all the point cloud output
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
-            tf_imu_frame: "body"
-            tf_world_frame: "camera_init"
-            tf_lidar_frame: "lidar_link"
-            tf_camera_init_frame: "camera_init"
+            tf_imu_frame: "livox_frame"
+            tf_world_frame: "odom"
+            tf_lidar_frame: "livox_frame"
+            tf_camera_init_frame: "odom"
             tf_map_frame: "map"
             tf_odom_frame: "odom"
 

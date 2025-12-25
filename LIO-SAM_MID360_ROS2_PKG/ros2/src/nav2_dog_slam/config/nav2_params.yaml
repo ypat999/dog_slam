@@ -33,8 +33,8 @@ amcl:
     use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 500
-    max_particles: 4000
+    min_particles: 200
+    max_particles: 5000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.97        # 修正参数名：kld_z -> pf_z
     
@@ -295,10 +295,10 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
       # time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
-      time_steps: 20
-      model_dt: 0.03
-      batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.5  # 减少变换容差，提高实时性
+      time_steps: 30
+      model_dt: 0.025
+      batch_size: 200  # 大幅减少批量大小，从1500减到800，提高计算速度
+      transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 1.0
@@ -306,15 +306,15 @@ controller_server:
       az_max: 3.0
       az_min: -3.0
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
-      wz_std: 0.25  # 提高角速度采样标准差，增加转向探索性
+      wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      # vx_max: 1.2
-      vx_max: 0.8
+      vx_max: 1.2
+      # vx_max: 0.8
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
-      vx_min: -0.06
-      # wz_max: 1.2
-      wz_max: 0.8
+      vx_min: -0.1
+      wz_max: 1.2
+      # wz_max: 2.0
       
       
       # 温度参数
@@ -422,12 +422,12 @@ velocity_smoother:
     # odom_duration: 0.1
     
     # 移动速度限制 - 降低速度避免过于激进
-    max_velocity: [1.5, 1.5, 1.0]  # [vx_max, vy_max, vtheta_max] - 降低最大速度
-    min_velocity: [-0.1, -1.5, -1.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
+    max_velocity: [3.0, 1.5, 5.0]  # [vx_max, vy_max, vtheta_max] - 降低最大速度
+    min_velocity: [-0.1, -1.5, -5.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
     
     # 加速度限制 - 降低加速度避免急转急停
-    max_accel: [0.8, 1.0, 2.0]  # [ax_max, ay_max, atheta_max] - 降低加速度
-    max_decel: [-10.0, -1.0, -2.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
+    max_accel: [2.0, 2.0, 5.0]  # [ax_max, ay_max, atheta_max] - 降低加速度
+    max_decel: [-20.0, -2.0, -5.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
     
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
@@ -440,7 +440,7 @@ velocity_smoother:
 planner_server:
   ros__parameters:
     use_sim_time: false
-    expected_planner_frequency: 0.2
+    expected_planner_frequency: 0.1
     planner_plugins: ["GridBased"]
 
     GridBased:

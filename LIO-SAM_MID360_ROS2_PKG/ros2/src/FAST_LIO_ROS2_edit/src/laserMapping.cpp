@@ -416,9 +416,14 @@ bool sync_packages(MeasureGroup &meas)
     // 检查传感器数据丢失
     if (lidar_buffer.empty() || imu_buffer.empty()) {
         // 检查是否已经丢失传感器数据
+
+        sensor_lost_count++;
+        if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
+            sensor_lost = true;
+        }
         
         sync_empty_count++;
-        if (sync_empty_count % 60 == 0) {
+        if (sync_empty_count % \500 == 0) {
             std::cout << "sync_packages: buffers empty (count: " << sync_empty_count 
                       << ", lidar_buffer: " << lidar_buffer.size() 
                       << ", imu_buffer: " << imu_buffer.size() 
@@ -430,6 +435,8 @@ bool sync_packages(MeasureGroup &meas)
     }
 
     sync_empty_count = 1;
+    sensor_lost_count = 0;
+    sensor_lost = false;
 
     /*** push a lidar scan ***/
     if(!lidar_pushed)

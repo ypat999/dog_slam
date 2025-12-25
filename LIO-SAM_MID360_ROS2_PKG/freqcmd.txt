@@ -26,11 +26,11 @@ rviz2
 # 启动建图：
 sudo systemctl start lio_sam_buildmap.service
 
-sudo systemctl start auto_buildmap.service
-
 # 查看日志（启动后尽快运行，避免错过ERROR）：
 sudo journalctl -u lio_sam_buildmap.service -f
 
+#全自动建图及日志
+sudo systemctl start auto_buildmap.service
 sudo journalctl -u auto_buildmap.service -f
 
 # 或  使用slamtoolbox建图
@@ -65,6 +65,9 @@ kill -
 
 # 关闭建图：
 sudo systemctl stop lio_sam_buildmap.service
+
+
+
 
 
 
@@ -136,10 +139,11 @@ ros2 launch explore_lite explore.launch.py
 
 
 
-# 全局定位
+# 三维定位
 ros2 launch lidar_localization_ros2 lidar_localization.launch.py
 
-
+#全局定位
+ros2 run nav2_dog_slam surf_map_matching.py
 
 
 

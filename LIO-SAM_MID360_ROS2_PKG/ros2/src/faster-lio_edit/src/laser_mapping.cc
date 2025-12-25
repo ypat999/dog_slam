@@ -393,8 +393,8 @@ void LaserMapping::Run() {
     // update local map
     Timer::Evaluate([&, this]() { MapIncremental(); }, "    Incremental Mapping");
 
-    LOG(INFO) << "[ mapping ]: In num: " << scan_undistort_->points.size() << " downsamp " << cur_pts
-              << " Map grid num: " << ivox_->NumValidGrids() << " effect num : " << effect_feat_num_;
+    // LOG(INFO) << "[ mapping ]: In num: " << scan_undistort_->points.size() << " downsamp " << cur_pts
+    //           << " Map grid num: " << ivox_->NumValidGrids() << " effect num : " << effect_feat_num_;
 
     // publish or save map pcd
     if (run_in_offline_) {

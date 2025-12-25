@@ -104,7 +104,7 @@ bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false;
 bool    is_first_lidar = true;
 bool    sensor_lost = false; // 传感器丢失标志
 int     sensor_lost_count = 0; // 传感器丢失计数器
-const int MAX_SENSOR_LOST_COUNT = 10; // 最大允许丢失次数
+const int MAX_SENSOR_LOST_COUNT = 40; // 最大允许丢失次数
 
 // 调试信息计数器
 static int debug_info_count = 0;
@@ -423,8 +423,8 @@ bool sync_packages(MeasureGroup &meas)
         }
         
         sync_empty_count++;
-        if (sync_empty_count % 500 == 0) {
-            std::cout << "sync_packages: buffers empty (count: " << sync_empty_count 
+        if (sync_empty_count % 60 == 0) {
+            std::cerr << "sync_packages: buffers empty (count: " << sync_empty_count 
                       << ", lidar_buffer: " << lidar_buffer.size() 
                       << ", imu_buffer: " << imu_buffer.size() 
                       << ", sensor_lost: " << sensor_lost 
@@ -1063,23 +1063,6 @@ private:
         //     std::cout << "========================================" << std::endl;
         // }
         
-        // 检查传感器是否丢失
-        if (sensor_lost) {
-            static int sensor_lost_print_count = 0;
-            if (sensor_lost_print_count % 100 == 0) {
-                RCLCPP_WARN(this->get_logger(), "Sensor data lost, pausing state estimation...");
-            }
-            sensor_lost_print_count++;
-            
-            // 在传感器丢失期间，只发布最后一次有效的位姿，避免漂移
-            if (flg_EKF_inited) {
-                // 发布最后一次有效的位姿，但标记为不可靠
-                publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
-                if (path_en) publish_path(pubPath_);
-            }
-            return;
-        }
-        
         if(sync_packages(Measures))
         {
             if (flg_first_scan)
@@ -1236,6 +1219,26 @@ private:
                 fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " " << euler_cur.transpose() << " " << state_point.pos.transpose()<< " " << ext_euler.transpose() << " "<<state_point.offset_T_L_I.transpose()<<" "<< state_point.vel.transpose() \
                 <<" "<<state_point.bg.transpose()<<" "<<state_point.ba.transpose()<<" "<<state_point.grav<<" "<<feats_undistort->points.size()<<endl;
                 dump_lio_state_to_log(fp);
+            }
+        }        
+        else
+        {
+            RCLCPP_INFO(this->get_logger(), "sync data false, lidar_buffer: %zu, imu_buffer: %zu", lidar_buffer.size(), imu_buffer.size());
+            // 检查传感器是否丢失
+            if (sensor_lost) {
+                static int sensor_lost_print_count = 0;
+                if (sensor_lost_print_count % 100 == 0) {
+                    RCLCPP_WARN(this->get_logger(), "Sensor data lost, pausing state estimation...");
+                }
+                sensor_lost_print_count++;
+
+                // 在传感器丢失期间，只发布最后一次有效的位姿，避免漂移
+                if (flg_EKF_inited) {
+                    // 发布最后一次有效的位姿，但标记为不可靠
+                    publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
+                    if (path_en) publish_path(pubPath_);
+                }
+                return;
             }
         }
     }

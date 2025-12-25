@@ -1,6 +1,6 @@
 /**:
     ros__parameters:
-        map_file_path: "/home/ztl/slam_data/pcd/test.pcd"
+        map_file_path: "/home/ywj/pcd/test.pcd"
         common:
             lid_topic:  "/livox/lidar"
             imu_topic:  "/livox/imu"
@@ -9,7 +9,7 @@
             gravity_constant: 9.8066
         
         preprocess:
-            lidar_type: 1
+            lidar_type: 5
             scan_line:  4
             blind: 0.3
             timestamp_unit: 3
@@ -32,7 +32,7 @@
         publish:
             path_en: true
             effect_map_en: false
-            map_en: true
+            map_en: false
             scan_publish_en:  true
             dense_publish_en: true
             scan_bodyframe_pub_en: true

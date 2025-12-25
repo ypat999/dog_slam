@@ -161,7 +161,7 @@ def generate_launch_description():
         name='laserMapping',
         output='screen',
         parameters=laser_mapping_params,
-        prefix=['taskset -c 6,7'],   # 绑定 CPU 7
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
         # prefix='gdb -ex run --args'
     )
 

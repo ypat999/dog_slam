@@ -85,7 +85,7 @@ def generate_launch_description():
         name='livox_lidar_publisher',
         output='screen',
         parameters=[
-            {"xfer_format": 1},
+            {"xfer_format": 0},
             {"multi_topic": 0},
             {"data_src": 0},
             {"publish_freq": 10.0},
@@ -105,7 +105,7 @@ def generate_launch_description():
         name='pointcloud_to_laserscan',
         remappings=[
             # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', '/cloud_registered_body'),
+            ('/cloud_in', '/dlio/odom_node/pointcloud/deskewed'),
             ('/scan', '/scan'),
         ],
         parameters=[{
@@ -163,6 +163,13 @@ def generate_launch_description():
         output='screen'
     )
 
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+
 
     # DLIO Odometry Node
     dlio_odom_node = Node(
@@ -180,7 +187,7 @@ def generate_launch_description():
             ('kf_cloud', 'dlio/odom_node/pointcloud/keyframe'),
             ('deskewed', 'dlio/odom_node/pointcloud/deskewed'),
         ],
-        prefix=['taskset -c 6,7'],   # 绑定 CPU 7
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
     )
 
     # DLIO Mapping Node
@@ -210,6 +217,7 @@ def generate_launch_description():
         pointcloud_to_laserscan_node,
         static_transform_map_to_odom,
         static_transform_odom_to_base_link,
+        base_link_to_livox_frame_tf,
         declare_rviz_arg,
         declare_pointcloud_topic_arg,
         declare_imu_topic_arg,

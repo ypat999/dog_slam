@@ -156,7 +156,7 @@ def generate_launch_description():
         name='fasterlio_mapping',
         output='screen',
         parameters=[config_file],
-        prefix=['taskset -c 6,7'],   # 绑定 CPU 7
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
     )
     
     # RVIZ node

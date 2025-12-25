@@ -97,7 +97,7 @@ def generate_launch_description():
         name='fastlio_mapping',
         parameters=[PathJoinSubstitution([config_path, config_file]),
                     {'use_sim_time': use_sim_time}],
-        prefix=['taskset -c 6,7'],   # 绑定 CPU 7
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
         output='screen',
         namespace='',
         # 启用生命周期管理

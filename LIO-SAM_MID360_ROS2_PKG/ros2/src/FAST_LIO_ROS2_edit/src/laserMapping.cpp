@@ -423,7 +423,7 @@ bool sync_packages(MeasureGroup &meas)
         }
         
         sync_empty_count++;
-        if (sync_empty_count % \500 == 0) {
+        if (sync_empty_count % 500 == 0) {
             std::cout << "sync_packages: buffers empty (count: " << sync_empty_count 
                       << ", lidar_buffer: " << lidar_buffer.size() 
                       << ", imu_buffer: " << imu_buffer.size() 
@@ -807,7 +807,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
         sensor_lost_count++;
         if (sensor_lost_count >= MAX_SENSOR_LOST_COUNT && !sensor_lost) {
             sensor_lost = true;
-            ROS_WARN("Sensor data lost! No effective points count: %d", sensor_lost_count);
+            std::cerr << "Sensor data lost! No effective points count: " << sensor_lost_count << std::endl;
         }
         
         // 每10次输出一次详细调试信息
@@ -823,7 +823,7 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
             std::cerr << "No Effective Points! [" << no_effective_count << "]" << std::endl;
         }
         
-        ROS_WARN("No Effective Points! \n");
+        // ROS_WARN("No Effective Points! \n");
         return;
     }
     

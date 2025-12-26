@@ -56,6 +56,7 @@ config_by_machine = {
         
         # RK3588主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_tilt.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
     },
     'jqr001': {
         # jqr001主机配置 - LIO-SAM
@@ -81,6 +82,7 @@ config_by_machine = {
         
         # jqr001主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - LIO-SAM
@@ -106,6 +108,7 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
     },
     'DESKTOP-ypat': {
         # DESKTOP-ypat主机配置 - LIO-SAM
@@ -131,6 +134,7 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
     }
 }
 
@@ -159,6 +163,7 @@ default_config = {
     
     # Livox MID360 默认配置
     'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+    'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
 }
 
 # 根据当前主机名选择配置
@@ -179,6 +184,9 @@ if not DEFAULT_USE_SIM_TIME:
 
 # 导出 Livox MID360 配置参数
 LIVOX_MID360_CONFIG = selected_config['LIVOX_MID360_CONFIG']
+LIVOX_MID360_CONFIG_NO_TILT = selected_config['LIVOX_MID360_CONFIG_NO_TILT']
+
+
 
 # 导出SLAM算法选择参数
 SLAM_ALGORITHM = SLAM_ALGORITHM

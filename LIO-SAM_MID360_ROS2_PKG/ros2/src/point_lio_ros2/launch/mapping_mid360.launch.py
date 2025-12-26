@@ -31,9 +31,9 @@ def generate_launch_description():
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
 
     # 导入全局配置
-    from global_config import LIVOX_MID360_CONFIG
+    from global_config import LIVOX_MID360_CONFIG_NO_TILT
     
-    livox_config_path = "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json" #LIVOX_MID360_CONFIG
+    livox_config_path = LIVOX_MID360_CONFIG_NO_TILT
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"

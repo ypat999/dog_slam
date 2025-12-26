@@ -20,7 +20,7 @@ lifecycle_manager:
 # # 单独的定位生命周期管理器配置
 # lifecycle_manager_localization:
 #   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 #     autostart: true
 #     node_names: ['map_server', 'amcl']
 #     bond_timeout_ms: 10000
@@ -308,13 +308,14 @@ controller_server:
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      vx_max: 1.2
-      # vx_max: 0.8
+      # vx_max: 2.0
+      # vx_max: 1.2
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
-      wz_max: 1.2
       # wz_max: 2.0
+      wz_max: 1.2
+      
       
       
       # 温度参数

@@ -33,7 +33,7 @@ def generate_launch_description():
     # 导入全局配置
     from global_config import LIVOX_MID360_CONFIG
     
-    livox_config_path = LIVOX_MID360_CONFIG
+    livox_config_path = "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json" #LIVOX_MID360_CONFIG
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
@@ -52,7 +52,7 @@ def generate_launch_description():
             'config', 'mid360.yaml'
         ]),
         {
-            'use_imu_as_input': False,  # Change to True to use IMU as input of Point-LIO
+            'use_imu_as_input': True,  # Change to True to use IMU as input of Point-LIO
             'prop_at_freq_of_imu': True,
             'check_satu': True,
             'init_map_size': 10,
@@ -77,7 +77,7 @@ def generate_launch_description():
             {"xfer_format": 1},
             {"multi_topic": 0},
             {"data_src": 0},
-            {"publish_freq": 10.0},
+            {"publish_freq": 40.0},
             {"output_data_type": 0},
             {"frame_id": 'livox_frame'},
             {"user_config_path": livox_config_path},
@@ -142,24 +142,44 @@ def generate_launch_description():
         output='screen'
     )
 
+    # # odom -> base_link (里程计到机器人基坐标系的静态变换)
+    # static_transform_odom_to_base_link = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='static_transform_odom_to_base_link',
+    #     parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+    #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+    #     output='screen'
+    # )
+
+    # base_link_to_livox_frame_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='base_link_to_livox_frame_tf',
+    #     parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+    #     arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+    #     output='screen'
+    # )
+
     # odom -> base_link (里程计到机器人基坐标系的静态变换)
-    static_transform_odom_to_base_link = Node(
+    static_transform_odom_to_livox_frame = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_odom_to_base_link',
+        name='static_transform_odom_to_livox_frame',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'livox_frame'],
         output='screen'
     )
 
-    base_link_to_livox_frame_tf = Node(
+    livox_frame_to_base_link_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='base_link_to_livox_frame_tf',
+        name='livox_frame_to_base_link_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        arguments=['-0.1', '0', '-0.1', '0', '-0.5235987756', '0', 'livox_frame', 'base_link'],
         output='screen'
     )
+
 
 
 
@@ -194,8 +214,10 @@ def generate_launch_description():
         livox_driver_node,
         pointcloud_to_laserscan_node,
         static_transform_map_to_odom,
-        static_transform_odom_to_base_link,
-        base_link_to_livox_frame_tf,
+        # static_transform_odom_to_base_link,
+        # base_link_to_livox_frame_tf,
+        static_transform_odom_to_livox_frame,
+        livox_frame_to_base_link_tf,
         laser_mapping_node,
         # GroupAction(
         #     actions=[rviz_node],

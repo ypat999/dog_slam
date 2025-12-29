@@ -66,9 +66,9 @@ controller_server:
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 2.0
-      ax_min: -10.0
-      az_max: 5.0
-      az_min: -5.0
+      ax_min: -3.0
+      az_max: 3.0
+      az_min: -3.0
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       

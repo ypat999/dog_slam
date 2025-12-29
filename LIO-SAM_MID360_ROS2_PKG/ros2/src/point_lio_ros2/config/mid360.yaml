@@ -3,8 +3,8 @@
         common:
             lid_topic: "/livox/lidar"
             imu_topic: "/livox/imu"
-            con_frame: false # true: if you need to combine several LiDAR frames into one
-            con_frame_num: 1 # the number of frames combined
+            con_frame: true # true: if you need to combine several LiDAR frames into one
+            con_frame_num: 4 # the number of frames combined
             cut_frame: false # true: if you need to cut one LiDAR frame into several subframes
             cut_frame_time_interval: 0.1 # should be integral fraction of 1 / LiDAR frequency
             time_lag_imu_to_lidar: 0.0 # Time offset between LiDAR and IMU calibrated by other algorithms, e.g., LI-Init (find in Readme),
@@ -58,7 +58,7 @@
             tf_imu_frame: "livox_frame" #"body"
             tf_world_frame: "odom" #"camera_init"
             tf_lidar_frame: "livox_frame" #"lidar_link"
-            tf_camera_init_frame: "odom"  #"camera_init"
+            tf_camera_init_frame: "base_link"  #"camera_init"
             tf_map_frame: "odom"
             tf_odom_frame: "livox_frame" 
 

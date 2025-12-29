@@ -83,7 +83,7 @@ def generate_launch_description():
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
         ],
-        prefix=['taskset -c 4,5'],   # 绑定 CPU 4
+        prefix=['taskset -c 4'],   # 绑定 CPU 4
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
@@ -167,7 +167,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_livox_frame',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'livox_frame'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.7', 'odom', 'livox_frame'],
         output='screen'
     )
 

@@ -24,7 +24,7 @@ def generate_launch_description():
         name="alaserPGO",
         output="screen",
         parameters=[
-            {"scan_line": 128},
+            {"scan_line": 4},
             {"minimum_range": 0.5},
             {"mapping_line_resolution": 0.4},
             {"mapping_plane_resolution": 0.8},
@@ -37,10 +37,11 @@ def generate_launch_description():
         remappings=[
             ("/aft_mapped_to_init", "/Odometry"),
             ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
-            ("/cloud_for_scancontext", "/cloud_registered_lidar"),
+            ("/cloud_for_scancontext", "/cloud_registered_body"),
             ("/tf", "tf"),
             ("/tf_static", "tf_static"),
         ],
+        prefix=['taskset -c 6'],   # 绑定 CPU 4
     )
 
     # RViz Node
@@ -59,9 +60,9 @@ def generate_launch_description():
     # Group nodes under namespace
     namespaced_group = GroupAction(
         actions=[
-            PushRosNamespace(namespace),
+            # PushRosNamespace(namespace),
             alaserPGO_node,
-            rviz_node,
+            # rviz_node,
         ]
     )
 

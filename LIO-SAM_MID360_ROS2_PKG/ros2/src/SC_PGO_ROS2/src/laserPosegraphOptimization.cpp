@@ -324,14 +324,14 @@ void pubPath(void) {
   // Publish odom and path
   nav_msgs::msg::Odometry odomAftPGO;
   nav_msgs::msg::Path pathAftPGO;
-  pathAftPGO.header.frame_id = "camera_init";
+  pathAftPGO.header.frame_id = "odom";
   mKF.lock();
   for (int node_idx = 0; node_idx < recentIdxUpdated; node_idx++) {
     const Pose6D &pose_est =
         keyframePosesUpdated.at(node_idx);  // Updated poses
 
     nav_msgs::msg::Odometry odomAftPGOthis;
-    odomAftPGOthis.header.frame_id = "camera_init";
+    odomAftPGOthis.header.frame_id = "odom";
     odomAftPGOthis.child_frame_id = "aft_pgo";
     odomAftPGOthis.header.stamp =
         rclcpp::Time(keyframeTimes.at(node_idx) * 1e9);
@@ -352,7 +352,7 @@ void pubPath(void) {
     poseStampAftPGO.pose = odomAftPGOthis.pose.pose;
 
     pathAftPGO.header.stamp = odomAftPGOthis.header.stamp;
-    pathAftPGO.header.frame_id = "camera_init";
+    pathAftPGO.header.frame_id = "odom";
     pathAftPGO.poses.push_back(poseStampAftPGO);
   }
   mKF.unlock();
@@ -361,7 +361,7 @@ void pubPath(void) {
 
   geometry_msgs::msg::TransformStamped transformStamped;
   transformStamped.header.stamp = odomAftPGO.header.stamp;
-  transformStamped.header.frame_id = "camera_init";
+  transformStamped.header.frame_id = "odom";
   transformStamped.child_frame_id = "aft_pgo";
   transformStamped.transform.translation.x = odomAftPGO.pose.pose.position.x;
   transformStamped.transform.translation.y = odomAftPGO.pose.pose.position.y;
@@ -426,7 +426,7 @@ pcl::PointCloud<PointType>::Ptr transformPointCloud(
       transformIn.translation().z(), transformIn.rotation().roll(),
       transformIn.rotation().pitch(), transformIn.rotation().yaw());
 
-  int numberOfCores = 8;  // TODO move to yaml
+  int numberOfCores = 4;  // TODO move to yaml
 #pragma omp parallel for num_threads(numberOfCores)
   for (int i = 0; i < cloudSize; ++i) {
     pointFrom = &cloudIn->points[i];
@@ -486,12 +486,12 @@ std::optional<gtsam::Pose3> doICPVirtualRelative(int _loop_kf_idx,
   // loop verification
   sensor_msgs::msg::PointCloud2 cureKeyframeCloudMsg;
   pcl::toROSMsg(*cureKeyframeCloud, cureKeyframeCloudMsg);
-  cureKeyframeCloudMsg.header.frame_id = "camera_init";
+  cureKeyframeCloudMsg.header.frame_id = "odom";
   pubLoopScanLocal->publish(cureKeyframeCloudMsg);
 
   sensor_msgs::msg::PointCloud2 targetKeyframeCloudMsg;
   pcl::toROSMsg(*targetKeyframeCloud, targetKeyframeCloudMsg);
-  targetKeyframeCloudMsg.header.frame_id = "camera_init";
+  targetKeyframeCloudMsg.header.frame_id = "odom";
   pubLoopSubmapLocal->publish(targetKeyframeCloudMsg);
 
   // ICP Settings
@@ -867,7 +867,7 @@ void pubMap(void) {
 
   sensor_msgs::msg::PointCloud2 laserCloudMapPGOMsg;
   pcl::toROSMsg(*laserCloudMapPGO, laserCloudMapPGOMsg);
-  laserCloudMapPGOMsg.header.frame_id = "camera_init";
+  laserCloudMapPGOMsg.header.frame_id = "odom";
   pubMapAftPGO->publish(laserCloudMapPGOMsg);
 }
 
@@ -897,6 +897,7 @@ int main(int argc, char **argv) {
   keyframeDegGap = nh->get_parameter("keyframe_deg_gap").as_double();
 
   odomKITTIformat = save_directory + "odom_poses.txt";
+  pgKITTIformat = save_directory + "optimized_poses.txt";
   pgTimeSaveStream =
       std::fstream(save_directory + "times.txt", std::fstream::out);
   pgTimeSaveStream.precision(std::numeric_limits<double>::max_digits10);

@@ -65,14 +65,14 @@ controller_server:
       transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
-      ax_max: 2.0
-      ax_min: -3.0
-      az_max: 3.0
-      az_min: -3.0
+      ax_max: 1.5
+      ax_min: -1.5
+      az_max: 1.5
+      az_min: -1.5
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      vx_max: 2.0
+      vx_max: 3.0
       # vx_max: 1.2
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
@@ -152,8 +152,8 @@ controller_server:
 
       VelocityDeadbandCritic: 
         enabled: true
-        cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
-        cost_power: 1
+        cost_weight: 99.0  # 增加死区评价器权重，减少低速抖动
+        cost_power: 2
         deadband_velocities: [0.05, 0.1, 0.1]
         
       GoalCritic:
@@ -179,7 +179,7 @@ velocity_smoother:
     
     use_sim_time: false
     smoothing_frequency: 40.0
-    scale_velocities: false
+    scale_velocities: true
     feedback: "OPEN_LOOP" 
 
     # feedback: "CLOSED_LOOP"  

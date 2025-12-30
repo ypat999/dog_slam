@@ -49,7 +49,7 @@
                         -0.5, 0.0, 0.8660]
 
         odometry:
-            publish_odometry_without_downsample: false
+            publish_odometry_without_downsample: true
 
         publish:
             path_en: true                 # false: close the path output
@@ -64,5 +64,5 @@
 
         pcd_save:
             pcd_save_en: false
-            interval: -1                 # how many LiDAR frames saved in each pcd file;
+            interval: 5                 # how many LiDAR frames saved in each pcd file;
             # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.

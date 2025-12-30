@@ -14,8 +14,10 @@ import open3d as o3d
 
 from pypcdMyUtils import * 
 
-jet_table = np.load('jet_table.npy')
-bone_table = np.load('bone_table.npy')
+this_folder = os.path.dirname(os.path.abspath(__file__ ))
+
+jet_table = np.load(this_folder + '/jet_table.npy')
+bone_table = np.load(this_folder + '/bone_table.npy')
 
 color_table = jet_table
 color_table_len = color_table.shape[0]
@@ -25,11 +27,11 @@ color_table_len = color_table.shape[0]
 # User only consider this block
 ##########################
 
-data_dir = "/home/user/Documents/catkin2021/catkin_fastlio2/data/" # should end with / 
-scan_idx_range_to_stack = [0, 200] # if you want a whole map, use [0, len(scan_files)]
+data_dir = "/home/ztl/save_data/" # should end with / 
+scan_idx_range_to_stack = [0, 183] # if you want a whole map, use [0, len(scan_files)]
 node_skip = 1
 
-num_points_in_a_scan = 150000 # for reservation (save faster) // e.g., use 150000 for 128 ray lidars, 100000 for 64 ray lidars, 30000 for 16 ray lidars, if error occured, use the larger value.
+num_points_in_a_scan = 10000 # for reservation (save faster) // e.g., use 150000 for 128 ray lidars, 100000 for 64 ray lidars, 30000 for 16 ray lidars, if error occured, use the larger value.
 
 is_live_vis = False # recommend to use false 
 is_o3d_vis = True
@@ -85,7 +87,7 @@ for node_idx in range(len(scan_files)):
         continue
 
     nodes_count = nodes_count + 1
-    if( nodes_count % node_skip is not 0): 
+    if( nodes_count % node_skip != 0): 
         if(node_idx is not scan_idx_range_to_stack[0]): # to ensure the vis init 
             continue
 
@@ -120,7 +122,7 @@ for node_idx in range(len(scan_files)):
         pcd_combined_for_vis += scan_pcd_global # open3d pointcloud class append is fast 
 
     if is_live_vis:
-        if(node_idx is scan_idx_range_to_stack[0]): # to ensure the vis init 
+        if(node_idx == scan_idx_range_to_stack[0]): # to ensure the vis init 
             vis.add_geometry(pcd_combined_for_vis) 
 
         vis.update_geometry(pcd_combined_for_vis)

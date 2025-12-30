@@ -145,6 +145,8 @@ ros2 launch lidar_localization_ros2 lidar_localization.launch.py
 #全局定位
 ros2 run nav2_dog_slam surf_map_matching.py
 
+# SC-posegraph
+ros2 launch sc_pgo_ros2 sc_pgo.launch.py
 
 
 

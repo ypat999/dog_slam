@@ -27,8 +27,8 @@ color_table_len = color_table.shape[0]
 # User only consider this block
 ##########################
 
-data_dir = "/home/ztl/save_data/" # should end with / 
-scan_idx_range_to_stack = [0, 183] # if you want a whole map, use [0, len(scan_files)]
+data_dir = "/home/ywj/save_data/" # should end with / 
+scan_idx_range_to_stack = [0, 209] # if you want a whole map, use [0, len(scan_files)]
 node_skip = 1
 
 num_points_in_a_scan = 10000 # for reservation (save faster) // e.g., use 150000 for 128 ray lidars, 100000 for 64 ray lidars, 30000 for 16 ray lidars, if error occured, use the larger value.

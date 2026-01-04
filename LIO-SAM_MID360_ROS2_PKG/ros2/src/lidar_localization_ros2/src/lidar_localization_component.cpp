@@ -259,15 +259,15 @@ void PCLLocalization::initializePubSub()
     std::bind(&PCLLocalization::mapReceived, this, std::placeholders::_1));
 
   odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-    "odom", rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(),
+    "odom", rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(),
     std::bind(&PCLLocalization::odomReceived, this, std::placeholders::_1));
 
   cloud_sub_ = create_subscription<sensor_msgs::msg::PointCloud2>(
-    "cloud", rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(),
+    "cloud", rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(),
     std::bind(&PCLLocalization::cloudReceived, this, std::placeholders::_1));
 
   imu_sub_ = create_subscription<sensor_msgs::msg::Imu>(
-    "imu", rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(),
+    "imu", rclcpp::QoS(rclcpp::KeepLast(100)).best_effort(),
     std::bind(&PCLLocalization::imuReceived, this, std::placeholders::_1));
 
   if (enable_timer_publishing_) {

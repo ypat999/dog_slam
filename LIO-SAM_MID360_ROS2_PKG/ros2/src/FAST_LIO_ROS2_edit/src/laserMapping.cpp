@@ -1008,13 +1008,13 @@ public:
         /*** ROS subscribe initialization ***/
         if (p_pre->lidar_type == AVIA)
         {
-            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), livox_pcl_cbk);
+            sub_pcl_livox_ = this->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(), livox_pcl_cbk);
         }
         else
         {
-            sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), standard_pcl_cbk);
+            sub_pcl_pc_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(), standard_pcl_cbk);
         }
-        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(rclcpp::KeepLast(400)).best_effort(), imu_cbk);
+        sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(rclcpp::KeepLast(100)).best_effort(), imu_cbk);
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 20);
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);

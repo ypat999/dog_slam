@@ -12,7 +12,7 @@ print(f"当前运行主机: {current_machine}")
 USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
-BUILD_MAP = os.environ.get('BUILD_MAP', 'False').lower() == 'true'  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
+MANUAL_BUILD_MAP = os.environ.get('MANUAL_BUILD_MAP', 'False').lower() == 'true'  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
 
 # 建图工具选择
 BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式工具选择

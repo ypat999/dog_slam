@@ -37,15 +37,15 @@ fi
 
 # Install the service
 echo "Installing systemd service..."
-cp "$SCRIPT_DIR/lio_sam_nav2.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/lio_nav2_unified.service" /etc/systemd/system/
 
 # Reload systemd and enable service
 systemctl daemon-reload
-systemctl enable lio_sam_nav2.service
+systemctl enable lio_nav2_unified.service
 
 echo "Service installation completed!"
-echo "To start the service: sudo systemctl start lio_sam_nav2"
-echo "To check status: sudo systemctl status lio_sam_nav2"
-echo "To view logs: sudo journalctl -u lio_sam_nav2 -f"
+echo "To start the service: sudo systemctl start lio_nav2_unified"
+echo "To check status: sudo systemctl status lio_nav2_unified"
+echo "To view logs: sudo journalctl -u lio_nav2_unified -f"
 echo ""
 echo "Note: You may need to log out and back in for group changes to take effect."

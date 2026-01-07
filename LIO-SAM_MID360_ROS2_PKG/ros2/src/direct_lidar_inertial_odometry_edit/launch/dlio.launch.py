@@ -25,7 +25,7 @@ def generate_launch_description():
         sys.path.insert(0, global_config_path)
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
-            DEFAULT_USE_SIM_TIME, BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
+            DEFAULT_USE_SIM_TIME, MANUAL_BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
             NAV2_DEFAULT_PARAMS_FILE
         )
     except ImportError as e:
@@ -35,7 +35,7 @@ def generate_launch_description():
         DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
         DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
         DEFAULT_USE_SIM_TIME = False
-        BUILD_MAP = False
+        MANUAL_BUILD_MAP = False
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
@@ -98,49 +98,8 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
-    # PointCloud to LaserScan 节点
-    pointcloud_to_laserscan_node = Node(
-        package='pointcloud_to_laserscan',
-        executable='pointcloud_to_laserscan_node',
-        name='pointcloud_to_laserscan',
-        remappings=[
-            # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', '/dlio/odom_node/pointcloud/deskewed'),
-            ('/scan', '/scan'),
-        ],
-        parameters=[{
-            'transform_tolerance': 0.1,
-            'min_height': 0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
-            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
-            'angle_min': -3.1,        # -180度
-            'angle_max': 3.1,         # 180度
-            # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
-            # 原始地图中的激光束数量为 691，实际转换产生 690 时会触发 slam_toolbox 的长度校验错误。
-            # 使用精确值可以避免舍入导致的“expected 691 / got 690”问题。
-            'angle_increment': 0.00869347338,
-            'scan_time': 0.1,             # 扫描时间
-            
-            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
-            'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
-            
-            'inf_epsilon': 40.0,           # 无穷大值的替代值
-            
-            # # QoS设置，确保与rviz2订阅者兼容
-            # 'qos_overrides./scan.publisher.reliability': 'reliable',
-            # 'qos_overrides./scan.publisher.depth': 10,
-            
-            # 其他参数
-            'use_sim_time': use_sim_time,
-            # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
-            # 'use_latest_timestamp': 'True',
-            # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
-            'target_frame': 'base_link',
-            'concurrency_level': 1,       # 处理并发级别
-        }],
-        output='screen',
-        prefix=['taskset -c 5'],   # 绑定 CPU 5
-    )
+    # PointCloud to LaserScan 节点已迁移到 lio_nav2_unified.launch.py
+
 
 
 
@@ -216,7 +175,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         livox_driver_node,
-        pointcloud_to_laserscan_node,
         static_transform_map_to_odom,
         static_transform_odom_to_base_link,
         base_link_to_livox_frame_tf,

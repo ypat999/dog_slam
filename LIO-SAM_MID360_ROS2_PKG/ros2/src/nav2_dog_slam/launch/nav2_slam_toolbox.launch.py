@@ -17,7 +17,7 @@ def generate_launch_description():
             DEFAULT_USE_SIM_TIME,
             NAV2_DEFAULT_MAP_FILE,
             NAV2_DEFAULT_PARAMS_FILE,
-            BUILD_MAP,
+            MANUAL_BUILD_MAP,
             AUTO_BUILD_MAP,
             )
     except ImportError:
@@ -26,7 +26,7 @@ def generate_launch_description():
         DEFAULT_USE_SIM_TIME = True
         NAV2_DEFAULT_MAP_FILE = "/home/ztl/slam_data/grid_map/map.yaml"
         NAV2_DEFAULT_PARAMS_FILE = "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml"
-        BUILD_MAP = False
+        MANUAL_BUILD_MAP = False
         AUTO_BUILD_MAP = False
 
 
@@ -132,7 +132,7 @@ def generate_launch_description():
     delayed_navigation = TimerAction(period=4.0, actions=[navigation_include])
 
     # add nodes
-    if not BUILD_MAP and not AUTO_BUILD_MAP:
+    if not MANUAL_BUILD_MAP and not AUTO_BUILD_MAP:
         ld.add_action(delayed_map_server)
         ld.add_action(delayed_lifecycle)
     ld.add_action(delayed_slam)

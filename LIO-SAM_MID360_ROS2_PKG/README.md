@@ -186,12 +186,13 @@ sudo chmod 777 ~/.gazebo/models/*
 - **初始位姿发布器**：发布机器人的初始位置
 - **点云到激光扫描转换器**：将点云数据转换为激光扫描数据供导航使用
 
-#### 3. lio_sam_nav2.launch.py
-这是集成LIO-SAM SLAM和Nav2导航的启动文件，通过包含其他launch文件实现：
-- **包含lio_sam.launch.py**：启动SLAM系统
-- **延时启动nav2.launch.py**：在SLAM启动后10秒启动导航系统
-- **服务调用**：延时5秒后调用/reinitialize_global_localization服务
-- **Web控制界面启动**：启动Nav2的Web控制界面
+#### 3. lio_nav2_unified.launch.py
+这是统一管理所有LIO算法（FAST-LIO、LIO-SAM、DLIO、Faster-LIO、Point-LIO）和Nav2导航的启动文件，通过参数选择不同的SLAM算法：
+- **支持多种LIO算法**：通过SLAM_ALGORITHM参数选择不同的SLAM系统
+- **统一节点配置**：集中管理pointcloud_to_laserscan、slam_toolbox、octomap_server等节点
+- **延时启动Nav2**：在SLAM启动后5秒启动导航系统
+- **Web控制界面启动**：固定启动Nav2的Web控制界面
+- **话题映射配置**：自动处理不同LIO算法的话题差异
 
 #### 4. pointcloud_to_laserscan.launch.py
 这是点云到激光扫描的转换启动文件，包含以下主要组件：
@@ -232,22 +233,17 @@ sudo chmod 777 ~/.gazebo/models/*
 
 ### 启动系统
 
-#### FAST-LIO2 + Nav2 集成启动（推荐）
+#### 统一启动所有LIO算法 + Nav2（推荐）
 ```bash
 # 进入项目根目录
 cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG
 
-# 运行FAST-LIO2集成启动脚本
-./run_fast_lio_nav2.sh
-```
-
-#### LIO-SAM + Nav2 集成启动
-```bash
-# 进入项目根目录
-cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG
-
-# 运行LIO-SAM集成启动脚本
-./run_lio_sam_nav2.sh
+# 运行统一启动脚本，通过参数选择LIO算法
+./run_navigation.sh fast_lio    # 启动FAST-LIO2 + Nav2
+./run_navigation.sh lio_sam     # 启动LIO-SAM + Nav2
+./run_navigation.sh dlio        # 启动DLIO + Nav2
+./run_navigation.sh faster_lio  # 启动Faster-LIO + Nav2
+./run_navigation.sh point_lio   # 启动Point-LIO + Nav2
 ```
 
 #### 分别启动各组件

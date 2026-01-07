@@ -1,0 +1,21 @@
+[Unit]
+Description=Unified LIO NAV2 Navigation Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=ztl
+Group=ztl
+WorkingDirectory=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/
+Environment="ROS_DOMAIN_ID=27"
+Environment="SLAM_ALGORITHM=fast_lio"
+ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/run_navigation.sh fast_lio > /dev/null 2>&1
+ExecStop=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/stop_all_navs.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

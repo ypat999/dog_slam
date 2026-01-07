@@ -34,8 +34,8 @@ sudo systemctl start auto_buildmap.service
 sudo journalctl -u auto_buildmap.service -f
 
 # 或  使用slamtoolbox建图
-BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
-BUILD_MAP=true BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
+MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
+MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
 
 # 保存二维地图(amcl)：
 source ros2/install/setup.bash 
@@ -129,10 +129,10 @@ ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
 ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
 
 # slam_toolbox + nav2 + fastlio建图导航
-BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam fast_lio_nav2.launch.py localization:=slam_toolbox
+MANUAL_BUILD_MAP=false BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
 
 # slam_toolbox + nav2 + liosam建图导航
-BUILD_MAP=false BUILD_TOOL=slam_toolbox ros2 launch nav2_dog_slam lio_sam_nav2.launch.py localization:=slam_toolbox
+MANUAL_BUILD_MAP=false BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
 
 # 自动探索建图
 ros2 launch explore_lite explore.launch.py
@@ -168,7 +168,7 @@ export ROS_DOMAIN_ID=27
 cd ros2
 export DISPLAY=localhost:10.0
 
-colcon build --symlink-install --packages-select lio_sam && source install/setup.bash &&BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
+colcon build --symlink-install --packages-select lio_sam && source install/setup.bash &&MANUAL_BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 colcon build --symlink-install --packages-select lio_sam && source install/setup.bash && ros2 launch nav2_dog_slam nav2.launch.py
 
 /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/web/run_web.sh
@@ -189,7 +189,7 @@ ros2 lifecycle set /static_transform_publisher_odom_base shutdown
 
 
 source install/setup.bash
-nohup ros2 launch nav2_dog_slam lio_sam_nav2.launch.py ns:=/ > record.log &
+nohup SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py ns:=/ > record.log &
 tail -f record.log
 
 
@@ -198,8 +198,8 @@ ps -ef | grep ros
 
 
 
-BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
-BUILD_MAP=False ros2 launch nav2_dog_slam lio_sam_nav2.launch.py
+MANUAL_BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 
 ros2 launch fast_lio mapping.launch.py
 ros2 launch lio_sam lio_sam.launch.py
@@ -207,7 +207,7 @@ ros2 launch direct_lidar_inertial_odometry dlio.launch.py   #实机无输出
 ros2 launch faster_lio fasterlio_launch.py
 ros2 launch point_lio mapping_mid360.launch.py
 
-ros2 launch nav2_dog_slam fast_lio_nav2.launch.py
+SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 
@@ -259,3 +259,4 @@ ros2 launch fast_lio mapping.launch.py
 
 
 
+nohup ros2 launch fast_lio mapping.launch.py > recordlio.log & && nohup ros2 launch sc_pgo_ros2 sc_pgo.launch.py > recordsc.log &

@@ -71,7 +71,7 @@ def generate_launch_description():
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
         ],
-        prefix=['taskset -c 4,5'],   # 绑定 CPU 4
+        prefix=['taskset -c 4'],   # 绑定 CPU 4
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 

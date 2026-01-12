@@ -167,15 +167,6 @@ fi
 echo ""
 echo "=== 第四步：项目依赖包安装 ==="
 
-# 安装PCL相关依赖
-echo "安装PCL相关依赖..."
-apt-get install -y \
-    libpcl-dev \
-    pcl-tools \
-    libvtk7-dev \
-    libproj-dev \
-    libeigen3-dev
-
 # 安装ROS2导航相关包
 echo "安装ROS2导航相关包..."
 apt-get install -y \

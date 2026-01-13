@@ -25,14 +25,14 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {"scan_line": 4},
-            {"minimum_range": 0.5},
+            {"minimum_range": 0.3},
             {"mapping_line_resolution": 0.4},
             {"mapping_plane_resolution": 0.8},
             {"mapviz_filter_size": 0.05},
-            {"keyframe_meter_gap": 0.5},
+            {"keyframe_meter_gap": 1.0},
             {"sc_dist_thres": 0.3},
             {"sc_max_radius": 290.0},
-            {"save_directory": "./save_data/"},
+            {"save_directory": "~/save_data/"},
         ],
         remappings=[
             ("/aft_mapped_to_init", "/Odometry"),

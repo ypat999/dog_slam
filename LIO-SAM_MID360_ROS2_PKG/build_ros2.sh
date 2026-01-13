@@ -8,6 +8,8 @@ else
 fi
 
 cd ./ros2
+source install/setup.bash
+colcon build --symlink-install --packages-select autorccar_interfaces
 colcon build --symlink-install --packages-select lio_sam
 colcon build --symlink-install --packages-select fast_lio
 colcon build --symlink-install --packages-select point_lio

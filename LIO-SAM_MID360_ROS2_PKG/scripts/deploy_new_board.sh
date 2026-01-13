@@ -207,12 +207,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo
     echo "安装Gazebo相关包..."
     
-    # 添加GZ Sim GPG key
-    curl -sSL https://packages.osrfoundation.org/gazebo.gpg | tee /etc/apt/trusted.gpg.d/gazebo.gpg > /dev/null
+    # # 添加GZ Sim GPG key
+    # curl -sSL https://packages.osrfoundation.org/gazebo.gpg | tee /etc/apt/trusted.gpg.d/gazebo.gpg > /dev/null
     
-    # 添加 Harmonic 软件源
-    echo "deb http://packages.osrfoundation.org/gz-harmonic/ubuntu $(lsb_release -cs) main" | \
-        tee /etc/apt/sources.list.d/gz-harmonic.list > /dev/null
+    # # 添加 Harmonic 软件源
+    # echo "deb http://packages.osrfoundation.org/gz-harmonic/ubuntu $(lsb_release -cs) main" | \
+    #     tee /etc/apt/sources.list.d/gz-harmonic.list > /dev/null
     
     apt-get update
     apt-get install -y mesa-vulkan-drivers vulkan-tools
@@ -285,34 +285,39 @@ fi
 echo ""
 echo "=== 第七步：系统服务安装 ==="
 
-# 创建系统服务文件
-SERVICE_FILE="/etc/systemd/system/lio_nav2_unified.service"
+# 检查现有的service文件是否存在
+if [ ! -f "$SCRIPT_DIR/lio_nav2_unified.service" ]; then
+    echo "错误：找不到导航服务文件 lio_nav2_unified.service"
+    exit 1
+fi
 
-cat > "$SERVICE_FILE" << EOF
-[Unit]
-Description=LIO-SAM MID360 ROS2 Navigation Service
-After=network.target
-Wants=network.target
+# 检查现有的service文件是否存在
+if [ ! -f "$SCRIPT_DIR/lio_sam_nav2.service" ]; then
+    echo "错误：找不到导航服务文件 lio_nav2_unified.service"
+    exit 1
+fi
 
-[Service]
-Type=simple
-User=$(logname)
-Group=$(logname)
-Environment=DISPLAY=:0
-Environment=PYTHONPATH=/home/$(logname)/.local/lib/python3.10/site-packages
-WorkingDirectory=$PROJECT_ROOT/ros2
-ExecStart=/bin/bash -c 'source /opt/ros/humble/setup.bash && source install/setup.bash && ros2 launch nav2_dog_slam lio_nav2_unified.launch.py slam_algorithm:=fast_lio'
-Restart=always
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
+if [ ! -f "$SCRIPT_DIR/lio_sam_buildmap.service" ]; then
+    echo "错误：找不到手动建图服务文件 lio_sam_buildmap.service"
+    exit 1
+fi
 
-[Install]
-WantedBy=multi-user.target
-EOF
+if [ ! -f "$SCRIPT_DIR/auto_buildmap.service" ]; then
+    echo "错误：找不到自动建图服务文件 auto_buildmap.service"
+    exit 1
+fi
+
+# 复制现有的service文件到系统目录
+cp "$SCRIPT_DIR/lio_nav2_unified.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/lio_sam_buildmap.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/lio_sam_buildmap.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/auto_buildmap.service" /etc/systemd/system/
 
 # 设置服务文件权限
-chmod 644 "$SERVICE_FILE"
+chmod 644 /etc/systemd/system/lio_nav2_unified.service
+chmod 644 /etc/systemd/system/lio_sam_buildmap.service
+chmod 644 /etc/systemd/system/lio_sam_buildmap.service
+chmod 644 /etc/systemd/system/auto_buildmap.service
 
 # 添加用户到必要组
 usermod -aG dialout $(logname)
@@ -320,7 +325,25 @@ usermod -aG audio $(logname)
 
 # 重新加载systemd并启用服务
 systemctl daemon-reload
-systemctl enable lio_nav2_unified.service
+systemctl enable lio_sam_nav2.service
+# systemctl enable lio_nav2_unified.service
+# systemctl enable lio_sam_buildmap.service
+# systemctl enable auto_buildmap.service
+
+echo "服务安装完成:"
+echo "  - 导航服务: lio_nav2_unified.service"
+echo "  - 手动建图服务: lio_sam_buildmap.service"
+echo "  - 自动建图服务: auto_buildmap.service"
+echo ""
+echo "启动命令:"
+echo "  sudo systemctl start lio_nav2_unified"
+echo "  sudo systemctl start lio_sam_buildmap"
+echo "  sudo systemctl start auto_buildmap"
+echo ""
+echo "查看状态:"
+echo "  sudo systemctl status lio_nav2_unified"
+echo "  sudo systemctl status lio_sam_buildmap"
+echo "  sudo systemctl status auto_buildmap"
 
 # =============================================================================
 # 第八步：环境配置和权限设置
@@ -339,6 +362,7 @@ cat > "$ENV_SCRIPT" << 'EOF'
 export ROS_DOMAIN_ID=27
 export ROS_LOCALHOST_ONLY=0
 export MANUAL_BUILD_MAP=False
+export AUTO_BUILD_MAP=False
 
 # 加载ROS2环境
 source /opt/ros/humble/setup.bash
@@ -352,6 +376,9 @@ fi
 export PYTHONPATH="$PYTHONPATH:$HOME/.local/lib/python3.10/site-packages"
 
 echo "LIO-SAM MID360 ROS2 环境已加载"
+echo "建图模式配置:"
+echo "  MANUAL_BUILD_MAP=$MANUAL_BUILD_MAP (手动建图)"
+echo "  AUTO_BUILD_MAP=$AUTO_BUILD_MAP (自动探索建图)"
 EOF
 
 chmod +x "$ENV_SCRIPT"
@@ -428,25 +455,39 @@ echo "  部署完成！"
 echo "=================================================="
 echo ""
 echo "重要信息："
-echo "1. 系统服务已安装并启用：lio_nav2_unified.service"
-echo "2. 环境配置已添加到 ~/.bashrc"
-echo "3. 重启后服务将自动启动"
+echo "1. 导航系统服务已安装并启用：lio_nav2_unified.service"
+echo "2. 建图服务已安装（默认禁用）："
+echo "   - 手动建图服务: lio_buildmap.service"
+echo "   - 自动探索建图服务: lio_auto_buildmap.service"
+echo "3. 环境配置已添加到 ~/.bashrc"
+echo "4. 重启后导航服务将自动启动"
 echo ""
 echo "常用命令："
-echo "- 启动服务: sudo systemctl start lio_nav2_unified"
-echo "- 停止服务: sudo systemctl stop lio_nav2_unified"
+echo "导航服务："
+echo "- 启动导航: sudo systemctl start lio_nav2_unified"
+echo "- 停止导航: sudo systemctl stop lio_nav2_unified"
 echo "- 查看状态: sudo systemctl status lio_nav2_unified"
 echo "- 查看日志: sudo journalctl -u lio_nav2_unified -f"
+echo ""
+echo "建图服务："
+echo "- 启动手动建图: sudo systemctl start lio_buildmap"
+echo "- 启动自动探索建图: sudo systemctl start lio_auto_buildmap"
+echo "- 停止建图: sudo systemctl stop lio_buildmap lio_auto_buildmap"
+echo "- 查看日志: sudo journalctl -u lio_buildmap -f"
 echo ""
 echo "手动启动方式："
 echo "1. 打开新终端"
 echo "2. 执行: source ~/.lio_nav2_env.sh"
-echo "3. 执行: ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
+echo "3. 执行以下命令之一："
+echo "   - 导航模式: ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
+echo "   - 手动建图: MANUAL_BUILD_MAP=True ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
+echo "   - 自动建图: AUTO_BUILD_MAP=True ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
 echo ""
 echo "下一步操作："
 echo "1. 重启系统以应用所有更改"
 echo "2. 连接Livox MID360设备（如使用真实设备）"
-echo "3. 启动服务进行测试"
+echo "3. 启动导航服务进行测试"
+echo "4. 需要建图时启用相应建图服务"
 echo ""
 
 read -p "是否立即重启系统? (y/N): " -n 1 -r

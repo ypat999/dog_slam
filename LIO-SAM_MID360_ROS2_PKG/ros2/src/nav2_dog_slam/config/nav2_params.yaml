@@ -72,13 +72,13 @@ controller_server:
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      vx_max: 3.0
-      # vx_max: 1.2
+      # vx_max: 3.0
+      vx_max: 0.5
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
-      wz_max: 2.0
-      # wz_max: 1.2
+      # wz_max: 2.0
+      wz_max: 0.5
       
       
       
@@ -497,15 +497,15 @@ amcl:
     first_map_only: false
     # map_padding: 0.3      # 删除不存在的参数
     save_pose_rate: 0.3
-    initial_pose:
-      x: 29.925  
-      y: 15.184 
-      z: 0.5
-      yaw: -1.396 
+    # initial_pose:
+    #   x: 29.925  
+    #   y: 15.184 
+    #   z: 0.5
+    #   yaw: -1.396 
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 40.0
+    laser_max_range: 100.0
     # laser_beam_step: 4
     max_beams: 180
     

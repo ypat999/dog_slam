@@ -24,13 +24,13 @@
             satu_acc: 3.0 # the saturation value of IMU's acceleration. not related to the units
             satu_gyro: 35.0 # the saturation value of IMU's angular velocity. not related to the units
             acc_norm: 1.0 # 1.0 for g as unit, 9.81 for m/s^2 as unit of the IMU's acceleration
-            lidar_meas_cov: 0.01 # 0.001
+            lidar_meas_cov: 0.001 # 0.01
             acc_cov_output: 500.0
             gyr_cov_output: 1000.0
             b_acc_cov: 0.0001
             b_gyr_cov: 0.0001
-            imu_meas_acc_cov: 0.01 #0.1 # 2
-            imu_meas_omg_cov: 0.01 #0.1 # 2
+            imu_meas_acc_cov: 0.1 #0.01 # 2
+            imu_meas_omg_cov: 0.1 #0.01 # 2
             gyr_cov_input: 0.01 # for IMU as input model
             acc_cov_input: 0.1 # for IMU as input model
             plane_thr: 0.1 # 0.05, the threshold for plane criteria, the smaller, the flatter a plane
@@ -38,29 +38,29 @@
             fov_degree: 360.0
             det_range: 100.0
             gravity_align: true # true to align the z axis of world frame with the direction of gravity, and the gravity direction should be specified below
-            gravity: [ 0.0, 0.0, -9.810 ] # [0.0, 9.810, 0.0] # gravity to be aligned
-            gravity_init: [ 0.0, 0.0, -9.810 ] # [0.0, 9.810, 0.0] # # preknown gravity in the first IMU body frame, use when imu_en is false or start from a non-stationary state
+            gravity: [ 4.905, 0.0, -8.495 ] #[ 0.0, 0.0, -9.810 ] # [0.0, 9.810, 0.0] # gravity to be aligned
+            gravity_init: [ 4.905, 0.0, -8.495 ] #[ 0.0, 0.0, -9.810 ] # [0.0, 9.810, 0.0] # # preknown gravity in the first IMU body frame, use when imu_en is false or start from a non-stationary state
             extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
             # extrinsic_R: [ 1.0, 0.0, 0.0,
             #                0.0, 1.0, 0.0,
             #                0.0, 0.0, 1.0 ]
-            extrinsicR: [0.8660, 0.0, 0.5,
+            extrinsic_R: [0.8660, 0.0, 0.5,
                         0.0, 1.0, 0.0,
                         -0.5, 0.0, 0.8660]
 
         odometry:
-            publish_odometry_without_downsample: true
+            publish_odometry_without_downsample: false
 
         publish:
             path_en: true                 # false: close the path output
             scan_publish_en: true         # false: close all the point cloud output
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
-            tf_imu_frame: "livox_frame" #"body"
+            tf_imu_frame: "base_link" #"livox_frame" #"body"
             tf_world_frame: "odom" #"camera_init"
             tf_lidar_frame: "livox_frame" #"lidar_link"
-            tf_camera_init_frame: "base_link"  #"camera_init"
-            tf_map_frame: "odom"
-            tf_odom_frame: "livox_frame" 
+            tf_camera_init_frame: "odom" #"base_link"  #"camera_init"
+            tf_map_frame: "odom" #"odom"
+            tf_odom_frame: "base_link" #"livox_frame" 
 
         pcd_save:
             pcd_save_en: false

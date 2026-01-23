@@ -1,0 +1,39 @@
+# NavSat Transform配置 - GPS坐标到地图坐标转换
+# 该节点将GPS的经纬度转换为地图坐标系中的位置
+
+navsat_transform_node:
+  ros__parameters:
+    # 基础参数
+    frequency: 30.0
+    delay: 0.0
+    magnetic_declination_radians: 0.0
+    yaw_offset: 0.0
+    zero_altitude: true
+    broadcast_utm_transform: false
+    broadcast_utm_transform_as_parent_frame: false
+    publish_filtered_gps: false
+    
+    # 坐标系配置
+    world_frame: map
+    base_link_frame: base_link
+    gps_frame: gps
+    
+    # GPS话题配置
+    navsat_fix_topic: /gps/fix
+    navsat_odom_topic: /gps/odom
+    
+    # 等待GPS初始化的时间（秒）
+    wait_for_datum: false
+    
+    # UTM参数
+    utm_zone: ""  # 自动检测
+    
+    # 转换参数
+    use_odometry_yaw: true  # 使用里程计的方向信息
+    
+    # 数据过滤参数
+    use_covariance: true
+    
+    # 调试参数
+    print_diagnostics: true
+    debug: false

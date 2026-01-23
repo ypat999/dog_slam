@@ -198,6 +198,21 @@ def generate_launch_description():
     # 统一的节点配置
     unified_nodes = []
     
+    # 动态base_footprint发布器节点
+    dynamic_base_footprint_node = Node(
+        package='nav2_dog_slam',
+        executable='dynamic_base_footprint.py',
+        name='dynamic_base_footprint',
+        parameters=[{
+            'base_link_frame': BASE_LINK_FRAME,
+            'base_footprint_frame': 'base_footprint',
+            'odom_frame': ODOM_FRAME,
+            'use_sim_time': use_sim_time,
+        }],
+        output='screen',
+    )
+    unified_nodes.append(dynamic_base_footprint_node)
+    
     # PointCloud to LaserScan 节点（所有LIO算法都需要）
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',

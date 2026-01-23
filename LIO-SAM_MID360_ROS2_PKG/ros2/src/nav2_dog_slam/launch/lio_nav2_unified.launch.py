@@ -65,7 +65,7 @@ LIO_TOPIC_CONFIGS = {
         'pointcloud_topic': '/cloud_registered_body',
         'odom_topic': '/Odometry',
         'octomap_topic': '/cloud_registered_body',
-        'target_frame': 'livox_frame'
+        'target_frame': 'base_link'
     },
     'lio_sam': {
         'pointcloud_topic': '/lio_sam/mapping/cloud_registered_raw',
@@ -218,7 +218,7 @@ def generate_launch_description():
             'range_min': 0.3,
             'range_max': 100.0,
             'use_inf': False,
-            'inf_epsilon': 40.0,
+            'inf_epsilon': 100.0,
             'use_sim_time': use_sim_time,
             'target_frame': lio_config['target_frame'],
             'concurrency_level': 1,

@@ -44,9 +44,9 @@ def generate_launch_description():
     config_file = 'mid360.yaml'
 
     # 导入全局配置
-    from global_config import LIVOX_MID360_CONFIG
+    from global_config import LIVOX_MID360_CONFIG, LIVOX_MID360_CONFIG_NO_TILT
     
-    livox_config_path = LIVOX_MID360_CONFIG
+    livox_config_path = LIVOX_MID360_CONFIG_NO_TILT #LIVOX_MID360_CONFIG
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
@@ -164,7 +164,8 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
         output='screen'
     )
     ld.add_action(base_link_to_livox_frame_tf)

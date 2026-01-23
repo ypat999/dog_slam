@@ -53,13 +53,17 @@ class DynamicBaseFootprint(Node):
             )
             
             # 创建base_footprint到base_link的变换
-            base_footprint_transform = odom_to_base_link
+            base_footprint_transform = TransformStamped()
+            base_footprint_transform.header = odom_to_base_link.header
+            base_footprint_transform.header.frame_id = self.base_link_frame
             
             # 设置时间戳（与odom->base_link同步）
             base_footprint_transform.child_frame_id = self.base_footprint_frame
-            
+
             # 设置变换：base_footprint在base_link下方，z坐标为0
             # 保持相同的x,y位置和朝向，只改变z坐标
+            base_footprint_transform.transform.translation.x = odom_to_base_link.transform.translation.x
+            base_footprint_transform.transform.translation.y = odom_to_base_link.transform.translation.y
             base_footprint_transform.transform.translation.z = 0.0  # z坐标为0
 
             q = odom_to_base_link.transform.rotation

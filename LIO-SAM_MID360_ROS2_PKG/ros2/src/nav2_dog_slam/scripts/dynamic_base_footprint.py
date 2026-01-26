@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
+from tf2_msgs.msg import TFMessage
 from tf2_ros import TransformBroadcaster, Buffer, TransformListener
 import tf2_ros
 import tf_transformations
@@ -26,8 +27,13 @@ class DynamicBaseFootprint(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
-        # 定时器用于监听TF变换并发布
-        self.timer = self.create_timer(0.01, self.timer_callback)  # 100Hz高频监听
+        # 订阅TF消息，在callback中处理变换
+        self.tf_subscription = self.create_subscription(
+            TFMessage,
+            '/tf',
+            self.tf_callback,
+            10
+        )
         
         self.get_logger().info(f'动态base_footprint节点已启动')
         self.get_logger().info(f'odom帧: {self.odom_frame}')
@@ -41,59 +47,52 @@ class DynamicBaseFootprint(Node):
         euler = tf_transformations.euler_from_quaternion([q.x, q.y, q.z, q.w])
         return euler  # 返回 (roll, pitch, yaw)
     
-    def timer_callback(self):
-        """监听odom->base_link的TF变换并发布base_link->base_footprint"""
-        try:
-            # 获取odom到base_link的变换
-            odom_to_base_link = self.tf_buffer.lookup_transform(
-                self.odom_frame, 
-                self.base_link_frame, 
-                rclpy.time.Time()
-            )
-            
-            # 创建base_link到base_footprint的变换
-            base_link_to_footprint = TransformStamped()
-            
-            # 设置时间戳（与odom->base_link同步）
-            base_link_to_footprint.header.stamp = odom_to_base_link.header.stamp
-            base_link_to_footprint.header.frame_id = self.base_link_frame
-            base_link_to_footprint.child_frame_id = self.base_footprint_frame
-            
-            # 设置变换：base_footprint在base_link下方，z坐标为0
-            # 这意味着base_footprint相对于base_link的位置是向下的
-            # 如果base_link在高度h处，那么base_footprint应该在高度0处
-            # 所以变换应该是：x=0, y=0, z=-h
-            
-            # 获取base_link在odom坐标系中的高度
-            base_link_height = odom_to_base_link.transform.translation.z
-            
-            # 设置变换：base_footprint在base_link下方base_link_height距离处
-            base_link_to_footprint.transform.translation.x = 0.0
-            base_link_to_footprint.transform.translation.y = 0.0
-            base_link_to_footprint.transform.translation.z = -base_link_height  # 向下移动
-            
-            # 保持与base_link相同的yaw角，但roll和pitch取反以确保base_footprint与地面平行
-            # 从base_link的旋转中提取完整的欧拉角
-            q_odom_to_base_link = odom_to_base_link.transform.rotation
-            roll, pitch, yaw = self.quaternion_to_euler(q_odom_to_base_link)
-            
-            # roll和pitch取反，yaw保持不变
-            # 这样base_footprint的朝向会与地面平行
-            q_corrected = tf_transformations.quaternion_from_euler(-roll, -pitch, yaw)
-            
-            base_link_to_footprint.transform.rotation.x = q_corrected[0]
-            base_link_to_footprint.transform.rotation.y = q_corrected[1]
-            base_link_to_footprint.transform.rotation.z = q_corrected[2]
-            base_link_to_footprint.transform.rotation.w = q_corrected[3]
-            
-            # 发布TF变换
-            self.tf_broadcaster.sendTransform(base_link_to_footprint)
-            
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-            # TF变换不可用，暂时跳过
-            pass
-        except Exception as e:
-            self.get_logger().error(f'发布TF变换时出错: {str(e)}')
+    def tf_callback(self, msg):
+        """处理TF消息，发布odom->base_footprint变换"""
+        # TFMessage包含一个transforms数组，遍历所有变换
+        for transform in msg.transforms:
+            # 检查是否是odom到base_link的变换
+            if transform.header.frame_id == self.odom_frame and transform.child_frame_id == self.base_link_frame:
+                try:
+                    # 创建odom到base_footprint的变换
+                    odom_to_footprint = TransformStamped()
+                    
+                    # 设置时间戳（与odom->base_link同步）
+                    odom_to_footprint.header.stamp = transform.header.stamp
+                    odom_to_footprint.header.frame_id = self.odom_frame
+                    odom_to_footprint.child_frame_id = self.base_footprint_frame
+                    
+                    # 设置变换：base_footprint在base_link的投影位置，但z坐标为0
+                    # 保持相同的x,y位置，但z坐标投影到地面
+                    
+                    # 获取base_link在odom坐标系中的位置
+                    base_link_x = transform.transform.translation.x
+                    base_link_y = transform.transform.translation.y
+                    base_link_z = transform.transform.translation.z
+                    
+                    # 设置变换：base_footprint在base_link的x,y位置，但z坐标为0
+                    odom_to_footprint.transform.translation.x = base_link_x
+                    odom_to_footprint.transform.translation.y = base_link_y
+                    odom_to_footprint.transform.translation.z = 0.0  # 地面高度
+                    
+                    # 保持与base_link相同的yaw角，但roll和pitch为0以确保base_footprint与地面平行
+                    # 从base_link的旋转中提取完整的欧拉角
+                    q_odom_to_base_link = transform.transform.rotation
+                    roll, pitch, yaw = self.quaternion_to_euler(q_odom_to_base_link)
+                    
+                    # 只保留yaw角，roll和pitch设为0（与地面平行）
+                    q_ground_parallel = tf_transformations.quaternion_from_euler(0.0, 0.0, yaw)
+                    
+                    odom_to_footprint.transform.rotation.x = q_ground_parallel[0]
+                    odom_to_footprint.transform.rotation.y = q_ground_parallel[1]
+                    odom_to_footprint.transform.rotation.z = q_ground_parallel[2]
+                    odom_to_footprint.transform.rotation.w = q_ground_parallel[3]
+                    
+                    # 发布TF变换
+                    self.tf_broadcaster.sendTransform(odom_to_footprint)
+                    
+                except Exception as e:
+                    self.get_logger().error(f'发布TF变换时出错: {str(e)}')
 
 def main(args=None):
     # 解析命令行参数

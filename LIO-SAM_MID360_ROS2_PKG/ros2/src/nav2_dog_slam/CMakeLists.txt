@@ -47,19 +47,19 @@ install(
 # Install Python scripts as executables with symlink support
 install(
   PROGRAMS scripts/publish_initial_pose.py
-  DESTINATION libexec/${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install the new SURF map matching script as executable
 install(
   PROGRAMS scripts/surf_map_matching.py
-  DESTINATION libexec/${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install dynamic base footprint script as executable
 install(
   PROGRAMS scripts/dynamic_base_footprint.py
-  DESTINATION libexec/${PROJECT_NAME}
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install web interface files

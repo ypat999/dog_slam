@@ -7,19 +7,19 @@ from tf2_ros import TransformBroadcaster, Buffer, TransformListener
 import tf2_ros
 import tf_transformations
 import math
+import argparse
 
 class DynamicBaseFootprint(Node):
-    def __init__(self):
+    def __init__(self, base_link_frame, base_footprint_frame, odom_frame, use_sim_time):
+        # 通过构造函数参数传递配置
         super().__init__('dynamic_base_footprint')
         
-        # 参数
-        self.declare_parameter('base_link_frame', 'base_link')
-        self.declare_parameter('base_footprint_frame', 'base_footprint')
-        self.declare_parameter('odom_frame', 'odom')  # odom坐标系
+        self.base_link_frame = base_link_frame
+        self.base_footprint_frame = base_footprint_frame
+        self.odom_frame = odom_frame
         
-        self.base_link_frame = self.get_parameter('base_link_frame').value
-        self.base_footprint_frame = self.get_parameter('base_footprint_frame').value
-        self.odom_frame = self.get_parameter('odom_frame').value
+        # 设置use_sim_time参数
+        self.set_parameters([rclpy.Parameter('use_sim_time', rclpy.Parameter.Type.BOOL, use_sim_time)])
         
         # TF广播器和监听器
         self.tf_broadcaster = TransformBroadcaster(self)
@@ -33,6 +33,7 @@ class DynamicBaseFootprint(Node):
         self.get_logger().info(f'odom帧: {self.odom_frame}')
         self.get_logger().info(f'base_link帧: {self.base_link_frame}')
         self.get_logger().info(f'base_footprint帧: {self.base_footprint_frame}')
+        self.get_logger().info(f'use_sim_time: {use_sim_time}')
     
     def quaternion_to_euler(self, q):
         """从四元数中提取完整的欧拉角"""
@@ -95,9 +96,27 @@ class DynamicBaseFootprint(Node):
             self.get_logger().error(f'发布TF变换时出错: {str(e)}')
 
 def main(args=None):
+    # 解析命令行参数
+    parser = argparse.ArgumentParser(description='Dynamic base_footprint TF publisher')
+    parser.add_argument('--base_link_frame', default='base_link', help='Base link frame name')
+    parser.add_argument('--base_footprint_frame', default='base_footprint', help='Base footprint frame name')
+    parser.add_argument('--odom_frame', default='odom', help='Odom frame name')
+    parser.add_argument('--use_sim_time', default='false', help='Use simulation time (true/false)')
+    
+    # 解析命令行参数
+    parsed_args, unknown = parser.parse_known_args(args)
+    
+    # 转换use_sim_time为布尔值
+    use_sim_time_bool = parsed_args.use_sim_time.lower() == 'true'
+    
     rclpy.init(args=args)
     
-    node = DynamicBaseFootprint()
+    node = DynamicBaseFootprint(
+        base_link_frame=parsed_args.base_link_frame,
+        base_footprint_frame=parsed_args.base_footprint_frame,
+        odom_frame=parsed_args.odom_frame,
+        use_sim_time=use_sim_time_bool
+    )
     
     try:
         rclpy.spin(node)

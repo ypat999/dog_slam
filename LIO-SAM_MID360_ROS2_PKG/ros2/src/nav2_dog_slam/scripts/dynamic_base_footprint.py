@@ -73,7 +73,7 @@ class DynamicBaseFootprint(Node):
                     # 设置变换：base_footprint在base_link的x,y位置，但z坐标为0
                     odom_to_footprint.transform.translation.x = base_link_x
                     odom_to_footprint.transform.translation.y = base_link_y
-                    odom_to_footprint.transform.translation.z = 0.0  # 地面高度
+                    odom_to_footprint.transform.translation.z = base_link_z  # 地面高度
                     
                     # 保持与base_link相同的yaw角，但roll和pitch为0以确保base_footprint与地面平行
                     # 从base_link的旋转中提取完整的欧拉角

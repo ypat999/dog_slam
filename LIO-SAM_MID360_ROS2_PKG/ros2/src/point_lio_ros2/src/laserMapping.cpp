@@ -1310,7 +1310,7 @@ int main(int argc, char **argv) {
             if (scan_pub_en && scan_body_pub_en) publish_frame_body(pubLaserCloudFullRes_body);
             
             /******* Log extrinsic parameters *******/
-            log_extrinsic_params();
+            //log_extrinsic_params();
 
             /*** Debug variables Logging ***/
             if (runtime_pos_log) {

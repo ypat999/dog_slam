@@ -100,30 +100,12 @@ def generate_launch_description():
         output='screen'
     )
 
-    # # odom -> base_link (里程计到机器人基坐标系的静态变换)
-    # static_transform_odom_to_base_link = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='static_transform_odom_to_base_link',
-    #     parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-    #     arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
-    #     output='screen'
-    # )
-
-    # base_link_to_livox_frame_tf = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     name='base_link_to_livox_frame_tf',
-    #     parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-    #     arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
-    #     output='screen'
-    # )
 
     # odom -> base_link (里程计到机器人基坐标系的静态变换)
-    static_transform_odom_to_livox_frame = Node(
+    static_transform_odom_to_base_link = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_odom_to_livox_frame',
+        name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
         output='screen'
@@ -138,6 +120,14 @@ def generate_launch_description():
         output='screen'
     )
 
+    base_link_to_base_footprint_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_link_to_base_footprint_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'base_link', 'base_footprint'],
+        output='screen'
+    )
 
 
 
@@ -171,9 +161,8 @@ def generate_launch_description():
         # rviz_arg,
         livox_driver_node,
         static_transform_map_to_odom,
-        # static_transform_odom_to_base_link,
-        # base_link_to_livox_frame_tf,
-        static_transform_odom_to_livox_frame,
+        static_transform_odom_to_base_link,
+        base_link_to_base_footprint_tf,
         base_link_to_livox_frame_tf,
         laser_mapping_node,
         # GroupAction(

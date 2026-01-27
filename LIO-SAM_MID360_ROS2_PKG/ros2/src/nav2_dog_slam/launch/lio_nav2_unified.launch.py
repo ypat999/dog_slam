@@ -100,6 +100,10 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     map_file = LaunchConfiguration('map_file')
     nav2_params_file = LaunchConfiguration('nav2_params_file')
+    
+    # 定义launch目录路径
+    bringup_dir = get_package_share_directory('nav2_dog_slam')
+    launch_dir = os.path.join(bringup_dir, 'launch')
 
     declare_map_file_cmd = DeclareLaunchArgument(
         'map_file',
@@ -195,10 +199,17 @@ def generate_launch_description():
         from launch.actions import LogInfo
         lio_sam_launch = LogInfo(msg="LIO-SAM package not found, skipping...")
     
+    # ============================================
+    # 第一步：定义所有可能的节点
+    # ============================================
+    
     # 统一的节点配置
     unified_nodes = []
+    nav2_actions = []
+    web_actions = []
     
-    # 动态base_footprint发布器节点（使用ExecuteProcess方式）
+    # 1. 基础节点（所有模式都需要）
+    # 动态base_footprint发布器节点
     dynamic_base_footprint_process = ExecuteProcess(
         cmd=['python3', get_package_share_directory('nav2_dog_slam') + '/../../lib/nav2_dog_slam/dynamic_base_footprint.py',
              '--base_link_frame', BASE_LINK_FRAME,
@@ -209,9 +220,8 @@ def generate_launch_description():
         output='screen',
         shell=False
     )
-    unified_nodes.append(dynamic_base_footprint_process)
     
-    # PointCloud to LaserScan 节点（所有LIO算法都需要）
+    # PointCloud to LaserScan 节点
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
@@ -239,9 +249,30 @@ def generate_launch_description():
         output='screen',
         prefix=['taskset -c 5'],
     )
-    unified_nodes.append(pointcloud_to_laserscan_node)
     
-    # slam_toolbox_node（仅在BUILD_TOOL为slam_toolbox时启动）
+    # rosbridge_websocket节点
+    rosbridge_websocket = Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+        name='rosbridge_websocket',
+        output='screen',
+        parameters=[
+            {'port': 9090},
+            {'default_call_service_timeout': 5.0},
+            {'call_services_in_new_thread': True},
+            {'send_action_goals_in_new_thread': True}
+        ]
+    )
+    
+    # web控制脚本
+    web_script_process = ExecuteProcess(
+        cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
+        output='screen',
+        shell=False
+    )
+    
+    # 2. 建图工具节点
+    # 合并后的slam_toolbox节点（支持建图和导航两种模式）
     slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
     declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
         'slam_toolbox_params',
@@ -263,10 +294,18 @@ def generate_launch_description():
             }
         ],
         prefix=['taskset -c 5,6'],
-        remappings=[('/scan', '/scan'), ('/odom', lio_config['odom_topic'])]
+        remappings=[
+            ('/scan', '/scan'), 
+            ('/odom', lio_config['odom_topic']),
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+            ('/initialpose', '/initialpose')
+        ],
+        respawn=True,
+        respawn_delay=2.0
     )
     
-    # octomap_server_node（仅在BUILD_TOOL为octomap_server时启动）
+    # octomap_server节点
     octomap_server_node = Node(
         package='octomap_server',
         executable='octomap_server_node',
@@ -289,54 +328,90 @@ def generate_launch_description():
         ]
     )
     
-    nav2_actions = []
-    web_actions = []
-    
-    # web_actions固定都要启动
-    web_actions.append(ExecuteProcess(
-        cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
+    # 3. 导航相关节点
+    # map_server节点
+    map_server_node = Node(
+        package='nav2_map_server',
+        executable='map_server',
+        name='map_server',
         output='screen',
-        shell=False
-    ))
-    
-    # if not MANUAL_BUILD_MAP:
-    if BUILD_TOOL != 'slam_toolbox':
-        # 根据 localization 参数选择包含哪一个 nav2 启动文件（amcl 或 slam_toolbox）
-        # For AMCL we use a dedicated local launch that starts map_server + amcl
-        # and forwards the main params file. This avoids the need for a second
-        # YAML file and lets the nodes read their sections from nav2_params.yaml.
-        nav2_amcl_include = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                current_dir, 'nav2_amcl.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'map': map_file,
-                'params_file': nav2_params_file,
-                'autostart': 'True',
-                'use_composition': 'True',
-                'use_respawn': 'False',
-                'log_level': 'info'
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
-        )
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'yaml_filename': map_file}
+        ],
+        prefix=['taskset -c 0,1,2,3'],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ]
+    )
 
-        nav2_slam_include = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                current_dir, 'nav2_slam_toolbox.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'map': map_file,
-                'params_file': NAV2_DEFAULT_PARAMS_FILE,
-                'slam_toolbox_params': NAV2_DEFAULT_PARAMS_FILE
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
-        )
-
-        # 将nav2启动文件添加到nav2_actions中
-        nav2_actions.append(nav2_amcl_include)
-        nav2_actions.append(nav2_slam_include)
+    # amcl节点
+    amcl_node = Node(
+        package='nav2_amcl',
+        executable='amcl',
+        name='amcl',
+        output='screen',
+        parameters=[nav2_params_file],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ],
+        prefix=['taskset -c 5,6']
+    )
     
-    # 根据BUILD_TOOL参数添加相应的节点
+    # 生命周期管理器节点
+    lifecycle_manager_amcl = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_amcl',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': 'True',
+            'node_names': ['amcl']
+        }]
+    )
+
+    lifecycle_manager_map_server = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_map_server',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': 'True',
+            'node_names': ['map_server']
+        }]
+    )
+    
+    # 4. 导航栈节点
+    navigation_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'autostart': 'True',
+            'params_file': nav2_params_file,
+            'use_composition': 'False',
+            'use_respawn': 'False',
+            'container_name': 'nav2_container',
+            'log_level': 'info'
+        }.items()
+    )
+    
+    # ============================================
+    # 第二步：根据配置条件决定启动哪些节点
+    # ============================================
+    
+    # 1. 基础节点（所有模式都需要）
+    unified_nodes.append(dynamic_base_footprint_process)
+    unified_nodes.append(pointcloud_to_laserscan_node)
+    
+    # 2. Web相关节点（所有模式都需要）
+    web_actions.append(web_script_process)
+    web_actions.append(rosbridge_websocket)
+    
+    # 3. 建图模式配置
     if MANUAL_BUILD_MAP:
         if BUILD_TOOL == 'slam_toolbox':
             # 建图模式 + slam_toolbox
@@ -356,6 +431,58 @@ def generate_launch_description():
                 )
             )
     
+
+        
+    if not MANUAL_BUILD_MAP and not AUTO_BUILD_MAP:
+        nav2_actions.append(
+            TimerAction(
+                period=1.0,
+                actions=[map_server_node]
+            )
+        )
+        nav2_actions.append(
+            TimerAction(
+                period=1.5,
+                actions=[lifecycle_manager_map_server]
+            )
+        )
+
+    # 4. 导航模式配置
+    if BUILD_TOOL != 'slam_toolbox' :
+        # 根据localization参数选择AMCL或SLAM Toolbox
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[amcl_node],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+            )
+        )
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[lifecycle_manager_amcl],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+            )
+        )
+        
+        # SLAM Toolbox导航模式
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[slam_toolbox_node],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+            )
+        )
+        
+        
+    # 导航栈
+    nav2_actions.append(
+        TimerAction(
+            period=3.0,
+            actions=[navigation_include]
+        )
+    )
+    
     # 创建延迟启动动作
     delayed_web_launch = TimerAction(
         period=5.0,  # 延迟5秒启动web控制脚本
@@ -364,9 +491,9 @@ def generate_launch_description():
     
     # if nav2_actions:
     delayed_nav2_launch = TimerAction(
-            period=5.0,  # 延迟5秒启动Nav2，确保SLAM算法已初始化
-            actions=nav2_actions
-        )
+        period=5.0,  # 延迟5秒启动Nav2，确保SLAM算法已初始化
+        actions=nav2_actions
+    )
     
     # 创建并返回完整的launch description
     # 注意: 启动参数声明必须在使用它们的操作之前

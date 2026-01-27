@@ -299,7 +299,8 @@ def generate_launch_description():
         shell=False
     ))
     
-    if not MANUAL_BUILD_MAP:
+    # if not MANUAL_BUILD_MAP:
+    if BUILD_TOOL != 'slam_toolbox':
         # 根据 localization 参数选择包含哪一个 nav2 启动文件（amcl 或 slam_toolbox）
         # For AMCL we use a dedicated local launch that starts map_server + amcl
         # and forwards the main params file. This avoids the need for a second
@@ -361,8 +362,8 @@ def generate_launch_description():
         actions=web_actions
     )
     
-    if nav2_actions:
-        delayed_nav2_launch = TimerAction(
+    # if nav2_actions:
+    delayed_nav2_launch = TimerAction(
             period=5.0,  # 延迟5秒启动Nav2，确保SLAM算法已初始化
             actions=nav2_actions
         )
@@ -388,13 +389,14 @@ def generate_launch_description():
     # 3. 添加web_actions（固定都要启动）
     launch_actions.append(delayed_web_launch)
     
-    # 4. 根据模式添加nav2_actions
-    if MANUAL_BUILD_MAP:
-        # 建图模式：不需要添加Nav2
-        pass
-    elif 'delayed_nav2_launch' in locals():
-        # 导航模式：添加nav2
-        launch_actions.append(delayed_nav2_launch)
+    # # 4. 根据模式添加nav2_actions
+    # if MANUAL_BUILD_MAP:
+    #     # 建图模式：不需要添加Nav2
+    #     pass
+    # elif 'delayed_nav2_launch' in locals():
+    #     # 导航模式：添加nav2
+    
+    launch_actions.append(delayed_nav2_launch)
     
     # 5. 如果AUTO_BUILD_MAP为True，延迟启动explore_lite
     if AUTO_BUILD_MAP and not MANUAL_BUILD_MAP:

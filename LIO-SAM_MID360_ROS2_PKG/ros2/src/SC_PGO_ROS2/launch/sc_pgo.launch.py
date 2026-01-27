@@ -32,10 +32,11 @@ def generate_launch_description():
             {"keyframe_meter_gap": 1.0},
             {"sc_dist_thres": 0.3},
             {"sc_max_radius": 290.0},
-            {"save_directory": "~/save_data/"},
+            {"save_directory": "./save_data/"},
         ],
         remappings=[
-            ("/aft_mapped_to_init", "/Odometry"),
+            # ("/aft_mapped_to_init", "/Odometry"),
+            ("/aft_mapped_to_init", "/aft_mapped_to_init"),
             ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
             ("/cloud_for_scancontext", "/cloud_registered_body"),
             ("/tf", "tf"),

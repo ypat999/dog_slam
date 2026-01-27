@@ -72,13 +72,13 @@ controller_server:
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      vx_max: 2.5
-      # vx_max: 0.8
+      # vx_max: 2.5
+      vx_max: 0.6
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
-      wz_max: 2.0
-      # wz_max: 1.0
+      # wz_max: 2.0
+      wz_max: 1.0
       
       
       
@@ -269,7 +269,7 @@ local_costmap:
       # observation_sources: "scan"  # 新增参数
       # origin_x: 0.0  # 新增参数
       # origin_y: 0.0  # 新增参数
-      # track_unknown_space: false  # 新增参数
+      track_unknown_space: true  # 新增参数
       # trinary_costmap: true  # 新增参数
       # unknown_cost_value: 255  # 新增参数
       # use_maximum: false  # 新增参数
@@ -731,7 +731,7 @@ behavior_server:
     # 后退行为 - 用于脱离障碍物
     backup:
       plugin: "nav2_behaviors/BackUp"
-      backup_dist: 0.5  # 增加后退距离，从0.15增加到0.25
+      backup_dist: 0.3  # 增加后退距离，从0.15增加到0.25
       backup_speed: 0.15  # 增加后退速度，从0.025增加到0.1
       acceleration_limit: 1.5  # 新增参数
       deceleration_limit: -5.0  # 新增参数
@@ -743,12 +743,12 @@ behavior_server:
       min_dist: 0.2
       max_dist: 0.8  # 增加最大移动距离，从0.5增加到0.8
       max_speed: 0.5
-      min_speed: 0.06
+      min_speed: 0.11
       min_theta_error: 0.1  # 减小最小角度误差，提高精度
       max_theta_error: 0.3  # 减小最大角度误差，提高精度
       speed_theta_error_scale: 0.3  # 调整角度误差缩放因子
       simulation_duration: 2.0  # 增加模拟持续时间，从1.0增加到2.0
-      rotate_to_heading: true
+      rotate_to_heading: false
       # max_rotational_vel: 1.0  # 移动到顶层参数
       # min_rotational_vel: 0.1  # 移动到顶层参数
       # rotational_acc_lim: 1.0  # 移动到顶层参数

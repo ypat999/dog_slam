@@ -411,6 +411,34 @@ def generate_launch_description():
             'log_level': 'info'
         }.items()
     )
+
+    sc_pgo_node = Node(
+        package="sc_pgo_ros2",
+        executable="alaserPGO",
+        name="alaserPGO",
+        output="screen",
+        parameters=[
+            {"scan_line": 4},
+            {"minimum_range": 0.3},
+            {"mapping_line_resolution": 0.4},
+            {"mapping_plane_resolution": 0.8},
+            {"mapviz_filter_size": 0.05},
+            {"keyframe_meter_gap": 1.0},
+            {"sc_dist_thres": 0.3},
+            {"sc_max_radius": 290.0},
+            {"save_directory": "/home/ztl/save_data/"},  # 修改为实际保存路径
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            # ("/aft_mapped_to_init", "/Odometry"),
+            ("/aft_mapped_to_init", "/aft_mapped_to_init"),
+            ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
+            ("/cloud_for_scancontext", "/cloud_registered_body"),
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
+        prefix=['taskset -c 6'],   # 绑定 CPU 6
+    )
     
     # ============================================
     # 第二步：根据配置条件决定启动哪些节点
@@ -435,6 +463,7 @@ def generate_launch_description():
                     actions=[slam_toolbox_node]
                 )
             )
+        
         else:
             # 建图模式：添加octomap server
             unified_nodes.append(
@@ -443,6 +472,15 @@ def generate_launch_description():
                     actions=[octomap_server_node]
                 )
             )
+
+    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+        # 建图模式 + SC-PGO
+        unified_nodes.append(
+            TimerAction(
+                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+                actions=[sc_pgo_node]
+            )
+        )
     
 
         

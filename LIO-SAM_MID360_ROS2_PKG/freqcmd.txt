@@ -128,8 +128,8 @@ ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
 # 手动控制
 ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
 
-# slam_toolbox + nav2 + fastlio建图导航
-MANUAL_BUILD_MAP=false BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
+# slam_toolbox + nav2 + pointlio建图导航
+MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=point_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
 
 # slam_toolbox + nav2 + liosam建图导航
 MANUAL_BUILD_MAP=false BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
@@ -200,6 +200,8 @@ ps -ef | grep ros
 
 MANUAL_BUILD_MAP=True ros2 launch lio_sam lio_sam.launch.py
 MANUAL_BUILD_MAP=False SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=point_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 
 ros2 launch fast_lio mapping.launch.py
 ros2 launch lio_sam lio_sam.launch.py

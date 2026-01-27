@@ -143,7 +143,7 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 15.0  # 降低权重，减少直线前进的强制性
         threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:

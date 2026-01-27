@@ -199,6 +199,19 @@ def generate_launch_description():
         from launch.actions import LogInfo
         lio_sam_launch = LogInfo(msg="LIO-SAM package not found, skipping...")
     
+
+
+
+
+
+
+
+
+
+
+
+
+
     # ============================================
     # 第一步：定义所有可能的节点
     # ============================================
@@ -289,7 +302,7 @@ def generate_launch_description():
             {
                 'use_sim_time': use_sim_time,
                 'map_update_interval': 1.0,
-                'publish_occupancy_map': True,
+                'publish_occupancy_map': 'True',
                 'use_map_saver': True
             }
         ],
@@ -315,11 +328,11 @@ def generate_launch_description():
             'frame_id': 'map',
             'sensor_model/max_range': 100.0,
             'sensor_model/min_range': 0.4,
-            'sensor_model/insert_free_space': True,
+            'sensor_model/insert_free_space': 'True',
             'resolution': 0.05,
             'occupancy_min_z': -0.1,
             'occupancy_max_z': 1.0,
-            'publish_2d_map': True,
+            'publish_2d_map': 'True',
             'use_sim_time': use_sim_time,
         }],
         prefix=['taskset -c 4,5'],
@@ -368,7 +381,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
-            'autostart': 'True',
+            'autostart': True,
             'node_names': ['amcl']
         }]
     )
@@ -380,7 +393,7 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'use_sim_time': use_sim_time,
-            'autostart': 'True',
+            'autostart': True,
             'node_names': ['map_server']
         }]
     )

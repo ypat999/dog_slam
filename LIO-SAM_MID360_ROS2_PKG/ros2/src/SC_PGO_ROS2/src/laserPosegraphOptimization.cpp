@@ -206,7 +206,6 @@ void saveOptimizedVerticesKITTIformat(gtsam::Values _estimates,
 void laserOdometryHandler(
     const nav_msgs::msg::Odometry::SharedPtr _laserOdometry) {
   mBuf.lock();
-  cout << "got Odemetry" << endl;
   odometryBuf.push(_laserOdometry);
   mBuf.unlock();
 }  // laserOdometryHandler
@@ -572,9 +571,9 @@ void process_pg() {
       //
       // pop and check keyframe is or not
       //
-      cout << "=== Process PG Frame " << frame_counter << " ===" << endl;
-      cout << "Odometry buffer size: " << odometryBuf.size() << endl;
-      cout << "FullRes buffer size: " << fullResBuf.size() << endl;
+      // cout << "=== Process PG Frame " << frame_counter << " ===" << endl;
+      // cout << "Odometry buffer size: " << odometryBuf.size() << endl;
+      // cout << "FullRes buffer size: " << fullResBuf.size() << endl;
       
       mBuf.lock();
       while (!odometryBuf.empty() &&
@@ -591,7 +590,7 @@ void process_pg() {
       timeLaserOdometry =
           rclcpp::Time(odometryBuf.front()->header.stamp).seconds();
       timeLaser = rclcpp::Time(fullResBuf.front()->header.stamp).seconds();
-      cout << "Time check - Odometry: " << timeLaserOdometry << ", Laser: " << timeLaser << endl;
+      // cout << "Time check - Odometry: " << timeLaserOdometry << ", Laser: " << timeLaser << endl;
       // TODO
 
       laserCloudFullRes->clear();
@@ -605,16 +604,16 @@ void process_pg() {
 
       // find nearest gps
       double eps = 0.1;  // find a gps topioc arrived within eps second
-      cout << "GPS buffer size: " << gpsBuf.size() << endl;
+      // cout << "GPS buffer size: " << gpsBuf.size() << endl;
       while (!gpsBuf.empty()) {
         auto thisGPS = gpsBuf.front();
         auto thisGPSTime = rclcpp::Time(thisGPS->header.stamp).seconds();
         double time_diff = abs(thisGPSTime - timeLaserOdometry);
-        cout << "GPS time diff: " << time_diff << " (threshold: " << eps << ")" << endl;
+        // cout << "GPS time diff: " << time_diff << " (threshold: " << eps << ")" << endl;
         if (time_diff < eps) {
           currGPS = thisGPS;
           hasGPSforThisKF = true;
-          cout << "GPS found for this keyframe, altitude: " << currGPS->altitude << endl;
+          // cout << "GPS found for this keyframe, altitude: " << currGPS->altitude << endl;
           break;
         } else {
           hasGPSforThisKF = false;
@@ -622,7 +621,7 @@ void process_pg() {
         gpsBuf.pop();
       }
       if (!hasGPSforThisKF) {
-        cout << "No GPS found for this keyframe" << endl;
+        // cout << "No GPS found for this keyframe" << endl;
       }
       mBuf.unlock();
 
@@ -641,11 +640,11 @@ void process_pg() {
       rotaionAccumulated +=
           (dtf.roll + dtf.pitch + dtf.yaw);  // sum just naive approach.
 
-      cout << "Delta movement - Translation: " << delta_translation 
-           << ", Accumulated: " << translationAccumulated 
-           << " (threshold: " << keyframeMeterGap << ")" << endl;
-      cout << "Delta rotation - Accumulated: " << rotaionAccumulated 
-           << " (threshold: " << keyframeRadGap << ")" << endl;
+      // cout << "Delta movement - Translation: " << delta_translation 
+      //      << ", Accumulated: " << translationAccumulated 
+      //      << " (threshold: " << keyframeMeterGap << ")" << endl;
+      // cout << "Delta rotation - Accumulated: " << rotaionAccumulated 
+      //      << " (threshold: " << keyframeRadGap << ")" << endl;
 
       if (translationAccumulated > keyframeMeterGap ||
           rotaionAccumulated > keyframeRadGap) {
@@ -655,7 +654,7 @@ void process_pg() {
         cout << "Keyframe detected!" << endl;
       } else {
         isNowKeyFrame = false;
-        cout << "Not a keyframe, skipping..." << endl;
+        // cout << "Not a keyframe, skipping..." << endl;
       }
 
       if (!isNowKeyFrame) continue;
@@ -670,7 +669,7 @@ void process_pg() {
       //
       // Save data and Add consecutive node
       //
-      cout << "Processing keyframe data..." << endl;
+      // cout << "Processing keyframe data..." << endl;
       pcl::PointCloud<PointType>::Ptr thisKeyFrameDS(
           new pcl::PointCloud<PointType>());
       downSizeFilterScancontext.setInputCloud(thisKeyFrame);
@@ -703,8 +702,8 @@ void process_pg() {
               // number, but for simple implementation, we follow sequential
               // indexing)
       
-      cout << "Adding to posegraph - Prev node: " << prev_node_idx 
-           << ", Curr node: " << curr_node_idx << endl;
+      // cout << "Adding to posegraph - Prev node: " << prev_node_idx 
+      //      << ", Curr node: " << curr_node_idx << endl;
       
       if (!gtSAMgraphMade /* prior node */) {
         const int init_node_idx = 0;
@@ -713,7 +712,7 @@ void process_pg() {
         // auto poseOrigin = gtsam::Pose3(gtsam::Rot3::RzRyRx(0.0, 0.0, 0.0),
         // gtsam::Point3(0.0, 0.0, 0.0));
 
-        cout << "Adding prior node " << init_node_idx << " to posegraph" << endl;
+        // cout << "Adding prior node " << init_node_idx << " to posegraph" << endl;
         
         mtxPosegraph.lock();
         {
@@ -727,17 +726,17 @@ void process_pg() {
 
         gtSAMgraphMade = true;
 
-        cout << "posegraph prior node " << init_node_idx << " added" << endl;
+        // cout << "posegraph prior node " << init_node_idx << " added" << endl;
       } else /* consecutive node (and odom factor) after the prior added */
       {      // == keyframePoses.size() > 1
-        cout << "Adding consecutive node " << curr_node_idx << " to posegraph" << endl;
+        // cout << "Adding consecutive node " << curr_node_idx << " to posegraph" << endl;
         
         gtsam::Pose3 poseFrom =
             Pose6DtoGTSAMPose3(keyframePoses.at(prev_node_idx));
         gtsam::Pose3 poseTo =
             Pose6DtoGTSAMPose3(keyframePoses.at(curr_node_idx));
 
-        cout << "Pose from node " << prev_node_idx << " to node " << curr_node_idx << endl;
+        // cout << "Pose from node " << prev_node_idx << " to node " << curr_node_idx << endl;
         
         mtxPosegraph.lock();
         {
@@ -745,7 +744,7 @@ void process_pg() {
           gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(
               prev_node_idx, curr_node_idx, poseFrom.between(poseTo),
               odomNoise));
-          cout << "Odom factor added between nodes " << prev_node_idx << " and " << curr_node_idx << endl;
+          // cout << "Odom factor added between nodes " << prev_node_idx << " and " << curr_node_idx << endl;
 
           // gps factor
           if (hasGPSforThisKF) {
@@ -760,21 +759,21 @@ void process_pg() {
             mtxRecentPose.unlock();
             gtSAMgraph.add(
                 gtsam::GPSFactor(curr_node_idx, gpsConstraint, robustGPSNoise));
-            cout << "GPS factor added at node " << curr_node_idx 
-                 << ", altitude offset: " << curr_altitude_offseted << endl;
+            // cout << "GPS factor added at node " << curr_node_idx 
+            //      << ", altitude offset: " << curr_altitude_offseted << endl;
           } else {
-            cout << "No GPS factor added for node " << curr_node_idx << endl;
+            // cout << "No GPS factor added for node " << curr_node_idx << endl;
           }
           initialEstimate.insert(curr_node_idx, poseTo);
           // runISAM2opt();
         }
         mtxPosegraph.unlock();
 
-        if (curr_node_idx % 100 == 0) {
-          cout << "posegraph odom node " << curr_node_idx << " added." << endl;
-        } else {
-          cout << "Node " << curr_node_idx << " added to posegraph" << endl;
-        }
+        // if (curr_node_idx % 100 == 0) {
+        //   cout << "posegraph odom node " << curr_node_idx << " added." << endl;
+        // } else {
+        //   cout << "Node " << curr_node_idx << " added to posegraph" << endl;
+        // }
       }
       // if want to print the current graph, use gtSAMgraph.print("\nFactor
       // Graph:\n");
@@ -785,9 +784,9 @@ void process_pg() {
       pcl::io::savePCDFileBinary(pcd_filename, *thisKeyFrame);   // scan
       pgTimeSaveStream << timeLaser << std::endl;  // path
       
-      cout << "Saved keyframe data to: " << pcd_filename << endl;
-      cout << "=== Process PG Frame " << frame_counter << " Completed ===" << endl;
-      cout << endl;  // Add empty line for better readability
+      // cout << "Saved keyframe data to: " << pcd_filename << endl;
+      // cout << "=== Process PG Frame " << frame_counter << " Completed ===" << endl;
+      // cout << endl;  // Add empty line for better readability
     }
 
     // ps.

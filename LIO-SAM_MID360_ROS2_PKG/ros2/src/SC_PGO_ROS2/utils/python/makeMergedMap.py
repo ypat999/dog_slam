@@ -33,7 +33,7 @@ scan_files.sort()
 ##########################
 
 
-scan_idx_range_to_stack = [0, len(scan_files)] # if you want a whole map, use [0, len(scan_files)]
+scan_idx_range_to_stack = [0, 749] #[0, len(scan_files)] # if you want a whole map, use [0, len(scan_files)]
 node_skip = 1
 
 num_points_in_a_scan = 10000 # for reservation (save faster) // e.g., use 150000 for 128 ray lidars, 100000 for 64 ray lidars, 30000 for 16 ray lidars, if error occured, use the larger value.

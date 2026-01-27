@@ -1,66 +1,113 @@
 # FAST-LIO2 & LIO-SAM MID360 ROS2 Package
 
-推荐使用阿里源：
+基于ROS2 Humble的Livox MID360激光雷达SLAM与导航系统，集成了多种先进的SLAM算法和导航功能。
+
+## 主要特性
+
+- **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, DLIO, SC-PGO
+- **统一导航系统**: 集成Nav2导航框架，支持自主探索和路径规划
+- **实时建图**: 支持在线建图和离线地图构建
+- **稳定导航**: 优化base_footprint，实现高速稳定导航
+- **Gazebo仿真**: 支持Gazebo GPU加速仿真
+
+## 系统要求
+
+- **操作系统**: Ubuntu 22.04
+- **ROS版本**: ROS2 Humble
+- **硬件**: Livox MID360激光雷达
+- **依赖库**: [Livox-SDK2](https://github.com/Livox-SDK/Livox-SDK2)
+
+### 推荐使用阿里源：
+```bash
 deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] https://mirrors.aliyun.com/ros2/ubuntu/ jammy main
 deb [arch=amd64] https://mirrors.aliyun.com/ubuntu/ jammy main
 
-使用前请添加gpg key：
+# 添加gpg key
 sudo apt install curl gnupg2 lsb-release
 sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-
-
-## 依赖项
-
-- Ubuntu 22.04
-- ROS2 Humble
-- [Livox-SDK2](https://github.com/Livox-SDK/Livox-SDK2)
-
-### Livox-SDK2 安装步骤
-
-在编译本项目之前，需要先安装Livox-SDK2：
-
-1. 安装依赖项：
-   ```bash
-   sudo apt-get update
-   sudo apt-get install -y git cmake g++ libboost-all-dev libpcl-dev
-   ```
-
-2. 克隆Livox-SDK2仓库：
-   ```bash
-   git clone https://github.com/Livox-SDK/Livox-SDK2.git
-   cd Livox-SDK2
-   ```
-
-3. 编译和安装：
-   ```bash
-   mkdir build
-   cd build
-   cmake ..
-   make
-   sudo make install
-   ```
-
-我们需要 Livox MID360 硬件。
-```bash
-## LIO-SAM (ros2)
-sudo apt install -y ros-humble-perception-pcl \
-  	   ros-humble-pcl-msgs \
-  	   ros-humble-vision-opencv \
-  	   ros-humble-xacro \
-	   ros-humble-vision-msgs
-
-## LIO-SAM (gtsam)
-sudo add-apt-repository ppa:borglab/gtsam-release-4.1
-sudo apt install -y libgtsam-dev libgtsam-unstable-dev
 ```
 
-## 构建 (首次)
-删除 build/ install/ log/ 目录
-运行 `build_ros2.sh` 进行首次构建。它会正确构建 Livox 包。
+## 依赖项安装
 
-## 运行
+### Livox-SDK2 安装
 
-### FAST-LIO2 启动方式（推荐）
+```bash
+# 安装依赖项
+sudo apt-get update
+sudo apt-get install -y git cmake g++ libboost-all-dev libpcl-dev
+
+# 克隆并编译Livox-SDK2
+git clone https://github.com/Livox-SDK/Livox-SDK2.git
+cd Livox-SDK2
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+```
+
+### ROS2 依赖包
+
+```bash
+# SLAM相关依赖
+sudo apt install -y ros-humble-perception-pcl \
+   	   ros-humble-pcl-msgs \
+   	   ros-humble-vision-opencv \
+   	   ros-humble-xacro \
+	   ros-humble-vision-msgs
+
+# GTSAM (LIO-SAM依赖)
+sudo add-apt-repository ppa:borglab/gtsam-release-4.1
+sudo apt install -y libgtsam-dev libgtsam-unstable-dev
+
+# Nav2导航系统
+sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
+sudo apt install ros-humble-rosbridge-server 
+sudo apt-get update && sudo apt-get install -y \
+    ros-humble-dwb-critics \
+    ros-humble-nav2-dwb-controller \
+    ros-humble-nav2-controller \
+    ros-humble-nav2-amcl \
+    ros-humble-nav2-planner \
+    ros-humble-nav2-bt-navigator \
+    ros-humble-nav2-lifecycle-manager \
+    ros-humble-nav2-map-server \
+    ros-humble-nav2-waypoint-follower \
+    ros-humble-rosbridge-server
+
+# 点云转激光扫描
+sudo apt install ros-humble-pointcloud-to-laserscan
+
+# OctoMap建图
+sudo apt install ros-humble-octomap ros-humble-octomap-msgs
+sudo apt install ros-humble-octomap-server
+```
+
+## 构建项目
+
+### 首次构建
+```bash
+# 删除旧构建文件
+rm -rf build/ install/ log/
+
+# 运行构建脚本
+./build_ros2.sh
+```
+
+## 运行方式
+
+### 统一启动方式（推荐）
+
+使用统一的启动文件，支持多种SLAM算法和导航模式：
+
+```bash
+# 启动统一SLAM导航系统
+ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+```
+
+### 单独启动方式
+
+#### FAST-LIO2 SLAM
 ```bash
 # 启动Livox MID360雷达驱动
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
@@ -69,7 +116,7 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 ros2 launch fast_lio mapping.launch.py
 ```
 
-### LIO-SAM 启动方式
+#### LIO-SAM SLAM
 ```bash
 # 启动Livox MID360雷达驱动
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
@@ -78,26 +125,108 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 ros2 launch lio_sam run.launch.py
 ```
 
-## 保存点云 （可选）
+#### Point-LIO SLAM
+```bash
+# 启动Point-LIO SLAM系统
+ros2 launch point_lio_ros2 mapping_mid360.launch.py
+```
+
+#### SC-PGO 姿态图优化
+```bash
+# 启动SC-PGO姿态图优化
+ros2 launch sc_pgo_ros2 sc_pgo.launch.py
+```
+
+## 地图保存与转换
+
+### 保存点云地图
+```bash
 source install/setup.bash 
 ros2 service call /lio_sam/save_map lio_sam/srv/SaveMap "{resolution: 0.05, destination: '/projects/LOAM/'}"
+```
 
-## 转换为占用网格 （PNG 地图输出）
-sudo apt install ros-humble-octomap ros-humble-octomap-msgs
-sudo apt install ros-humble-octomap-server
-#### 当 lio-sam 运行且地图构建完成后，保存地图
-ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ywj/projects/map_grid/map --fmt png
+### 转换为占用网格地图
+```bash
+# 当SLAM系统运行且地图构建完成后，保存为PNG格式
+ros2 run nav2_map_server map_saver_cli -t /projected_map -f /path/to/map --fmt png
+```
 
-## nav2
-sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
-sudo apt install ros-humble-rosbridge-server 
-sudo apt-get update && sudo apt-get install -y ros-humble-dwb-critics ros-humble-nav2-dwb-controller ros-humble-nav2-controller ros-humble-nav2-amcl ros-humble-nav2-planner ros-humble-nav2-bt-navigator ros-humble-nav2-lifecycle-manager ros-humble-nav2-map-server ros-humble-nav2-waypoint-follower ros-humble-rosbridge-server 
+## 导航功能
 
-## pointcloud_to_laserscan
-sudo apt install ros-humble-pointcloud-to-laserscan 
+### 自主探索
+```bash
+# 启动自主探索
+ros2 launch m-explore explore.launch.py
+```
 
-## ros2topic
-sudo apt install ros-humble-ros2topic=0.18.14-1jammy.20251008.030
+### 路径规划与导航
+系统支持Nav2的完整导航栈，包括：
+- 全局路径规划
+- 局部路径规划
+- 障碍物避障
+- 动态重规划
+
+## 配置说明
+
+### 全局配置
+项目使用`global_config`包进行统一配置管理，支持环境变量配置：
+- `MANUAL_BUILD_MAP`: 手动建图模式
+- `AUTO_BUILD_MAP`: 自动建图模式
+- `NAVIGATION_MODE`: 导航模式设置
+- `SLAM_ALGORITHM`: SLAM算法选择
+
+### 传感器配置
+支持多种Livox雷达配置：
+- MID360标准配置
+- MID360倾斜配置
+- HAP雷达配置
+- 多雷达混合配置
+
+## 项目结构
+
+```
+LIO-SAM_MID360_ROS2_PKG/
+├── ros2/src/
+│   ├── LIO-SAM_MID360_ROS2_DOG/      # LIO-SAM实现
+│   ├── FAST_LIO_ROS2_edit/           # FAST-LIO2实现
+│   ├── point_lio_ros2/               # Point-LIO实现
+│   ├── SC_PGO_ROS2/                  # SC-PGO姿态图优化
+│   ├── nav2_dog_slam/                # 统一导航系统
+│   ├── livox_ros_driver2/            # Livox雷达驱动
+│   ├── global_config/                # 全局配置管理
+│   └── m-explore/                   # 自主探索
+├── map_sample/                       # 地图示例
+└── build_ros2.sh                     # 构建脚本
+```
+
+## 最新更新
+
+- **2026-01-27**: 导航算法集中到一起，统一启动文件
+- **2026-01-26**: 修正base_footprint相关问题，实现稳定高速导航
+- **2026-01-26**: 添加SC-PGO扫描上下文姿态图优化
+- **2026-01-26**: 优化动态base_footprint计算
+- **2026-01-26**: 统一导航参数配置
+
+## 故障排除
+
+### 常见问题
+
+1. **雷达连接问题**: 检查Livox-SDK2是否正确安装
+2. **TF变换错误**: 确认base_footprint坐标系设置正确
+3. **导航失败**: 检查地图质量和导航参数配置
+
+### 调试工具
+
+```bash
+# 查看TF树
+ros2 run tf2_tools view_frames.py
+
+# 查看话题列表
+ros2 topic list
+
+# 查看节点信息
+ros2 node list
+```
 
 ## rqt
 sudo apt install ros-humble-rqt  

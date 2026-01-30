@@ -324,14 +324,14 @@ void pubPath(void) {
   // Publish odom and path
   nav_msgs::msg::Odometry odomAftPGO;
   nav_msgs::msg::Path pathAftPGO;
-  pathAftPGO.header.frame_id = "camera_init";
+  pathAftPGO.header.frame_id = "odom";
   mKF.lock();
   for (int node_idx = 0; node_idx < recentIdxUpdated; node_idx++) {
     const Pose6D &pose_est =
         keyframePosesUpdated.at(node_idx);  // Updated poses
 
     nav_msgs::msg::Odometry odomAftPGOthis;
-    odomAftPGOthis.header.frame_id = "camera_init";
+    odomAftPGOthis.header.frame_id = "odom";
     odomAftPGOthis.child_frame_id = "aft_pgo";
     odomAftPGOthis.header.stamp =
         rclcpp::Time(keyframeTimes.at(node_idx) * 1e9);
@@ -352,7 +352,7 @@ void pubPath(void) {
     poseStampAftPGO.pose = odomAftPGOthis.pose.pose;
 
     pathAftPGO.header.stamp = odomAftPGOthis.header.stamp;
-    pathAftPGO.header.frame_id = "camera_init";
+    pathAftPGO.header.frame_id = "odom";
     pathAftPGO.poses.push_back(poseStampAftPGO);
   }
   mKF.unlock();
@@ -361,7 +361,7 @@ void pubPath(void) {
 
   geometry_msgs::msg::TransformStamped transformStamped;
   transformStamped.header.stamp = odomAftPGO.header.stamp;
-  transformStamped.header.frame_id = "camera_init";
+  transformStamped.header.frame_id = "odom";
   transformStamped.child_frame_id = "aft_pgo";
   transformStamped.transform.translation.x = odomAftPGO.pose.pose.position.x;
   transformStamped.transform.translation.y = odomAftPGO.pose.pose.position.y;
@@ -426,7 +426,7 @@ pcl::PointCloud<PointType>::Ptr transformPointCloud(
       transformIn.translation().z(), transformIn.rotation().roll(),
       transformIn.rotation().pitch(), transformIn.rotation().yaw());
 
-  int numberOfCores = 8;  // TODO move to yaml
+  int numberOfCores = 4;  // TODO move to yaml
 #pragma omp parallel for num_threads(numberOfCores)
   for (int i = 0; i < cloudSize; ++i) {
     pointFrom = &cloudIn->points[i];
@@ -486,12 +486,12 @@ std::optional<gtsam::Pose3> doICPVirtualRelative(int _loop_kf_idx,
   // loop verification
   sensor_msgs::msg::PointCloud2 cureKeyframeCloudMsg;
   pcl::toROSMsg(*cureKeyframeCloud, cureKeyframeCloudMsg);
-  cureKeyframeCloudMsg.header.frame_id = "camera_init";
+  cureKeyframeCloudMsg.header.frame_id = "odom";
   pubLoopScanLocal->publish(cureKeyframeCloudMsg);
 
   sensor_msgs::msg::PointCloud2 targetKeyframeCloudMsg;
   pcl::toROSMsg(*targetKeyframeCloud, targetKeyframeCloudMsg);
-  targetKeyframeCloudMsg.header.frame_id = "camera_init";
+  targetKeyframeCloudMsg.header.frame_id = "odom";
   pubLoopSubmapLocal->publish(targetKeyframeCloudMsg);
 
   // ICP Settings
@@ -563,17 +563,25 @@ void removeNaNAndInfiniteInPlace(typename pcl::PointCloud<PointT>::Ptr &cloud) {
 }
 
 void process_pg() {
+  static int frame_counter = 0;
   while (1) {
     while (!odometryBuf.empty() && !fullResBuf.empty()) {
+      frame_counter++;
+      
       //
       // pop and check keyframe is or not
       //
+      // cout << "=== Process PG Frame " << frame_counter << " ===" << endl;
+      // cout << "Odometry buffer size: " << odometryBuf.size() << endl;
+      // cout << "FullRes buffer size: " << fullResBuf.size() << endl;
+      
       mBuf.lock();
       while (!odometryBuf.empty() &&
              rclcpp::Time(odometryBuf.front()->header.stamp).seconds() <
                  rclcpp::Time(fullResBuf.front()->header.stamp).seconds())
         odometryBuf.pop();
       if (odometryBuf.empty()) {
+        cout << "Odometry buffer empty after sync, breaking..." << endl;
         mBuf.unlock();
         break;
       }
@@ -582,6 +590,7 @@ void process_pg() {
       timeLaserOdometry =
           rclcpp::Time(odometryBuf.front()->header.stamp).seconds();
       timeLaser = rclcpp::Time(fullResBuf.front()->header.stamp).seconds();
+      // cout << "Time check - Odometry: " << timeLaserOdometry << ", Laser: " << timeLaser << endl;
       // TODO
 
       laserCloudFullRes->clear();
@@ -595,17 +604,24 @@ void process_pg() {
 
       // find nearest gps
       double eps = 0.1;  // find a gps topioc arrived within eps second
+      // cout << "GPS buffer size: " << gpsBuf.size() << endl;
       while (!gpsBuf.empty()) {
         auto thisGPS = gpsBuf.front();
         auto thisGPSTime = rclcpp::Time(thisGPS->header.stamp).seconds();
-        if (abs(thisGPSTime - timeLaserOdometry) < eps) {
+        double time_diff = abs(thisGPSTime - timeLaserOdometry);
+        // cout << "GPS time diff: " << time_diff << " (threshold: " << eps << ")" << endl;
+        if (time_diff < eps) {
           currGPS = thisGPS;
           hasGPSforThisKF = true;
+          // cout << "GPS found for this keyframe, altitude: " << currGPS->altitude << endl;
           break;
         } else {
           hasGPSforThisKF = false;
         }
         gpsBuf.pop();
+      }
+      if (!hasGPSforThisKF) {
+        // cout << "No GPS found for this keyframe" << endl;
       }
       mBuf.unlock();
 
@@ -624,13 +640,21 @@ void process_pg() {
       rotaionAccumulated +=
           (dtf.roll + dtf.pitch + dtf.yaw);  // sum just naive approach.
 
+      // cout << "Delta movement - Translation: " << delta_translation 
+      //      << ", Accumulated: " << translationAccumulated 
+      //      << " (threshold: " << keyframeMeterGap << ")" << endl;
+      // cout << "Delta rotation - Accumulated: " << rotaionAccumulated 
+      //      << " (threshold: " << keyframeRadGap << ")" << endl;
+
       if (translationAccumulated > keyframeMeterGap ||
           rotaionAccumulated > keyframeRadGap) {
         isNowKeyFrame = true;
         translationAccumulated = 0.0;  // reset
         rotaionAccumulated = 0.0;      // reset
+        cout << "Keyframe detected!" << endl;
       } else {
         isNowKeyFrame = false;
+        // cout << "Not a keyframe, skipping..." << endl;
       }
 
       if (!isNowKeyFrame) continue;
@@ -645,17 +669,26 @@ void process_pg() {
       //
       // Save data and Add consecutive node
       //
+      // cout << "Processing keyframe data..." << endl;
       pcl::PointCloud<PointType>::Ptr thisKeyFrameDS(
           new pcl::PointCloud<PointType>());
       downSizeFilterScancontext.setInputCloud(thisKeyFrame);
       downSizeFilterScancontext.filter(*thisKeyFrameDS);
       removeNaNAndInfiniteInPlace<PointType>(thisKeyFrameDS);
 
+      cout << "Original keyframe points: " << thisKeyFrame->size() 
+           << ", Downsampled: " << thisKeyFrameDS->size() << endl;
+
       mKF.lock();
       keyframeLaserClouds.push_back(thisKeyFrameDS);
       keyframePoses.push_back(pose_curr);
       keyframePosesUpdated.push_back(pose_curr);  // init
       keyframeTimes.push_back(timeLaserOdometry);
+
+      cout << "Current keyframe count: " << keyframePoses.size() << endl;
+      cout << "Keyframe pose - x: " << pose_curr.x << ", y: " << pose_curr.y 
+           << ", z: " << pose_curr.z << ", roll: " << pose_curr.roll 
+           << ", pitch: " << pose_curr.pitch << ", yaw: " << pose_curr.yaw << endl;
 
       scManager.makeAndSaveScancontextAndKeys(*thisKeyFrameDS);
 
@@ -668,6 +701,10 @@ void process_pg() {
           1;  // becuase cpp starts with 0 (actually this index could be any
               // number, but for simple implementation, we follow sequential
               // indexing)
+      
+      // cout << "Adding to posegraph - Prev node: " << prev_node_idx 
+      //      << ", Curr node: " << curr_node_idx << endl;
+      
       if (!gtSAMgraphMade /* prior node */) {
         const int init_node_idx = 0;
         gtsam::Pose3 poseOrigin =
@@ -675,6 +712,8 @@ void process_pg() {
         // auto poseOrigin = gtsam::Pose3(gtsam::Rot3::RzRyRx(0.0, 0.0, 0.0),
         // gtsam::Point3(0.0, 0.0, 0.0));
 
+        // cout << "Adding prior node " << init_node_idx << " to posegraph" << endl;
+        
         mtxPosegraph.lock();
         {
           // prior factor
@@ -687,20 +726,25 @@ void process_pg() {
 
         gtSAMgraphMade = true;
 
-        cout << "posegraph prior node " << init_node_idx << " added" << endl;
+        // cout << "posegraph prior node " << init_node_idx << " added" << endl;
       } else /* consecutive node (and odom factor) after the prior added */
       {      // == keyframePoses.size() > 1
+        // cout << "Adding consecutive node " << curr_node_idx << " to posegraph" << endl;
+        
         gtsam::Pose3 poseFrom =
             Pose6DtoGTSAMPose3(keyframePoses.at(prev_node_idx));
         gtsam::Pose3 poseTo =
             Pose6DtoGTSAMPose3(keyframePoses.at(curr_node_idx));
 
+        // cout << "Pose from node " << prev_node_idx << " to node " << curr_node_idx << endl;
+        
         mtxPosegraph.lock();
         {
           // odom factor
           gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(
               prev_node_idx, curr_node_idx, poseFrom.between(poseTo),
               odomNoise));
+          // cout << "Odom factor added between nodes " << prev_node_idx << " and " << curr_node_idx << endl;
 
           // gps factor
           if (hasGPSforThisKF) {
@@ -715,24 +759,34 @@ void process_pg() {
             mtxRecentPose.unlock();
             gtSAMgraph.add(
                 gtsam::GPSFactor(curr_node_idx, gpsConstraint, robustGPSNoise));
-            cout << "GPS factor added at node " << curr_node_idx << endl;
+            // cout << "GPS factor added at node " << curr_node_idx 
+            //      << ", altitude offset: " << curr_altitude_offseted << endl;
+          } else {
+            // cout << "No GPS factor added for node " << curr_node_idx << endl;
           }
           initialEstimate.insert(curr_node_idx, poseTo);
           // runISAM2opt();
         }
         mtxPosegraph.unlock();
 
-        if (curr_node_idx % 100 == 0)
-          cout << "posegraph odom node " << curr_node_idx << " added." << endl;
+        // if (curr_node_idx % 100 == 0) {
+        //   cout << "posegraph odom node " << curr_node_idx << " added." << endl;
+        // } else {
+        //   cout << "Node " << curr_node_idx << " added to posegraph" << endl;
+        // }
       }
       // if want to print the current graph, use gtSAMgraph.print("\nFactor
       // Graph:\n");
 
       // save utility
       std::string curr_node_idx_str = padZeros(curr_node_idx);
-      pcl::io::savePCDFileBinary(pgScansDirectory + curr_node_idx_str + ".pcd",
-                                 *thisKeyFrame);   // scan
+      std::string pcd_filename = pgScansDirectory + curr_node_idx_str + ".pcd";
+      pcl::io::savePCDFileBinary(pcd_filename, *thisKeyFrame);   // scan
       pgTimeSaveStream << timeLaser << std::endl;  // path
+      
+      // cout << "Saved keyframe data to: " << pcd_filename << endl;
+      // cout << "=== Process PG Frame " << frame_counter << " Completed ===" << endl;
+      // cout << endl;  // Add empty line for better readability
     }
 
     // ps.
@@ -742,6 +796,12 @@ void process_pg() {
     // wait (must required for running the while loop)
     std::chrono::milliseconds dura(2);
     std::this_thread::sleep_for(dura);
+    
+    if (frame_counter % 1000 == 0) {
+      cout << "Process PG still running... Total frames processed: " << frame_counter << endl;
+      cout << "Odometry buffer size: " << odometryBuf.size() << endl;
+      cout << "FullRes buffer size: " << fullResBuf.size() << endl;
+    }
   }
 }  // process_pg
 
@@ -867,7 +927,7 @@ void pubMap(void) {
 
   sensor_msgs::msg::PointCloud2 laserCloudMapPGOMsg;
   pcl::toROSMsg(*laserCloudMapPGO, laserCloudMapPGOMsg);
-  laserCloudMapPGOMsg.header.frame_id = "camera_init";
+  laserCloudMapPGOMsg.header.frame_id = "odom";
   pubMapAftPGO->publish(laserCloudMapPGOMsg);
 }
 
@@ -897,10 +957,12 @@ int main(int argc, char **argv) {
   keyframeDegGap = nh->get_parameter("keyframe_deg_gap").as_double();
 
   odomKITTIformat = save_directory + "odom_poses.txt";
+  pgKITTIformat = save_directory + "optimized_poses.txt";
   pgTimeSaveStream =
       std::fstream(save_directory + "times.txt", std::fstream::out);
   pgTimeSaveStream.precision(std::numeric_limits<double>::max_digits10);
   pgScansDirectory = save_directory + "Scans/";
+  cout << "pgScansDirectory " << pgScansDirectory << endl;
   auto unused = system((std::string("exec rm -r ") + pgScansDirectory).c_str());
   unused = system((std::string("mkdir -p ") + pgScansDirectory).c_str());
 

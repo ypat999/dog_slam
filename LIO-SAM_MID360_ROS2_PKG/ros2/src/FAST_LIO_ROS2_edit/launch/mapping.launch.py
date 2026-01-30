@@ -21,7 +21,7 @@ def generate_launch_description():
         sys.path.insert(0, global_config_path)
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
-            DEFAULT_USE_SIM_TIME, BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
+            DEFAULT_USE_SIM_TIME, MANUAL_BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
             NAV2_DEFAULT_PARAMS_FILE
         )
     except ImportError as e:
@@ -31,7 +31,7 @@ def generate_launch_description():
         DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
         DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
         DEFAULT_USE_SIM_TIME = False
-        BUILD_MAP = False
+        MANUAL_BUILD_MAP = False
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
@@ -44,9 +44,9 @@ def generate_launch_description():
     config_file = 'mid360.yaml'
 
     # 导入全局配置
-    from global_config import LIVOX_MID360_CONFIG
+    from global_config import LIVOX_MID360_CONFIG, LIVOX_MID360_CONFIG_NO_TILT
     
-    livox_config_path = LIVOX_MID360_CONFIG
+    livox_config_path = LIVOX_MID360_CONFIG_NO_TILT #LIVOX_MID360_CONFIG
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
@@ -71,7 +71,7 @@ def generate_launch_description():
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
         ],
-        prefix=['taskset -c 4,5'],   # 绑定 CPU 4
+        prefix=['taskset -c 4'],   # 绑定 CPU 4
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
@@ -134,50 +134,7 @@ def generate_launch_description():
     )
     
 
-    # PointCloud to LaserScan 节点
-    pointcloud_to_laserscan_node = Node(
-        package='pointcloud_to_laserscan',
-        executable='pointcloud_to_laserscan_node',
-        name='pointcloud_to_laserscan',
-        remappings=[
-            # ('/cloud_in', '/lio_sam/deskew/cloud_deskewed'),
-            ('/cloud_in', '/cloud_registered_body'),
-            ('/scan', '/scan'),
-        ],
-        parameters=[{
-            'transform_tolerance': 0.1,
-            'min_height': 0.1,           # 最小高度（过滤掉地面以下的点，调整为更紧的范围）
-            'max_height': 1.5,            # 最大高度（过滤掉较高的点，限制在地面附近）
-            'angle_min': -3.1,        # -180度
-            'angle_max': 3.1,         # 180度
-            # 将角度增量精确设置为 (angle_max - angle_min) / (691 - 1)
-            # 原始地图中的激光束数量为 691，实际转换产生 690 时会触发 slam_toolbox 的长度校验错误。
-            # 使用精确值可以避免舍入导致的“expected 691 / got 690”问题。
-            'angle_increment': 0.00869347338,
-            'scan_time': 0.1,             # 扫描时间
-            
-            'range_min': 0.3,             # 增加最小距离，过滤掉近距离噪声 (原0.8)
-            'range_max': 40.0,             # 减少最大距离，避免远距离噪声影响 (原10.0)
-            'use_inf': False,              # 是否使用无穷大值（布尔类型，不使用引号）
-            
-            'inf_epsilon': 40.0,           # 无穷大值的替代值
-            
-            # # QoS设置，确保与rviz2订阅者兼容
-            # 'qos_overrides./scan.publisher.reliability': 'reliable',
-            # 'qos_overrides./scan.publisher.depth': 10,
-            
-            # 其他参数
-            'use_sim_time': use_sim_time,
-            # 使用当前时间戳而不是原始时间戳，避免时间戳不匹配问题
-            # 'use_latest_timestamp': 'True',
-            # 设置目标坐标系为odom，确保laserscan保持水平，不随baselink倾斜
-            'target_frame': 'livox_frame',
-            'concurrency_level': 1,       # 处理并发级别
-        }],
-        output='screen',
-        prefix=['taskset -c 5'],   # 绑定 CPU 5
-    )
-    ld.add_action(pointcloud_to_laserscan_node)
+    # PointCloud to LaserScan 节点已迁移到 lio_nav2_unified.launch.py
 
 
 
@@ -207,7 +164,8 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
         output='screen'
     )
     ld.add_action(base_link_to_livox_frame_tf)
@@ -217,81 +175,11 @@ def generate_launch_description():
         # 仅录制模式：只启动雷达驱动
         return ld
 
-    # 获取nav2_dog_slam包的路径
-    nav2_dog_slam_path = get_package_share_directory('nav2_dog_slam')
+
     
-    # 添加slam_toolbox节点（按照LIO-SAM的模式）
-    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
-    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
-        'slam_toolbox_params',
-        default_value=NAV2_DEFAULT_PARAMS_FILE,
-        description='Full path to slam_toolbox parameters file'
-    )
-    
-    
-    slam_toolbox_node = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox_node',
-        output='screen',
-        parameters=[
-            slam_toolbox_params,
-            {
-                'use_sim_time': use_sim_time,
-                # force-disable map publishing/updating to keep nav2 map_server as authoritative
-                'map_update_interval': 1.0,
-                'publish_occupancy_map': True,
-                'use_map_saver': True
-            }
-        ],
-        prefix=['taskset -c 5,6'],
-        remappings=[('/scan', '/scan'), ('/odom', '/Odometry')]  # 使用FAST-LIO的odometry话题
-    )
-    
-    # 添加octomap_server节点（按照LIO-SAM的模式）
-    octomap_server_node = Node(
-        package='octomap_server',
-        executable='octomap_server_node',
-        name='octomap_server',
-        output='screen',
-        parameters=[{
-            'frame_id': 'map',                   # 地图坐标系
-            'sensor_model/max_range': 100.0,     # 最大感测距离
-            'sensor_model/min_range': 0.4,       # 最小感测距离
-            'sensor_model/insert_free_space': True,
-            'resolution': 0.05,                  # OctoMap 分辨率（5cm）
-            'occupancy_min_z': -0.1,             # 投影高度下限
-            'occupancy_max_z': 1.0,              # 投影高度上限
-            'publish_2d_map': True,              # 输出2D occupancy grid
-            'use_sim_time': use_sim_time,
-        }],
-        prefix=['taskset -c 4,5'],
-        remappings=[
-            ('/cloud_in', '/cloud_registered_body')  # 输入点云
-        ]
-    )
+    # slam_toolbox_node和octomap_server_node已迁移到 lio_nav2_unified.launch.py
 
     # 根据模式添加相应的节点
-    if BUILD_MAP:
-        if BUILD_TOOL == 'slam_toolbox':
-            # 建图模式 + slam_toolbox
-            ld.add_action(declare_slam_toolbox_params_cmd)
-            ld.add_action(
-                TimerAction(
-                    period=5.0,  # 延迟20秒启动slam_toolbox
-                    actions=[slam_toolbox_node]
-                )
-            )
-        else:
-            # 建图模式：添加octomap server
-            ld.add_action(
-                TimerAction(
-                    period=15.0,  # 延迟15秒启动octomap_server
-                    actions=[octomap_server_node]
-                )
-            )
-    else:
-        # 非建图模式：只添加pointcloud_to_laserscan节点
-        pass
+    # 所有节点已迁移到 lio_nav2_unified.launch.py
 
     return ld

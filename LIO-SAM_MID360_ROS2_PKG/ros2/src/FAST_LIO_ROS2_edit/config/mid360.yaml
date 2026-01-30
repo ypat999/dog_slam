@@ -35,19 +35,19 @@
             b_acc_cov: 0.01
             b_gyr_cov: 0.01
             fov_degree:    360.0
-            det_range:     60.0
+            det_range:     100.0
             extrinsic_est_en:  false         # 保持关闭，避免外参在线估计导致的不稳定
             extrinsic_T: [ -0.011, -0.02329, 0.04412 ]
-            extrinsic_R: [ 1., 0., 0.,
-                            0., 1., 0.,
-                            0., 0., 1.]
+            # extrinsic_R: [ 1., 0., 0.,
+            #                 0., 1., 0.,
+            #                 0., 0., 1.]
             
             # 速度限制参数（新增）
             max_velocity: 3.0               # 最大速度限制 (m/s)
             # extrinsic_T: [ 0.1,  0.0,  0.1 ]
-            # extrinsic_R: [0.8660, 0.0, 0.5,
-            #                 0.0, 1.0, 0.0,
-            #                 -0.5, 0.0, 0.8660]
+            extrinsic_R: [0.8660, 0.0, 0.5,
+                            0.0, 1.0, 0.0,
+                            -0.5, 0.0, 0.8660]
             
             
 
@@ -57,7 +57,7 @@
             effect_map_en: false         # true: publish Effects
             map_en: false                 # true: publish Map cloud
             scan_publish_en:  true       # false: close all the point cloud output
-            dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
+            dense_publish_en: true      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
 
         pcd_save:

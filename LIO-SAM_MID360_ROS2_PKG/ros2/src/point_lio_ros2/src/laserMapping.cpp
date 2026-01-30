@@ -4,7 +4,6 @@
 #include <thread>
 #include <fstream>
 #include <csignal>
-#include <Python.h>
 #include <so3_math.h>
 #include <rclcpp/rclcpp.hpp>
 #include <Eigen/Core>
@@ -21,6 +20,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/msg/vector3.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
 
 #include "parameters.h"
@@ -692,6 +692,48 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     tf_br->sendTransform(transform);
 }
 
+void log_extrinsic_params() {
+    V3D ext_T;
+    M3D ext_R;
+    bool is_estimated = false;
+    
+    // Get extrinsic parameters from the state
+    if (extrinsic_est_en) {
+        is_estimated = true;
+        if (!use_imu_as_input) {
+            // Use kf_output state
+            ext_T = kf_output.x_.offset_T_L_I;
+            ext_R = kf_output.x_.offset_R_L_I.normalized();
+        } else {
+            // Use kf_input state
+            ext_T = kf_input.x_.offset_T_L_I;
+            ext_R = kf_input.x_.offset_R_L_I.normalized();
+        }
+    } else {
+        // Use initial extrinsic parameters
+        ext_T = Lidar_T_wrt_IMU;
+        ext_R = Lidar_R_wrt_IMU;
+    }
+    
+    // Convert rotation matrix to Euler angles
+    V3D euler_angles = SO3ToEuler(SO3(ext_R));
+    
+    // Log extrinsic parameters to console
+    static int log_counter = 0;
+    if (log_counter % 100 == 0) { // Log every 100 frames to avoid spam
+        if (is_estimated) {
+            RCLCPP_INFO(logger, "Extrinsic Parameters (Estimated):");
+        } else {
+            RCLCPP_INFO(logger, "Extrinsic Parameters (Initial):");
+        }
+        RCLCPP_INFO(logger, "  Translation: [%.6f, %.6f, %.6f]", ext_T(0), ext_T(1), ext_T(2));
+        RCLCPP_INFO(logger, "  Rotation (Euler): [%.6f, %.6f, %.6f] rad", 
+                   euler_angles(0), euler_angles(1), euler_angles(2));
+        RCLCPP_INFO(logger, "  Estimation Enabled: %s", extrinsic_est_en ? "true" : "false");
+    }
+    log_counter++;
+}
+
 void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath) {
 
     if (odom_only) {return;}
@@ -776,11 +818,11 @@ int main(int argc, char **argv) {
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_pcl;
     rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_pcl_livox_;
     if (p_pre->lidar_type == AVIA) {
-        sub_pcl_livox_ = nh->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(20)).best_effort(), livox_pcl_cbk);
+        sub_pcl_livox_ = nh->create_subscription<livox_ros_driver2::msg::CustomMsg>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(), livox_pcl_cbk);
     } else {
-        sub_pcl = nh->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::SensorDataQoS(), standard_pcl_cbk);
+        sub_pcl = nh->create_subscription<sensor_msgs::msg::PointCloud2>(lid_topic, rclcpp::QoS(rclcpp::KeepLast(1)).best_effort(), standard_pcl_cbk);
     }
-    auto sub_imu = nh->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 200000, imu_cbk);
+    auto sub_imu = nh->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(rclcpp::KeepLast(100)).best_effort(), imu_cbk);
 
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFullRes;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudFullRes_body;
@@ -810,6 +852,8 @@ int main(int argc, char **argv) {
         pubOdomAftMapped = nh->create_publisher<nav_msgs::msg::Odometry>
                 ("/aft_mapped_to_init", 100000);
     }
+
+
 
     //auto plane_pub = nh->create_publisher<visualization_msgs::msg::Marker>
     //        ("/planner_normal", 1000);
@@ -1264,6 +1308,9 @@ int main(int argc, char **argv) {
             if (path_en) publish_path(pubPath);
             if (scan_pub_en || pcd_save_en) publish_frame_world(pubLaserCloudFullRes);
             if (scan_pub_en && scan_body_pub_en) publish_frame_body(pubLaserCloudFullRes_body);
+            
+            /******* Log extrinsic parameters *******/
+            //log_extrinsic_params();
 
             /*** Debug variables Logging ***/
             if (runtime_pos_log) {

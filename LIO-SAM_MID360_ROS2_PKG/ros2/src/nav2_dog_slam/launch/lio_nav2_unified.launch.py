@@ -17,7 +17,7 @@ try:
     if global_config_path not in sys.path:
         sys.path.insert(0, global_config_path)
     from global_config import (
-        BUILD_MAP, BUILD_TOOL, AUTO_BUILD_MAP, RECORD_ONLY, NAVIGATION_MODE, 
+        MANUAL_BUILD_MAP, BUILD_TOOL, AUTO_BUILD_MAP, RECORD_ONLY, NAVIGATION_MODE, 
         ONLINE_LIDAR as ONLINE_LIDAR, 
         LIO_SAM_BASE_CODE_PATH as BASE_CODE_PATH, 
         DEFAULT_USE_SIM_TIME as DEFAULT_USE_SIM_TIME,
@@ -33,7 +33,7 @@ try:
 except Exception as e:
     print(f"导入global_config失败: {e}")
     # 如果导入失败，使用默认值
-    BUILD_MAP = False
+    MANUAL_BUILD_MAP = False
     BUILD_TOOL = 'octomap_server'
     AUTO_BUILD_MAP = False
     RECORD_ONLY = False
@@ -59,6 +59,40 @@ except Exception as e:
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
+# 定义不同LIO算法的话题映射配置
+LIO_TOPIC_CONFIGS = {
+    'fast_lio': {
+        'pointcloud_topic': '/cloud_registered_body',
+        'odom_topic': '/Odometry',
+        'octomap_topic': '/cloud_registered_body',
+        'target_frame': 'base_footprint'
+    },
+    'lio_sam': {
+        'pointcloud_topic': '/lio_sam/mapping/cloud_registered_raw',
+        'odom_topic': '/lio_sam/mapping/odometry',
+        'octomap_topic': '/lio_sam/mapping/cloud_registered',
+        'target_frame': 'base_link'
+    },
+    'dlio': {
+        'pointcloud_topic': '/dlio/odom_node/pointcloud/deskewed',
+        'odom_topic': '/Odometry',
+        'octomap_topic': '/dlio/odom_node/pointcloud/deskewed',
+        'target_frame': 'base_link'
+    },
+    'faster_lio': {
+        'pointcloud_topic': '/cloud_registered_body',
+        'odom_topic': '/Odometry',
+        'octomap_topic': '/cloud_registered_body',
+        'target_frame': 'base_link'
+    },
+    'point_lio': {
+        'pointcloud_topic': '/cloud_registered_body',
+        'odom_topic': '/Odometry',
+        'octomap_topic': '/cloud_registered_body',
+        'target_frame': 'base_footprint'
+    }
+}
+
 
 def generate_launch_description():
     ns = LaunchConfiguration('ns', default='/')   # 默认 robot1
@@ -66,6 +100,10 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     map_file = LaunchConfiguration('map_file')
     nav2_params_file = LaunchConfiguration('nav2_params_file')
+    
+    # 定义launch目录路径
+    bringup_dir = get_package_share_directory('nav2_dog_slam')
+    launch_dir = os.path.join(bringup_dir, 'launch')
 
     declare_map_file_cmd = DeclareLaunchArgument(
         'map_file',
@@ -84,6 +122,9 @@ def generate_launch_description():
     )
     
     # 根据SLAM_ALGORITHM参数选择启动不同的SLAM算法
+    # 获取当前选择的LIO算法的话题配置
+    lio_config = LIO_TOPIC_CONFIGS.get(SLAM_ALGORITHM, LIO_TOPIC_CONFIGS['fast_lio'])
+    
     # FAST-LIO
     fast_lio_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
@@ -158,59 +199,361 @@ def generate_launch_description():
         from launch.actions import LogInfo
         lio_sam_launch = LogInfo(msg="LIO-SAM package not found, skipping...")
     
-    nav2_and_web_actions = []
-    if not BUILD_MAP:
-        # 根据 localization 参数选择包含哪一个 nav2 启动文件（amcl 或 slam_toolbox）
-        # For AMCL we use a dedicated local launch that starts map_server + amcl
-        # and forwards the main params file. This avoids the need for a second
-        # YAML file and lets the nodes read their sections from nav2_params.yaml.
-        nav2_amcl_include = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                current_dir, 'nav2_amcl.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'map': map_file,
-                'params_file': nav2_params_file,
-                'autostart': 'True',
-                'use_composition': 'True',
-                'use_respawn': 'False',
-                'log_level': 'info'
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
-        )
 
-        nav2_slam_include = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                current_dir, 'nav2_slam_toolbox.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'map': map_file,
-                'params_file': NAV2_DEFAULT_PARAMS_FILE,
-                'slam_toolbox_params': NAV2_DEFAULT_PARAMS_FILE
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
-        )
 
-        # 延迟启动Nav2的launch文件（两个 include 都会被放入延迟动作中，条件决定实际生效的那个）
-        # Append both include actions; each include has its own condition so only the
-        # matching one (amcl or slam_toolbox) will actually be executed at runtime.
-        nav2_and_web_actions.append(nav2_amcl_include)
-        nav2_and_web_actions.append(nav2_slam_include)
-        
-        # 调用web控制脚本
-        nav2_and_web_actions.append(ExecuteProcess(
-            cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
-            output='screen',
-            shell=False
-        ))
+
+
+
+
+
+
+
+
+
+
+
+    # ============================================
+    # 第一步：定义所有可能的节点
+    # ============================================
     
-    # 
-    # 根据模式创建适当的延迟启动动作
-    if nav2_and_web_actions:
-        delayed_nav2_launch = TimerAction(
-            period=5.0,  # 延迟5秒启动Nav2，确保SLAM算法已初始化
-            actions=nav2_and_web_actions
+    # 统一的节点配置
+    unified_nodes = []
+    nav2_actions = []
+    web_actions = []
+    
+    # 1. 基础节点（所有模式都需要）
+    # 动态base_footprint发布器节点
+    dynamic_base_footprint_process = ExecuteProcess(
+        cmd=['python3', get_package_share_directory('nav2_dog_slam') + '/../../lib/nav2_dog_slam/dynamic_base_footprint.py',
+             '--base_link_frame', BASE_LINK_FRAME,
+             '--base_footprint_frame', 'base_footprint',
+             '--odom_frame', ODOM_FRAME,
+             '--use_sim_time', use_sim_time],
+        name='dynamic_base_footprint',
+        output='screen',
+        shell=False
+    )
+    
+    # PointCloud to LaserScan 节点
+    pointcloud_to_laserscan_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        remappings=[
+            ('/cloud_in', lio_config['pointcloud_topic']),
+            ('/scan', '/scan'),
+        ],
+        parameters=[{
+            'transform_tolerance': 0.1,
+            'min_height': -0.1,
+            'max_height': 1.5,
+            'angle_min': -3.1,
+            'angle_max': 3.1,
+            'angle_increment': 0.00869347338,
+            'scan_time': 0.1,
+            'range_min': 0.3,
+            'range_max': 100.0,
+            'use_inf': False,
+            'inf_epsilon': 100.0,
+            'use_sim_time': use_sim_time,
+            'target_frame': lio_config['target_frame'],
+            'concurrency_level': 1,
+        }],
+        output='screen',
+        prefix=['taskset -c 5'],
+    )
+    
+    # rosbridge_websocket节点
+    rosbridge_websocket = Node(
+        package='rosbridge_server',
+        executable='rosbridge_websocket',
+        name='rosbridge_websocket',
+        output='screen',
+        parameters=[
+            {'port': 9090},
+            {'default_call_service_timeout': 5.0},
+            {'call_services_in_new_thread': True},
+            {'send_action_goals_in_new_thread': True}
+        ]
+    )
+    
+    # web控制脚本
+    web_script_process = ExecuteProcess(
+        cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
+        output='screen',
+        shell=False
+    )
+    
+    # 2. 建图工具节点
+    # 合并后的slam_toolbox节点（支持建图和导航两种模式）
+    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
+    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
+        'slam_toolbox_params',
+        default_value=NAV2_DEFAULT_PARAMS_FILE,
+        description='Full path to slam_toolbox parameters file')
+    
+    slam_toolbox_node = Node(
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox_node',
+        output='screen',
+        parameters=[
+            slam_toolbox_params,
+            {
+                'use_sim_time': use_sim_time,
+                'map_update_interval': 1.0,
+                'publish_occupancy_map': 'True',
+                'use_map_saver': True
+            }
+        ],
+        prefix=['taskset -c 5,6'],
+        remappings=[
+            ('/scan', '/scan'), 
+            ('/odom', lio_config['odom_topic']),
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
+            ('/initialpose', '/initialpose')
+        ],
+        respawn=True,
+        respawn_delay=2.0
+    )
+    
+    # octomap_server节点
+    octomap_server_node = Node(
+        package='octomap_server',
+        executable='octomap_server_node',
+        name='octomap_server',
+        output='screen',
+        parameters=[{
+            'frame_id': 'map',
+            'sensor_model/max_range': 100.0,
+            'sensor_model/min_range': 0.4,
+            'sensor_model/insert_free_space': 'True',
+            'resolution': 0.05,
+            'occupancy_min_z': -0.1,
+            'occupancy_max_z': 1.0,
+            'publish_2d_map': 'True',
+            'use_sim_time': use_sim_time,
+        }],
+        prefix=['taskset -c 4,5'],
+        remappings=[
+            ('/cloud_in', lio_config['octomap_topic'])
+        ]
+    )
+    
+    # 3. 导航相关节点
+    # map_server节点
+    map_server_node = Node(
+        package='nav2_map_server',
+        executable='map_server',
+        name='map_server',
+        output='screen',
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            {'yaml_filename': map_file}
+        ],
+        prefix=['taskset -c 0,1,2,3'],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ]
+    )
+
+    # amcl节点
+    amcl_node = Node(
+        package='nav2_amcl',
+        executable='amcl',
+        name='amcl',
+        output='screen',
+        parameters=[nav2_params_file],
+        remappings=[
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ],
+        prefix=['taskset -c 5,6']
+    )
+    
+    # 生命周期管理器节点
+    lifecycle_manager_amcl = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_amcl',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': True,
+            'node_names': ['amcl']
+        }]
+    )
+
+    lifecycle_manager_map_server = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_map_server',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': True,
+            'node_names': ['map_server']
+        }]
+    )
+    
+    # 4. 导航栈节点
+    navigation_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'autostart': 'True',
+            'params_file': nav2_params_file,
+            'use_composition': 'False',
+            'use_respawn': 'False',
+            'container_name': 'nav2_container',
+            'log_level': 'info'
+        }.items()
+    )
+
+    sc_pgo_node = Node(
+        package="sc_pgo_ros2",
+        executable="alaserPGO",
+        name="alaserPGO",
+        output="screen",
+        parameters=[
+            {"scan_line": 4},
+            {"minimum_range": 0.3},
+            {"mapping_line_resolution": 0.4},
+            {"mapping_plane_resolution": 0.8},
+            {"mapviz_filter_size": 0.05},
+            {"keyframe_meter_gap": 1.0},
+            {"sc_dist_thres": 0.3},
+            {"sc_max_radius": 290.0},
+            {"save_directory": "/home/ztl/save_data/"},  # 修改为实际保存路径
+            {"use_sim_time": use_sim_time}
+        ],
+        remappings=[
+            # ("/aft_mapped_to_init", "/Odometry"),
+            ("/aft_mapped_to_init", "/aft_mapped_to_init"),
+            ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
+            ("/cloud_for_scancontext", "/cloud_registered_body"),
+            ("/tf", "tf"),
+            ("/tf_static", "tf_static"),
+        ],
+        prefix=['taskset -c 6'],   # 绑定 CPU 6
+    )
+    
+
+
+
+
+
+
+
+
+
+    # ============================================
+    # 第二步：根据配置条件决定启动哪些节点
+    # ============================================
+    
+    # 1. 基础节点（所有模式都需要）
+    unified_nodes.append(dynamic_base_footprint_process)
+    unified_nodes.append(pointcloud_to_laserscan_node)
+    
+    # 2. Web相关节点（所有模式都需要）
+    web_actions.append(web_script_process)
+    web_actions.append(rosbridge_websocket)
+    
+    # 3. 建图模式配置
+    if MANUAL_BUILD_MAP:
+        if BUILD_TOOL == 'slam_toolbox':
+            # 建图模式 + slam_toolbox
+            unified_nodes.append(declare_slam_toolbox_params_cmd)
+            unified_nodes.append(
+                TimerAction(
+                    period=5.0,
+                    actions=[slam_toolbox_node]
+                )
+            )
+        
+        else:
+            # 建图模式：添加octomap server
+            unified_nodes.append(
+                TimerAction(
+                    period=15.0,
+                    actions=[octomap_server_node]
+                )
+            )
+
+    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+        # 建图模式 + SC-PGO
+        unified_nodes.append(
+            TimerAction(
+                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+                actions=[sc_pgo_node]
+            )
         )
+    
+
+        
+    if not MANUAL_BUILD_MAP and not AUTO_BUILD_MAP:
+        nav2_actions.append(
+            TimerAction(
+                period=1.0,
+                actions=[map_server_node]
+            )
+        )
+        nav2_actions.append(
+            TimerAction(
+                period=1.5,
+                actions=[lifecycle_manager_map_server]
+            )
+        )
+
+    # 4. 导航模式配置
+    if BUILD_TOOL != 'slam_toolbox' :
+        # 根据localization参数选择AMCL或SLAM Toolbox
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[amcl_node],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+            )
+        )
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[lifecycle_manager_amcl],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+            )
+        )
+        
+        # SLAM Toolbox导航模式
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[slam_toolbox_node],
+                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+            )
+        )
+        
+        
+    # 导航栈
+    nav2_actions.append(
+        TimerAction(
+            period=3.0,
+            actions=[navigation_include]
+        )
+    )
+    
+    # 创建延迟启动动作
+    delayed_web_launch = TimerAction(
+        period=5.0,  # 延迟5秒启动web控制脚本
+        actions=web_actions
+    )
+    
+    # if nav2_actions:
+    delayed_nav2_launch = TimerAction(
+        period=5.0,  # 延迟5秒启动Nav2，确保SLAM算法已初始化
+        actions=nav2_actions
+    )
     
     # 创建并返回完整的launch description
     # 注意: 启动参数声明必须在使用它们的操作之前
@@ -225,19 +568,25 @@ def generate_launch_description():
         point_lio_launch,
         faster_lio_launch,
         dlio_launch,
-        lio_sam_launch
+        lio_sam_launch,
+        # 3. 添加统一的节点配置
+        *unified_nodes
     ]
     
-    # 3. 根据模式添加相应的节点
-    if BUILD_MAP:
-        # 建图模式：不需要添加Nav2
-        pass
-    elif 'delayed_nav2_launch' in locals():
-        # 导航模式：添加nav2和web
-        launch_actions.append(delayed_nav2_launch)
+    # 3. 添加web_actions（固定都要启动）
+    launch_actions.append(delayed_web_launch)
     
-    # 4. 如果AUTO_BUILD_MAP为True，延迟启动explore_lite
-    if AUTO_BUILD_MAP and not BUILD_MAP:
+    # # 4. 根据模式添加nav2_actions
+    # if MANUAL_BUILD_MAP:
+    #     # 建图模式：不需要添加Nav2
+    #     pass
+    # elif 'delayed_nav2_launch' in locals():
+    #     # 导航模式：添加nav2
+    
+    launch_actions.append(delayed_nav2_launch)
+    
+    # 5. 如果AUTO_BUILD_MAP为True，延迟启动explore_lite
+    if AUTO_BUILD_MAP and not MANUAL_BUILD_MAP:
         explore_lite_package_dir = get_package_share_directory('explore_lite')
         explore_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(

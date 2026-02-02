@@ -4,7 +4,7 @@
 
 ## 主要特性
 
-- **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, DLIO, SC-PGO
+- **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, DLIO, SC-PGO, Super-LIO
 - **统一导航系统**: 集成Nav2导航框架，支持自主探索和路径规划
 - **实时建图**: 支持在线建图和离线地图构建
 - **稳定导航**: 优化base_footprint，实现高速稳定导航
@@ -60,6 +60,9 @@ sudo apt install -y ros-humble-perception-pcl \
 sudo add-apt-repository ppa:borglab/gtsam-release-4.1
 sudo apt install -y libgtsam-dev libgtsam-unstable-dev
 
+# Super-LIO依赖
+sudo apt install libgoogle-glog-dev libtbb-dev
+
 # Nav2导航系统
 sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
 sudo apt install ros-humble-rosbridge-server 
@@ -114,6 +117,15 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 # 启动FAST-LIO2 SLAM系统
 ros2 launch fast_lio mapping.launch.py
+```
+
+#### Super-LIO SLAM
+```bash
+# 启动Super-LIO SLAM系统
+ros2 launch super_lio Livox_mid360.py
+
+# 重定位模式
+ros2 launch super_lio relocation.py
 ```
 
 #### LIO-SAM SLAM

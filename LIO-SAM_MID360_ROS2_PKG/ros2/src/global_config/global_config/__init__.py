@@ -18,7 +18,7 @@ MANUAL_BUILD_MAP = os.environ.get('MANUAL_BUILD_MAP', 'False').lower() == 'true'
 BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式工具选择
 
 # SLAM算法选择
-SLAM_ALGORITHM = os.environ.get('SLAM_ALGORITHM', 'fast_lio').lower()  # SLAM算法选择: fast_lio, point_lio, faster_lio, dlio, lio_sam
+SLAM_ALGORITHM = os.environ.get('SLAM_ALGORITHM', 'fast_lio').lower()  # SLAM算法选择: fast_lio, point_lio, faster_lio, dlio, lio_sam, super_lio
 
 # 自动建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
 AUTO_BUILD_MAP = os.environ.get('AUTO_BUILD_MAP', 'False').lower() == 'true'  # True: 自动建图模式（延迟启动explore_lite）, False: 正常模式

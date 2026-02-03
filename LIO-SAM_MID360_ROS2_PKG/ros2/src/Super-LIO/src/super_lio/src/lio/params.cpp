@@ -63,6 +63,8 @@ namespace LI2Sup{
   bool g_2_ml_map = false;
   bool g_visual_map = true;
   bool g_visual_dense = false;
+  bool g_visual_map_body = false;
+  bool g_visual_dense_body = false;
   int  g_pub_step;
 
   /// for planner

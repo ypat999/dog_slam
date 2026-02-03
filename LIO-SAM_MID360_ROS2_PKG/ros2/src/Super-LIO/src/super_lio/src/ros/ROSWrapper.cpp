@@ -171,6 +171,12 @@ void LoadParamFromRos(rclcpp::Node& node)
   node.declare_parameter<bool>("lio.output.dense", false);
   node.get_parameter("lio.output.dense", g_visual_dense);
 
+  node.declare_parameter<bool>("lio.output.map_body", false);
+  node.get_parameter("lio.output.map_body", g_visual_map_body);
+
+  node.declare_parameter<bool>("lio.output.dense_body", false);
+  node.get_parameter("lio.output.dense_body", g_visual_dense_body);
+
   node.declare_parameter<int>("lio.output.pub_step", 0);
   node.get_parameter("lio.output.pub_step", g_pub_step);
 
@@ -647,6 +653,18 @@ void ROSWrapper::pub_cloud_world(const CloudPtr& pc, double time){
   cloud.header.frame_id = "world";
   cloud.header.stamp = toRosTime(time);
   pub_cloud_world_->publish(cloud);
+}
+
+
+void ROSWrapper::pub_cloud_body(const CloudPtr& pc, double time){
+  static auto pub_cloud_body_ = 
+    this->create_publisher<sensor_msgs::msg::PointCloud2>(
+        "/lio/body/cloud", 10);
+  sensor_msgs::msg::PointCloud2 cloud;
+  pcl::toROSMsg(*pc, cloud);
+  cloud.header.frame_id = "imu";
+  cloud.header.stamp = toRosTime(time);
+  pub_cloud_body_->publish(cloud);
 }
 
 

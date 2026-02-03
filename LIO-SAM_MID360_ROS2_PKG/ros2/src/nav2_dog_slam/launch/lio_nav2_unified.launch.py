@@ -254,7 +254,7 @@ def generate_launch_description():
             'range_min': 0.3,
             'range_max': 100.0,
             'use_inf': False,
-            'inf_epsilon': 100.0,
+            'inf_epsilon': 1000.0,
             'use_sim_time': use_sim_time,
             'target_frame': lio_config['target_frame'],
             'concurrency_level': 1,
@@ -430,8 +430,8 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time}
         ],
         remappings=[
-            # ("/aft_mapped_to_init", "/Odometry"),
-            ("/aft_mapped_to_init", "/aft_mapped_to_init"),
+            ("/aft_mapped_to_init", "/Odometry"),
+            # ("/aft_mapped_to_init", "/aft_mapped_to_init"),
             ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
             ("/cloud_for_scancontext", "/cloud_registered_body"),
             ("/tf", "tf"),

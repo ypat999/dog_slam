@@ -90,6 +90,12 @@ LIO_TOPIC_CONFIGS = {
         'odom_topic': '/Odometry',
         'octomap_topic': '/cloud_registered_body',
         'target_frame': 'base_footprint'
+    },
+    'super_lio': {
+        'pointcloud_topic': '/cloud_registered_body',
+        'odom_topic': '/Odometry',
+        'octomap_topic': '/cloud_registered_body',
+        'target_frame': 'base_footprint'
     }
 }
 
@@ -198,6 +204,22 @@ def generate_launch_description():
         # 创建一个空的动作作为占位符
         from launch.actions import LogInfo
         lio_sam_launch = LogInfo(msg="LIO-SAM package not found, skipping...")
+
+    # Super-LIO
+    try:
+        super_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('super_lio'), 'launch', 'Livox_mid360.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio'"]))
+        )
+    except Exception as e:
+        print(f"Super-LIO package not found: {e}")
+        # 创建一个空的动作作为占位符
+        from launch.actions import LogInfo
+        super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
     
 
 
@@ -569,6 +591,7 @@ def generate_launch_description():
         faster_lio_launch,
         dlio_launch,
         lio_sam_launch,
+        super_lio_launch,
         # 3. 添加统一的节点配置
         *unified_nodes
     ]

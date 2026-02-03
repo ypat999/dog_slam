@@ -1,0 +1,162 @@
+import os
+import launch.logging
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
+from launch.conditions import IfCondition
+from launch_ros.actions import Node
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+from ament_index_python.packages import get_package_share_directory
+import sys, os
+
+def generate_launch_description():
+    # 首先导入全局配置
+
+    # 正确导入global_config包
+    try:
+        # 方法1：通过ROS2包路径导入
+        global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
+        sys.path.insert(0, global_config_path)
+        from global_config import (
+            ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
+            DEFAULT_USE_SIM_TIME, MANUAL_BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
+            NAV2_DEFAULT_PARAMS_FILE, LIVOX_MID360_CONFIG, LIVOX_MID360_CONFIG_NO_TILT
+        )
+    except ImportError as e:
+        print(f"方法2导入global_config失败: {e}")
+        # 如果导入失败，使用默认值
+        ONLINE_LIDAR = True
+        DEFAULT_BAG_PATH = '/home/ztl/slam_data/livox_record_new/'
+        DEFAULT_RELIABILITY_OVERRIDE = '/home/ztl/slam_data/reliability_override.yaml'
+        DEFAULT_USE_SIM_TIME = False
+        MANUAL_BUILD_MAP = False
+        BUILD_TOOL = 'octomap_server'
+        RECORD_ONLY = False
+        NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+        LIVOX_MID360_CONFIG_NO_TILT = ''
+    
+    pkg_super_lio = get_package_share_directory('super_lio')
+    config_yaml = os.path.join(pkg_super_lio, 'config', 'livox_360.yaml')
+    rviz_config_file = os.path.join(pkg_super_lio, 'rviz', 'lio.rviz')
+    
+    use_sim_time = DEFAULT_USE_SIM_TIME
+    livox_config_path = LIVOX_MID360_CONFIG_NO_TILT
+    lidar_mode = "ONLINE"
+    if not ONLINE_LIDAR:
+        lidar_mode = "OFFLINE"
+
+    ld = LaunchDescription()
+
+
+    # 在线模式：Livox雷达驱动
+    livox_driver_node = Node(
+        package='livox_ros_driver2',
+        executable='livox_ros_driver2_node',
+        name='livox_lidar_publisher',
+        output='screen',
+        parameters=[
+            {"xfer_format": 1},
+            {"multi_topic": 0},
+            {"data_src": 0},
+            {"publish_freq": 10.0},
+            {"output_data_type": 0},
+            {"frame_id": 'livox_frame'},
+            {"user_config_path": livox_config_path},
+            {"cmdline_input_bd_code": 'livox0000000001'},
+        ],
+        prefix=['taskset -c 4'],   # 绑定 CPU 4
+        condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'"))
+    )
+
+    # # 离线模式：rosbag播放
+    # from launch.actions import ExecuteProcess
+    # rosbag_player = ExecuteProcess(
+    #     cmd=['ros2', 'bag', 'play', DEFAULT_BAG_PATH, '--qos-profile-overrides-path', DEFAULT_RELIABILITY_OVERRIDE, '--clock', '--rate', '1.0'],
+    #     name='rosbag_player',
+    #     output='screen',
+    #     prefix=['taskset -c 4'],   # 绑定 CPU 4
+    #     condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'OFFLINE'"))
+    # )
+
+    # 根据模式选择启动相应的节点
+    # ld.add_action(rosbag_player)
+    ld.add_action(livox_driver_node)
+
+    declare_rviz_arg = DeclareLaunchArgument(
+        'rviz',
+        default_value='false',
+        description='Whether to start RVIZ2'
+    )
+    rviz_flag = LaunchConfiguration('rviz')
+    
+    declare_use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description='Use simulation (Gazebo) clock'
+    )
+    use_sim_time = LaunchConfiguration('use_sim_time')
+
+    # 创建Super-LIO生命周期节点
+    super_lio_node = Node(
+        package='super_lio',
+        executable='super_lio_node',
+        name='super_lio_node',
+        output='screen',
+        parameters=[config_yaml],
+        prefix=['taskset -c 7'],   # 绑定 CPU 7
+        arguments=['--ros-args', '--log-level', 'info']
+    )
+
+    rviz2_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='super_lio',
+        arguments=['-d', rviz_config_file, '--ros-args', '--log-level', 'warn'],
+        condition=IfCondition(rviz_flag)
+    )
+    ld.add_action(rviz2_node)
+
+    # 添加静态变换发布器
+    static_transform_map_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_map_to_odom',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        output='screen'
+    )
+    ld.add_action(static_transform_map_to_odom)
+
+    # odom -> base_link (里程计到机器人基坐标系的静态变换)
+    static_transform_odom_to_base_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_odom_to_base_link',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        output='screen'
+    )
+    ld.add_action(static_transform_odom_to_base_link)
+
+    # base_link -> livox_frame (机器人基坐标系到雷达坐标系的静态变换)
+    base_link_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+        output='screen'
+    )
+    ld.add_action(base_link_to_livox_frame_tf)
+
+    # 根据模式添加相应的节点（按照LIO-SAM的逻辑）
+    if RECORD_ONLY:
+        # 仅录制模式：只启动雷达驱动
+        return ld
+
+    ld.add_action(declare_rviz_arg)
+    ld.add_action(declare_use_sim_time_arg)
+
+    return ld

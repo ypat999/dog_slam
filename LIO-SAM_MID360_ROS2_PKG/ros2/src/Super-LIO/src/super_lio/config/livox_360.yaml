@@ -24,9 +24,9 @@
     lio.sensor.imu_nbg: 0.0001
 
     lio.extrinsic.lidar_imu: [-0.011, -0.02329, 0.04412, 
-                              0.8660, 0.0, 0.5, 
+                              1.0, 0.0, 0.0, 
                               0.0, 1.0, 0.0, 
-                              -0.5, 0.0, 0.8660]
+                              0.0, 0.0, 1.0]
     lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     lio.hash_map.hash_capacity: 2000000
@@ -37,15 +37,15 @@
     lio.kf.kf_align_gravity: true
     lio.kf.kf_quit_eps: 0.001
 
-    lio.output.robot: true
+    lio.output.robot: false
     lio.output.plan_env_world: false
     lio.output.plan_env_body: false
     lio.output.ml_map: false
     lio.output.planner: false
-    lio.output.map: true
-    lio.output.dense: true
-    lio.output.map_body: false
-    lio.output.dense_body: false
+    lio.output.map: false
+    lio.output.dense: false
+    lio.output.map_body: true
+    lio.output.dense_body: true
     lio.output.pub_step: 1
 
     lio.eva.timer: true

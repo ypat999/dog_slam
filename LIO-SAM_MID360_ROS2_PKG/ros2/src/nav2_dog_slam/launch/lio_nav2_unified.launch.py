@@ -52,7 +52,7 @@ except Exception as e:
     NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'
-    BASE_LINK_FRAME = 'base_link'
+    BASE_LINK_FRAME = 'base_link' 
     LIVOX_FRAME = 'livox_frame'
     SLAM_ALGORITHM = 'fast_lio'  # 默认算法
 
@@ -92,10 +92,11 @@ LIO_TOPIC_CONFIGS = {
         'target_frame': 'base_footprint'
     },
     'super_lio': {
-        'pointcloud_topic': '/cloud_registered_body',
-        'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registered_body',
+        'pointcloud_topic': '/lio/body/cloud',
+        'odom_topic': '/lio/odom',
+        'octomap_topic': '/lio/body/cloud',
         'target_frame': 'base_footprint'
+        # 'target_frame': 'base_link'
     }
 }
 

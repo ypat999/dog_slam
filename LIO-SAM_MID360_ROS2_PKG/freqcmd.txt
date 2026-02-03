@@ -1,5 +1,5 @@
 # 编译（狗里面，排除gazebo模拟环境，如果要模拟则去掉--packages-skip livox_gazebo_ros2_gpu_simulation）
-cd dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
+cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/
 source install/setup.bash
 colcon build --symlink-install --parallel-workers 8 --packages-skip livox_gazebo_ros2_gpu_simulation
 
@@ -214,6 +214,7 @@ ros2 launch lio_sam lio_sam.launch.py
 ros2 launch direct_lidar_inertial_odometry dlio.launch.py   #实机无输出
 ros2 launch faster_lio fasterlio_launch.py
 ros2 launch point_lio mapping_mid360.launch.py
+ros2 launch super_lio Livox_mid360.py
 
 SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py

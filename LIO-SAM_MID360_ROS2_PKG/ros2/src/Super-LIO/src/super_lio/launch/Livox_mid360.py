@@ -39,7 +39,7 @@ def generate_launch_description():
     
     pkg_super_lio = get_package_share_directory('super_lio')
     config_yaml = os.path.join(pkg_super_lio, 'config', 'livox_360.yaml')
-    rviz_config_file = os.path.join(pkg_super_lio, 'rviz', 'lio.rviz')
+    # rviz_config_file = os.path.join(pkg_super_lio, 'rviz', 'lio.rviz')
     
     use_sim_time = DEFAULT_USE_SIM_TIME
     livox_config_path = LIVOX_MID360_CONFIG_NO_TILT
@@ -48,6 +48,15 @@ def generate_launch_description():
         lidar_mode = "OFFLINE"
 
     ld = LaunchDescription()
+
+    declare_rviz_arg = DeclareLaunchArgument(
+        'rviz',
+        default_value='false',
+        description='Whether to start RVIZ2'
+    )
+    rviz_flag = LaunchConfiguration('rviz')
+    ld.add_action(declare_rviz_arg)
+
 
 
     # 在线模式：Livox雷达驱动
@@ -84,12 +93,6 @@ def generate_launch_description():
     # ld.add_action(rosbag_player)
     ld.add_action(livox_driver_node)
 
-    declare_rviz_arg = DeclareLaunchArgument(
-        'rviz',
-        default_value='false',
-        description='Whether to start RVIZ2'
-    )
-    rviz_flag = LaunchConfiguration('rviz')
     
     declare_use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
@@ -97,6 +100,8 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock'
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
+
+    ld.add_action(declare_use_sim_time_arg)
 
     # 创建Super-LIO生命周期节点
     super_lio_node = Node(
@@ -108,15 +113,7 @@ def generate_launch_description():
         prefix=['taskset -c 7'],   # 绑定 CPU 7
         arguments=['--ros-args', '--log-level', 'info']
     )
-
-    rviz2_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='super_lio',
-        arguments=['-d', rviz_config_file, '--ros-args', '--log-level', 'warn'],
-        condition=IfCondition(rviz_flag)
-    )
-    ld.add_action(rviz2_node)
+    ld.add_action(super_lio_node)
 
     # 添加静态变换发布器
     static_transform_map_to_odom = Node(
@@ -129,34 +126,62 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_map_to_odom)
 
-    # odom -> base_link (里程计到机器人基坐标系的静态变换)
-    static_transform_odom_to_base_link = Node(
+    static_transform_odom_to_world = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_odom_to_base_link',
+        name='static_transform_odom_to_world',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'world'],
         output='screen'
     )
-    ld.add_action(static_transform_odom_to_base_link)
+    ld.add_action(static_transform_odom_to_world)
 
-    # base_link -> livox_frame (机器人基坐标系到雷达坐标系的静态变换)
-    base_link_to_livox_frame_tf = Node(
+    # # world -> imu (里程计到机器人基坐标系的静态变换)
+    static_transform_world_to_imu = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_world_to_imu',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world', 'imu'],
+        output='screen'
+    )
+    ld.add_action(static_transform_world_to_imu)
+
+    imu_to_livox_frame_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'imu', 'livox_frame'],
+        output='screen'
+    )
+    ld.add_action(imu_to_livox_frame_tf)
+
+    # livox_frame -> base_link (机器人基坐标系到雷达坐标系的静态变换)
+    livox_frame_to_base_link_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
-        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+        arguments=['-0.1', '0', '-0.1', '0', '-0.5235987756', '0', 'livox_frame', 'base_link'],
         output='screen'
     )
-    ld.add_action(base_link_to_livox_frame_tf)
+    ld.add_action(livox_frame_to_base_link_tf)
+
+    base_link_to_base_footprint_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_link_to_base_footprint_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'base_link', 'base_footprint'],
+        output='screen'
+    )
+    ld.add_action(base_link_to_base_footprint_tf)
 
     # 根据模式添加相应的节点（按照LIO-SAM的逻辑）
     if RECORD_ONLY:
         # 仅录制模式：只启动雷达驱动
         return ld
 
-    ld.add_action(declare_rviz_arg)
-    ld.add_action(declare_use_sim_time_arg)
+    
 
     return ld

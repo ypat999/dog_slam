@@ -72,13 +72,13 @@ controller_server:
       vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
-      # vx_max: 3.0
-      vx_max: 0.6
+      vx_max: 2.0
+      # vx_max: 0.6
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
-      # wz_max: 2.0
-      wz_max: 1.0
+      wz_max: 2.0
+      # wz_max: 1.0
       
       
       
@@ -507,7 +507,7 @@ amcl:
     laser_min_range: 0.3
     laser_max_range: 100.0
     # laser_beam_step: 4
-    max_beams: 180
+    max_beams: 120
     
     # odom_topic: /lio_sam/mapping/odometry
 

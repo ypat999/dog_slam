@@ -75,18 +75,49 @@ class DynamicBaseFootprint(Node):
                     odom_to_footprint.transform.translation.y = base_link_y
                     odom_to_footprint.transform.translation.z = base_link_z  # 地面高度
                     
+
+
+
                     # 保持与base_link相同的yaw角，但roll和pitch为0以确保base_footprint与地面平行
                     # 从base_link的旋转中提取完整的欧拉角
                     q_odom_to_base_link = transform.transform.rotation
-                    roll, pitch, yaw = self.quaternion_to_euler(q_odom_to_base_link)
+                    # roll, pitch, yaw = self.quaternion_to_euler(q_odom_to_base_link)
                     
                     # 只保留yaw角，roll和pitch设为0（与地面平行）
-                    q_ground_parallel = tf_transformations.quaternion_from_euler(0.0, 0.0, yaw)
-                    
-                    odom_to_footprint.transform.rotation.x = q_ground_parallel[0]
-                    odom_to_footprint.transform.rotation.y = q_ground_parallel[1]
-                    odom_to_footprint.transform.rotation.z = q_ground_parallel[2]
-                    odom_to_footprint.transform.rotation.w = q_ground_parallel[3]
+                    # q_ground_parallel = tf_transformations.quaternion_from_euler(0.0, 0.0, yaw)
+
+                    yaw = math.atan2(
+                        2.0 * (q_odom_to_base_link.w * q_odom_to_base_link.z + q_odom_to_base_link.x * q_odom_to_base_link.y),
+                        1.0 - 2.0 * (q_odom_to_base_link.y ** 2 + q_odom_to_base_link.z ** 2)
+                    )
+
+                    q_yaw = [
+                        math.cos(yaw * 0.5),
+                        0.0,
+                        0.0,
+                        math.sin(yaw * 0.5)
+                    ]
+
+
+                    # 转为python
+                    # double yaw = std::atan2(
+                    #     2.0 * (q.w()*q.z() + q.x()*q.y()),
+                    #     1.0 - 2.0 * (q.y()*q.y() + q.z()*q.z())
+                    # );
+
+                    # Eigen::Quaterniond q_yaw(
+                    #     std::cos(yaw * 0.5),
+                    #     0.0,
+                    #     0.0,
+                    #     std::sin(yaw * 0.5)
+                    # );
+
+
+            
+                    odom_to_footprint.transform.rotation.x = q_yaw[0]
+                    odom_to_footprint.transform.rotation.y = q_yaw[1]
+                    odom_to_footprint.transform.rotation.z = q_yaw[2]
+                    odom_to_footprint.transform.rotation.w = q_yaw[3]
                     
                     # 发布TF变换
                     self.tf_broadcaster.sendTransform(odom_to_footprint)

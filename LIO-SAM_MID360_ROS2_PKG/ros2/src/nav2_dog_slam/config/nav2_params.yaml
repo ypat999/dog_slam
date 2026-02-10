@@ -453,7 +453,7 @@ amcl:
     use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 400
+    min_particles: 200
     max_particles: 4000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.97        # 修正参数名：kld_z -> pf_z
@@ -465,9 +465,9 @@ amcl:
     # map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.2            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha1: 0.1            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
     alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.2            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha3: 0.1            # 降低平移-平移噪声，室内环境减少位置漂移
     alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
@@ -507,7 +507,7 @@ amcl:
     laser_min_range: 0.3
     laser_max_range: 100.0
     # laser_beam_step: 4
-    max_beams: 120
+    max_beams: 360
     
     # odom_topic: /lio_sam/mapping/odometry
 
@@ -538,8 +538,8 @@ amcl:
     # Likelihood模型特有参数
     lambda_short: 0.1
     sigma_hit: 0.08
-    z_hit: 0.60
-    z_rand: 0.40
+    z_hit: 0.70
+    z_rand: 0.30
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
     # z_short: 0.05  # 注释掉 - Likelihood模型不需要此参数
     

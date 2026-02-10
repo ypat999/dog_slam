@@ -254,6 +254,7 @@ def generate_launch_description():
              '--use_sim_time', use_sim_time],
         name='dynamic_base_footprint',
         output='screen',
+        prefix=['taskset -c 6'],
         shell=False
     )
     
@@ -272,7 +273,7 @@ def generate_launch_description():
             'max_height': 1.0,
             'angle_min': -3.1,
             'angle_max': 3.1,
-            'angle_increment': 0.05, #0.00869347338,
+            'angle_increment': 0.00869347338,
             'scan_time': 0.1,
             'range_min': 0.3,
             'range_max': 100.0,

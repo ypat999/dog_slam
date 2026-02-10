@@ -32,7 +32,7 @@ class DynamicBaseFootprint(Node):
             TFMessage,
             '/tf',
             self.tf_callback,
-            10
+            100
         )
         
         self.get_logger().info(f'动态base_footprint节点已启动')
@@ -114,10 +114,10 @@ class DynamicBaseFootprint(Node):
 
 
             
-                    odom_to_footprint.transform.rotation.x = q_yaw[0]
-                    odom_to_footprint.transform.rotation.y = q_yaw[1]
-                    odom_to_footprint.transform.rotation.z = q_yaw[2]
-                    odom_to_footprint.transform.rotation.w = q_yaw[3]
+                    odom_to_footprint.transform.rotation.w = q_yaw[0]
+                    odom_to_footprint.transform.rotation.x = q_yaw[1]
+                    odom_to_footprint.transform.rotation.y = q_yaw[2]
+                    odom_to_footprint.transform.rotation.z = q_yaw[3]
                     
                     # 发布TF变换
                     self.tf_broadcaster.sendTransform(odom_to_footprint)

@@ -55,12 +55,14 @@
             path_en: true                 # false: close the path output
             scan_publish_en: true         # false: close all the point cloud output
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+            footprint_pub_en: true        # true: publish base_footprint transform
             tf_imu_frame: "base_link" #"livox_frame" #"body"
             tf_world_frame: "odom" #"camera_init"
             tf_lidar_frame: "livox_frame" #"lidar_link"
             tf_camera_init_frame: "odom" #"base_link"  #"camera_init"
             tf_map_frame: "odom" #"odom"
-            tf_odom_frame: "base_link" #"livox_frame" 
+            tf_odom_frame: "base_link" #"livox_frame"
+            tf_base_footprint_frame: "base_footprint" 
 
         pcd_save:
             pcd_save_en: false

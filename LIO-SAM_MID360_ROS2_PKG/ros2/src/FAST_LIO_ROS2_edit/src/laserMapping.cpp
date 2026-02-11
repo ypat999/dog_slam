@@ -77,6 +77,8 @@ double T1[MAXN], s_plot[MAXN], s_plot2[MAXN], s_plot3[MAXN], s_plot4[MAXN], s_pl
 double match_time = 0, solve_time = 0, solve_const_H_time = 0;
 int    kdtree_size_st = 0, kdtree_size_end = 0, add_point_size = 0, kdtree_delete_counter = 0;
 bool   runtime_pos_log = false, pcd_save_en = false, time_sync_en = false, extrinsic_est_en = true, path_en = true;
+bool   footprint_pub_en = true;
+string tf_base_footprint_frame = "base_footprint";
 /**************************/
 
 float res_last[100000] = {0.0};
@@ -708,6 +710,34 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
     trans.transform.rotation.z = odomAftMapped.pose.pose.orientation.z;
     tf_br->sendTransform(trans);
+
+    // Publish base_footprint transform
+    if (footprint_pub_en) {
+        geometry_msgs::msg::TransformStamped footprint_transform;
+        footprint_transform.header.stamp = odomAftMapped.header.stamp;
+        footprint_transform.header.frame_id = frame_id_camera_init;
+        footprint_transform.child_frame_id = tf_base_footprint_frame;
+        
+        footprint_transform.transform.translation.x = odomAftMapped.pose.pose.position.x;
+        footprint_transform.transform.translation.y = odomAftMapped.pose.pose.position.y;
+        footprint_transform.transform.translation.z = odomAftMapped.pose.pose.position.z;
+        
+        double qx = odomAftMapped.pose.pose.orientation.x;
+        double qy = odomAftMapped.pose.pose.orientation.y;
+        double qz = odomAftMapped.pose.pose.orientation.z;
+        double qw = odomAftMapped.pose.pose.orientation.w;
+        
+        double yaw = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+        double cos_yaw_half = std::cos(yaw * 0.5);
+        double sin_yaw_half = std::sin(yaw * 0.5);
+        
+        footprint_transform.transform.rotation.w = cos_yaw_half;
+        footprint_transform.transform.rotation.x = 0.0;
+        footprint_transform.transform.rotation.y = 0.0;
+        footprint_transform.transform.rotation.z = sin_yaw_half;
+        
+        tf_br->sendTransform(footprint_transform);
+    }
 }
 
 void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
@@ -882,6 +912,8 @@ public:
         this->declare_parameter<bool>("publish.scan_publish_en", true);
         this->declare_parameter<bool>("publish.dense_publish_en", true);
         this->declare_parameter<bool>("publish.scan_bodyframe_pub_en", true);
+        this->declare_parameter<bool>("publish.footprint_pub_en", true);
+        this->declare_parameter<string>("publish.tf_base_footprint_frame", "base_footprint");
         this->declare_parameter<int>("max_iteration", 4);
         this->declare_parameter<string>("map_file_path", "");
         this->declare_parameter<string>("common.lid_topic", "/livox/lidar");
@@ -922,6 +954,8 @@ public:
         this->get_parameter_or<bool>("publish.scan_publish_en", scan_pub_en, true);
         this->get_parameter_or<bool>("publish.dense_publish_en", dense_pub_en, true);
         this->get_parameter_or<bool>("publish.scan_bodyframe_pub_en", scan_body_pub_en, true);
+        this->get_parameter_or<bool>("publish.footprint_pub_en", footprint_pub_en, true);
+        this->get_parameter_or<string>("publish.tf_base_footprint_frame", tf_base_footprint_frame, "base_footprint");
         this->get_parameter_or<int>("max_iteration", NUM_MAX_ITERATIONS, 4);
         this->get_parameter_or<string>("map_file_path", map_file_path, "");
         this->get_parameter_or<string>("common.lid_topic", lid_topic, "/livox/lidar");

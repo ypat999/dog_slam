@@ -211,8 +211,6 @@ MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_na
 
 ros2 launch fast_lio mapping.launch.py
 ros2 launch lio_sam lio_sam.launch.py
-ros2 launch direct_lidar_inertial_odometry dlio.launch.py   #实机无输出
-ros2 launch faster_lio fasterlio_launch.py
 ros2 launch point_lio mapping_mid360.launch.py
 ros2 launch super_lio Livox_mid360.py
 
@@ -221,8 +219,6 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 
 SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
-SLAM_ALGORITHM=faster_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
-SLAM_ALGORITHM=dlio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 SLAM_ALGORITHM=point_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py

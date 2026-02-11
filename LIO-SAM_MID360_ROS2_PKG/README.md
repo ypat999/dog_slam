@@ -88,6 +88,8 @@ sudo apt install ros-humble-octomap-server
 
 ## 构建项目
 
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
 ### 首次构建
 ```bash
 # 删除旧构建文件

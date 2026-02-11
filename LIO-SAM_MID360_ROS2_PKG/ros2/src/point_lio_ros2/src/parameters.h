@@ -20,6 +20,7 @@ extern std::string tf_lidar_frame;
 extern std::string tf_camera_init_frame;
 extern std::string tf_map_frame;
 extern std::string tf_odom_frame;
+extern std::string tf_base_footprint_frame;
 
 extern bool is_first_frame;
 extern double lidar_end_time, first_lidar_time, time_con;
@@ -48,6 +49,7 @@ extern std::vector<double> extrinT;
 extern std::vector<double> extrinR;
 extern bool runtime_pos_log, pcd_save_en, path_en;
 extern bool scan_pub_en, scan_body_pub_en;
+extern bool footprint_pub_en;
 extern shared_ptr<Preprocess> p_pre;
 extern double time_lag_imu_to_lidar;
 

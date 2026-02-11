@@ -4,7 +4,7 @@ bool odom_only;
 std::string odom_header_frame_id, odom_child_frame_id;
 
 // Frame configuration parameters
-std::string tf_imu_frame, tf_world_frame, tf_lidar_frame, tf_camera_init_frame, tf_map_frame, tf_odom_frame;
+std::string tf_imu_frame, tf_world_frame, tf_lidar_frame, tf_camera_init_frame, tf_map_frame, tf_odom_frame, tf_base_footprint_frame;
 
 bool is_first_frame = true;
 double lidar_end_time = 0.0, first_lidar_time = 0.0, time_con = 0.0;
@@ -31,7 +31,7 @@ std::vector<double> gravity_init, gravity;
 std::vector<double> extrinT;
 std::vector<double> extrinR;
 bool runtime_pos_log, pcd_save_en, path_en, extrinsic_est_en = true;
-bool scan_pub_en, scan_body_pub_en;
+bool scan_pub_en, scan_body_pub_en, footprint_pub_en = true;
 shared_ptr<Preprocess> p_pre;
 double time_lag_imu_to_lidar = 0.0;
 
@@ -49,6 +49,8 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->declare_parameter<std::string>("publish.tf_camera_init_frame", "camera_init");
     nh->declare_parameter<std::string>("publish.tf_map_frame", "map");
     nh->declare_parameter<std::string>("publish.tf_odom_frame", "odom");
+    nh->declare_parameter<std::string>("publish.tf_base_footprint_frame", "base_footprint");
+    nh->declare_parameter<bool>("publish.footprint_pub_en", true);
 
     nh->declare_parameter<bool>("prop_at_freq_of_imu", true);
     nh->declare_parameter<bool>("use_imu_as_input", true);
@@ -117,6 +119,8 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->get_parameter("publish.tf_camera_init_frame", tf_camera_init_frame);
     nh->get_parameter("publish.tf_map_frame", tf_map_frame);
     nh->get_parameter("publish.tf_odom_frame", tf_odom_frame);
+    nh->get_parameter("publish.tf_base_footprint_frame", tf_base_footprint_frame);
+    nh->get_parameter("publish.footprint_pub_en", footprint_pub_en);
 
     nh->get_parameter("prop_at_freq_of_imu", prop_at_freq_of_imu);
     nh->get_parameter("use_imu_as_input", use_imu_as_input);

@@ -18,7 +18,7 @@ MANUAL_BUILD_MAP = os.environ.get('MANUAL_BUILD_MAP', 'False').lower() == 'true'
 BUILD_TOOL = os.environ.get('BUILD_TOOL', 'octomap_server').lower()  # 建图模式工具选择
 
 # SLAM算法选择
-SLAM_ALGORITHM = os.environ.get('SLAM_ALGORITHM', 'fast_lio').lower()  # SLAM算法选择: fast_lio, point_lio, faster_lio, dlio, lio_sam, super_lio
+SLAM_ALGORITHM = os.environ.get('SLAM_ALGORITHM', 'fast_lio').lower()  # SLAM算法选择: fast_lio, point_lio, lio_sam, super_lio
 
 # 自动建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
 AUTO_BUILD_MAP = os.environ.get('AUTO_BUILD_MAP', 'False').lower() == 'true'  # True: 自动建图模式（延迟启动explore_lite）, False: 正常模式
@@ -270,25 +270,6 @@ def update_lio_params():
             except Exception as e:
                 print(f"更新FAST-LIO参数文件 {yaml_file} 时出错: {e}")
 
-    config_dir = os.path.join(FAST_LIO_BASE_CODE_PATH, '../faster-lio_edit/config')
-    if os.path.exists(config_dir):
-        yaml_files = glob.glob(os.path.join(config_dir, "mid360.yaml"))
-        for yaml_file in yaml_files:
-            try:
-                with open(yaml_file, 'r') as file:
-                    lines = file.readlines()
-                with open(yaml_file, 'w') as file:
-                    for line in lines:
-                        if 'lidar_type:' in line:
-                            file.write(f'            lidar_type: {FAST_LIO_LIDAR_TYPE}\n')
-                        elif 'map_file_path:' in line:
-                            # 更新所有的map_file_path
-                            file.write(f'        map_file_path: "{FAST_LIO_MAP_FILE_PATH}"\n')
-                        else:
-                            file.write(line)
-                print(f"FASTER-LIO参数文件已更新: {yaml_file}")
-            except Exception as e:
-                print(f"更新FASTER-LIO参数文件 {yaml_file} 时出错: {e}")
 
     config_dir = os.path.join(FAST_LIO_BASE_CODE_PATH, '../point_lio_ros2/config')
     if os.path.exists(config_dir):
@@ -303,9 +284,9 @@ def update_lio_params():
                             file.write(f'            lidar_type: {FAST_LIO_LIDAR_TYPE}\n')
                         else:
                             file.write(line)
-                print(f"FASTER-LIO参数文件已更新: {yaml_file}")
+                print(f"POINT-LIO参数文件已更新: {yaml_file}")
             except Exception as e:
-                print(f"更新FASTER-LIO参数文件 {yaml_file} 时出错: {e}")
+                print(f"更新POINT-LIO参数文件 {yaml_file} 时出错: {e}")
 
 
 # 导入时自动更新Nav2参数

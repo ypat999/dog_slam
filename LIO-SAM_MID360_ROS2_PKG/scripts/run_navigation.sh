@@ -10,7 +10,7 @@ export ROS_LOCALHOST_ONLY=0
 export PYTHONPATH="$PYTHONPATH:/home/ztl/.local/lib/python3.10/site-packages"
 
 # 支持的LIO算法列表
-SUPPORTED_ALGORITHMS=("fast_lio" "lio_sam" "dlio" "faster_lio" "point_lio")
+SUPPORTED_ALGORITHMS=("fast_lio" "lio_sam" "point_lio" "super_lio")
 
 # 检查参数
 if [ $# -eq 0 ]; then

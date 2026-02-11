@@ -83,6 +83,8 @@ namespace LI2Sup{
   extern bool g_visual_map_body;
   extern bool g_visual_dense_body;
   extern int  g_pub_step;
+  extern bool g_footprint_pub_en;
+  extern std::string g_tf_base_footprint_frame;
 
   /// for planner
   extern bool g_planner_enable;

@@ -59,6 +59,8 @@
             scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: true      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
+            footprint_pub_en: true       # true: publish base_footprint transform
+            tf_base_footprint_frame: "base_footprint"  # base_footprint frame name
 
         pcd_save:
             pcd_save_en: true

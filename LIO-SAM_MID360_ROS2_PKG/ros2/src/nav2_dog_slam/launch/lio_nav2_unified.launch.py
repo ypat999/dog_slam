@@ -73,18 +73,6 @@ LIO_TOPIC_CONFIGS = {
         'octomap_topic': '/lio_sam/mapping/cloud_registered',
         'target_frame': 'base_link'
     },
-    'dlio': {
-        'pointcloud_topic': '/dlio/odom_node/pointcloud/deskewed',
-        'odom_topic': '/Odometry',
-        'octomap_topic': '/dlio/odom_node/pointcloud/deskewed',
-        'target_frame': 'base_link'
-    },
-    'faster_lio': {
-        'pointcloud_topic': '/cloud_registered_body',
-        'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registered_body',
-        'target_frame': 'base_link'
-    },
     'point_lio': {
         'pointcloud_topic': '/cloud_registered_body',
         'odom_topic': '/Odometry',
@@ -158,37 +146,6 @@ def generate_launch_description():
         from launch.actions import LogInfo
         point_lio_launch = LogInfo(msg="Point-LIO package not found, skipping...")
     
-    # Faster-LIO
-    try:
-        faster_lio_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('faster_lio'), 'launch_ros2', 'fasterlio_launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'faster_lio'"]))
-        )
-    except Exception as e:
-        print(f"Faster-LIO package not found: {e}")
-        # 创建一个空的动作作为占位符
-        from launch.actions import LogInfo
-        faster_lio_launch = LogInfo(msg="Faster-LIO package not found, skipping...")
-    
-    # DLIO
-    try:
-        dlio_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('direct_lidar_inertial_odometry'), 'launch', 'dlio.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'dlio'"]))
-        )
-    except Exception as e:
-        print(f"DLIO package not found: {e}")
-        # 创建一个空的动作作为占位符
-        from launch.actions import LogInfo
-        dlio_launch = LogInfo(msg="DLIO package not found, skipping...")
     
     # LIO-SAM
     try:
@@ -245,18 +202,7 @@ def generate_launch_description():
     web_actions = []
     
     # 1. 基础节点（所有模式都需要）
-    # 动态base_footprint发布器节点
-    dynamic_base_footprint_process = ExecuteProcess(
-        cmd=['python3', get_package_share_directory('nav2_dog_slam') + '/../../lib/nav2_dog_slam/dynamic_base_footprint.py',
-             '--base_link_frame', BASE_LINK_FRAME,
-             '--base_footprint_frame', 'base_footprint',
-             '--odom_frame', ODOM_FRAME,
-             '--use_sim_time', use_sim_time],
-        name='dynamic_base_footprint',
-        output='screen',
-        prefix=['taskset -c 6'],
-        shell=False
-    )
+    # 注意：dynamic_base_footprint发布功能已迁移到各LIO算法的C++部分，此处不再需要
     
     # PointCloud to LaserScan 节点
     pointcloud_to_laserscan_node = Node(
@@ -478,7 +424,6 @@ def generate_launch_description():
     # ============================================
     
     # 1. 基础节点（所有模式都需要）
-    unified_nodes.append(dynamic_base_footprint_process)
     unified_nodes.append(pointcloud_to_laserscan_node)
     
     # 2. Web相关节点（所有模式都需要）
@@ -590,8 +535,6 @@ def generate_launch_description():
         # 2. 启动主要组件（根据SLAM_ALGORITHM参数选择）
         fast_lio_launch,
         point_lio_launch,
-        faster_lio_launch,
-        dlio_launch,
         lio_sam_launch,
         super_lio_launch,
         # 3. 添加统一的节点配置

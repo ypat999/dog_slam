@@ -180,6 +180,18 @@ void LoadParamFromRos(rclcpp::Node& node)
   node.declare_parameter<int>("lio.output.pub_step", 0);
   node.get_parameter("lio.output.pub_step", g_pub_step);
 
+  node.declare_parameter<bool>("lio.output.footprint_pub_en", true);
+  node.get_parameter("lio.output.footprint_pub_en", g_footprint_pub_en);
+
+  node.declare_parameter<std::string>("lio.output.tf_base_footprint_frame", "base_footprint");
+  node.get_parameter("lio.output.tf_base_footprint_frame", g_tf_base_footprint_frame);
+
+  LOG(INFO) << GREEN << " ---> [Param] output/footprint_pub_en: "
+            << (g_footprint_pub_en ? "true" : "false") << RESET;
+
+  LOG(INFO) << GREEN << " ---> [Param] output/tf_base_footprint_frame: "
+            << g_tf_base_footprint_frame << RESET;
+
   // ================= relocation =================
   node.declare_parameter<bool>("lio.relocation.update_map", false);
   node.get_parameter("lio.relocation.update_map", g_update_map);
@@ -636,6 +648,34 @@ void ROSWrapper::pub_odom(const NavState& state){
   tf_msg.transform.rotation.w = temp_q.w();
 
   tf_broadcaster_->sendTransform(tf_msg);
+
+  // Publish base_footprint transform
+  if (g_footprint_pub_en) {
+    geometry_msgs::msg::TransformStamped footprint_transform;
+    footprint_transform.header.stamp = odom.header.stamp;
+    footprint_transform.header.frame_id = "world";
+    footprint_transform.child_frame_id = g_tf_base_footprint_frame;
+    
+    footprint_transform.transform.translation.x = state.p[0];
+    footprint_transform.transform.translation.y = state.p[1];
+    footprint_transform.transform.translation.z = state.p[2];
+    
+    double qx = temp_q.x();
+    double qy = temp_q.y();
+    double qz = temp_q.z();
+    double qw = temp_q.w();
+    
+    double yaw = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+    double cos_yaw_half = std::cos(yaw * 0.5);
+    double sin_yaw_half = std::sin(yaw * 0.5);
+    
+    footprint_transform.transform.rotation.w = cos_yaw_half;
+    footprint_transform.transform.rotation.x = 0.0;
+    footprint_transform.transform.rotation.y = 0.0;
+    footprint_transform.transform.rotation.z = sin_yaw_half;
+    
+    tf_broadcaster_->sendTransform(footprint_transform);
+  }
 
   // tf_msg.child_frame_id = "god";
   // tf_msg.transform.rotation.x = 0.0;

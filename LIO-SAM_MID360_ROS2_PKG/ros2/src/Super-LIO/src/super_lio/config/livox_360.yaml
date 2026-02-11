@@ -47,5 +47,7 @@
     lio.output.map_body: true
     lio.output.dense_body: true
     lio.output.pub_step: 1
+    lio.output.footprint_pub_en: true
+    lio.output.tf_base_footprint_frame: "base_footprint"
 
     lio.eva.timer: true

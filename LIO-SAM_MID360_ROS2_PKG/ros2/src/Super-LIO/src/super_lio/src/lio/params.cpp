@@ -66,6 +66,8 @@ namespace LI2Sup{
   bool g_visual_map_body = false;
   bool g_visual_dense_body = false;
   int  g_pub_step;
+  bool g_footprint_pub_en = true;
+  string g_tf_base_footprint_frame = "base_footprint";
 
   /// for planner
   bool g_planner_enable;

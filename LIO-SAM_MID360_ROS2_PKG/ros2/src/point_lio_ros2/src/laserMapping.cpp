@@ -690,6 +690,36 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     transform.header.stamp = odomAftMapped.header.stamp;
 
     tf_br->sendTransform(transform);
+    
+    // Publish base_footprint transform
+    if (footprint_pub_en) {
+        geometry_msgs::msg::TransformStamped footprint_transform;
+        footprint_transform.header.stamp = odomAftMapped.header.stamp;
+        footprint_transform.header.frame_id = tf_odom_frame;
+        footprint_transform.child_frame_id = tf_base_footprint_frame;
+        
+        // Set position (same as base_link but z-coordinate preserved)
+        footprint_transform.transform.translation.x = odomAftMapped.pose.pose.position.x;
+        footprint_transform.transform.translation.y = odomAftMapped.pose.pose.position.y;
+        footprint_transform.transform.translation.z = odomAftMapped.pose.pose.position.z;
+        
+        // Calculate yaw from quaternion and create new quaternion with only yaw
+        double qx = odomAftMapped.pose.pose.orientation.x;
+        double qy = odomAftMapped.pose.pose.orientation.y;
+        double qz = odomAftMapped.pose.pose.orientation.z;
+        double qw = odomAftMapped.pose.pose.orientation.w;
+        
+        double yaw = std::atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
+        double cos_yaw_half = std::cos(yaw * 0.5);
+        double sin_yaw_half = std::sin(yaw * 0.5);
+        
+        footprint_transform.transform.rotation.w = cos_yaw_half;
+        footprint_transform.transform.rotation.x = 0.0;
+        footprint_transform.transform.rotation.y = 0.0;
+        footprint_transform.transform.rotation.z = sin_yaw_half;
+        
+        tf_br->sendTransform(footprint_transform);
+    }
 }
 
 void log_extrinsic_params() {

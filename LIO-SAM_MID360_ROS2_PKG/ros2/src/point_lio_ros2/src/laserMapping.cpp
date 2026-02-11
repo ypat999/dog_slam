@@ -508,7 +508,7 @@ void publish_init_kdtree(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>:
     pcl::toROSMsg(*laserCloudInit, laserCloudmsg);
 
     laserCloudmsg.header.stamp = get_ros_time(lidar_end_time);
-    laserCloudmsg.header.frame_id = tf_map_frame;
+    laserCloudmsg.header.frame_id = tf_odom_frame;
     if (!odom_only) {
         pubLaserCloudFullRes->publish(laserCloudmsg);
     }
@@ -540,7 +540,7 @@ void publish_frame_world(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>:
         pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
 
         laserCloudmsg.header.stamp = get_ros_time(lidar_end_time);
-        laserCloudmsg.header.frame_id = tf_map_frame;
+        laserCloudmsg.header.frame_id = tf_odom_frame;
         pubLaserCloudFullRes->publish(laserCloudmsg);
         publish_count -= PUBFRAME_PERIOD;
     }
@@ -638,8 +638,8 @@ void set_twist(T &out) {
 void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pubOdomAftMapped,
                       std::shared_ptr<tf2_ros::TransformBroadcaster> &tf_br) {
 
-    odomAftMapped.header.frame_id = tf_map_frame;
-    odomAftMapped.child_frame_id = tf_odom_frame;
+    odomAftMapped.header.frame_id = tf_odom_frame;
+    odomAftMapped.child_frame_id = tf_base_link_frame;
 
     if (publish_odometry_without_downsample) {
         odomAftMapped.header.stamp = get_ros_time(time_current);
@@ -675,8 +675,8 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
 
     //static tf2_ros::TransformBroadcaster br = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     geometry_msgs::msg::TransformStamped transform;
-    transform.header.frame_id = tf_map_frame;
-    transform.child_frame_id = tf_odom_frame;
+    transform.header.frame_id = tf_odom_frame;
+    transform.child_frame_id = tf_base_link_frame;
 
     transform.transform.translation.x = odomAftMapped.pose.pose.position.x;
     transform.transform.translation.y = odomAftMapped.pose.pose.position.y;
@@ -771,7 +771,7 @@ void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPa
     set_posestamp(msg_body_pose.pose);
     // msg_body_pose.header.stamp = ros::Time::now();
     msg_body_pose.header.stamp = get_ros_time(lidar_end_time);
-    msg_body_pose.header.frame_id = tf_map_frame;
+    msg_body_pose.header.frame_id = tf_odom_frame;
     static int jjj = 0;
     jjj++;
     // if (jjj % 2 == 0) // if path is too large, the rvis will crash
@@ -788,7 +788,7 @@ int main(int argc, char **argv) {
     cout << "lidar_type: " << lidar_type << endl;
 
     path.header.stamp = get_ros_time(lidar_end_time);
-    path.header.frame_id = tf_map_frame;
+    path.header.frame_id = tf_odom_frame;
 
     /*** variables definition for counting ***/
     int frame_num = 0;

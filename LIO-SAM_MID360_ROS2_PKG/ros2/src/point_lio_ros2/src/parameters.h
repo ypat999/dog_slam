@@ -18,8 +18,8 @@ extern std::string tf_imu_frame;
 extern std::string tf_world_frame;
 extern std::string tf_lidar_frame;
 extern std::string tf_camera_init_frame;
-extern std::string tf_map_frame;
 extern std::string tf_odom_frame;
+extern std::string tf_base_link_frame;
 extern std::string tf_base_footprint_frame;
 
 extern bool is_first_frame;

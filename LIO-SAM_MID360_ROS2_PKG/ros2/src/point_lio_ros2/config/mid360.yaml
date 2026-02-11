@@ -60,8 +60,8 @@
             tf_world_frame: "odom" #"camera_init"
             tf_lidar_frame: "livox_frame" #"lidar_link"
             tf_camera_init_frame: "odom" #"base_link"  #"camera_init"
-            tf_map_frame: "odom" #"odom"
-            tf_odom_frame: "base_link" #"livox_frame"
+            tf_odom_frame: "odom" #"odom"
+            tf_base_link_frame: "base_link" #"livox_frame"
             tf_base_footprint_frame: "base_footprint" 
 
         pcd_save:

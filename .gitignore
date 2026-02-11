@@ -216,6 +216,5 @@ log/*
 LIO-SAM_MID360_ROS2_PKG/ros2/build/
 LIO-SAM_MID360_ROS2_PKG/ros2/install/
 LIO-SAM_MID360_ROS2_PKG/ros2/log/
-
-
+LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/src/super_lio/map/
 

@@ -4,7 +4,7 @@ bool odom_only;
 std::string odom_header_frame_id, odom_child_frame_id;
 
 // Frame configuration parameters
-std::string tf_imu_frame, tf_world_frame, tf_lidar_frame, tf_camera_init_frame, tf_map_frame, tf_odom_frame, tf_base_footprint_frame;
+std::string tf_imu_frame, tf_world_frame, tf_lidar_frame, tf_camera_init_frame, tf_odom_frame, tf_base_link_frame, tf_base_footprint_frame;
 
 bool is_first_frame = true;
 double lidar_end_time = 0.0, first_lidar_time = 0.0, time_con = 0.0;
@@ -47,8 +47,8 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->declare_parameter<std::string>("publish.tf_world_frame", "camera_init");
     nh->declare_parameter<std::string>("publish.tf_lidar_frame", "lidar_link");
     nh->declare_parameter<std::string>("publish.tf_camera_init_frame", "camera_init");
-    nh->declare_parameter<std::string>("publish.tf_map_frame", "map");
     nh->declare_parameter<std::string>("publish.tf_odom_frame", "odom");
+    nh->declare_parameter<std::string>("publish.tf_base_link_frame", "base_link");
     nh->declare_parameter<std::string>("publish.tf_base_footprint_frame", "base_footprint");
     nh->declare_parameter<bool>("publish.footprint_pub_en", true);
 
@@ -117,8 +117,8 @@ void readParameters(shared_ptr<rclcpp::Node> &nh) {
     nh->get_parameter("publish.tf_world_frame", tf_world_frame);
     nh->get_parameter("publish.tf_lidar_frame", tf_lidar_frame);
     nh->get_parameter("publish.tf_camera_init_frame", tf_camera_init_frame);
-    nh->get_parameter("publish.tf_map_frame", tf_map_frame);
     nh->get_parameter("publish.tf_odom_frame", tf_odom_frame);
+    nh->get_parameter("publish.tf_base_link_frame", tf_base_link_frame);
     nh->get_parameter("publish.tf_base_footprint_frame", tf_base_footprint_frame);
     nh->get_parameter("publish.footprint_pub_en", footprint_pub_en);
 

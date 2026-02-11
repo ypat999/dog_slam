@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    lio.map.save_map: false
-    lio.map.if_filter: true
+    lio.map.save_map: true
+    lio.map.if_filter: false
     lio.map.save_map_dir: "map"
     lio.map.map_name: "map.pcd"
     lio.map.ds_size: 0.25
@@ -12,7 +12,7 @@
 
     lio.sensor.lidar_type: 1
     lio.sensor.blind: 0.3
-    lio.sensor.maxrange: 60.0
+    lio.sensor.maxrange: 100.0
     lio.sensor.filter_rate: 3
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.5

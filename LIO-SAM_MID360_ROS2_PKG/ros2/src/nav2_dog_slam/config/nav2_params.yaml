@@ -73,11 +73,13 @@ controller_server:
       wz_std: 0.5  # 提高角速度采样标准差，增加转向探索性
       
       vx_max: 2.0
+      # vx_max: 1.2
       # vx_max: 0.6
       vy_max: 0.0
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
       wz_max: 2.0
+      # wz_max: 1.2
       # wz_max: 1.0
       
       

@@ -56,8 +56,8 @@
             tf_world_frame: "camera_init"
             tf_lidar_frame: "lidar_link"
             tf_camera_init_frame: "camera_init"
-            tf_map_frame: "map"
-            tf_odom_frame: "odom"
+            tf_odom_frame: "map"
+            tf_base_link_frame: "odom"
 
         pcd_save:
             pcd_save_en: false

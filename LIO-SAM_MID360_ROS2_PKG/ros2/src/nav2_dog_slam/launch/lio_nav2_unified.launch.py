@@ -71,7 +71,7 @@ LIO_TOPIC_CONFIGS = {
         'pointcloud_topic': '/lio_sam/mapping/cloud_registered_raw',
         'odom_topic': '/lio_sam/mapping/odometry',
         'octomap_topic': '/lio_sam/mapping/cloud_registered',
-        'target_frame': 'base_link'
+        'target_frame': 'base_footprint'
     },
     'point_lio': {
         'pointcloud_topic': '/cloud_registered_body',

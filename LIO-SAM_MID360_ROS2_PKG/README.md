@@ -4,7 +4,7 @@
 
 ## 主要特性
 
-- **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, DLIO, SC-PGO, Super-LIO
+- **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, SC-PGO, Super-LIO
 - **统一导航系统**: 集成Nav2导航框架，支持自主探索和路径规划
 - **实时建图**: 支持在线建图和离线地图构建
 - **稳定导航**: 优化base_footprint，实现高速稳定导航
@@ -101,54 +101,53 @@ rm -rf build/ install/ log/
 
 ## 运行方式
 
-### 统一启动方式（推荐）
+现在系统使用统一的启动文件，不再支持单独启动各组件。统一入口集成了所有SLAM算法和导航功能，提供了更简洁、更稳定的使用体验。
+
+### 统一启动方式（唯一入口）
 
 使用统一的启动文件，支持多种SLAM算法和导航模式：
 
 ```bash
+# 进入项目根目录
+cd /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG
+
 # 启动统一SLAM导航系统
 ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+
+# 通过环境变量选择SLAM算法（默认使用FAST-LIO2）
+# export SLAM_ALGORITHM=fast_lio    # 使用FAST-LIO2
+# export SLAM_ALGORITHM=point_lio   # 使用Point-LIO
+# export SLAM_ALGORITHM=super_lio   # 使用Super-LIO
+# export SLAM_ALGORITHM=lio_sam     # 使用LIO-SAM
 ```
 
-### 单独启动方式
+### 统一启动文件说明
 
-#### FAST-LIO2 SLAM
+统一启动文件 `lio_nav2_unified.launch.py` 位于 `nav2_dog_slam/launch/` 目录下，它集成了：
+
+- **Livox MID360雷达驱动**：自动启动雷达驱动，无需单独启动
+- **SLAM算法**：根据环境变量选择不同的SLAM算法（FAST-LIO2、Point-LIO、Super-LIO、LIO-SAM）
+- **导航系统**：集成Nav2导航框架，支持路径规划和避障
+- **点云转激光扫描**：自动将3D点云转换为2D激光扫描数据，供导航使用
+- **TF变换管理**：统一管理所有坐标系变换，确保系统稳定性
+- **Web控制界面**：启动rosbridge_websocket，支持通过浏览器控制机器人
+
+### 环境变量配置
+
+通过设置环境变量，可以自定义系统行为：
+
 ```bash
-# 启动Livox MID360雷达驱动
-ros2 launch livox_ros_driver2 msg_MID360_launch.py
+# 选择SLAM算法
+export SLAM_ALGORITHM=fast_lio    # 默认值，使用FAST-LIO2
 
-# 启动FAST-LIO2 SLAM系统
-ros2 launch fast_lio mapping.launch.py
-```
+# 建图模式
+export MAP_BUILDING_MODE=true      # 启用建图模式
 
-#### Super-LIO SLAM
-```bash
-# 启动Super-LIO SLAM系统
-ros2 launch super_lio Livox_mid360.py
+# 导航模式
+export NAVIGATION_MODE=true        # 启用导航模式
 
-# 重定位模式
-ros2 launch super_lio relocation.py
-```
-
-#### LIO-SAM SLAM
-```bash
-# 启动Livox MID360雷达驱动
-ros2 launch livox_ros_driver2 msg_MID360_launch.py
-
-# 启动LIO-SAM SLAM系统
-ros2 launch lio_sam run.launch.py
-```
-
-#### Point-LIO SLAM
-```bash
-# 启动Point-LIO SLAM系统
-ros2 launch point_lio_ros2 mapping_mid360.launch.py
-```
-
-#### SC-PGO 姿态图优化
-```bash
-# 启动SC-PGO姿态图优化
-ros2 launch sc_pgo_ros2 sc_pgo.launch.py
+# 启动系统
+ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 ```
 
 ## 地图保存与转换
@@ -196,6 +195,44 @@ ros2 launch m-explore explore.launch.py
 - HAP雷达配置
 - 多雷达混合配置
 
+### base_footprint配置
+现在base_footprint已集成到各LIO算法中，可在各算法的配置文件中设置：
+
+#### FAST-LIO2配置 (`FAST_LIO_ROS2_edit/config/mid360.yaml`)
+```yaml
+publish:
+  footprint_pub_en: true        # 启用base_footprint发布
+  tf_base_footprint_frame: "base_footprint"  # base_footprint坐标系名称
+```
+
+#### Point-LIO配置 (`point_lio_ros2/config/mid360.yaml`)
+```yaml
+publish:
+  footprint_pub_en: true        # 启用base_footprint发布
+  tf_base_footprint_frame: "base_footprint"  # base_footprint坐标系名称
+```
+
+#### Super-LIO配置 (`Super-LIO/src/super_lio/config/livox_360.yaml`)
+```yaml
+lio.output:
+  footprint_pub_en: true        # 启用base_footprint发布
+  tf_base_footprint_frame: "base_footprint"  # base_footprint坐标系名称
+```
+
+### odom发布频率控制
+
+#### Point-LIO配置 (`point_lio_ros2/config/mid360.yaml`)
+```yaml
+publish:
+  pub_step: 1                   # odom和tf的发布步长，值越小频率越高
+```
+
+#### Super-LIO配置 (`Super-LIO/src/super_lio/config/livox_360.yaml`)
+```yaml
+lio.output:
+  pub_step: 1                   # odom和tf的发布步长，值越小频率越高
+```
+
 ## 项目结构
 
 ```
@@ -204,22 +241,28 @@ LIO-SAM_MID360_ROS2_PKG/
 │   ├── LIO-SAM_MID360_ROS2_DOG/      # LIO-SAM实现
 │   ├── FAST_LIO_ROS2_edit/           # FAST-LIO2实现
 │   ├── point_lio_ros2/               # Point-LIO实现
+│   ├── Super-LIO/                    # Super-LIO实现
 │   ├── SC_PGO_ROS2/                  # SC-PGO姿态图优化
 │   ├── nav2_dog_slam/                # 统一导航系统
 │   ├── livox_ros_driver2/            # Livox雷达驱动
 │   ├── global_config/                # 全局配置管理
-│   └── m-explore/                   # 自主探索
+│   └── m-explore/                    # 自主探索
 ├── map_sample/                       # 地图示例
 └── build_ros2.sh                     # 构建脚本
 ```
 
 ## 最新更新
 
+- **2026-02-11**: 去除fasterlio和dio（未使用），修正pointlio的footprint参考问题，微调superlio点云保存参数
+- **2026-02-10**: 将base_footprint移至各lio算法输出
+- **2026-02-09**: 修正footprint计算
+- **2026-02-08**: 改进base_footprint计算
+- **2026-02-07**: 参数微调，superlio疑似会影响odom使其倾斜，需调试
+- **2026-02-06**: super lio导航可用
+- **2026-02-05**: 添加Super-LIO支持到SLAM导航系统
+- **2026-02-04**: superlio添加body cloud
+- **2026-01-30**: 修正base_footprint相关问题，实现稳定高速导航
 - **2026-01-27**: 导航算法集中到一起，统一启动文件
-- **2026-01-26**: 修正base_footprint相关问题，实现稳定高速导航
-- **2026-01-26**: 添加SC-PGO扫描上下文姿态图优化
-- **2026-01-26**: 优化动态base_footprint计算
-- **2026-01-26**: 统一导航参数配置
 
 ## 故障排除
 
@@ -265,7 +308,7 @@ sudo apt install mesa-vulkan-drivers vulkan-tools -y
 
 
 sudo apt install \
-  ros-humble-gazebo-* \          
+  ros-humble-gazebo-*          \
   <!-- sudo apt install ros-humble-ros-gz
   sudo apt install gz-harmonic -->
 
@@ -301,43 +344,15 @@ sudo chmod 777 ~/.gazebo/models/*
 
 ### 项目提供了多种启动脚本和配置：
 
-#### 1. fast_lio_mapping.launch.py
-这是FAST-LIO2 SLAM系统的核心启动文件，包含以下主要组件：
-- **IMU预处理节点**：处理IMU数据，进行预积分
-- **点云预处理节点**：对激光点云进行滤波和特征提取
-- **激光-惯性里程计节点**：基于迭代卡尔曼滤波的紧耦合SLAM
-- **地图构建节点**：实时构建并更新3D点云地图
-- **RViz2可视化工具**：提供SLAM过程的可视化界面
-
-#### 2. lio_sam.launch.py
-这是LIO-SAM SLAM系统的核心启动文件，包含以下主要组件：
-- **IMU预积分节点** (`imuPreintegration`)：处理IMU数据，提供IMU预积分 odometry
-- **点云投影节点** (`imageProjection`)：将3D点云投影到range image和bev map，提取特征点
-- **激光里程计节点** (`featureOdomatry`)：使用提取的特征点进行激光里程计计算
-- **地图优化节点** (`mapOptmization`)：执行滑动窗口优化，进行回环检测和全局优化
-- **静态坐标变换**：定义传感器之间的坐标关系
-- **OctoMap服务器**：用于生成3D占据网格地图
-- **RViz2可视化工具**：提供SLAM过程的可视化界面
-
-#### 2. nav2.launch.py
-这是Nav2导航系统的启动文件，包含以下主要组件：
-- **地图服务器** (`map_server`)：加载并发布静态地图
-- **AMCL定位节点** (`amcl`)：使用自适应蒙特卡洛定位算法进行机器人定位
-- **Nav2核心节点组**：包括控制器、规划器、行为服务器等
-- **静态坐标变换发布器**：发布map→odom和odom→base_link坐标变换
-- **Rosbridge WebSocket节点**：提供Web端与ROS2通信的桥梁
-- **初始位姿发布器**：发布机器人的初始位置
-- **点云到激光扫描转换器**：将点云数据转换为激光扫描数据供导航使用
-
-#### 3. lio_nav2_unified.launch.py
-这是统一管理所有LIO算法（FAST-LIO、LIO-SAM、DLIO、Faster-LIO、Point-LIO）和Nav2导航的启动文件，通过参数选择不同的SLAM算法：
+#### 1. lio_nav2_unified.launch.py
+这是统一管理所有LIO算法（FAST-LIO、LIO-SAM、Point-LIO、Super-LIO）和Nav2导航的启动文件，通过参数选择不同的SLAM算法：
 - **支持多种LIO算法**：通过SLAM_ALGORITHM参数选择不同的SLAM系统
 - **统一节点配置**：集中管理pointcloud_to_laserscan、slam_toolbox、octomap_server等节点
 - **延时启动Nav2**：在SLAM启动后5秒启动导航系统
 - **Web控制界面启动**：固定启动Nav2的Web控制界面
 - **话题映射配置**：自动处理不同LIO算法的话题差异
 
-#### 4. pointcloud_to_laserscan.launch.py
+#### 2. pointcloud_to_laserscan.launch.py
 这是点云到激光扫描的转换启动文件，包含以下主要组件：
 - **PointCloud to LaserScan节点**：将3D点云数据转换为2D激光扫描数据
 - **参数配置**：设置高度过滤范围、角度范围、距离范围等参数
@@ -376,79 +391,20 @@ sudo chmod 777 ~/.gazebo/models/*
 
 ### 启动系统
 
-#### 统一启动所有LIO算法 + Nav2（推荐）
+#### 统一启动所有LIO算法 + Nav2（唯一方式）
 ```bash
 # 进入项目根目录
-cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG
+cd /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG
 
-# 运行统一启动脚本，通过参数选择LIO算法
-./run_navigation.sh fast_lio    # 启动FAST-LIO2 + Nav2
-./run_navigation.sh lio_sam     # 启动LIO-SAM + Nav2
-./run_navigation.sh dlio        # 启动DLIO + Nav2
-./run_navigation.sh faster_lio  # 启动Faster-LIO + Nav2
-./run_navigation.sh point_lio   # 启动Point-LIO + Nav2
+# 通过环境变量选择SLAM算法（默认使用FAST-LIO2）
+# export SLAM_ALGORITHM=fast_lio    # 使用FAST-LIO2
+# export SLAM_ALGORITHM=point_lio   # 使用Point-LIO
+# export SLAM_ALGORITHM=super_lio   # 使用Super-LIO
+# export SLAM_ALGORITHM=lio_sam     # 使用LIO-SAM
+
+# 启动统一SLAM导航系统
+ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 ```
-
-#### 分别启动各组件
-1. 启动FAST-LIO2 SLAM系统：
-   ```bash
-   # 进入ROS2工作空间
-   cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG/ros2
-   
-   # 编译项目
-   colcon build --packages-select fast_lio
-   
-   # 设置环境变量
-   source install/setup.bash
-   
-   # 启动FAST-LIO2 SLAM系统
-   ros2 launch fast_lio mapping.launch.py
-   ```
-
-2. 启动LIO-SAM SLAM系统：
-   ```bash
-   # 进入ROS2工作空间
-   cd /home/ywj/projects/git/dog_slam/FAST-LIO2_LIO-SAM_MID360_ROS2_PKG/ros2
-   
-   # 编译项目
-   colcon build --packages-select lio_sam
-   
-   # 设置环境变量
-   source install/setup.bash
-   
-   # 启动LIO-SAM SLAM系统
-   ros2 launch lio_sam lio_sam.launch.py
-   ```
-
-#### 方法二：分别启动各组件
-1. 启动SLAM系统：
-   ```bash
-   # 进入ROS2工作空间
-   cd /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2
-   
-   # 编译项目
-   colcon build --packages-select lio_sam
-   
-   # 设置环境变量
-   source install/setup.bash
-   
-   # 启动LIO-SAM SLAM系统
-   ros2 launch lio_sam lio_sam.launch.py
-   ```
-
-2. 启动导航系统：
-   ```bash
-   # 在新的终端中执行以下命令
-   
-   # 进入ROS2工作空间
-   cd /home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2
-   
-   # 设置环境变量
-   source install/setup.bash
-   
-   # 启动Nav2导航系统
-   ros2 launch lio_sam nav2.launch.py
-   ```
 
 ### Web控制界面使用
 系统启动后，可通过Web浏览器访问控制界面：

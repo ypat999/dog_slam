@@ -1,6 +1,7 @@
 
 #include "ros/ROSWrapper.h"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
+#include "lio/super_lio.h"
 
 
 using namespace BASIC;
@@ -23,7 +24,7 @@ void LoadParamFromRos(rclcpp::Node& node)
 
   node.declare_parameter<std::string>("lio.map.save_map_dir", "");
   node.get_parameter("lio.map.save_map_dir", g_save_map_dir);
-  g_save_map_dir = g_root_dir + g_save_map_dir;
+  // g_save_map_dir = g_root_dir + g_save_map_dir;
 
   node.declare_parameter<std::string>("lio.map.map_name", "default");
   node.get_parameter("lio.map.map_name", g_map_name);
@@ -299,6 +300,18 @@ ROSWrapper::ROSWrapper(const rclcpp::NodeOptions& options)
   path_.header.frame_id = "world";
 
   setupIO();
+  setupServices();
+}
+
+
+void ROSWrapper::setupServices(){
+  // 创建保存地图服务
+  save_map_service_ = this->create_service<std_srvs::srv::Trigger>(
+      "/map_save",
+      std::bind(&ROSWrapper::saveMapServiceCallback, this, 
+                std::placeholders::_1, std::placeholders::_2));
+  
+  LOG(INFO) << GREEN << " ---> [Service] Save map service created: /map_save" << RESET;
 }
 
 
@@ -845,6 +858,27 @@ void ROSWrapper::set_initial_data(BASIC::SE3& init_pose, bool& flg_get_init_gues
 
   if (flg_finish_init) {
     init_pose_sub.reset();
+  }
+}
+
+
+void ROSWrapper::saveMapServiceCallback(const std_srvs::srv::Trigger::Request::SharedPtr request, 
+                                        const std_srvs::srv::Trigger::Response::SharedPtr response)
+{
+  LOG(INFO) << GREEN << " ---> [Service] Save map service called" << RESET;
+  
+  if (super_lio_) {
+    // 调用SuperLIO的saveMap()方法保存地图
+    super_lio_->saveMap();
+    // 调用printTimeRecord()方法，参照退出流程
+    super_lio_->printTimeRecord();
+    LOG(INFO) << GREEN << " ---> [Service] Map saved successfully" << RESET;
+    response->success = true;
+    response->message = "Map saved successfully";
+  } else {
+    LOG(ERROR) << RED << " ---> [Service] SuperLIO instance not set" << RESET;
+    response->success = false;
+    response->message = "SuperLIO instance not set";
   }
 }
 

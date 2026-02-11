@@ -2,8 +2,8 @@
   ros__parameters:
     lio.map.save_map: true
     lio.map.if_filter: false
-    lio.map.save_map_dir: "map"
-    lio.map.map_name: "map.pcd"
+    lio.map.save_map_dir: "/home/ztl/slam_data/pcd"
+    lio.map.map_name: "test.pcd"
     lio.map.ds_size: 0.25
     lio.map.save_interval: 500
 

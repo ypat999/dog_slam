@@ -3,7 +3,7 @@ echo "===== ROS2 统一建图模式启动脚本 ====="
 WORKSPACE_DIR="/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2"
 
 # 支持的LIO算法列表
-SUPPORTED_ALGORITHMS=("fast_lio" "lio_sam" "point_lio" "super_lio"
+SUPPORTED_ALGORITHMS=("fast_lio" "lio_sam" "point_lio" "super_lio" )
 
 # 检查参数
 if [ $# -eq 0 ]; then

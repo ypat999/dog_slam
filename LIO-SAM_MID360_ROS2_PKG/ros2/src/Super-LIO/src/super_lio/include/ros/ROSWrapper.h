@@ -25,6 +25,7 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <livox_ros_driver2/msg/custom_msg.hpp>
+#include <std_srvs/srv/trigger.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 
 /// msgs
@@ -56,6 +57,9 @@ public:
   bool sync_measure(MeasureGroup&);
 
   void setESKF(ESKF::Ptr& eskf) { eskf_ = eskf;}
+  
+  // 设置SuperLIO实例的引用
+  void setSuperLIO(std::shared_ptr<class SuperLIO> lio) { super_lio_ = lio; }
 
   void clear(){
     lidar_buffer_.clear();
@@ -85,6 +89,10 @@ public:
     return cb_sensor_;
   }
 
+  // 保存地图服务回调函数
+  void saveMapServiceCallback(const std_srvs::srv::Trigger::Request::SharedPtr request, 
+                              const std_srvs::srv::Trigger::Response::SharedPtr response);
+
 private:
   void imuHandler(const sensor_msgs::msg::Imu::SharedPtr msg);
   void livoxHandler(const livox_ros_driver2::msg::CustomMsg::SharedPtr msg);
@@ -92,12 +100,16 @@ private:
 
   void setupParams();
   void setupIO();
+  void setupServices();
 
 private:
   rclcpp::CallbackGroup::SharedPtr cb_sensor_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
   rclcpp::Subscription<livox_ros_driver2::msg::CustomMsg>::SharedPtr sub_lidar_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_lidar_std_;
+
+  // 保存地图服务
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr save_map_service_;
 
   std::deque<IMUData>   imu_buffer_;
   std::deque<LidarData> lidar_buffer_;
@@ -106,6 +118,7 @@ private:
   double last_timestamp_lidar_ = -1.0;
 
   ESKF::Ptr eskf_{nullptr};
+  std::shared_ptr<class SuperLIO> super_lio_{nullptr};
 
   nav_msgs::msg::Path path_;
   geometry_msgs::msg::PoseStamped msg2uav_;

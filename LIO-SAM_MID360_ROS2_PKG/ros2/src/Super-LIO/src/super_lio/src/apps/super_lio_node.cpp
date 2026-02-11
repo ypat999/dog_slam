@@ -7,17 +7,32 @@
 #include "ros/ROSWrapper.h"
 #include "lio/super_lio_reloc.h"
 
+#include <signal.h>
+
+void sigterm_handler(int signum)
+{
+  rclcpp::shutdown();
+}
+
 
 using namespace LI2Sup;
 
 int main(int argc, char** argv){
   rclcpp::init(argc, argv);
 
+  signal(SIGTERM, sigterm_handler);
+
   ROSWrapper::Ptr data_wrapper = std::make_shared<ROSWrapper>();
   
   auto lio = std::make_shared<SuperLIO>();
   lio->setROSWrapper(data_wrapper);
+  data_wrapper->setSuperLIO(lio);
   lio->init();
+
+  rclcpp::on_shutdown([lio]() {
+    lio->saveMap();
+    lio->printTimeRecord();
+  });
 
   auto timer = data_wrapper->create_wall_timer(
     std::chrono::milliseconds(2),
@@ -27,8 +42,8 @@ int main(int argc, char** argv){
 
   rclcpp::spin(data_wrapper);
 
-  lio->saveMap();
-  lio->printTimeRecord();
+  // lio->saveMap();
+  // lio->printTimeRecord();
 
   rclcpp::shutdown();
   return 0;

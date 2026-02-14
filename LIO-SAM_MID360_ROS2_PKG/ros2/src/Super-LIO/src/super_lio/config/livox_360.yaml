@@ -42,7 +42,7 @@
     lio.output.plan_env_body: false
     lio.output.ml_map: false
     lio.output.planner: false
-    lio.output.map: false
+    lio.output.map: true
     lio.output.dense: false
     lio.output.map_body: true
     lio.output.dense_body: true

@@ -99,7 +99,11 @@ bool SuperLIOReLoc::map_init(){
   static bool pcd_loaded = false;
   if(pcd_loaded) return true;
 
-  std::string map_name = g_save_map_dir + "/" + g_map_name;
+  std::string map_dir = g_save_map_dir;
+  if (!map_dir.empty() && map_dir[0] != '/') {
+    map_dir = g_root_dir + map_dir;
+  }
+  std::string map_name = map_dir + "/" + g_map_name;
   if(pcl::io::loadPCDFile<PointType>(map_name, *point_map_) == -1){
     LOG(ERROR) << RED << " ---> Load map failed. File: " << map_name << RESET;
     return false;

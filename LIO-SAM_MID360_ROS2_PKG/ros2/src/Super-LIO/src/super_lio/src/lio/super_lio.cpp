@@ -236,16 +236,24 @@ void SuperLIO::caceData(){
   static bool rm_PCD_dir = false;
   if(!rm_PCD_dir){
     rm_PCD_dir = true;
-    std::string cmd = "rm -rf " + g_save_map_dir + "/PCD";
+    std::string save_map_dir = g_save_map_dir;
+    if (!save_map_dir.empty() && save_map_dir[0] != '/') {
+      save_map_dir = g_root_dir + save_map_dir;
+    }
+    std::string cmd = "rm -rf " + save_map_dir + "/PCD";
     [[maybe_unused]] int res;
     res = system(cmd.c_str());
-    cmd = "mkdir -p " + g_save_map_dir + "/PCD";
+    cmd = "mkdir -p " + save_map_dir + "/PCD";
     res = system(cmd.c_str());
   }
 
   if (point_map_->size() > 0 && scan_wait_num >= g_pcd_save_interval) {
     pcd_index_++;
-    std::string map_name(std::string(g_save_map_dir + "/PCD/scans_") + std::to_string(pcd_index_) +
+    std::string save_map_dir = g_save_map_dir;
+    if (!save_map_dir.empty() && save_map_dir[0] != '/') {
+      save_map_dir = g_root_dir + save_map_dir;
+    }
+    std::string map_name(std::string(save_map_dir + "/PCD/scans_") + std::to_string(pcd_index_) +
                                std::string(".pcd"));
     LOG(INFO) << GREEN << " ---> current scan saved to /PCD/scans_" << pcd_index_ << "  size:  " << point_map_->size() << RESET;
     pcl::io::savePCDFileBinary(map_name, *point_map_);
@@ -258,8 +266,13 @@ void SuperLIO::caceData(){
 void SuperLIO::ProcessCaceMap(){
   namespace fs = std::filesystem;
 
-  std::string pcd_folder = g_save_map_dir + "/PCD";
-  std::string output_map_name = g_save_map_dir + "/" + g_map_name;
+  std::string save_map_dir = g_save_map_dir;
+  if (!save_map_dir.empty() && save_map_dir[0] != '/') {
+    save_map_dir = g_root_dir + save_map_dir;
+  }
+
+  std::string pcd_folder = save_map_dir + "/PCD";
+  std::string output_map_name = save_map_dir + "/" + g_map_name;
 
   LOG(INFO) << YELLOW << " ---> Merging PCD fragments in: " << pcd_folder << RESET;
 
@@ -316,7 +329,11 @@ void SuperLIO::saveMap(){
     LOG(INFO) << YELLOW << " ---> Saving last cace ... " << RESET;
     if (point_map_->size() > 0) {
       pcd_index_++;
-      std::string map_name(std::string(g_save_map_dir + "/PCD/scans_") + std::to_string(pcd_index_) +
+      std::string save_map_dir = g_save_map_dir;
+      if (!save_map_dir.empty() && save_map_dir[0] != '/') {
+        save_map_dir = g_root_dir + save_map_dir;
+      }
+      std::string map_name(std::string(save_map_dir + "/PCD/scans_") + std::to_string(pcd_index_) +
                                  std::string(".pcd"));
       LOG(INFO) << GREEN << " ---> current scan saved to /PCD/scans_" << pcd_index_ << "  size:  " << point_map_->size() << RESET;
       pcl::io::savePCDFileBinary(map_name, *point_map_);
@@ -331,7 +348,11 @@ void SuperLIO::saveMap(){
 
   LOG(INFO) << YELLOW << " ---> Saving map..... " << RESET;
   if(!point_map_->empty()){
-    std::string map_name = g_save_map_dir + "/" + g_map_name;
+    std::string save_map_dir = g_save_map_dir;
+    if (!save_map_dir.empty() && save_map_dir[0] != '/') {
+      save_map_dir = g_root_dir + save_map_dir;
+    }
+    std::string map_name = save_map_dir + "/" + g_map_name;
     LOG(INFO) << YELLOW << " ---> Save map to: " << map_name << RESET;
     pcl::VoxelGrid<PointType> voxel_fliter;
     PointCloudType latst_map;

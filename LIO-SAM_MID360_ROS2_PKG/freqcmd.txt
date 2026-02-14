@@ -214,6 +214,8 @@ ros2 launch lio_sam lio_sam.launch.py
 ros2 launch point_lio mapping_mid360.launch.py
 ros2 launch super_lio Livox_mid360.py
 
+ros2 launch super_lio relocation.py
+
 SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 ros2 launch livox_ros_driver2 msg_MID360_launch.py
 

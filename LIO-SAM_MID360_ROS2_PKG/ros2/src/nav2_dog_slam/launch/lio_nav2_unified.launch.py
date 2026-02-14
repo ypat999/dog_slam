@@ -54,7 +54,7 @@ except Exception as e:
     ODOM_FRAME = 'odom'
     BASE_LINK_FRAME = 'base_link' 
     LIVOX_FRAME = 'livox_frame'
-    SLAM_ALGORITHM = 'fast_lio'  # 默认算法
+    SLAM_ALGORITHM = 'super_lio'  # 默认算法
 
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -64,7 +64,7 @@ LIO_TOPIC_CONFIGS = {
     'fast_lio': {
         'pointcloud_topic': '/cloud_registered_body',
         'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registered_body',
+        'octomap_topic': '/cloud_registered',
         'target_frame': 'base_footprint'
     },
     'lio_sam': {
@@ -76,13 +76,13 @@ LIO_TOPIC_CONFIGS = {
     'point_lio': {
         'pointcloud_topic': '/cloud_registered_body',
         'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registered_body',
+        'octomap_topic': '/cloud_registeredy',
         'target_frame': 'base_footprint'
     },
     'super_lio': {
         'pointcloud_topic': '/lio/body/cloud',
         'odom_topic': '/lio/odom',
-        'octomap_topic': '/lio/body/cloud',
+        'octomap_topic': '/lio/cloud_world',
         'target_frame': 'base_footprint'
         # 'target_frame': 'base_link'
     }
@@ -382,33 +382,33 @@ def generate_launch_description():
         }.items()
     )
 
-    sc_pgo_node = Node(
-        package="sc_pgo_ros2",
-        executable="alaserPGO",
-        name="alaserPGO",
-        output="screen",
-        parameters=[
-            {"scan_line": 4},
-            {"minimum_range": 0.3},
-            {"mapping_line_resolution": 0.4},
-            {"mapping_plane_resolution": 0.8},
-            {"mapviz_filter_size": 0.05},
-            {"keyframe_meter_gap": 1.0},
-            {"sc_dist_thres": 0.3},
-            {"sc_max_radius": 290.0},
-            {"save_directory": "/home/ztl/save_data/"},  # 修改为实际保存路径
-            {"use_sim_time": use_sim_time}
-        ],
-        remappings=[
-            ("/aft_mapped_to_init", "/Odometry"),
-            # ("/aft_mapped_to_init", "/aft_mapped_to_init"),
-            ("/velodyne_cloud_registered_local", "/cloud_registered_body"),
-            ("/cloud_for_scancontext", "/cloud_registered_body"),
-            ("/tf", "tf"),
-            ("/tf_static", "tf_static"),
-        ],
-        prefix=['taskset -c 6'],   # 绑定 CPU 6
-    )
+    # sc_pgo_node = Node(
+    #     package="sc_pgo_ros2",
+    #     executable="alaserPGO",
+    #     name="alaserPGO",
+    #     output="screen",
+    #     parameters=[
+    #         {"scan_line": 4},
+    #         {"minimum_range": 0.3},
+    #         {"mapping_line_resolution": 0.4},
+    #         {"mapping_plane_resolution": 0.8},
+    #         {"mapviz_filter_size": 0.05},
+    #         {"keyframe_meter_gap": 1.0},
+    #         {"sc_dist_thres": 0.3},
+    #         {"sc_max_radius": 290.0},
+    #         {"save_directory": "/home/ztl/save_data/"},  # 修改为实际保存路径
+    #         {"use_sim_time": use_sim_time}
+    #     ],
+    #     remappings=[
+    #         ("/aft_mapped_to_init", lio_config['odom_topic']),
+    #         # ("/aft_mapped_to_init", "/aft_mapped_to_init"),
+    #         ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
+    #         ("/cloud_for_scancontext", lio_config['octomap_topic']),
+    #         ("/tf", "tf"),
+    #         ("/tf_static", "tf_static"),
+    #     ],
+    #     prefix=['taskset -c 6'],   # 绑定 CPU 6
+    # )
     
 
 
@@ -451,14 +451,14 @@ def generate_launch_description():
                 )
             )
 
-    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
-        # 建图模式 + SC-PGO
-        unified_nodes.append(
-            TimerAction(
-                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
-                actions=[sc_pgo_node]
-            )
-        )
+    # if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+    #     # 建图模式 + SC-PGO
+    #     unified_nodes.append(
+    #         TimerAction(
+    #             period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+    #             actions=[sc_pgo_node]
+    #         )
+    #     )
     
 
         

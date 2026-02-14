@@ -38,7 +38,7 @@ def generate_launch_description():
         LIVOX_MID360_CONFIG_NO_TILT = ''
 
     pkg_super_lio = get_package_share_directory('super_lio')
-    config_yaml = os.path.join(pkg_super_lio, 'config', 'livox_360.yaml')
+    config_yaml = os.path.join(pkg_super_lio, 'config', 'relocation.yaml')
     rviz_config_file = os.path.join(pkg_super_lio, 'rviz', 'relocation.rviz')
 
     use_sim_time = DEFAULT_USE_SIM_TIME

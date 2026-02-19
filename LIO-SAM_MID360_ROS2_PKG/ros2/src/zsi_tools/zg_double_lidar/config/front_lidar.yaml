@@ -2,18 +2,22 @@
   ros__parameters:
     lio.map.save_map: false
     lio.map.if_filter: false
-    lio.map.save_map_dir: "/home/ywj/slam_data/pcd"
+    lio.map.save_map_dir: "/home/robot/slam_data/pcd"
     lio.map.map_name: "front_lidar_map.pcd"
     lio.map.ds_size: 0.25
     lio.map.save_interval: 500
+    # 点云切片保存前缀，用于多雷达同时建图时区分不同雷达的切片
+    # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
+    # 空字符串表示无前缀（默认）
+    lio.map.pcd_prefix: "front_"
 
     lio.ros.lidar_topic: "/front_lidar"
     lio.ros.imu_topic: "/front_lidar/imu"
 
     lio.sensor.lidar_type: 9
-    lio.sensor.blind: 0.5
+    lio.sensor.blind: 0.1
     lio.sensor.maxrange: 150.0
-    lio.sensor.filter_rate: 1
+    lio.sensor.filter_rate: 4
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.25
     lio.sensor.intensity_filter_en: false
@@ -26,17 +30,23 @@
     lio.sensor.imu_nbg: 0.0001
 
     lio.extrinsic.lidar_imu: [0.0, 0.0, 0.0,
-                              1.0, 0.0, 0.0,
-                              0.0, 1.0, 0.0,
-                              0.0, 0.0, 1.0]
+                              0.0, -1.0, 0.0,
+                              -1.0, 0.0, 0.0,
+                              0.0, 0.0, -1.0]
     lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
-    lio.hash_map.hash_capacity: 2000000
+    lio.hash_map.hash_capacity: 20000000
     lio.hash_map.vox_resolution: 0.25
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
     lio.kf.kf_align_gravity: true
+
+    # - 0 : 参考重力指向 +X轴
+    # - 1 : 参考重力指向 +Y轴
+    # - 2 : 参考重力指向 -Z轴 （默认值）
+    lio.kf.ref_gravity_axis: 0
+
     lio.kf.kf_quit_eps: 0.001
 
     lio.output.robot: false
@@ -63,3 +73,12 @@
     lio.dynamic_removal.frame_window: 1
     lio.dynamic_removal.raycast_min_hits: 2
     lio.dynamic_removal.isolated_removal: true
+
+    # 仅做点云去畸变和降采样模式，不计算LIO
+    # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
+    # 点云输出到 lio_only_undistort_frame 指定的frame（依赖外部LIO的TF）
+    # 默认: false（正常计算LIO）
+    lio.lio_only_undistort: false
+    # 仅去畸变模式下点云输出的frame_id
+    # 应设置为外部LIO控制的frame，以便通过TF变换到世界坐标系
+    lio.lio_only_undistort_frame: "imu"

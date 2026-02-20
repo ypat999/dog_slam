@@ -60,9 +60,9 @@
     lio.output.dense_body: true
     lio.output.pub_step: 1
     lio.output.footprint_pub_en: true
-    lio.output.tf_base_footprint_frame: "base_footprint_rear"
-    lio.output.world_frame: "world_rear"
-    lio.output.imu_frame: "imu_rear"
+    lio.output.tf_base_footprint_frame: "base_footprint"
+    lio.output.world_frame: "world"
+    lio.output.imu_frame: "imu"
 
     lio.eva.timer: true
 
@@ -76,9 +76,5 @@
 
     # 仅做点云去畸变和降采样模式，不计算LIO
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
-    # 点云输出到 lio_only_undistort_frame 指定的frame（依赖外部LIO的TF）
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: true
-    # 仅去畸变模式下点云输出的frame_id
-    # 应设置为外部LIO控制的frame，以便通过TF变换到世界坐标系
-    lio.lio_only_undistort_frame: "rslidar_tail"

@@ -49,6 +49,9 @@ def generate_launch_description():
     ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
     ns_world_frame = PythonExpression(["'world' if '", ns, "' == '' else str('", ns, "/world')"])
     ns_imu_frame = PythonExpression(["'imu' if '", ns, "' == '' else str('", ns, "/imu')"])
+    ns_base_rear_frame = PythonExpression(["'base_footprint_rear' if '", ns, "' == '' else str('", ns, "/base_footprint_rear')"])
+    ns_world_rear_frame = PythonExpression(["'world_rear' if '", ns, "' == '' else str('", ns, "/world_rear')"])
+    ns_imu_rear_frame = PythonExpression(["'imu_rear' if '", ns, "' == '' else str('", ns, "/imu_rear')"])
     ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
 
     ld.add_action(declare_ns_arg)
@@ -104,9 +107,9 @@ def generate_launch_description():
         parameters=[
             rear_config_yaml,
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
-            {'lio.output.tf_base_footprint_frame': ns_base_frame},
-            {'lio.output.world_frame': ns_world_frame},
-            {'lio.output.imu_frame': ns_imu_frame},
+            {'lio.output.tf_base_footprint_frame': ns_base_rear_frame},
+            {'lio.output.world_frame': ns_world_rear_frame},
+            {'lio.output.imu_frame': ns_imu_rear_frame},
         ],
         prefix=['taskset -c 7'],
         arguments=['--ros-args', '--log-level', 'info'],
@@ -205,6 +208,16 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_odom_to_world)
 
+    static_transform_odom_to_world_rear = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_odom_to_world_rear',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['-0.36615', '0.0', '0.0', '0.0', str(deg_to_rad(90)), str(deg_to_rad(180)), ns_odom_frame, ns_world_rear_frame],
+        output='screen'
+    )
+    ld.add_action(static_transform_odom_to_world_rear)
+
     static_transform_world_to_imu = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -246,6 +259,17 @@ def generate_launch_description():
         output='screen'
     )
     ld.add_action(rslidar_head_to_rslidar_tail_tf)
+
+    # rslidar_head -> rslidar_tail (雷达到雷达的静态变换)
+    rslidar_tail_to_imu_rear_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='rslidar_tail_to_imu_rear_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0', '0', '0', '0', '0', '0', 'rslidar_tail', ns_imu_rear_frame],
+        output='screen'
+    )
+    ld.add_action(rslidar_tail_to_imu_rear_tf)
 
     static_transform_world_to_base_footprint = Node(
         package='tf2_ros',

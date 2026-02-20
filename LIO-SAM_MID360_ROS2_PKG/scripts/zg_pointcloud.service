@@ -1,0 +1,21 @@
+[Unit]
+Description=ZG POINTCLOUD Service
+After=network.target rmw_control.service
+Wants=network.target rmw_control.service
+
+[Service]
+Type=simple
+User=robot
+Group=robot
+WorkingDirectory=/home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/
+Environment="ROS_DOMAIN_ID=24"
+Environment="RMW_IMPLEMENTATION=rmw_zenoh_cpp"
+ExecStart=/home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/run_zg_pointcloud.sh
+ExecStop=/home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/stop_all_navs.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

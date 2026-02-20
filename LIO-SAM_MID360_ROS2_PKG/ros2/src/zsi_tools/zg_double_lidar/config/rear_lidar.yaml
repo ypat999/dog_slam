@@ -60,9 +60,9 @@
     lio.output.dense_body: true
     lio.output.pub_step: 1
     lio.output.footprint_pub_en: true
-    lio.output.tf_base_footprint_frame: "base_footprint"
-    lio.output.world_frame: "world"
-    lio.output.imu_frame: "imu"
+    lio.output.tf_base_footprint_frame: "base_footprint_rear"
+    lio.output.world_frame: "world_rear"
+    lio.output.imu_frame: "imu_rear"
 
     lio.eva.timer: true
 

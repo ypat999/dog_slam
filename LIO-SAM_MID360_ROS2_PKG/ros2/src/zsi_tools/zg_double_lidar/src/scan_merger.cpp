@@ -10,10 +10,13 @@ class ScanMerger : public rclcpp::Node
 public:
     ScanMerger() : Node("scan_merger")
     {
-        this->declare_parameter("use_sim_time", false);
-        this->declare_parameter("front_scan_topic", "/front_lidar/scan");
-        this->declare_parameter("rear_scan_topic", "/rear_lidar/scan");
-        this->declare_parameter("merged_scan_topic", "/scan_merge");
+
+        if (!this->has_parameter("use_sim_time")) {
+            this->declare_parameter("use_sim_time", false);
+        }
+        this->declare_parameter("front_scan_topic", "scan_front");
+        this->declare_parameter("rear_scan_topic", "scan_rear");
+        this->declare_parameter("merged_scan_topic", "scan");
         this->declare_parameter("merge_timeout", 0.1);
         this->declare_parameter("angle_increment", 0.00872);
         this->declare_parameter("range_min", 0.5);
@@ -46,24 +49,27 @@ public:
 private:
     void frontScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan_msg)
     {
-        std::lock_guard<std::mutex> lock(front_mutex_);
+        // RCLCPP_INFO(this->get_logger(), "Received front scan!"); // 添加这行
+        std::lock_guard<std::recursive_mutex> lock(front_mutex_);
         latest_front_scan_ = scan_msg;
         tryMergeAndPublish();
     }
 
     void rearScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr scan_msg)
     {
-        std::lock_guard<std::mutex> lock(rear_mutex_);
+        // RCLCPP_INFO(this->get_logger(), "Received rear scan!"); // 添加这行
+        std::lock_guard<std::recursive_mutex> lock(rear_mutex_);
         latest_rear_scan_ = scan_msg;
         tryMergeAndPublish();
     }
 
     void tryMergeAndPublish()
     {
+        // RCLCPP_INFO(this->get_logger(), "Attempting to merge scans...");
         sensor_msgs::msg::LaserScan::SharedPtr front_scan, rear_scan;
         
         {
-            std::lock_guard<std::mutex> lock(front_mutex_);
+            std::lock_guard<std::recursive_mutex> lock(front_mutex_);
             if (latest_front_scan_)
             {
                 front_scan = latest_front_scan_;
@@ -71,7 +77,7 @@ private:
         }
 
         {
-            std::lock_guard<std::mutex> lock(rear_mutex_);
+            std::lock_guard<std::recursive_mutex> lock(rear_mutex_);
             if (latest_rear_scan_)
             {
                 rear_scan = latest_rear_scan_;
@@ -170,8 +176,8 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr rear_scan_sub_;
     rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr merged_scan_pub_;
 
-    std::mutex front_mutex_;
-    std::mutex rear_mutex_;
+    std::recursive_mutex front_mutex_;
+    std::recursive_mutex rear_mutex_;
     sensor_msgs::msg::LaserScan::SharedPtr latest_front_scan_;
     sensor_msgs::msg::LaserScan::SharedPtr latest_rear_scan_;
 

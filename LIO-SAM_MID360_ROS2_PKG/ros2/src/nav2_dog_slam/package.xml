@@ -68,6 +68,7 @@
   <exec_depend>nav2_costmap_2d</exec_depend>
   <exec_depend>rosbridge_server</exec_depend>
   <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
     
   <member_of_group>rosidl_interface_packages</member_of_group>
 

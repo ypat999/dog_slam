@@ -1,6 +1,7 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
-from launch.substitutions import LaunchConfiguration, FindExecutable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess, TimerAction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, FindExecutable, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
@@ -14,7 +15,7 @@ def generate_launch_description():
     try:
         global_config_path = os.path.join(get_package_share_directory('global_config'), '../../src/global_config')
         sys.path.insert(0, global_config_path)
-        from global_config import DEFAULT_USE_SIM_TIME, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_PARAMS_FILE, MANUAL_BUILD_MAP, AUTO_BUILD_MAP
+        from global_config import DEFAULT_USE_SIM_TIME, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_PARAMS_FILE, MANUAL_BUILD_MAP, AUTO_BUILD_MAP, SLAM_ALGORITHM
     except ImportError:
         # 如果导入失败，使用默认值  
         print("Warning: Failed to import global_config, using default values")
@@ -23,6 +24,38 @@ def generate_launch_description():
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
         MANUAL_BUILD_MAP = False
         AUTO_BUILD_MAP = False
+        SLAM_ALGORITHM = 'super_lio'  # 默认算法
+
+    # 定义不同LIO算法的话题映射配置
+    LIO_TOPIC_CONFIGS = {
+        'fast_lio': {
+            'pointcloud_topic': '/cloud_registered_body',
+            'odom_topic': '/Odometry',
+            'octomap_topic': '/cloud_registered',
+            'target_frame': 'base_footprint'
+        },
+        'lio_sam': {
+            'pointcloud_topic': '/lio_sam/mapping/cloud_registered_raw',
+            'odom_topic': '/lio_sam/mapping/odometry',
+            'octomap_topic': '/lio_sam/mapping/cloud_registered',
+            'target_frame': 'base_footprint'
+        },
+        'point_lio': {
+            'pointcloud_topic': '/cloud_registered_body',
+            'odom_topic': '/Odometry',
+            'octomap_topic': '/cloud_registeredy',
+            'target_frame': 'base_footprint'
+        },
+        'super_lio': {
+            'pointcloud_topic': '/lio/body/cloud',
+            'odom_topic': '/lio/odom',
+            'octomap_topic': '/lio/cloud_world',
+            'target_frame': 'base_footprint'
+        }
+    }
+    
+    # 获取当前选择的LIO算法的话题配置
+    lio_config = LIO_TOPIC_CONFIGS.get(SLAM_ALGORITHM, LIO_TOPIC_CONFIGS['fast_lio'])
 
     use_sim_time = DEFAULT_USE_SIM_TIME
     params_file = NAV2_DEFAULT_PARAMS_FILE
@@ -35,6 +68,93 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     ld = LaunchDescription()
+
+    # 根据SLAM_ALGORITHM参数选择启动不同的SLAM算法
+    # FAST-LIO
+    try:
+        fast_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('fast_lio'), 'launch', 'mapping.launch.py')]),
+            launch_arguments={
+                'use_sim_time': str(use_sim_time)
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'fast_lio'"]))
+        )
+        ld.add_action(fast_lio_launch)
+    except Exception as e:
+        print(f"Fast-LIO package not found: {e}")
+    
+    # Point-LIO
+    try:
+        point_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('point_lio'), 'launch', 'mapping_mid360.launch.py')]),
+            launch_arguments={
+                'use_sim_time': str(use_sim_time)
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'point_lio'"]))
+        )
+        ld.add_action(point_lio_launch)
+    except Exception as e:
+        print(f"Point-LIO package not found: {e}")
+    
+    # LIO-SAM
+    try:
+        lio_sam_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('lio_sam'), 'launch', 'lio_sam.launch.py')]),
+            launch_arguments={
+                'use_sim_time': str(use_sim_time)
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'lio_sam'"]))
+        )
+        ld.add_action(lio_sam_launch)
+    except Exception as e:
+        print(f"LIO-SAM package not found: {e}")
+
+    # Super-LIO
+    try:
+        super_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('super_lio'), 'launch', 'Livox_mid360.py')]),
+            launch_arguments={
+                'use_sim_time': str(use_sim_time)
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio'"]))
+        )
+        ld.add_action(super_lio_launch)
+    except Exception as e:
+        print(f"Super-LIO package not found: {e}")
+
+    # PointCloud to LaserScan 节点
+    pointcloud_to_laserscan_node = Node(
+        package='pointcloud_to_laserscan',
+        executable='pointcloud_to_laserscan_node',
+        name='pointcloud_to_laserscan',
+        remappings=[
+            ('/cloud_in', lio_config['pointcloud_topic']),
+            ('/scan', '/scan'),
+        ],
+        parameters=[{
+            'transform_tolerance': 0.1,
+            'min_height': -0.1,
+            'max_height': 1.0,
+            'angle_min': -3.1,
+            'angle_max': 3.1,
+            'angle_increment': 0.00869347338,
+            'scan_time': 0.1,
+            'range_min': 0.3,
+            'range_max': 100.0,
+            'use_inf': False,
+            'inf_epsilon': 1000.0,
+            'use_sim_time': use_sim_time,
+            'target_frame': lio_config['target_frame'],
+            'concurrency_level': 1,
+        }],
+        output='screen',
+        prefix=['taskset -c 5'],
+    )
+    ld.add_action(pointcloud_to_laserscan_node)
 
     # map_server node
     map_server_node = Node(
@@ -60,7 +180,7 @@ def generate_launch_description():
     # GPS预处理节点 - 处理GPS数据质量问题
     gps_preprocessor_node = Node(
         package='nav2_dog_slam',
-        executable='gps_preprocessor',
+        executable='gps_preprocessor.py',
         name='gps_preprocessor',
         output='screen',
         parameters=[{

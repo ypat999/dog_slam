@@ -29,7 +29,7 @@ class GPSPreprocessor(Node):
         # 订阅原始GPS数据
         self.gps_sub = self.create_subscription(
             NavSatFix,
-            '/gps/fix',
+            '/fix',
             self.gps_callback,
             10
         )
@@ -37,7 +37,7 @@ class GPSPreprocessor(Node):
         # 发布处理后的GPS数据
         self.gps_pub = self.create_publisher(
             NavSatFix,
-            '/gps/fix_filtered',
+            '/fix_filtered',
             10
         )
         
@@ -95,6 +95,20 @@ class GPSPreprocessor(Node):
     
     def gps_callback(self, msg):
         """处理原始GPS数据"""
+        
+        # 打印收到的GPS数据
+        self.get_logger().info('=====================================')
+        self.get_logger().info(f'收到GPS数据:')
+        self.get_logger().info(f'  时间戳: {msg.header.stamp.sec}.{msg.header.stamp.nanosec // 1000000}')
+        self.get_logger().info(f'  坐标系: {msg.header.frame_id}')
+        self.get_logger().info(f'  状态: {msg.status.status} (0=FIX, -1=NO_FIX)')
+        self.get_logger().info(f'  服务: {msg.status.service}')
+        self.get_logger().info(f'  纬度: {msg.latitude}')
+        self.get_logger().info(f'  经度: {msg.longitude}')
+        self.get_logger().info(f'  高度: {msg.altitude}')
+        self.get_logger().info(f'  协方差类型: {msg.position_covariance_type}')
+        self.get_logger().info(f'  协方差: {msg.position_covariance[0]:.6f}, {msg.position_covariance[4]:.6f}, {msg.position_covariance[8]:.6f}')
+        self.get_logger().info('=====================================')
         
         # 检查数据有效性
         is_valid = self.is_valid_gps_data(msg)

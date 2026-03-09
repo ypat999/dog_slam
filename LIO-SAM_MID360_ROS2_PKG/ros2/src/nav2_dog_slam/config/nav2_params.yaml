@@ -207,26 +207,25 @@ velocity_smoother:
 planner_server:
   ros__parameters:
     use_sim_time: false
-    expected_planner_frequency: 0.1
+    expected_planner_frequency: 1.0
     planner_plugins: ["GridBased"]
 
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
 
-      # # ---- 启用方向模型（必需，否则没倒车）----
+      # ---- 启用方向模型（禁止倒车）----
       # motion_model_for_search: "REEDS_SHEPP"
 
-      # # ---- 倒车代价（越高越不愿倒车）----
-      # # 建议：1.5～3.0：允许倒车但倾向前进
+      # ---- 倒车代价（设置为极高值以禁止倒车）----
       # reverse_penalty: 5.0
 
-      # # ---- 切换前进/倒车的代价 ----
+      # ---- 切换前进/倒车的代价 ----
       # change_penalty: 9.9
 
-      # # # ---- 转弯代价（可稍微提高让路径更自然）----
-      # non_straight_penalty: 1.2
+      # # ---- 转弯代价（可稍微提高让路径更自然）----
+      #non_straight_penalty: 1.2
 
-      # retrospective_penalty: 10.0
+      #retrospective_penalty: 10.0
 
       tolerance: 0.5
       planner_timeout: 3.0
@@ -420,8 +419,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
-        inflation_radius: 2.0
-        cost_scaling_factor: 1.0
+        inflation_radius: 0.8
+        cost_scaling_factor: 3.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
       

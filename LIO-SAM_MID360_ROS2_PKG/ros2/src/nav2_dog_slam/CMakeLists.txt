@@ -62,6 +62,24 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install gps preprocessor script as executable
+install(
+  PROGRAMS src/gps_preprocessor.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps test publisher script as executable
+install(
+  PROGRAMS scripts/gps_test_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps fusion verification script as executable
+install(
+  PROGRAMS scripts/verify_gps_fusion.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install web interface files
 install(
   DIRECTORY web

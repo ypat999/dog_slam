@@ -368,7 +368,64 @@ def generate_launch_description():
         }]
     )
     
-    # 4. 导航栈节点
+    # 4. GPS融合节点
+    # GPS预处理节点 - 处理GPS数据质量问题
+    gps_preprocessor_node = Node(
+        package='nav2_dog_slam',
+        executable='gps_preprocessor.py',
+        name='gps_preprocessor',
+        output='screen',
+        parameters=[{
+            'min_satellites': 4,
+            'max_hdop': 2.0,
+            'min_accuracy': 0.1,
+            'status_threshold': 0
+        }]
+    )
+    
+    # NavSat Transform节点 - GPS坐标转换
+    navsat_transform_node = Node(
+        package='robot_localization',
+        executable='navsat_transform_node',
+        name='navsat_transform_node',
+        output='screen',
+        parameters=[os.path.join(bringup_dir, 'config', 'navsat_transform.yaml')],
+        remappings=[
+            ('/imu/data', '/imu/data'),  # IMU数据话题
+            ('/gps/fix', '/fix_filtered'),  # 使用预处理后的GPS数据
+            ('/odometry/gps', '/odometry/gps'),  # 转换后的GPS里程计
+            ('/odometry/filtered', '/odometry/gps_fused')  # EKF融合后的里程计
+        ]
+    )
+    
+    # EKF滤波器节点 - 传感器融合
+    ekf_filter_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[os.path.join(bringup_dir, 'config', 'gps_ekf.yaml')],
+        remappings=[
+            ('/odometry/filtered', '/odometry/gps_fused'),  # GPS融合后的里程计
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static')
+        ]
+    )
+    
+    # GPS融合生命周期管理器
+    lifecycle_manager_gps = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_gps',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'autostart': True,
+            'node_names': ['gps_preprocessor', 'navsat_transform_node', 'ekf_filter_node']
+        }]
+    )
+
+    # 5. 导航栈节点
     navigation_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
         launch_arguments={
@@ -503,6 +560,13 @@ def generate_launch_description():
             )
         )
         
+        # GPS融合节点
+        nav2_actions.append(
+            TimerAction(
+                period=2.5,
+                actions=[gps_preprocessor_node, navsat_transform_node, ekf_filter_node, lifecycle_manager_gps]
+            )
+        )
         
     # 导航栈
     nav2_actions.append(

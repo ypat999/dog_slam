@@ -828,7 +828,7 @@ slam_toolbox_node:
     # 发布频率与变换发布
     # 禁止 slam_toolbox 输出/更新 2D occupancy map（避免覆盖 nav2 的 /map）
     # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
-    map_update_interval: 1.0
+    map_update_interval: 5.0
     publish_occupancy_map: true
 
     # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
@@ -854,7 +854,7 @@ slam_toolbox_node:
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
     scan_topic: /scan
     # 里程计话题
-    odom_topic: /Odometry
+    odom_topic: /aft_mapped_to_init
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
@@ -862,12 +862,12 @@ slam_toolbox_node:
 
     # 传感器范围与匹配参数（可按需调优）
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
-    max_laser_range: 60.0
+    max_laser_range: 100.0
     # 最小激光范围 - 用于 2D 占用地图栅格化的最小激光范围
     min_laser_range: 0.5
 
     # 使能局部scan-matching用于相对定位增强 - 必须启用以支持重定位
-    use_scan_matching: false
+    use_scan_matching: true
 
     # 不启用内置的 map saver 服务以避免意外写盘或覆盖
     # 实例化地图保存服务并自订阅地图话题
@@ -893,7 +893,7 @@ slam_toolbox_node:
     do_loop_closing: true
     
     # # 是否启用交互模式
-    # enable_interactive_mode: false
+    enable_interactive_mode: true
     # interactive_mode: false
     
     # # 暂停新测量处理

@@ -57,6 +57,11 @@ config_by_machine = {
         # RK3588主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_tilt.json',
         'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+        
+        # RK3588主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': True,  # 在线机器人需要保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
     },
     'jqr001': {
         # jqr001主机配置 - LIO-SAM
@@ -83,6 +88,11 @@ config_by_machine = {
         # jqr001主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
         'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+        
+        # jqr001主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/projects/pcd',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - LIO-SAM
@@ -109,6 +119,11 @@ config_by_machine = {
         # DESKTOP-4LS1SSN主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
         'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        
+        # DESKTOP-4LS1SSN主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/pcd',
     },
     'DESKTOP-ypat': {
         # DESKTOP-ypat主机配置 - LIO-SAM
@@ -135,6 +150,42 @@ config_by_machine = {
         # DESKTOP-ypat主机配置 - Livox MID360
         'LIVOX_MID360_CONFIG': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
         'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        
+        # DESKTOP-ypat主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/pcd',
+    },
+    'ywj-B250-D3A': {
+        # ywj-B250-D3A主机配置 - LIO-SAM
+        'ONLINE_LIDAR': False,
+        'LIO_SAM_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'DEFAULT_BAG_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/LOAM/',
+        
+        # ywj-B250-D3A主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/map_sample/map.yaml",
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_sim.yaml',
+        
+        # ywj-B250-D3A主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
+        'FAST_LIO_MAP_FILE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd/test.pcd',  # 添加的地图文件路径
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
+        'DEFAULT_USE_SIM_TIME': True,
+        
+        # ywj-B250-D3A主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_gazebo.json',
+        
+        # ywj-B250-D3A主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': False,  # 台式机离线开发，不保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/pcd',
     }
 }
 
@@ -164,6 +215,11 @@ default_config = {
     # Livox MID360 默认配置
     'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
     'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+    
+    # Super-LIO 默认配置
+    'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+    'SUPER_LIO_SAVE_MAP': True,  # 默认保存地图
+    'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
 }
 
 # 根据当前主机名选择配置
@@ -203,6 +259,11 @@ FAST_LIO_BASE_CODE_PATH = selected_config['FAST_LIO_BASE_CODE_PATH']
 FAST_LIO_LIDAR_TYPE = selected_config['FAST_LIO_LIDAR_TYPE']
 FAST_LIO_MAP_FILE_PATH = selected_config['FAST_LIO_MAP_FILE_PATH']
 DEFAULT_RELIABILITY_OVERRIDE = selected_config['DEFAULT_RELIABILITY_OVERRIDE']
+
+# ========== 导出Super-LIO配置参数 ==========
+SUPER_LIO_BASE_CODE_PATH = selected_config['SUPER_LIO_BASE_CODE_PATH']
+SUPER_LIO_SAVE_MAP = selected_config['SUPER_LIO_SAVE_MAP']
+SUPER_LIO_SAVE_MAP_DIR = selected_config['SUPER_LIO_SAVE_MAP_DIR']
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'
@@ -288,9 +349,36 @@ def update_lio_params():
             except Exception as e:
                 print(f"更新POINT-LIO参数文件 {yaml_file} 时出错: {e}")
 
+# ========== Super-LIO参数文件自动更新 ==========
+def update_super_lio_params():
+    """自动更新Super-LIO的配置文件"""
+    import glob
+    # 获取所有yaml配置文件
+    config_dir = os.path.join(SUPER_LIO_BASE_CODE_PATH, 'src/super_lio/config')
+    if os.path.exists(config_dir):
+        yaml_files = glob.glob(os.path.join(config_dir, "livox_360.yaml"))
+        for yaml_file in yaml_files:
+            try:
+                with open(yaml_file, 'r') as file:
+                    lines = file.readlines()
+                with open(yaml_file, 'w') as file:
+                    for line in lines:
+                        if 'lio.map.save_map:' in line:
+                            file.write(f'    lio.map.save_map: {str(SUPER_LIO_SAVE_MAP).lower()}\n')
+                        elif 'lio.map.save_map_dir:' in line:
+                            file.write(f'    lio.map.save_map_dir: "{SUPER_LIO_SAVE_MAP_DIR}"\n')
+                        else:
+                            file.write(line)
+                print(f"Super-LIO参数文件已更新: {yaml_file}")
+            except Exception as e:
+                print(f"更新Super-LIO参数文件 {yaml_file} 时出错: {e}")
+
 
 # 导入时自动更新Nav2参数
 update_nav2_params()
 
 # 导入时自动更新FAST-LIO参数
 update_lio_params()
+
+# 导入时自动更新Super-LIO参数
+update_super_lio_params()

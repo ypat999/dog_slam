@@ -10,6 +10,11 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 from ament_index_python.packages import get_package_share_directory
 import sys, os
+import math
+
+def deg_to_rad(degrees):
+    """将角度转换为弧度"""
+    return degrees * math.pi / 180.0
 
 def generate_launch_description():
     # 首先导入全局配置
@@ -96,7 +101,7 @@ def generate_launch_description():
     
     declare_use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='false',
+        default_value=str(DEFAULT_USE_SIM_TIME),
         description='Use simulation (Gazebo) clock'
     )
     use_sim_time = LaunchConfiguration('use_sim_time')
@@ -109,7 +114,7 @@ def generate_launch_description():
         executable='super_lio_node',
         name='super_lio_node',
         output='screen',
-        parameters=[config_yaml],
+        parameters=[config_yaml, {'use_sim_time': DEFAULT_USE_SIM_TIME}],
         prefix=['taskset -c 7'],   # 绑定 CPU 7
         arguments=['--ros-args', '--log-level', 'info']
     )
@@ -162,7 +167,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
-        arguments=['-0.1', '0', '-0.1', '0', '-0.5235987756', '0', 'livox_frame', 'base_link'],
+        arguments=['-0.1', '0', '-0.1', '0', str(deg_to_rad(-30)), '0', 'livox_frame', 'base_link'],
         output='screen'
     )
     ld.add_action(livox_frame_to_base_link_tf)

@@ -134,6 +134,14 @@ bool SuperLIO::kf_init(){
   V3 n = init_rot.col(0);
   double yaw = atan2(n(1), n(0));
 
+  LOG(INFO) << GREEN << " ---> [SuperLIO]: Gravity Alignment Results:" << RESET;
+  LOG(INFO) << GREEN << "      Mean Acceleration: [" << mean_acce.transpose() << "]" << RESET;
+  LOG(INFO) << GREEN << "      Gravity Norm: " << g_gravity_norm << RESET;
+  LOG(INFO) << GREEN << "      Measured Gravity: [" << gravity.transpose() << "]" << RESET;
+  LOG(INFO) << GREEN << "      Reference Gravity: [" << ref_gravity.transpose() << "]" << RESET;
+  LOG(INFO) << GREEN << "      Yaw Angle: " << yaw * 180.0 / M_PI << " degrees" << RESET;
+  LOG(INFO) << GREEN << "      IMU Scale: " << g_gravity_norm / mean_acce.norm() << RESET;
+
   M3 R_yaw_inv = Eigen::AngleAxis<scalar>(-yaw, V3::UnitZ()).toRotationMatrix(); 
 
   // init_rot represents the IMU orientation after gravity alignment (level orientation).

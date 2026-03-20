@@ -12,6 +12,7 @@ Panels:
         - /Map2/Topic1
         - /Map3/Topic1
         - /Map4/Topic1
+        - /Odometry1
       Splitter Ratio: 0.43529412150382996
     Tree Height: 814
   - Class: rviz_common/Selection
@@ -57,8 +58,6 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        gps_loc:
-          Value: true
         imu:
           Value: true
         livox_frame:
@@ -76,8 +75,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         map:
-          gps_loc:
-            {}
           odom:
             world:
               imu:
@@ -130,15 +127,15 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 59.241241455078125
-        Min Value: -0.7769989967346191
+        Max Value: 3.2691376209259033
+        Min Value: -0.2084120661020279
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: AxisColor
-      Decay Time: 9000
+      Decay Time: 10
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -179,7 +176,7 @@ Visualization Manager:
       Max Intensity: 214
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: PointCloud2_PGO
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -421,6 +418,45 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /goal_pose
       Value: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz_default_plugins/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: true
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 100
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Shape:
+        Alpha: 1
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.30000001192092896
+        Head Radius: 0.10000000149011612
+        Shaft Length: 1
+        Shaft Radius: 0.05000000074505806
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /lio/robo/odom
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -467,16 +503,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 52.34638977050781
+      Distance: 16.075632095336914
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 46.46324157714844
-        Y: 78.58406066894531
-        Z: -8.840185165405273
+        X: 28.644153594970703
+        Y: 17.01325225830078
+        Z: 0.005770095624029636
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -485,7 +521,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.69013786315918
+      Yaw: 1.60983145236969
     Saved: ~
 Window Geometry:
   Displays:

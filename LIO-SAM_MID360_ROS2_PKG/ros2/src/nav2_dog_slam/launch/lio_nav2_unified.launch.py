@@ -245,7 +245,9 @@ def generate_launch_description():
             {'port': 9090},
             {'default_call_service_timeout': 5.0},
             {'call_services_in_new_thread': True},
-            {'send_action_goals_in_new_thread': True}
+            {'send_action_goals_in_new_thread': True},
+            {'fragment_timeout': 600},  # 增加分片超时时间到600秒
+            {'max_message_size': 100000000}  # 设置最大消息大小为100MB
         ]
     )
     

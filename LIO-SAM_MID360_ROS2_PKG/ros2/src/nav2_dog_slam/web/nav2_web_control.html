@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROS2 Web导航控制</title>
   <!-- 使用简化的依赖，只保留必要的roslib -->
-  <script src="libs/roslib.min.js"></script>
+  <script src="libs/roslib.min.js?v=2"></script>
   <style>
     body {
       background-color: #1e1e1e;
@@ -49,11 +50,8 @@
     
     #robot-marker {
       position: absolute;
-      width: 0;
-      height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 20px solid #ff0000;
+      width: 30px;
+      height: 30px;
       transform: translate(-50%, -50%) rotate(0deg);
       display: none;
       z-index: 10;
@@ -117,10 +115,6 @@
     <div>
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
-      <div style="margin-top: 5px;">
-        <label for="goal-yaw">目标点朝向(yaw)：</label>
-        <input type="number" id="goal-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
-      </div>
       <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
         操作提示：在地图上点击并拖动来设置目标位置和方向
       </div>
@@ -129,10 +123,6 @@
       <button onclick="setInitialPose()">设置初始点</button>
       <button onclick="clearInitialPose()">清除初始点</button>
       <span id="initial-pose-status">未设置</span>
-      <div style="margin-top: 5px;">
-        <label for="initial-pose-yaw">初始点朝向(yaw)：</label>
-        <input type="number" id="initial-pose-yaw" value="0" min="-180" max="180" step="1" style="width: 60px; padding: 2px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">°
-      </div>
       <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
         操作提示：点击"设置初始点"按钮后，在地图上点击并拖动来设置位置和方向
       </div>
@@ -165,6 +155,12 @@
         <label for="free-color">自由空间：</label>
         <input type="color" id="free-color" value="#ffffff" onchange="updateMapColor('free', this.value)">
       </div>
+      <div style="margin-bottom: 8px;">
+        <label>
+          <input type="checkbox" id="show-laser-scan" checked onchange="toggleLaserScan(this.checked)">
+          显示激光扫描数据
+        </label>
+      </div>
     </div>
   </div>
   <div id="map-container">
@@ -186,6 +182,7 @@
     const CMD_TOPIC = "/cmd_vel";
     const GOAL_TOPIC = "/goal_pose";
     const INITIAL_POSE_TOPIC = "/initialpose";
+    const SCAN_TOPIC = "/scan"; // 激光扫描话题
   // 位置源选择：'lio_sam' 或 'amcl' 或 'slam_toolbox'
   let positionSource = 'amcl'; // 默认使用AMCL定位信息
     
@@ -203,12 +200,23 @@
     let robotPosition = { x: 0, y: 0, theta: 0 }; // 添加theta表示机器人朝向
     let goalPosition = null;
     let initialPosePosition = null;
+    let laserScanData = null; // 激光扫描数据
+    let showLaserScan = true; // 是否显示激光扫描数据
     let scale = 1.0; // 缩放比例
     let offsetX = 0; // 偏移量X
     let offsetY = 0; // 偏移量Y
     let isDragging = false;
     let lastMouseX = 0;
     let lastMouseY = 0;
+    
+    // 性能优化：离屏Canvas缓存
+    let mapCacheCanvas = null;
+    let mapCacheCtx = null;
+    let mapCacheValid = false;
+    let lastDrawTime = 0;
+    let drawRequestPending = false;
+    let wheelTimeout = null; // 滚轮防抖
+    let directionAnimationFrame = null; // 方向线动画帧
     
     // 初始化Canvas
     function initCanvas() {
@@ -276,6 +284,11 @@
     function handleWheel(event) {
       event.preventDefault();
       
+      // 清除之前的定时器
+      if (wheelTimeout) {
+        clearTimeout(wheelTimeout);
+      }
+      
       // 获取鼠标在Canvas中的位置
       const rect = canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
@@ -294,16 +307,24 @@
       offsetX = mouseX - worldX * scale;
       offsetY = mouseY - worldY * scale;
       
-      // 重新绘制地图
-      drawMap();
+      // 防抖：延迟绘制，避免频繁重绘
+      wheelTimeout = setTimeout(() => {
+        drawMap();
+      }, 16); // 约60fps
     }
     
 
     
-    // 处理Canvas点击事件（设置目标点或初始点）
+    // 处理Canvas点击事件（开始设置目标点或初始点）
      function handleCanvasClick(event) {
        // 如果正在设置方向，则不处理点击事件
        if (isSettingDirection) return;
+       
+       // 如果在设置初始点模式，不允许点击（必须通过拖动设置）
+       if (window.settingInitialPose) {
+         showMessage('请拖动鼠标来设置初始点和方向');
+         return;
+       }
        
        const rect = canvas.getBoundingClientRect();
        const mouseX = event.clientX - rect.left;
@@ -313,21 +334,19 @@
        const worldX = (mouseX - offsetX) / scale;
        const worldY = (offsetY - mouseY) / scale;
        
-       if (window.settingInitialPose) {
-         // 在设置初始点模式下，点击即设置初始点（无方向）
-         publishInitialPose(worldX, worldY, 0);
-         window.settingInitialPose = false;
-         canvas.style.cursor = 'default';
+       // 检查坐标是否在有效范围内
+       if (currentMap) {
+         const mapWidth = currentMap.info.width * currentMap.info.resolution;
+         const mapHeight = currentMap.info.height * currentMap.info.resolution;
          
-         // 恢复按钮状态
-         const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
-         if (setInitialPoseButton) {
-           setInitialPoseButton.textContent = '设置初始点';
-           setInitialPoseButton.onclick = setInitialPose;
+         if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
+           // 正常模式：记录拖动起始点用于设置目标点
+           dragStartX = mouseX;
+           dragStartY = mouseY;
+           isSettingDirection = true;
+           canvas.style.cursor = 'crosshair';
+           event.preventDefault();
          }
-       } else {
-         // 正常模式下，点击即设置目标点（无方向）
-         publishGoal(worldX, worldY, 0);
        }
      }
      
@@ -335,9 +354,8 @@
      let dragStartX, dragStartY, isSettingDirection = false;
      
      function handleMouseDownForDirection(event) {
-       // 只有在设置初始点模式下或者按住Ctrl/Shift键时才启用方向设置
-       if (window.settingInitialPose || event.ctrlKey || event.shiftKey) {
-         // 检查是否是在地图上点击（而不是在控件上）
+       // 如果在设置初始点模式，允许点击开始拖动
+       if (window.settingInitialPose) {
          const rect = canvas.getBoundingClientRect();
          const mouseX = event.clientX - rect.left;
          const mouseY = event.clientY - rect.top;
@@ -352,54 +370,64 @@
            const mapHeight = currentMap.info.height * currentMap.info.resolution;
            
            if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
-             dragStartX = event.clientX - rect.left;
-             dragStartY = event.clientY - rect.top;
+             dragStartX = mouseX;
+             dragStartY = mouseY;
              isSettingDirection = true;
              canvas.style.cursor = 'crosshair';
-             event.preventDefault();
+             event.preventDefault(); // 阻止click事件触发
+             event.stopPropagation(); // 阻止事件冒泡
            }
          }
        }
+       // 正常模式下的点击由 handleCanvasClick 处理
      }
      
      function handleMouseMoveForDirection(event) {
-       if (isSettingDirection) {
-         // 添加视觉反馈，显示一条线表示方向
-         // 清除之前的绘制
-         drawMap();
-         
-         // 绘制方向线
-         const rect = canvas.getBoundingClientRect();
-         const currentX = event.clientX - rect.left;
-         const currentY = event.clientY - rect.top;
-         
-         ctx.beginPath();
-         ctx.moveTo(dragStartX, dragStartY);
-         ctx.lineTo(currentX, currentY);
-         ctx.strokeStyle = '#ff0000';
-         ctx.lineWidth = 2;
-         ctx.stroke();
-         
-         // 绘制箭头头部
-         const angle = Math.atan2(currentY - dragStartY, currentX - dragStartX);
-         const arrowSize = 10;
-         
-         ctx.beginPath();
-         ctx.moveTo(currentX, currentY);
-         ctx.lineTo(
-           currentX - arrowSize * Math.cos(angle - Math.PI/6),
-           currentY - arrowSize * Math.sin(angle - Math.PI/6)
-         );
-         ctx.moveTo(currentX, currentY);
-         ctx.lineTo(
-           currentX - arrowSize * Math.cos(angle + Math.PI/6),
-           currentY - arrowSize * Math.sin(angle + Math.PI/6)
-         );
-         ctx.stroke();
-         
-         event.preventDefault();
-       }
-     }
+      if (isSettingDirection) {
+        // 取消之前的动画帧
+        if (directionAnimationFrame) {
+          cancelAnimationFrame(directionAnimationFrame);
+        }
+        
+        // 使用requestAnimationFrame优化重绘
+        directionAnimationFrame = requestAnimationFrame(() => {
+          // 添加视觉反馈，显示一条线表示方向
+          // 清除之前的绘制
+          drawMap();
+          
+          // 绘制方向线
+          const rect = canvas.getBoundingClientRect();
+          const currentX = event.clientX - rect.left;
+          const currentY = event.clientY - rect.top;
+          
+          ctx.beginPath();
+          ctx.moveTo(dragStartX, dragStartY);
+          ctx.lineTo(currentX, currentY);
+          ctx.strokeStyle = '#ff0000';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          
+          // 绘制箭头头部
+          const angle = Math.atan2(currentY - dragStartY, currentX - dragStartX);
+          const arrowSize = 10;
+          
+          ctx.beginPath();
+          ctx.moveTo(currentX, currentY);
+          ctx.lineTo(
+            currentX - arrowSize * Math.cos(angle - Math.PI/6),
+            currentY - arrowSize * Math.sin(angle - Math.PI/6)
+          );
+          ctx.moveTo(currentX, currentY);
+          ctx.lineTo(
+            currentX - arrowSize * Math.cos(angle + Math.PI/6),
+            currentY - arrowSize * Math.sin(angle + Math.PI/6)
+          );
+          ctx.stroke();
+        });
+        
+        event.preventDefault();
+      }
+    }
      
      function handleMouseUpForDirection(event) {
        if (isSettingDirection) {
@@ -409,10 +437,12 @@
          
          // 只有当拖动距离足够大时才设置方向
          const distance = Math.sqrt(Math.pow(endX - dragStartX, 2) + Math.pow(endY - dragStartY, 2));
+         
+         // 转换为地图坐标
+         const startX = (dragStartX - offsetX) / scale;
+         const startY = (offsetY - dragStartY) / scale;
+         
          if (distance > 5) { // 至少拖动5像素才认为是有效的方向设置
-           // 转换为地图坐标
-           const startX = (dragStartX - offsetX) / scale;
-           const startY = (offsetY - dragStartY) / scale;
            const endXWorld = (endX - offsetX) / scale;
            const endYWorld = (offsetY - endY) / scale;
            
@@ -439,13 +469,10 @@
              publishGoal(startX, startY, angle);
            }
          } else {
-           // 如果拖动距离太小，就当作普通点击处理
-           const worldX = (dragStartX - offsetX) / scale;
-           const worldY = (offsetY - dragStartY) / scale;
-           
+           // 如果拖动距离太小，就当作普通点击处理（无方向）
            if (window.settingInitialPose) {
              // 设置初始点模式
-             publishInitialPose(worldX, worldY, 0);
+             publishInitialPose(startX, startY, 0);
              window.settingInitialPose = false;
              canvas.style.cursor = 'default';
              
@@ -457,7 +484,7 @@
              }
            } else {
              // 正常模式 - 设置目标点
-             publishGoal(worldX, worldY, 0);
+             publishGoal(startX, startY, 0);
            }
          }
          
@@ -487,97 +514,160 @@
       drawMap();
     }
     
-    // 绘制地图
-     function drawMap() {
-       ctx.clearRect(0, 0, canvas.width, canvas.height);
-       
-       if (!currentMap) {
-         // 如果没有地图数据，显示提示信息
-         ctx.fillStyle = '#999';
-         ctx.font = '16px Arial';
-         ctx.textAlign = 'center';
-         ctx.textBaseline = 'middle';
-         ctx.fillText('等待地图数据...', canvas.width / 2, canvas.height / 2);
-         return;
-       }
-       
-       const info = currentMap.info;
-       const data = currentMap.data;
-       
-       // 计算每个格子的大小（像素）
-       const cellSize = info.resolution * scale;
-       
-       // 找到地图中心点（世界坐标）
-       const mapCenterX = info.width * info.resolution / 2;
-       const mapCenterY = info.height * info.resolution / 2;
-       
-       // 计算地图绘制的起始位置（Canvas坐标）
-       // 不再以中心点计算，而是以左下角为基准
-       const startX = offsetX;
-       const startY = offsetY - info.height * info.resolution * scale;
-       
-       // 只绘制可见区域内的格子，提高性能
-       const visibleStartCol = Math.max(0, Math.floor(-startX / cellSize));
-       const visibleEndCol = Math.min(info.width, Math.ceil((canvas.width - startX) / cellSize) + 1);
-       const visibleStartRow = Math.max(0, Math.floor(-startY / cellSize));
-       const visibleEndRow = Math.min(info.height, Math.ceil((canvas.height - startY) / cellSize) + 1);
-       
-       // 绘制可见区域的格子
-       // 注意：这里调整了行的遍历顺序，实现地图上下翻转
-       for (let row = visibleStartRow; row < visibleEndRow; row++) {
-         for (let col = visibleStartCol; col < visibleEndCol; col++) {
-           // 计算数组索引时使用翻转的行号，实现地图上下翻转
-           const flippedRow = info.height - 1 - row;
-           const index = flippedRow * info.width + col;
-           const value = data[index];
-           
-           // 根据占用值设置颜色
-           if (value === -1) { // 未知
-             ctx.fillStyle = mapColors.unknown;
-           } else if (value > 50) { // 障碍物
-             ctx.fillStyle = mapColors.obstacle;
-           } else if (value > 0) { // 可能障碍物
-             ctx.fillStyle = mapColors.possibleObstacle;
-           } else { // 自由空间
-             ctx.fillStyle = mapColors.free;
-           }
-           
-           // 绘制格子
-           const x = startX + col * cellSize;
-           const y = startY + row * cellSize;
-           ctx.fillRect(x, y, cellSize, cellSize);
-           
-           // 绘制网格线（仅在缩放级别足够大时）
-           if (cellSize > 2) {
-             ctx.strokeStyle = '#dddddd';
-             ctx.strokeRect(x, y, cellSize, cellSize);
-           }
-         }
-       }
-       
-       // 绘制原点（现在是左下角）
-       ctx.strokeStyle = '#0000ff';
-       ctx.lineWidth = 2;
-       ctx.beginPath();
-       ctx.arc(offsetX, offsetY, 5, 0, 2 * Math.PI);
-       ctx.stroke();
-       
-       // 添加原点标签
-       ctx.fillStyle = '#0000ff';
-       ctx.font = '12px Arial';
-       ctx.textAlign = 'left';
-       ctx.textBaseline = 'top';
-       ctx.fillText('原点 (0,0)', offsetX + 8, offsetY + 8);
-       
-       // 绘制机器人位置
-       updateRobotMarker();
-       
-       // 绘制目标位置
-       updateGoalMarker();
-       
-       // 更新初始点标记
-       updateInitialPoseMarker();
-     }
+    // 创建或更新地图缓存
+    function updateMapCache() {
+      if (!currentMap) return;
+      
+      const info = currentMap.info;
+      const data = currentMap.data;
+      
+      // 创建离屏Canvas（如果不存在或尺寸不匹配）
+      if (!mapCacheCanvas || mapCacheCanvas.width !== info.width || mapCacheCanvas.height !== info.height) {
+        mapCacheCanvas = document.createElement('canvas');
+        mapCacheCanvas.width = info.width;
+        mapCacheCanvas.height = info.height;
+        mapCacheCtx = mapCacheCanvas.getContext('2d');
+        mapCacheValid = false;
+      }
+      
+      // 如果缓存无效，重新生成
+      if (!mapCacheValid) {
+        const imageData = mapCacheCtx.createImageData(info.width, info.height);
+        const pixels = imageData.data;
+        
+        // 预解析颜色
+        const obstacleColor = hexToRgb(mapColors.obstacle);
+        const possibleObstacleColor = hexToRgb(mapColors.possibleObstacle);
+        const unknownColor = hexToRgb(mapColors.unknown);
+        const freeColor = hexToRgb(mapColors.free);
+        
+        // 批量处理像素数据，注意需要上下翻转
+        for (let row = 0; row < info.height; row++) {
+          // 翻转行号，实现地图上下翻转
+          const flippedRow = info.height - 1 - row;
+          
+          for (let col = 0; col < info.width; col++) {
+            // 计算原始数据索引（使用翻转后的行号）
+            const dataIndex = flippedRow * info.width + col;
+            const value = data[dataIndex];
+            
+            // 计算像素索引（正常顺序）
+            const pixelIndex = (row * info.width + col) * 4;
+            
+            let color;
+            if (value === -1) {
+              color = unknownColor;
+            } else if (value > 50) {
+              color = obstacleColor;
+            } else if (value > 0) {
+              color = possibleObstacleColor;
+            } else {
+              color = freeColor;
+            }
+            
+            pixels[pixelIndex] = color.r;
+            pixels[pixelIndex + 1] = color.g;
+            pixels[pixelIndex + 2] = color.b;
+            pixels[pixelIndex + 3] = 255;
+          }
+        }
+        
+        mapCacheCtx.putImageData(imageData, 0, 0);
+        mapCacheValid = true;
+      }
+    }
+    
+    // 十六进制颜色转RGB
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    }
+    
+    // 优化的地图绘制函数
+    function drawMap() {
+      const now = performance.now();
+      
+      // 节流：限制绘制频率
+      if (drawRequestPending) {
+        return;
+      }
+      
+      drawRequestPending = true;
+      
+      requestAnimationFrame(() => {
+        drawRequestPending = false;
+        
+        const drawStartTime = performance.now();
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        if (!currentMap) {
+          ctx.fillStyle = '#999';
+          ctx.font = '16px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('等待地图数据...', canvas.width / 2, canvas.height / 2);
+          return;
+        }
+        
+        const info = currentMap.info;
+        
+        // 更新地图缓存
+        updateMapCache();
+        
+        // 计算地图在Canvas上的绘制参数
+        const mapWidthPixels = info.width * info.resolution * scale;
+        const mapHeightPixels = info.height * info.resolution * scale;
+        
+        const startX = offsetX;
+        const startY = offsetY - mapHeightPixels;
+        
+        // 使用drawImage直接绘制缓存的地图（比逐个格子绘制快得多）
+        if (mapCacheCanvas) {
+          ctx.imageSmoothingEnabled = false; // 禁用平滑，保持像素清晰
+          ctx.drawImage(mapCacheCanvas, startX, startY, mapWidthPixels, mapHeightPixels);
+        }
+        
+        // 绘制原点
+        ctx.strokeStyle = '#0000ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(offsetX, offsetY, 5, 0, 2 * Math.PI);
+        ctx.stroke();
+        
+        // 添加原点标签
+        ctx.fillStyle = '#0000ff';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('原点 (0,0)', offsetX + 8, offsetY + 8);
+        
+        // 绘制机器人位置
+        updateRobotMarker();
+        
+        // 绘制目标位置
+        updateGoalMarker();
+        
+        // 更新初始点标记
+        updateInitialPoseMarker();
+        
+        // 绘制激光扫描数据
+        drawLaserScan();
+        
+        const drawEndTime = performance.now();
+        const drawDuration = drawEndTime - drawStartTime;
+        
+        // 性能监控（每秒最多输出一次）
+        if (now - lastDrawTime > 1000) {
+          console.log(`地图渲染耗时: ${drawDuration.toFixed(2)}ms`);
+          lastDrawTime = now;
+        }
+      });
+    }
     
     // 更新机器人标记位置
      function updateRobotMarker() {
@@ -589,11 +679,39 @@
          const canvasX = offsetX + robotPosition.x * scale;
          const canvasY = offsetY - robotPosition.y * scale;
          
-         // 设置标记位置和旋转角度
+         // 设置标记位置
          marker.style.left = canvasX + 'px';
          marker.style.top = canvasY + 'px';
-         marker.style.transform = 'translate(-50%, -50%) rotate(' + (robotPosition.theta * 180 / Math.PI) + 'deg)';
+         marker.style.transform = 'translate(-50%, -50%)'; // 不旋转div，在SVG内部旋转
          marker.style.display = 'block';
+         
+         // 清除之前的SVG
+         const existingSvg = marker.querySelector('svg');
+         if (existingSvg) {
+           existingSvg.remove();
+         }
+         
+         // 创建SVG箭头
+         const svgNS = 'http://www.w3.org/2000/svg';
+         const svg = document.createElementNS(svgNS, 'svg');
+         svg.setAttribute('width', '30');
+         svg.setAttribute('height', '30');
+         svg.setAttribute('viewBox', '0 0 30 30');
+         
+         // 创建三角形路径（尖角朝向右侧，即x轴正方向）
+         // 只有3个顶点：尖角在 (25, 15)，底边左端在 (2, 5)，底边右端在 (2, 25)
+         const path = document.createElementNS(svgNS, 'path');
+         path.setAttribute('d', 'M 25 15 L 2 5 L 2 25 Z'); // 尖角朝右的等腰三角形
+         path.setAttribute('fill', '#ff0000');
+         path.setAttribute('stroke', '#cc0000');
+         path.setAttribute('stroke-width', '1');
+         
+         // 在SVG内部旋转三角形（SVG y轴向下，地图y轴向上，需要取反）
+         const rotationAngle = -robotPosition.theta * (180 / Math.PI);
+         path.setAttribute('transform', `rotate(${rotationAngle} 15 15)`);
+         
+         svg.appendChild(path);
+         marker.appendChild(svg);
        } else {
          marker.style.display = 'none';
        }
@@ -622,19 +740,38 @@
              existingArrow.remove();
            }
            
-           // 创建箭头元素
+           // 使用SVG创建细长的等腰三角形箭头
            const arrow = document.createElement('div');
            arrow.id = 'goal-arrow';
            arrow.style.position = 'absolute';
-           arrow.style.width = '0';
-           arrow.style.height = '0';
-           arrow.style.borderLeft = '8px solid transparent';
-           arrow.style.borderRight = '8px solid transparent';
-           arrow.style.borderBottom = '12px solid #00ff00';
-           arrow.style.transform = `translate(-50%, -50%) rotate(${goalPosition.theta}rad)`;
+           arrow.style.width = '30px';
+           arrow.style.height = '30px';
            arrow.style.zIndex = '5';
            arrow.style.left = canvasX + 'px';
            arrow.style.top = canvasY + 'px';
+           arrow.style.transform = 'translate(-50%, -50%)'; // 不旋转div，在SVG内部旋转
+           
+           // 创建SVG箭头
+           const svgNS = 'http://www.w3.org/2000/svg';
+           const svg = document.createElementNS(svgNS, 'svg');
+           svg.setAttribute('width', '30');
+           svg.setAttribute('height', '30');
+           svg.setAttribute('viewBox', '0 0 30 30');
+           
+           // 创建三角形路径（尖角朝向右侧，即x轴正方向）
+           // 只有3个顶点：尖角在 (25, 15)，底边左端在 (2, 5)，底边右端在 (2, 25)
+           const path = document.createElementNS(svgNS, 'path');
+           path.setAttribute('d', 'M 25 15 L 2 5 L 2 25 Z'); // 尖角朝右的等腰三角形
+           path.setAttribute('fill', '#00ff00');
+           path.setAttribute('stroke', '#008800');
+           path.setAttribute('stroke-width', '1');
+           
+           // 在SVG内部旋转三角形（SVG y轴向下，地图y轴向上，需要取反）
+           const rotationAngle = -goalPosition.theta * (180 / Math.PI);
+           path.setAttribute('transform', `rotate(${rotationAngle} 15 15)`);
+           
+           svg.appendChild(path);
+           arrow.appendChild(svg);
            
            document.getElementById('map-container').appendChild(arrow);
          }
@@ -664,6 +801,7 @@
         document.getElementById("conn-status").innerHTML = "✅ 已连接";
         document.getElementById("conn-status").style.color = "#00ff7f";
         console.log('已连接到ROS Bridge服务器');
+        console.log('WebSocket URL:', wsUrl);
       });
 
       ros.on("error", function (error) {
@@ -685,30 +823,43 @@
         messageType: 'nav_msgs/OccupancyGrid'
       });
       
+      console.log('正在订阅地图话题:', MAP_TOPIC);
+      
       mapTopic.subscribe(function(mapMsg) {
-        console.log('收到地图数据:', mapMsg.info.width, 'x', mapMsg.info.height, '分辨率:', mapMsg.info.resolution);
+        console.log('=== 收到地图数据 ===');
+        console.log('地图尺寸:', mapMsg.info.width, 'x', mapMsg.info.height);
+        console.log('分辨率:', mapMsg.info.resolution, 'm/cell');
+        console.log('原点:', mapMsg.info.origin.position.x, ',', mapMsg.info.origin.position.y);
+        console.log('地图数据长度:', mapMsg.data ? mapMsg.data.length : 'undefined');
+        console.log('消息类型:', typeof mapMsg);
+        console.log('==================');
         
-        // 更新地图信息显示
-        document.getElementById('map-info').innerHTML = `地图信息：${mapMsg.info.width}x${mapMsg.info.height}，分辨率：${mapMsg.info.resolution}m`;
+        try {
+          // 更新地图信息显示
+          document.getElementById('map-info').innerHTML = `地图信息：${mapMsg.info.width}x${mapMsg.info.height}，分辨率：${mapMsg.info.resolution}m`;
+          
+          // 保存地图数据
+          currentMap = mapMsg;
         
-        // 保存地图数据
-        currentMap = mapMsg;
-        
-        // 初始调整缩放和偏移，使地图以左下角为原点
-        const mapWidthMeters = mapMsg.info.width * mapMsg.info.resolution;
-        const mapHeightMeters = mapMsg.info.height * mapMsg.info.resolution;
-        
-        // 计算合适的初始缩放比例
-        const scaleX = canvas.width / mapWidthMeters * 0.95; // 增加初始缩放比例
-        const scaleY = canvas.height / mapHeightMeters * 0.95;
-        scale = Math.min(scaleX, scaleY);
-        
-        // 设置原点为左下角
-        offsetX = 0;
-        offsetY = canvas.height;
-        
-        // 绘制地图
-        drawMap();
+          // 初始调整缩放和偏移，使地图以左下角为原点
+          const mapWidthMeters = mapMsg.info.width * mapMsg.info.resolution;
+          const mapHeightMeters = mapMsg.info.height * mapMsg.info.resolution;
+          
+          // 计算合适的初始缩放比例
+          const scaleX = canvas.width / mapWidthMeters * 0.95; // 增加初始缩放比例
+          const scaleY = canvas.height / mapHeightMeters * 0.95;
+          scale = Math.min(scaleX, scaleY);
+          
+          // 设置原点为左下角
+          offsetX = 0;
+          offsetY = canvas.height;
+          
+          // 绘制地图
+          drawMap();
+        } catch (error) {
+          console.error('处理地图数据时出错:', error);
+          document.getElementById('map-info').innerHTML = `地图信息：处理失败 - ${error.message}`;
+        }
       });
       
       // 订阅LIO-SAM里程计主题
@@ -789,6 +940,35 @@
           
           // 重绘地图以更新机器人位置
           drawMap();
+        }
+      });
+      
+      // 订阅激光扫描话题
+      var scanTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: SCAN_TOPIC,
+        messageType: 'sensor_msgs/LaserScan'
+      });
+      
+      console.log('正在订阅激光扫描话题:', SCAN_TOPIC);
+      
+      scanTopic.subscribe(function(scanMsg) {
+        try {
+          // 保存激光扫描数据
+          laserScanData = {
+            angle_min: scanMsg.angle_min,
+            angle_max: scanMsg.angle_max,
+            angle_increment: scanMsg.angle_increment,
+            range_min: scanMsg.range_min,
+            range_max: scanMsg.range_max,
+            ranges: scanMsg.ranges,
+            intensities: scanMsg.intensities
+          };
+          
+          // 重绘地图以更新激光扫描显示
+          drawMap();
+        } catch (error) {
+          console.error('处理激光扫描数据时出错:', error);
         }
       });
       
@@ -974,22 +1154,93 @@
           existingArrow.remove();
         }
         
-        // 创建箭头元素
+        // 使用SVG创建细长的等腰三角形箭头
         const arrow = document.createElement('div');
         arrow.id = 'initial-pose-arrow';
         arrow.style.position = 'absolute';
-        arrow.style.width = '0';
-        arrow.style.height = '0';
-        arrow.style.borderLeft = '8px solid transparent';
-        arrow.style.borderRight = '8px solid transparent';
-        arrow.style.borderBottom = '12px solid #ff8800';
-        arrow.style.transform = `translate(-50%, -50%) rotate(${initialPosePosition.theta}rad)`;
+        arrow.style.width = '30px';
+        arrow.style.height = '30px';
         arrow.style.zIndex = '6';
         arrow.style.left = canvasX + 'px';
         arrow.style.top = canvasY + 'px';
+        arrow.style.transform = 'translate(-50%, -50%)'; // 不旋转div，在SVG内部旋转
+        
+        // 创建SVG箭头
+        const svgNS = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(svgNS, 'svg');
+        svg.setAttribute('width', '30');
+        svg.setAttribute('height', '30');
+        svg.setAttribute('viewBox', '0 0 30 30');
+        
+        // 创建三角形路径（尖角朝向右侧，即x轴正方向）
+        // 只有3个顶点：尖角在 (25, 15)，底边左端在 (2, 5)，底边右端在 (2, 25)
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', 'M 25 15 L 2 5 L 2 25 Z'); // 尖角朝右的等腰三角形
+        path.setAttribute('fill', '#ff8800');
+        path.setAttribute('stroke', '#cc6600');
+        path.setAttribute('stroke-width', '1');
+        
+        // 在SVG内部旋转三角形（SVG y轴向下，地图y轴向上，需要取反）
+        const rotationAngle = -initialPosePosition.theta * (180 / Math.PI);
+        path.setAttribute('transform', `rotate(${rotationAngle} 15 15)`);
+        
+        svg.appendChild(path);
+        arrow.appendChild(svg);
         
         document.getElementById('map-container').appendChild(arrow);
       }
+    }
+    
+    // 绘制激光扫描数据
+    function drawLaserScan() {
+      if (!laserScanData || !currentMap || !showLaserScan) {
+        return;
+      }
+      
+      const { angle_min, angle_max, angle_increment, range_min, range_max, ranges } = laserScanData;
+      
+      // 转换机器人位置到Canvas坐标
+      const robotCanvasX = offsetX + robotPosition.x * scale;
+      const robotCanvasY = offsetY - robotPosition.y * scale;
+      
+      // 设置激光扫描点的样式
+      ctx.fillStyle = '#ff0000';
+      ctx.globalAlpha = 0.6; // 半透明
+      
+      // 遍历所有激光扫描点
+      for (let i = 0; i < ranges.length; i++) {
+        const range = ranges[i];
+        
+        // 检查距离是否有效
+        if (range < range_min || range > range_max || !isFinite(range)) {
+          continue;
+        }
+        
+        // 计算激光点的角度
+        const angle = angle_min + i * angle_increment;
+        
+        // 计算激光点在世界坐标系中的位置
+        const worldX = robotPosition.x + range * Math.cos(angle + robotPosition.theta);
+        const worldY = robotPosition.y + range * Math.sin(angle + robotPosition.theta);
+        
+        // 转换到Canvas坐标
+        const canvasX = offsetX + worldX * scale;
+        const canvasY = offsetY - worldY * scale;
+        
+        // 绘制激光点
+        ctx.beginPath();
+        ctx.arc(canvasX, canvasY, 2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      // 恢复透明度
+      ctx.globalAlpha = 1.0;
+    }
+    
+    // 切换激光扫描显示
+    function toggleLaserScan(show) {
+      showLaserScan = show;
+      drawMap();
     }
     
     // 发布目标点
@@ -1186,6 +1437,8 @@
     function updateMapColor(colorType, colorValue) {
       mapColors[colorType] = colorValue;
       console.log(`已更新${colorType}颜色为:`, colorValue);
+      // 标记缓存无效，下次绘制时会重新生成
+      mapCacheValid = false;
       // 重新绘制地图以应用新颜色
       drawMap();
     }

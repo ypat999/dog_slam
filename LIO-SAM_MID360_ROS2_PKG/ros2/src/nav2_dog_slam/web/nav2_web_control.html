@@ -317,12 +317,43 @@
     
     // 处理Canvas点击事件（开始设置目标点或初始点）
      function handleCanvasClick(event) {
+       // 如果刚刚处理了mouseup事件，不再处理click事件
+       if (hasMouseUp) {
+         hasMouseUp = false;
+         event.preventDefault();
+         event.stopPropagation();
+         return;
+       }
+       
+       // 如果发生了拖动操作，不再处理click事件
+       if (hasDragged) {
+         hasDragged = false;
+         hasMouseDown = false;
+         event.preventDefault();
+         event.stopPropagation();
+         return;
+       }
+       
+       // 如果已经处理了mousedown事件，不再处理click事件
+       if (hasMouseDown) {
+         hasMouseDown = false;
+         event.preventDefault();
+         event.stopPropagation();
+         return;
+       }
+       
        // 如果正在设置方向，则不处理点击事件
-       if (isSettingDirection) return;
+       if (isSettingDirection) {
+         event.preventDefault();
+         event.stopPropagation();
+         return;
+       }
        
        // 如果在设置初始点模式，不允许点击（必须通过拖动设置）
        if (window.settingInitialPose) {
          showMessage('请拖动鼠标来设置初始点和方向');
+         event.preventDefault();
+         event.stopPropagation();
          return;
        }
        
@@ -346,14 +377,22 @@
            isSettingDirection = true;
            canvas.style.cursor = 'crosshair';
            event.preventDefault();
+           event.stopPropagation();
          }
        }
      }
      
      // 添加鼠标按下事件用于拖动设置方向
      let dragStartX, dragStartY, isSettingDirection = false;
+     let hasMouseDown = false; // 跟踪是否已经处理了mousedown事件
+     let hasDragged = false; // 跟踪是否发生了拖动操作
+     let hasMouseUp = false; // 跟踪是否刚刚处理了mouseup事件
      
      function handleMouseDownForDirection(event) {
+       hasMouseDown = true;
+       hasDragged = false;
+       hasMouseUp = false;
+       
        // 如果在设置初始点模式，允许点击开始拖动
        if (window.settingInitialPose) {
          const rect = canvas.getBoundingClientRect();
@@ -374,16 +413,37 @@
              dragStartY = mouseY;
              isSettingDirection = true;
              canvas.style.cursor = 'crosshair';
-             event.preventDefault(); // 阻止click事件触发
-             event.stopPropagation(); // 阻止事件冒泡
+           }
+         }
+       } else {
+         // 正常模式：记录拖动起始点用于设置目标点
+         const rect = canvas.getBoundingClientRect();
+         const mouseX = event.clientX - rect.left;
+         const mouseY = event.clientY - rect.top;
+         
+         // 转换为地图坐标
+         const worldX = (mouseX - offsetX) / scale;
+         const worldY = (offsetY - mouseY) / scale;
+         
+         // 检查坐标是否在有效范围内
+         if (currentMap) {
+           const mapWidth = currentMap.info.width * currentMap.info.resolution;
+           const mapHeight = currentMap.info.height * currentMap.info.resolution;
+           
+           if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
+             dragStartX = mouseX;
+             dragStartY = mouseY;
+             isSettingDirection = true;
+             canvas.style.cursor = 'crosshair';
            }
          }
        }
-       // 正常模式下的点击由 handleCanvasClick 处理
      }
      
      function handleMouseMoveForDirection(event) {
       if (isSettingDirection) {
+        hasDragged = true; // 标记发生了拖动
+        
         // 取消之前的动画帧
         if (directionAnimationFrame) {
           cancelAnimationFrame(directionAnimationFrame);
@@ -493,6 +553,11 @@
          drawMap(); // 重新绘制地图以清除方向线
          event.preventDefault();
        }
+       
+       // 重置mousedown标志
+       hasMouseDown = false;
+       hasDragged = false; // 重置拖动标志
+       hasMouseUp = true; // 标记刚刚处理了mouseup
      }
     
     // 重置缩放和偏移

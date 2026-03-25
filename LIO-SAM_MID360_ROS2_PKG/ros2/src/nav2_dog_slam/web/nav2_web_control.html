@@ -242,6 +242,8 @@
     let mapRenderPending = false; // 地图渲染待处理
     let laserRenderPending = false; // 激光渲染待处理
     let lastLaserScanData = null; // 最新的激光数据
+    let lastPlanPath = null; // 最新的路径规划数据
+    let lastFootprint = null; // 最新的机器人足迹数据
     
     // 初始化Canvas
     function initCanvas() {
@@ -855,6 +857,12 @@
       ctx.textBaseline = 'top';
       ctx.fillText('原点 (0,0)', offsetX + 8, offsetY + 8);
       
+      // 绘制路径规划
+      drawPlanPath();
+      
+      // 绘制机器人足迹
+      drawRobotFootprint();
+      
       // 绘制机器人位置
       updateRobotMarker();
       
@@ -1162,7 +1170,7 @@
            arrow.style.position = 'absolute';
            arrow.style.width = '30px';
            arrow.style.height = '30px';
-           arrow.style.zIndex = '5';
+           arrow.style.zIndex = '1';
            arrow.style.left = canvasX + 'px';
            arrow.style.top = canvasY + 'px';
            arrow.style.transform = 'translate(-50%, -50%)'; // 不旋转div，在SVG内部旋转
@@ -1351,10 +1359,11 @@
           const cacheRebuildTime_ms = drawResult && drawResult.cacheRebuildTime ? drawResult.cacheRebuildTime : 0;
           
           if (mapUpdateCount % 10 === 0 || totalTime > 100) {
+            const rosIntervalTime = timeSinceLastProcess - waitTime - step1Time_ms - step2Time_ms - step3Time_ms - drawTime_ms;
             if (cacheRebuildTime_ms > 0) {
-              console.log(`[性能分析] 总耗时:${totalTime.toFixed(1)}ms | 等待:${waitTime.toFixed(1)}ms | 接收:${step1Time_ms.toFixed(1)}ms | 数据处理:${step2Time_ms.toFixed(1)}ms | 缩放计算:${step3Time_ms.toFixed(1)}ms | 绘制:${drawTime_ms.toFixed(1)}ms (含缓存重建:${cacheRebuildTime_ms.toFixed(1)}ms)`);
+              console.log(`[性能分析] 总耗时:${totalTime.toFixed(1)}ms | ROS间隔:${rosIntervalTime.toFixed(1)}ms | 等待:${waitTime.toFixed(1)}ms | 接收:${step1Time_ms.toFixed(1)}ms | 数据处理:${step2Time_ms.toFixed(1)}ms | 缩放计算:${step3Time_ms.toFixed(1)}ms | 绘制:${drawTime_ms.toFixed(1)}ms (含缓存重建:${cacheRebuildTime_ms.toFixed(1)}ms)`);
             } else {
-              console.log(`[性能分析] 总耗时:${totalTime.toFixed(1)}ms | 等待:${waitTime.toFixed(1)}ms | 接收:${step1Time_ms.toFixed(1)}ms | 数据处理:${step2Time_ms.toFixed(1)}ms | 缩放计算:${step3Time_ms.toFixed(1)}ms | 绘制:${drawTime_ms.toFixed(1)}ms`);
+              console.log(`[性能分析] 总耗时:${totalTime.toFixed(1)}ms | ROS间隔:${rosIntervalTime.toFixed(1)}ms | 等待:${waitTime.toFixed(1)}ms | 接收:${step1Time_ms.toFixed(1)}ms | 数据处理:${step2Time_ms.toFixed(1)}ms | 缩放计算:${step3Time_ms.toFixed(1)}ms | 绘制:${drawTime_ms.toFixed(1)}ms`);
             }
           }
         } catch (error) {
@@ -1363,7 +1372,7 @@
         } finally {
           // 处理完成，记录完成时间
           isProcessingMap = false;
-          lastMapProcessCompleteTime = processTime;
+          lastMapProcessCompleteTime = performance.now();
           
           // 如果有待处理的数据，处理最新的那个
           if (pendingMapData) {
@@ -1466,6 +1475,48 @@
           laserRenderPending = true;
         } catch (error) {
           console.error('处理激光扫描数据时出错:', error);
+        }
+      });
+      
+      // 订阅路径规划话题
+      var planTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/plan',
+        messageType: 'nav_msgs/Path'
+      });
+      
+      console.log('正在订阅路径规划话题: /plan');
+      
+      planTopic.subscribe(function(planMsg) {
+        try {
+          // 保存路径数据
+          lastPlanPath = planMsg.poses;
+          
+          // 触发地图重绘以显示路径
+          drawMap();
+        } catch (error) {
+          console.error('处理路径规划数据时出错:', error);
+        }
+      });
+      
+      // 订阅机器人足迹话题
+      var footprintTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/global_costmap/published_footprint',
+        messageType: 'geometry_msgs/PolygonStamped'
+      });
+      
+      console.log('正在订阅机器人足迹话题: /global_costmap/published_footprint');
+      
+      footprintTopic.subscribe(function(footprintMsg) {
+        try {
+          // 保存足迹数据
+          lastFootprint = footprintMsg.polygon.points;
+          
+          // 触发地图重绘以显示足迹
+          drawMap();
+        } catch (error) {
+          console.error('处理机器人足迹数据时出错:', error);
         }
       });
       
@@ -1664,7 +1715,7 @@
         arrow.style.position = 'absolute';
         arrow.style.width = '30px';
         arrow.style.height = '30px';
-        arrow.style.zIndex = '6';
+        arrow.style.zIndex = '0';
         arrow.style.left = canvasX + 'px';
         arrow.style.top = canvasY + 'px';
         arrow.style.transform = 'translate(-50%, -50%)'; // 不旋转div，在SVG内部旋转
@@ -1693,6 +1744,76 @@
         
         document.getElementById('map-container').appendChild(arrow);
       }
+    }
+    
+    // 绘制路径规划
+    function drawPlanPath() {
+      if (!lastPlanPath || !currentMap || lastPlanPath.length === 0) {
+        return;
+      }
+      
+      const originX = currentMap.info.origin.position.x;
+      const originY = currentMap.info.origin.position.y;
+      
+      // 设置路径样式
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      // 绘制路径
+      for (let i = 0; i < lastPlanPath.length; i++) {
+        const pose = lastPlanPath[i].pose;
+        const worldX = pose.position.x;
+        const worldY = pose.position.y;
+        
+        const canvasX = offsetX + (worldX - originX) * scale;
+        const canvasY = offsetY - (worldY - originY) * scale;
+        
+        if (i === 0) {
+          ctx.moveTo(canvasX, canvasY);
+        } else {
+          ctx.lineTo(canvasX, canvasY);
+        }
+      }
+      
+      ctx.stroke();
+    }
+    
+    // 绘制机器人足迹
+    function drawRobotFootprint() {
+      if (!lastFootprint || !currentMap || lastFootprint.length === 0) {
+        return;
+      }
+      
+      const originX = currentMap.info.origin.position.x;
+      const originY = currentMap.info.origin.position.y;
+      
+      // 设置足迹样式
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 2;
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+      
+      ctx.beginPath();
+      
+      // 绘制足迹多边形
+      for (let i = 0; i < lastFootprint.length; i++) {
+        const point = lastFootprint[i];
+        const worldX = point.x;
+        const worldY = point.y;
+        
+        const canvasX = offsetX + (worldX - originX) * scale;
+        const canvasY = offsetY - (worldY - originY) * scale;
+        
+        if (i === 0) {
+          ctx.moveTo(canvasX, canvasY);
+        } else {
+          ctx.lineTo(canvasX, canvasY);
+        }
+      }
+      
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
     }
     
     // 绘制激光扫描数据（使用独立的激光Canvas）

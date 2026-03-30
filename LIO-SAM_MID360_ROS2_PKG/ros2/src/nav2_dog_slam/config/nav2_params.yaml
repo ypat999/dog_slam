@@ -455,7 +455,7 @@ amcl:
     
     # 基础参数 - 两个模型共用
     min_particles: 200
-    max_particles: 4000
+    max_particles: 2000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.97        # 修正参数名：kld_z -> pf_z
     
@@ -483,8 +483,8 @@ amcl:
     # selective_resampling: false  # 删除不存在的参数
     
     # 恢复参数 - 两个模型共用
-    recovery_alpha_slow: 0.001
-    recovery_alpha_fast: 0.1
+    recovery_alpha_slow: 0.0001
+    recovery_alpha_fast: 0.05
     
     # 坐标系配置 - 两个模型共用
     global_frame_id: map
@@ -538,7 +538,7 @@ amcl:
     
     # Likelihood模型特有参数
     lambda_short: 0.1
-    sigma_hit: 0.08
+    sigma_hit: 0.30
     z_hit: 0.60
     z_rand: 0.40
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
@@ -548,12 +548,12 @@ amcl:
     # beam_skip_error_threshold: 0.1  # 新增参数
     
     # Likelihood距离参数
-    laser_likelihood_max_dist: 40.0
+    laser_likelihood_max_dist: 2.0
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
-    beam_skip_distance: 0.8  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
-    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    beam_skip_distance: 0.5  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
+    beam_skip_threshold: 0.6   #如果异常束比例 超过 0.6（即 60%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
     
     # # QoS覆盖参数 - 新增
     # qos_overrides:

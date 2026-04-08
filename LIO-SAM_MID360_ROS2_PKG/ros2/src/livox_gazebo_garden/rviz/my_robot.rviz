@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Grid1/Offset1
+        - /PointCloud21
         - /LaserScan1/Topic1
         - /Map2/Update Topic1
         - /Map3/Topic1
@@ -102,6 +103,7 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -161,7 +163,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: AxisColor
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -179,10 +181,10 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /cloud_registered_body
+        Value: /livox/lidar
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
       Color Scheme: map
@@ -479,10 +481,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7853981852531433
+      Pitch: 1.035398244857788
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.7853981852531433
+      Yaw: 4.8185834884643555
     Saved: ~
 Window Geometry:
   Displays:
@@ -500,5 +502,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1844
-  X: 90
-  Y: 866
+  X: 58
+  Y: 834

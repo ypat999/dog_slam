@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    lio.map.save_map: false
+    lio.map.save_map: true
     lio.map.if_filter: false
     lio.map.save_map_dir: "/home/ywj/slam_data/pcd"
     lio.map.map_name: "test.pcd"

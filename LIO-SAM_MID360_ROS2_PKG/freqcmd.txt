@@ -122,6 +122,8 @@ lsof -i:8083
 ros2 launch livox_gazebo_garden livox_garden.launch.py
 ros2 launch super_lio gazebo_mid360.py
 MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=super_lio_gazebo ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
+SLAM_ALGORITHM=super_lio_gazebo ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+
 
 
 # 手动控制

@@ -150,7 +150,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0', '0.0', deg_to_rad(0), deg_to_rad(0), deg_to_rad(0), 'imu', 'x500_depth_0/livox_frame/mid360_lidar'],
+        arguments=['0.0', '0', '0.0', deg_to_rad(0), deg_to_rad(0), deg_to_rad(0), 'imu', 'livox_frame'],
         output='screen'
     )
     ld.add_action(imu_to_livox_frame_tf)
@@ -162,17 +162,17 @@ def generate_launch_description():
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
-        arguments=['-0.1', '0', '-0.3', deg_to_rad(0), deg_to_rad(-30), '0', 'x500_depth_0/livox_frame/mid360_lidar', 'x500_depth_0/base_link'],
+        arguments=['-0.07', '0', '-0.14', deg_to_rad(0), deg_to_rad(0), '0', 'livox_frame', 'base_link'],
         output='screen'
     )
-    ld.add_action(livox_frame_to_base_link_tf)
+    ld.add_action(livox_frame_to_base_link_tf) 
 
     base_link_to_base_footprint_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='base_link_to_base_footprint_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'world', 'x500_depth_0/base_footprint'],
+        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'world', 'base_footprint'],
         output='screen'
     )
     ld.add_action(base_link_to_base_footprint_tf)

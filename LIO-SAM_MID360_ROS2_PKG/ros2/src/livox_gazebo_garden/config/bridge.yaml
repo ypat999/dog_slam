@@ -4,22 +4,20 @@
   gz_type_name: "gz.msgs.Clock"
   direction: BIDIRECTIONAL
 
-- ros_topic_name: "/joint_states"
-  gz_topic_name: "/joint_state"
-  ros_type_name: "sensor_msgs/msg/JointState"
-  gz_type_name: "gz.msgs.Model"
-  direction: GZ_TO_ROS
+# - ros_topic_name: "/joint_states"
+#   gz_topic_name: "/joint_state"
+#   ros_type_name: "sensor_msgs/msg/JointState"
+#   gz_type_name: "gz.msgs.Model"
+#   direction: GZ_TO_ROS
 
 - ros_topic_name: "/livox/lidar"
   gz_topic_name: "/livox/lidar/points"
-  ros_frame_id: "livox_frame"
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "gz.msgs.PointCloudPacked"
   direction: GZ_TO_ROS
 
 - ros_topic_name: "/livox/imu"
   gz_topic_name: "/livox/imu"
-  ros_frame_id: "livox_frame"
   ros_type_name: "sensor_msgs/msg/Imu"
   gz_type_name: "gz.msgs.IMU"
   direction: GZ_TO_ROS
@@ -30,8 +28,8 @@
   gz_type_name: "gz.msgs.Twist"
   direction: ROS_TO_GZ
 
-- ros_topic_name: "/odom"
-  gz_topic_name: "/odom"
-  ros_type_name: "nav_msgs/msg/Odometry"
-  gz_type_name: "gz.msgs.Odometry"
-  direction: GZ_TO_ROS
+# - ros_topic_name: "/odom"
+#   gz_topic_name: "/odom"
+#   ros_type_name: "nav_msgs/msg/Odometry"
+#   gz_type_name: "gz.msgs.Odometry"
+#   direction: GZ_TO_ROS

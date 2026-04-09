@@ -9,7 +9,7 @@
     <RecoveryNode number_of_retries="3" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
         <RateController hz="1.0">
-          <RecoveryNode number_of_retries="5" name="ComputePathToPose">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
           </RecoveryNode>
@@ -26,9 +26,8 @@
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
           </Sequence>
-          <BackUp backup_dist="0.50" backup_speed="0.1"/>
+          <BackUp backup_dist="0.50" backup_speed="0.15"/>
           <Wait wait_duration="2"/>
-          <Spin spin_dist="1.57"/>
         </RoundRobin>
       </ReactiveFallback>
     </RecoveryNode>

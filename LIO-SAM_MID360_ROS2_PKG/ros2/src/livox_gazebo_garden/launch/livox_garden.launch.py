@@ -90,6 +90,15 @@ def generate_launch_description():
         output='screen',
     )
 
+    static_transform_livox_frame_to_mid360_robot_livox_frame_lidar = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_livox_frame_to_mid360_robot_livox_frame_lidar',
+        parameters=[{'use_sim_time': True}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'livox_frame', 'mid360_robot/livox_frame/lidar'],
+        output='screen'
+    )
+
     rviz_config = os.path.join(pkg_dir, 'rviz', 'my_robot.rviz')
     rviz_node = Node(
         package='rviz2',
@@ -105,6 +114,7 @@ def generate_launch_description():
         gazebo_process,
         robot_state_publisher,
         TimerAction(period=15.0, actions=[spawn_entity]),
+        static_transform_livox_frame_to_mid360_robot_livox_frame_lidar,
         TimerAction(period=20.0, actions=[
             bridge_node,
             joint_state_publisher,

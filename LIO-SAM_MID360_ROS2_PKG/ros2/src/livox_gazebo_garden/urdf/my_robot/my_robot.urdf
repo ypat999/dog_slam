@@ -187,7 +187,7 @@
   <joint name="livox_frame_joint" type="fixed">
     <parent link="base_link"/>
     <child link="livox_frame"/>
-    <origin rpy="0 0.5235987756 0" xyz="0.07 0.0 0.10"/>
+    <origin rpy="0 0 0" xyz="0.07 0.0 0.10"/>
   </joint>
   <gazebo reference="livox_frame">
     <sensor name="livox_frame_lidar" type="gpu_ray">

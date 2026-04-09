@@ -21,8 +21,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(livox_ros_driver2 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS chrono)
-
-set(jsoncpp_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/jsoncpp_override/lib/x86_64-linux-gnu/cmake/jsoncpp" CACHE PATH "Patched jsoncpp config" FORCE)
+set(jsoncpp_DIR "/tmp/jsoncpp_patch" CACHE PATH "Patched jsoncpp config" FORCE)
 
 find_package(sdformat12 REQUIRED)
 find_package(gz-sim7 REQUIRED)

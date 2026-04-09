@@ -9,8 +9,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-set(jsoncpp_DIR "/tmp/jsoncpp_patch" CACHE PATH "Patched jsoncpp config" FORCE)
-
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -26,6 +24,7 @@ find_package(Boost REQUIRED COMPONENTS chrono)
 
 
 find_package(sdformat12 REQUIRED)
+list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 find_package(gz-sim7 REQUIRED)
 find_package(gz-sensors7 REQUIRED)
 find_package(gz-transport12 REQUIRED)

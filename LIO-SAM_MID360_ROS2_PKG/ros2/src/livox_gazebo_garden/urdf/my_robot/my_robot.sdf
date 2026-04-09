@@ -323,6 +323,18 @@
           <izz>0.001</izz>
         </inertia>
       </inertial>
+      <visual name='front_left_steer_link_visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.8 0.2 0.2 1</diffuse>
+          <ambient>0.8 0.2 0.2 1</ambient>
+        </material>
+      </visual>
     </link>
 
     <!-- 左前转向关节 (绕Z轴转向) -->
@@ -347,7 +359,7 @@
 
     <!-- 左前轮 -->
     <link name='front_left_wheel'>
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to='front_left_steer_link'>0 0 0 0 0 0</pose>
       <inertial>
         <mass>1.0</mass>
         <pose>0 0 0 0 0 0</pose>
@@ -434,6 +446,18 @@
           <izz>0.001</izz>
         </inertia>
       </inertial>
+      <visual name='front_right_steer_link_visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.8 0.2 0.2 1</diffuse>
+          <ambient>0.8 0.2 0.2 1</ambient>
+        </material>
+      </visual>
     </link>
 
     <!-- 右前转向关节 (绕Z轴转向) -->
@@ -458,7 +482,7 @@
 
     <!-- 右前轮 -->
     <link name='front_right_wheel'>
-      <pose>0 0 0 0 0 0</pose>
+      <pose relative_to='front_right_steer_link'>0 0 0 0 0 0</pose>
       <inertial>
         <mass>1.0</mass>
         <pose>0 0 0 0 0 0</pose>

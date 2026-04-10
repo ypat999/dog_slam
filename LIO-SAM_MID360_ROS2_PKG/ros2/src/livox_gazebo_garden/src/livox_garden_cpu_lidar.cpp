@@ -292,11 +292,11 @@ void LivoxCpuLidarSystem::PostUpdate(
 
 }
 
-GZ_ADD_PLUGIN(livox_gazebo_garden::LivoxCpuLidarSystem,
-    gz::sim::System,
-    livox_gazebo_garden::LivoxCpuLidarSystem::ISystemConfigure,
-    livox_gazebo_garden::LivoxCpuLidarSystem::ISystemPreUpdate,
-    livox_gazebo_garden::LivoxCpuLidarSystem::ISystemPostUpdate)
+// GZ_ADD_PLUGIN(livox_gazebo_garden::LivoxCpuLidarSystem,
+//     gz::sim::System,
+//     livox_gazebo_garden::LivoxCpuLidarSystem::ISystemConfigure,
+//     livox_gazebo_garden::LivoxCpuLidarSystem::ISystemPreUpdate,
+//     livox_gazebo_garden::LivoxCpuLidarSystem::ISystemPostUpdate)
 
-GZ_ADD_PLUGIN_ALIAS(livox_gazebo_garden::LivoxCpuLidarSystem,
-    "livox_gazebo_garden::LivoxCpuLidarSystem")
+// GZ_ADD_PLUGIN_ALIAS(livox_gazebo_garden::LivoxCpuLidarSystem,
+//     "livox_gazebo_garden::LivoxCpuLidarSystem")

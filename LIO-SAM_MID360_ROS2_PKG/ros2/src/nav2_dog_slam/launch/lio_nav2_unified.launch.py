@@ -96,9 +96,9 @@ LIO_TOPIC_CONFIGS = {
         'map_frame': 'map'
     },
     'super_lio_gazebo': {
-        'pointcloud_topic': '/lio/body/cloud',
+        'pointcloud_topic': '/livox/lidar',
         'odom_topic': '/lio/odom',
-        'octomap_topic': '/lio/cloud_world',
+        'octomap_topic': '/livox/lidar',
         'target_frame': 'base_footprint',
         'map_frame': 'map'
     }
@@ -271,10 +271,10 @@ def generate_launch_description():
     
     # PointCloud to LaserScan 节点
     if str(SLAM_ALGORITHM).endswith('gazebo'):
-        min_height = 0.0
+        min_height = 0.2
     else:
         min_height = -0.3
-        
+
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',

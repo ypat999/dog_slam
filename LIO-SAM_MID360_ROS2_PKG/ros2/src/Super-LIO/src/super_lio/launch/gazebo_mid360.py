@@ -39,7 +39,7 @@ def generate_launch_description():
         MANUAL_BUILD_MAP = False
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
-        NAV2_DEFAULT_PARAMS_FILE = '/home/cat/git/xtd2_ws/XTDrone2_ego_planner/lio/nav2_dog_slam/config/nav2_params.yaml'
+        NAV2_DEFAULT_PARAMS_FILE = '/home/cat/git/xtd2_ws/XTDrone2_ego_planner/lio/nav2_dog_slam/config/nav2_params_sim.yaml'
         LIVOX_MID360_CONFIG_NO_TILT = ''
     
     pkg_super_lio = get_package_share_directory('super_lio')
@@ -162,7 +162,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
-        arguments=['-0.07', '0', '-0.14', deg_to_rad(0), deg_to_rad(0), '0', 'livox_frame', 'base_link'],
+        arguments=['-0.07', '0', '-0.1', deg_to_rad(0), deg_to_rad(0), '0', 'livox_frame', 'base_link'],
         output='screen'
     )
     ld.add_action(livox_frame_to_base_link_tf) 

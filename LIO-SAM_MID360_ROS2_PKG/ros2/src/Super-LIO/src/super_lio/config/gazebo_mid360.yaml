@@ -13,7 +13,7 @@
     lio.sensor.lidar_type: 8
     lio.sensor.blind: 0.8
     lio.sensor.maxrange: 100.0
-    lio.sensor.filter_rate: 2
+    lio.sensor.filter_rate: 1
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.5
     lio.sensor.gravity_norm: 9.8066

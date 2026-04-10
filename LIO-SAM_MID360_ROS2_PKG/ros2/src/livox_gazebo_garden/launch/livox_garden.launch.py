@@ -36,7 +36,7 @@ def generate_launch_description():
     world_file = os.path.join(pkg_dir, 'worlds', 'test_zone.world')
 
     gazebo_process = ExecuteProcess(
-        cmd=['gz', 'sim', '-r', world_file],
+        cmd=['taskset', '-c', '0,1,2,3', 'gz', 'sim', '-r', world_file],
         output='screen',
     )
 
@@ -80,6 +80,7 @@ def generate_launch_description():
         name='gz_bridge',
         parameters=[{'config_file': bridge_config}],
         output='screen',
+        prefix=['taskset -c 0,1,2,3'],
     )
 
     # joint_state_publisher 已禁用以节省CPU
@@ -109,6 +110,7 @@ def generate_launch_description():
         arguments=['-d', rviz_config],
         parameters=[{'use_sim_time': True}],
         output='screen',
+        prefix=['taskset -c 0,1,2,3'],
     )
 
     return LaunchDescription([

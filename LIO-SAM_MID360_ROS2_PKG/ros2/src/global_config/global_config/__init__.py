@@ -181,11 +181,11 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml',
+        'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_sim.yaml',
         
         # ywj-B250-D3A主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
+        'FAST_LIO_LIDAR_TYPE': 5,  # 其他主机lidar_type为1
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/slam_data/pcd/test.pcd',  # 添加的地图文件路径
         'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/reliability_override.yaml',
         'DEFAULT_USE_SIM_TIME': True,

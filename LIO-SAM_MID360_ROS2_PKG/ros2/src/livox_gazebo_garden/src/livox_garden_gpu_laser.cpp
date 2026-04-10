@@ -298,11 +298,11 @@ void LivoxGpuLaserSystem::PostUpdate(
 
 }
 
-GZ_ADD_PLUGIN(livox_gazebo_garden::LivoxGpuLaserSystem,
-    gz::sim::System,
-    livox_gazebo_garden::LivoxGpuLaserSystem::ISystemConfigure,
-    livox_gazebo_garden::LivoxGpuLaserSystem::ISystemPreUpdate,
-    livox_gazebo_garden::LivoxGpuLaserSystem::ISystemPostUpdate)
+// GZ_ADD_PLUGIN(livox_gazebo_garden::LivoxGpuLaserSystem,
+//     gz::sim::System,
+//     livox_gazebo_garden::LivoxGpuLaserSystem::ISystemConfigure,
+//     livox_gazebo_garden::LivoxGpuLaserSystem::ISystemPreUpdate,
+//     livox_gazebo_garden::LivoxGpuLaserSystem::ISystemPostUpdate)
 
-GZ_ADD_PLUGIN_ALIAS(livox_gazebo_garden::LivoxGpuLaserSystem,
-    "livox_gazebo_garden::LivoxGpuLaserSystem")
+// GZ_ADD_PLUGIN_ALIAS(livox_gazebo_garden::LivoxGpuLaserSystem,
+//     "livox_gazebo_garden::LivoxGpuLaserSystem")

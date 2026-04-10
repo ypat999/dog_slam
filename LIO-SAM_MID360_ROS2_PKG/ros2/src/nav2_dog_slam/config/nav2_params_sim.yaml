@@ -19,14 +19,14 @@ controller_server:
     # bond_disable_heartbeat_timeout: false  # 新增参数
     use_sim_time: true
 
-    controller_frequency: 10.0  # 保持10Hz控制器频率
+    controller_frequency: 20.0  # 保持10Hz控制器频率
     failure_tolerance: 3.0
 
     min_x_velocity_threshold: 0.05
     min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
 
-    odom_topic: "/lio/odom"  # 新增参数
+    odom_topic: "/lio/robo/odom"  # 新增参数
     # publish_zero_velocity: true  # 新增参数
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
@@ -59,9 +59,9 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
 
-      time_steps: 20  # 大幅减少时间步数，从40减到20，降低计算延迟
+      time_steps: 30  # 大幅减少时间步数，从40减到20，降低计算延迟
       # time_steps: 30
-      model_dt: 0.1
+      model_dt: 0.05
       batch_size: 200  # 大幅减少批量大小，从1500减到800，提高计算速度
       transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
@@ -119,7 +119,7 @@ controller_server:
       ConstraintCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 50.0  # 保持安全性权重
+        cost_weight: 30.0  # 保持安全性权重
       
       CostCritic:
         enabled: true
@@ -133,7 +133,7 @@ controller_server:
 
       ObstaclesCritic:
         enabled: true
-        cost_weight: 99.0
+        cost_weight: 30.0
         cost_power: 3
         collision_cost: 254.0
         consider_footprint: true
@@ -145,30 +145,30 @@ controller_server:
         enabled: true
         cost_weight: 1.0  # 进一步降低路径跟踪权重，减少左右震荡
         cost_power: 1
-        offset_from_furthest: 1  # 减少前瞻距离，提高实时响应
-        threshold_to_consider: 2.0  # Distance (m) between robot and goal to stop considering path following and allow goal critics to take over. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the goal critic.
+        offset_from_furthest: 4  # 减少前瞻距离，提高实时响应
+        threshold_to_consider: 1.0  # Distance (m) between robot and goal to stop considering path following and allow goal critics to take over. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the goal critic.
       
 
       PathAlignCritic:
         enabled: true
         cost_weight: 10.0
-        cost_power: 1
+        cost_power: 4
         forward_point_distance: 0.5
-        threshold_to_consider: 2.0
+        threshold_to_consider: 1.0
 
       PathAngleCritic:
         enabled: true
-        cost_weight: 10.0  # 大幅降低权重，减少方向修正的过度反应
-        cost_power: 5
+        cost_weight: 20.0  # 大幅降低权重，减少方向修正的过度反应
+        cost_power: 3
         forward_preference: true
-        offset_from_furthest: 1  # 进一步减少前瞻距离，提高实时响应
+        offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
         threshold_to_consider: 0.5  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
-        max_angle_to_furthest: 0.1  # 大幅减少最大角度阈值，避免过度修正
+        max_angle_to_furthest: 0.5  # 大幅减少最大角度阈值，避免过度修正
         
       PreferForwardCritic:
         enabled: true
         cost_power: 2
-        cost_weight: 20.0  # 降低权重，减少直线前进的强制性
+        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
         threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:
@@ -496,7 +496,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
         inflation_radius: 0.8
-        cost_scaling_factor: 1.0
+        cost_scaling_factor: 3.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
       

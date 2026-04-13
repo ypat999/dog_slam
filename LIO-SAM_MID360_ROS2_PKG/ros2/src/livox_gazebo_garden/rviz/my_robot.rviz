@@ -147,10 +147,11 @@ Visualization Manager:
           odom:
             world:
               base_footprint:
-                base_link:
-                  {}
+                {}
               imu:
                 livox_frame:
+                  base_link:
+                    {}
                   mid360_robot/livox_frame/lidar:
                     {}
       Update Interval: 0
@@ -496,25 +497,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 13.981278419494629
+      Distance: 30.90815544128418
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.371835708618164
-        Y: 12.217804908752441
-        Z: -2.774895191192627
+        X: -1.9194416999816895
+        Y: 2.762404203414917
+        Z: 0.09522180259227753
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.1297962665557861
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.823589563369751
+      Yaw: 1.5935897827148438
     Saved: ~
 Window Geometry:
   Displays:

@@ -7,7 +7,7 @@ from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubs
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.descriptions import ParameterFile
 import os
-
+SC
 # 导入nav2_common的RewrittenYaml
 from nav2_common.launch import RewrittenYaml
 
@@ -230,7 +230,7 @@ def generate_launch_description():
 
     # Super-LIO
     try:
-        super_lio_launch = IncludeLaunchDescription(
+        super_lio_gazebo_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
                 get_package_share_directory('super_lio'), 'launch', 'gazebo_mid360.py')]),
             launch_arguments={
@@ -681,6 +681,7 @@ def generate_launch_description():
         point_lio_launch,
         lio_sam_launch,
         super_lio_launch,
+        super_lio_gazebo_launch,
         # 3. 添加统一的节点配置
         *unified_nodes
     ]

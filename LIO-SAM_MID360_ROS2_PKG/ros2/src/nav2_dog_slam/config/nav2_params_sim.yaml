@@ -64,17 +64,17 @@ controller_server:
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 2.0
-      ax_min: -1.0
-      az_max: 1.0
-      az_min: -1.0
-      vx_std: 1.0  # 提高线速度采样标准差，探索更高速轨迹
+      ax_min: -2.5
+      az_max: 3.0
+      az_min: -3.0
+      vx_std: 2.0  # 提高线速度采样标准差，探索更高速轨迹
       wz_std: 0.8  # 提高角速度采样标准差，增加转向探索性
       
       vx_max: 5.0
       vy_max: 0.0
       vy_std: 0.2
       vx_min: -0.5
-      wz_max: 2.0
+      wz_max: 1.5
       
       
       
@@ -147,7 +147,7 @@ controller_server:
         cost_weight: 10.0
         cost_power: 4
         forward_point_distance: 0.5
-        threshold_to_consider: 1.0
+        threshold_to_consider: 3.0
 
       PathAngleCritic:
         enabled: true
@@ -155,14 +155,14 @@ controller_server:
         cost_power: 3
         forward_preference: true
         offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
-        threshold_to_consider: 0.5  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
+        threshold_to_consider: 1.5  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
         max_angle_to_furthest: 0.5  # 大幅减少最大角度阈值，避免过度修正
         
       PreferForwardCritic:
         enabled: true
         cost_power: 1
         cost_weight: 30.0  # 大幅提高权重，鼓励前进
-        threshold_to_consider: 2.0  # 接近目标时停止鼓励前进，让GoalCritic接管  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
+        threshold_to_consider: 3.0  # 接近目标时停止鼓励前进，让GoalCritic接管  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:
       #   enabled: false
@@ -176,15 +176,15 @@ controller_server:
         
       GoalCritic:
         enabled: true
-        cost_weight: 40.0  # 大幅提高权重，强化终点减速
-        cost_power: 2  # 提高幂次，使距离目标越近减速效果越急剧
-        threshold_to_consider: 3.0  # 提前开始考虑目标距离（预测范围约3m）
+        cost_weight: 50.0  # 提高权重，强化终点减速
+        cost_power: 3  # 提高幂次，使距离目标越近减速效果更急剧
+        threshold_to_consider: 5.0  # 提前开始考虑目标距离（预测范围约5m）
 
       GoalAngleCritic:
         enabled: true
-        cost_weight: 30.0  
-        cost_power: 2 
-        threshold_to_consider: 2.0  # 提前开始考虑目标角度
+        cost_weight: 35.0  
+        cost_power: 3 
+        threshold_to_consider: 3.0  # 提前开始考虑目标角度
 
     # DWB控制器参数 - 参照MPPI参数配置
     FollowPathDWB:

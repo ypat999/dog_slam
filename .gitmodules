@@ -1,6 +1,3 @@
-[submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO"]
-	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO
-	url = https://github.com/ypat999/Super-LIO.git
 [submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO"]
 	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO
 	url = ./LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO

@@ -144,35 +144,59 @@
     <div style="margin-top: 10px;">
       <select id="position-source-select" onchange="changePositionSource(this.value)">
         <option value="amcl">使用AMCL定位</option>
-        <option value="super_lio">使用super_lio里程计</option>
+        <option value="super_lio" selected>使用super_lio里程计</option>
       </select>
-      <span id="position-source-status">当前：使用AMCL定位</span>
+      <span id="position-source-status">当前：使用super_lio里程计</span>
     </div>
     
-    <!-- 地图颜色配置 -->
-    <div style="margin-top: 20px; border-top: 1px solid #555; padding-top: 10px;">
-      <h3>地图颜色配置</h3>
-      <div style="margin-bottom: 8px;">
-        <label for="obstacle-color">障碍物颜色：</label>
-        <input type="color" id="obstacle-color" value="#000000" onchange="updateMapColor('obstacle', this.value)">
+    <div style="margin-top: 10px;">
+      <label>
+        <input type="checkbox" id="show-laser-scan" checked onchange="toggleLaserScan(this.checked)">
+        显示激光扫描数据
+      </label>
+    </div>
+    
+    <!-- 机器人控制按钮 -->
+    <div style="margin-top: 10px;">
+      <h3>机器人控制</h3>
+      <div style="margin-bottom: 10px;">
+        <button onclick="sendCtrlMode(1)">站立</button>
+        <button onclick="sendCtrlMode(2)">半蹲</button>
+        <button onclick="sendCtrlMode(0)">趴下</button>
       </div>
-      <div style="margin-bottom: 8px;">
-        <label for="possible-obstacle-color">可能障碍物：</label>
-        <input type="color" id="possible-obstacle-color" value="#444444" onchange="updateMapColor('possibleObstacle', this.value)">
+      <div>
+        <button onclick="stopRobotControl()">关闭控制服务</button>
+        <button onclick="startRobotControl()">启动控制服务</button>
       </div>
-      <div style="margin-bottom: 8px;">
-        <label for="unknown-color">未知区域：</label>
-        <input type="color" id="unknown-color" value="#cccccc" onchange="updateMapColor('unknown', this.value)">
+    </div>
+    
+    <!-- Teleop控制按钮 -->
+    <div style="margin-top: 10px;">
+      <h3>远程控制</h3>
+      
+      <!-- 9宫格控制按钮（x轴和z旋转） -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-bottom: 10px;">
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, 1.0)">左前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, 0)">前进</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, -1.0)">右前</button>
+        
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, 1.0)">左转</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, 0)">停止</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, -1.0)">右转</button>
+        
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, 1.0)">左后</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, 0)">后退</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, -1.0)">右后</button>
       </div>
-      <div style="margin-bottom: 8px;">
-        <label for="free-color">自由空间：</label>
-        <input type="color" id="free-color" value="#ffffff" onchange="updateMapColor('free', this.value)">
-      </div>
-      <div style="margin-bottom: 8px;">
-        <label>
-          <input type="checkbox" id="show-laser-scan" checked onchange="toggleLaserScan(this.checked)">
-          显示激光扫描数据
-        </label>
+      
+      <!-- x轴和y轴组合按钮 -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; margin-bottom: 10px;">
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0.5, 0, 0, 0, 0)">左前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, -0.5, 0, 0, 0, 0)">右前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0.5, 0, 0, 0, 0)">左移</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, -0.5, 0, 0, 0, 0)">右移</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0.5, 0, 0, 0, 0)">左后</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, -0.5, 0, 0, 0, 0)">右后</button>
       </div>
     </div>
   </div>
@@ -197,9 +221,14 @@
     const INITIAL_POSE_TOPIC = "/initialpose";
     const SCAN_TOPIC = "/scan"; // 激光扫描话题
   // 位置源选择：'super_lio' 或 'amcl'
-  let positionSource = 'amcl'; // 默认使用AMCL定位信息
+  let positionSource = 'super_lio'; // 默认使用super_lio定位信息
     
-    // 地图颜色配置
+  // TF变换相关变量
+  let mapToOdomTransform = null; // map->odom的变换
+  let lastMapToOdomUpdate = 0; // 上次更新map->odom的时间
+  const MAP_TO_ODOM_UPDATE_INTERVAL = 5000; // 5秒更新一次map->odom变换
+    
+  // 地图颜色配置
     let mapColors = {
       obstacle: '#000000',        // 障碍物颜色 (默认黑色)
       possibleObstacle: '#444444', // 可能障碍物颜色
@@ -222,6 +251,7 @@
     let isDragging = false;
     let lastMouseX = 0;
     let lastMouseY = 0;
+    let ros = null; // ROS连接对象
     
     // 性能优化：离屏Canvas缓存
     let mapCacheCanvas = null;
@@ -1217,7 +1247,7 @@
       
       console.log('正在连接到ROS Bridge:', wsUrl);
       
-      var ros = new ROSLIB.Ros({
+      ros = new ROSLIB.Ros({
         url: wsUrl
       });
 
@@ -1226,6 +1256,9 @@
         document.getElementById("conn-status").style.color = "#00ff7f";
         console.log('已连接到ROS Bridge服务器');
         console.log('WebSocket URL:', wsUrl);
+        
+        // 启动map->odom TF查询定时器
+        startMapToOdomTFQuery(ros);
         
         // 检查 /slam_toolbox/feedback 话题是否存在
         checkAndSwitchPositionSource(ros);
@@ -1409,15 +1442,87 @@
         return yaw;
       }
       
+      // 启动map->odom TF查询定时器
+      function startMapToOdomTFQuery(ros) {
+        console.log('启动map->odom TF查询定时器，每5秒查询一次');
+        
+        // 订阅/tf话题来获取map->odom变换
+        const tfTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/tf',
+          messageType: 'tf2_msgs/TFMessage'
+        });
+        
+        tfTopic.subscribe(function(tfMsg) {
+          // 遍历所有变换，查找map->odom
+          if (tfMsg.transforms) {
+            for (let transform of tfMsg.transforms) {
+              if (transform.header.frame_id === 'map' && transform.child_frame_id === 'odom') {
+                // 更新map->odom变换
+                mapToOdomTransform = {
+                  translation: {
+                    x: transform.transform.translation.x,
+                    y: transform.transform.translation.y,
+                    z: transform.transform.translation.z
+                  },
+                  rotation: {
+                    x: transform.transform.rotation.x,
+                    y: transform.transform.rotation.y,
+                    z: transform.transform.rotation.z,
+                    w: transform.transform.rotation.w
+                  },
+                  timestamp: Date.now()
+                };
+                lastMapToOdomUpdate = Date.now();
+                console.log('更新map->odom变换:', 
+                  'x=', mapToOdomTransform.translation.x.toFixed(3),
+                  'y=', mapToOdomTransform.translation.y.toFixed(3),
+                  'yaw=', (quaternionToYaw(mapToOdomTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+              }
+            }
+          }
+        });
+      }
+      
+      // 应用map->odom变换到odom坐标
+      function applyMapToOdomTransform(odomX, odomY, odomTheta) {
+        if (!mapToOdomTransform) {
+          console.warn('map->odom变换未初始化，返回原始odom坐标');
+          return { x: odomX, y: odomY, theta: odomTheta };
+        }
+        
+        // 获取map->odom的平移和旋转
+        const tx = mapToOdomTransform.translation.x;
+        const ty = mapToOdomTransform.translation.y;
+        const mapToOdomYaw = quaternionToYaw(mapToOdomTransform.rotation);
+        
+        // 应用变换：map = map->odom * odom
+        // 先旋转，再平移
+        const cosYaw = Math.cos(mapToOdomYaw);
+        const sinYaw = Math.sin(mapToOdomYaw);
+        
+        const mapX = tx + odomX * cosYaw - odomY * sinYaw;
+        const mapY = ty + odomX * sinYaw + odomY * cosYaw;
+        const mapTheta = odomTheta + mapToOdomYaw;
+        
+        return { x: mapX, y: mapY, theta: mapTheta };
+      }
+      
       superLioOdomTopic.subscribe(function(odomMsg) {
         // 只有当位置源设置为super_lio时才使用这些数据
         if (positionSource === 'super_lio') {
+          // 获取odom坐标系下的位置和朝向
+          const odomX = odomMsg.pose.pose.position.x;
+          const odomY = odomMsg.pose.pose.position.y;
+          const odomTheta = quaternionToYaw(odomMsg.pose.pose.orientation);
+          
+          // 应用map->odom变换，得到map坐标系下的位置
+          const mapPosition = applyMapToOdomTransform(odomX, odomY, odomTheta);
+          
           // 更新机器人位置和朝向
-          robotPosition.x = odomMsg.pose.pose.position.x;
-          // 注意：这里保持原始Y坐标，因为在updateRobotMarker中已经处理了翻转
-          robotPosition.y = odomMsg.pose.pose.position.y;
-          // 提取朝向信息
-          robotPosition.theta = quaternionToYaw(odomMsg.pose.pose.orientation);
+          robotPosition.x = mapPosition.x;
+          robotPosition.y = mapPosition.y;
+          robotPosition.theta = mapPosition.theta;
           
           // 重绘地图以更新机器人位置
           drawMap();
@@ -2057,6 +2162,77 @@
       }
       console.log('位置源已切换为:', source);
       // 切换位置源后，可能需要等待新数据到来才能更新显示
+    }
+    
+    // 发送控制模式命令
+    function sendCtrlMode(modeValue) {
+      if (!ros) {
+        alert('ROS未连接，请先连接ROS Bridge');
+        return;
+      }
+      
+      const service = new ROSLIB.Service({
+        ros: ros,
+        name: '/rkbot/setctrlmode',
+        serviceType: 'robot_interface/srv/SetCtrlMode'
+      });
+      
+      const request = new ROSLIB.ServiceRequest({
+        mode: { value: modeValue }
+      });
+      
+      service.callService(request, function(result) {
+        console.log('控制模式设置成功:', result);
+        const modeNames = ['趴下', '站立', '半蹲'];
+        alert(`已设置为${modeNames[modeValue]}模式`);
+      }, function(error) {
+        console.error('控制模式设置失败:', error);
+        alert('控制模式设置失败，请检查ROS连接');
+      });
+    }
+    
+    // 关闭控制服务
+    function stopRobotControl() {
+      // 注意：网页无法直接执行sudo命令，这里仅显示提示
+      alert('请在终端中执行：sudo systemctl stop robot_control.service');
+      console.log('提示用户在终端执行：sudo systemctl stop robot_control.service');
+    }
+    
+    // 启动控制服务
+    function startRobotControl() {
+      // 注意：网页无法直接执行sudo命令，这里仅显示提示
+      alert('请在终端中执行：sudo systemctl start robot_control.service');
+      console.log('提示用户在终端执行：sudo systemctl start robot_control.service');
+    }
+    
+    // 发送速度命令
+    function sendCmdVel(linear_x, linear_y, linear_z, angular_x, angular_y, angular_z) {
+      if (!ros) {
+        alert('ROS未连接，请先连接ROS Bridge');
+        return;
+      }
+      
+      const cmdVelTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: CMD_TOPIC,
+        messageType: 'geometry_msgs/Twist'
+      });
+      
+      const twistMsg = new ROSLIB.Message({
+        linear: {
+          x: linear_x,
+          y: linear_y,
+          z: linear_z
+        },
+        angular: {
+          x: angular_x,
+          y: angular_y,
+          z: angular_z
+        }
+      });
+      
+      cmdVelTopic.publish(twistMsg);
+      console.log('发送速度命令:', linear_x, linear_y, angular_z);
     }
     
     // 检查话题并自动切换位置源

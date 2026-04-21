@@ -8,6 +8,578 @@
 # =============================================================================
 
 # =============================================================================
+# Controller Server Configuration - MPPI控制器
+# =============================================================================
+controller_server:
+  ros__parameters:
+    
+    # 缺失的顶层参数
+    # bond_disable_heartbeat_timeout: false  # 新增参数
+    use_sim_time: true
+
+    controller_frequency: 20.0  # 保持10Hz控制器频率
+    failure_tolerance: 3.0
+
+    min_x_velocity_threshold: 0.05
+    min_y_velocity_threshold: 0.1
+    min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
+
+    odom_topic: "/lio/robo/odom"  # 新增参数
+    # publish_zero_velocity: true  # 新增参数
+    # speed_limit_topic: "/speed_limit"  # 新增参数
+    
+    # 插件配置
+    controller_plugins: ["FollowPath"]  # 使用DWB控制器替代MPPI
+    
+    # 其他缺失参数
+    goal_checker_plugins: ["goal_checker"]  # 新增参数
+    
+    progress_checker_plugin: "progress_checker"  # 新增参数
+  
+    
+    # 进度检查器参数 - 配合新行为树优化
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.10  # 增加移动半径，从0.1增加到0.15，减少误判
+      movement_time_allowance: 20.0  # 减少移动时间容差，从30.0减到20.0，提高响应速度
+    
+    # 目标检查器参数 - 优化终点减速和停止精度
+    goal_checker:
+      plugin: "nav2_controller::StoppedGoalChecker"
+      xy_goal_tolerance: 0.5  # 进一步减小位置容差，提高停止精度
+      yaw_goal_tolerance: 0.3  # 进一步减小角度容差，避免过度修正
+      trans_stopped_velocity: 1.5
+      rot_stopped_velocity: 1.5
+      stateful: true
+
+    # MPPI控制器参数 - 全向移动配置（实时性优化）
+    FollowPath:
+      plugin: "nav2_mppi_controller::MPPIController"
+
+      time_steps: 60  # 大幅减少时间步数，从40减到20，降低计算延迟
+      # time_steps: 30
+      model_dt: 0.05
+      batch_size: 400  # 大幅减少批量大小，从1500减到800，提高计算速度
+      transform_tolerance: 0.2  # 减少变换容差，提高实时性
+      
+      # 全向移动速度限制 - 适应机器人结构特性
+      ax_max: 1.0
+      ax_min: -0.2
+      az_max: 1.0
+      az_min: -1.0
+      vx_std: 2.0  # 提高线速度采样标准差，探索更高速轨迹
+      wz_std: 0.8  # 提高角速度采样标准差，增加转向探索性
+      
+      vx_max: 5.0
+      vy_max: 0.0
+      vy_std: 0.2
+      vx_min: -0.5
+      wz_max: 1.0
+      
+      
+      
+      # 温度参数
+      temperature: 0.3
+      motion_model: "DiffDrive" 
+      # motion_model: "Omni"  # 全向移动模型
+      # motion_model: "Ackermann"  # Ackermann模型
+      # AckermannConstraints: 
+        # min_turning_r: 0.3
+
+      reset_period: 0.5
+
+      visualize: true
+      publish_optimal_trajectory: true
+      # TrajectoryVisualizer参数
+      TrajectoryVisualizer:
+        time_step: 5  # 新增参数
+        trajectory_step: 20  # 新增参数
+      
+      # # 缺失的MPPI参数
+      enforce_path_inversion: false  # 强制变向
+      # inversion_xy_tolerance: 0.3
+      # inversion_yaw_tolerance: 0.2
+      # gamma: 0.015  # 新增参数
+      # iteration_count: 1  # 新增参数
+      max_robot_pose_search_dist: 2.0  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
+      # prune_distance: 1.0  # 新增参数
+      # regenerate_noises: true  # 新增参数
+      # retry_attempt_limit: 1  # 新增参数
+      
+      # 评价器参数 - 优化权重以提高停止精度
+      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "GoalCritic", "PreferForwardCritic", "GoalAngleCritic", "VelocityDeadbandCritic", "ObstaclesCritic", "PathAlignCritic", "PathAngleCritic"] #  "TwirlingCritic",  
+
+      ConstraintCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 30.0  # 保持安全性权重
+      
+      CostCritic:
+        enabled: true
+        cost_weight: 30.0  # 大幅增加避障成本权重，强制避障
+        cost_power: 2      # 大幅增加成本幂次，使靠近障碍物时成本急剧增加
+        collision_cost: 254.0  # 碰撞成本设为最大值
+        consider_footprint: true  # 考虑机器人轮廓
+        critical_cost: 254.0  # 临界成本设为最大值
+        inflation_layer_name: "inflation_layer_local"
+        near_goal_distance: 2.0  # 提前降低避障权重，让GoalCritic主导
+
+      ObstaclesCritic:
+        enabled: true
+        cost_weight: 30.0
+        cost_power: 3
+        collision_cost: 254.0
+        consider_footprint: true
+        critical_cost: 254.0
+        inflation_layer_name: "inflation_layer_local"
+        near_goal_distance: 2.0  # 提前降低避障权重
+        
+      PathFollowCritic:
+        enabled: true
+        cost_weight: 1.0  # 进一步降低路径跟踪权重，减少左右震荡
+        cost_power: 1
+        offset_from_furthest: 8  # 减少前瞻距离，提高实时响应
+        threshold_to_consider: 5.0  # 提前让GoalCritic接管，避免过冲
+      
+
+      PathAlignCritic:
+        enabled: true
+        cost_weight: 10.0
+        cost_power: 4
+        forward_point_distance: 0.5
+        threshold_to_consider: 3.0
+
+      PathAngleCritic:
+        enabled: true
+        cost_weight: 20.0  # 大幅降低权重，减少方向修正的过度反应
+        cost_power: 3
+        forward_preference: true
+        offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
+        threshold_to_consider: 1.5  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
+        max_angle_to_furthest: 0.5  # 大幅减少最大角度阈值，避免过度修正
+        
+      PreferForwardCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 30.0  # 大幅提高权重，鼓励前进
+        threshold_to_consider: 3.0  # 接近目标时停止鼓励前进，让GoalCritic接管  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
+      
+      # TwirlingCritic:
+      #   enabled: false
+      #   cost_weight: 20.0     # 强惩绕圈行为
+
+      VelocityDeadbandCritic: 
+        enabled: true
+        cost_weight: 10.0  # 降低死区评价器权重
+        cost_power: 1
+        deadband_velocities: [0.05, 0.1, 0.1]
+        
+      GoalCritic:
+        enabled: true
+        cost_weight: 50.0  # 提高权重，强化终点减速
+        cost_power: 3  # 提高幂次，使距离目标越近减速效果更急剧
+        threshold_to_consider: 5.0  # 提前开始考虑目标距离（预测范围约5m）
+
+      GoalAngleCritic:
+        enabled: true
+        cost_weight: 35.0  
+        cost_power: 3 
+        threshold_to_consider: 3.0  # 提前开始考虑目标角度
+
+    # DWB控制器参数 - 参照MPPI参数配置
+    FollowPathDWB:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: true
+      
+      # 速度限制 - 降低速度提高稳定性
+      min_vel_x: -0.0
+      min_vel_y: 0.0
+      max_vel_x: 5.0
+      max_vel_y: 0.0
+      max_vel_theta: 2.0
+      min_speed_xy: 0.1
+      max_speed_xy: 5.0
+      min_speed_theta: 0.2
+      
+      # 加速度限制
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
+      decel_lim_theta: -3.2
+      
+      # 轨迹采样参数 - 增加角速度采样提高转向精度
+      vx_samples: 20
+      vy_samples: 0
+      vtheta_samples: 60
+      sim_time: 1.5
+      linear_granularity: 0.05
+      angular_granularity: 0.025
+      
+      # 其他参数
+      transform_tolerance: 0.2
+      trans_stopped_velocity: 0.25
+      short_circuit_trajectory_evaluation: true
+      stateful: true
+      prune_plan: true
+      prune_distance: 1.0
+      
+      # 轨迹评分插件
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist", "PreferForward"]
+      
+      # Critics参数 - 优化转向
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.5
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.5
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+      Oscillation.scale: 1.0
+      PreferForward.scale: 1.0
+      PreferForward.penalty: 1.0
+
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
+
+
+# =============================================================================
+# Velocity Smoother Configuration
+# =============================================================================
+velocity_smoother:
+  ros__parameters:
+    # 缺失的顶层参数
+    # bond_disable_heartbeat_timeout: false  # 新增参数
+    
+    use_sim_time: true
+    smoothing_frequency: 40.0
+    scale_velocities: true
+    feedback: "OPEN_LOOP" 
+
+    # feedback: "CLOSED_LOOP"  
+    # odom_topic: "/Odometry"
+    # odom_duration: 0.1
+    
+    # 移动速度限制 - 降低速度避免过于激进
+    max_velocity: [10.0, 1.5, 5.0]  # [vx_max, vy_max, vtheta_max] - 降低最大速度
+    min_velocity: [-0.1, -1.5, -5.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
+    
+    # 加速度限制 - 降低加速度避免急转急停
+    max_accel: [3.0, 2.0, 10.0]  # [ax_max, ay_max, atheta_max] - 降低加速度
+    max_decel: [-5.0, -2.0, -10.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
+    
+    # 其他参数
+    deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
+    velocity_timeout: 1.0
+
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
+
+# =============================================================================
+# Planner Server Configuration
+# =============================================================================
+planner_server:
+  ros__parameters:
+    use_sim_time: true
+    expected_planner_frequency: 0.2
+    planner_plugins: ["GridBased"]
+    bond_disable_heartbeat_timeout: false
+
+    GridBased:
+      plugin: "nav2_smac_planner/SmacPlannerHybrid"
+
+      # ---- 启用方向模型（禁止倒车）----
+      # motion_model_for_search: "REEDS_SHEPP"
+
+      # ---- 倒车代价（设置为极高值以禁止倒车）----
+      # reverse_penalty: 5.0
+
+      # ---- 切换前进/倒车的代价 ----
+      # change_penalty: 9.9
+
+      # # ---- 转弯代价（可稍微提高让路径更自然）----
+      non_straight_penalty: 1.2
+      cost_penalty: 2.0
+      # retrospective_penalty: 10.0
+
+      tolerance: 0.5
+      allow_unknown: true
+      max_iterations: 100000
+      max_on_approach_iterations: 10000
+      max_planning_time: 5.0
+      minimum_turning_radius: 0.2
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      cache_analytic_expansion: false
+
+      # analytic_expansion_max_length: 3.0
+      # analytic_expansion_ratio: 3.5
+      downsample_costmap: true
+      downsampling_factor: 2
+      # lookup_table_size: 20.0
+
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
+
+# =============================================================================
+# Local Costmap Configuration
+# =============================================================================
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      # 缺失的顶层参数
+      # bond_disable_heartbeat_timeout: false  # 新增参数
+      use_sim_time: true
+      update_frequency: 10.0
+      publish_frequency: 10.0
+      global_frame: odom
+      robot_base_frame: base_footprint
+      transform_tolerance: 0.5
+      
+      # 地图参数
+      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.1, 0.2], [0.1, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint_padding: 0.05  # footprint膨胀填充
+      resolution: 0.05
+      rolling_window: true
+      width: 12
+      height: 12
+      
+      # # 其他缺失参数
+      # footprint: ""  # 新增参数 - 使用robot_radius代替
+      # footprint_padding: 0.01  # 新增参数
+      # lethal_cost_threshold: 100  # 新增参数
+      # map_topic: "/map"  # 新增参数
+      # observation_sources: "scan"  # 新增参数
+      # origin_x: 0.0  # 新增参数
+      # origin_y: 0.0  # 新增参数
+      track_unknown_space: true  # 新增参数
+      # trinary_costmap: true  # 新增参数
+      # unknown_cost_value: 255  # 新增参数
+      # use_maximum: false  # 新增参数
+      
+      # # 过滤器配置
+      # filters: []  # 新增参数 - 无过滤器
+      
+      # 插件配置
+      plugins: [ "obstacle_layer_local", "inflation_layer_local"] #"voxel_layer",
+      
+      # # 体素层参数
+      # voxel_layer:
+      #   plugin: "nav2_costmap_2d::VoxelLayer"
+      #   enabled: true
+      #   publish_voxel_map: true
+      #   origin_z: 0.0  # 负值以容纳传感器原点的负值z坐标
+      #   z_resolution: 0.05
+      #   z_voxels: 16    # 增加体素数量以保持足够的垂直覆盖范围
+      #   max_obstacle_height: 2.0
+      #   min_obstacle_height: -0.5
+      #   # mark_threshold: 0.5
+      #   observation_sources: scan
+      #   scan:
+      #     topic: /scan
+      #     max_obstacle_height: 1.8
+      #     min_obstacle_height: -0.5
+      #     clearing: true
+      #     marking: false
+      #     data_type: "LaserScan"
+      #     raytrace_max_range: 3.0
+      #     raytrace_min_range: 0.3
+      #     obstacle_max_range: 2.5
+      #     obstacle_min_range: 0.3
+      
+      # 障碍物层参数
+      obstacle_layer_local:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        combination_method: 1  # 取最大值组合方法
+        footprint_clearing_enabled: true  # 启用footprint清理
+        max_obstacle_height: 100.0
+        min_obstacle_height: -100.0
+        scan:
+          topic: /scan
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 15.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 15.0
+          obstacle_min_range: 0.0
+          # expected_update_rate: 0.0  # 新增参数
+          # inf_is_valid: false  # 新增参数
+          # observation_persistence: 0.0  # 新增参数
+          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
+      
+      # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
+      inflation_layer_local:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        inflation_radius: 0.4     # 大幅增加局部膨胀半径，避免贴边行走
+        cost_scaling_factor: 1.5  # 大幅增加成本缩放因子，使靠近障碍物的路径代价急剧增加
+        # inflate_unknown: false      # 新增参数
+        # inflate_around_unknown: false  # 新增参数
+      
+      # 始终发送完整代价地图
+      always_send_full_costmap: true
+
+      qos_overrides:
+        /tf:
+          subscription:
+            depth: 1
+            durability: "volatile"
+            history: "keep_last"
+            reliability: "best_effort"
+        /tf_static:
+          subscription:
+            depth: 1
+            durability: "transient_local"
+            history: "keep_last"
+            reliability: "reliable"
+# =============================================================================
+# Global Costmap Configuration
+# =============================================================================
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      # 缺失的顶层参数
+      # bond_disable_heartbeat_timeout: false  # 新增参数
+      use_sim_time: true
+      update_frequency: 0.5
+      publish_frequency: 0.5
+      global_frame: map
+      robot_base_frame: base_footprint
+      transform_tolerance: 0.5
+      
+      # 地图参数
+      footprint: "[[-0.2, -0.2], [-0.2, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint_padding: 0.05  # footprint膨胀填充
+      resolution: 0.05
+      track_unknown_space: true
+      
+      # # 其他缺失参数
+      # always_send_full_costmap: false  # 新增参数
+      # footprint: ""  # 新增参数 - 使用robot_radius代替
+      # footprint_padding: 0.01  # 新增参数
+      # lethal_cost_threshold: 100  # 新增参数
+      # map_topic: "/map"  # 新增参数
+      # observation_sources: ""  # 新增参数
+      # origin_x: 0.0  # 新增参数
+      # origin_y: 0.0  # 新增参数
+      # rolling_window: false  # 新增参数
+      # trinary_costmap: true  # 新增参数
+      # unknown_cost_value: 255  # 新增参数
+      # use_maximum: false  # 新增参数
+      # transform_tolerance: 0.3  # 新增参数
+      
+      # # 尺寸参数
+      # width: 100  # 新增参数 - 地图宽度(米)
+      # height: 100  # 新增参数 - 地图高度(米)
+      
+      # # 过滤器配置
+      # filters: []  # 新增参数 - 无过滤器
+    
+      # 插件配置
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      
+      # 静态层参数
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        enabled: true  # 新增参数
+        map_topic: "/map"  # 新增参数
+        # subscribe_to_updates: false  # 新增参数
+        map_subscribe_transient_local: true
+        # transform_tolerance: 0.3  # 新增参数
+        footprint_clearing_enabled: true  # 新增参数
+      
+      # 障碍物层参数
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 1.8
+          min_obstacle_height: -0.1
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.0
+      
+      # 膨胀层参数
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true  # 新增参数
+        inflation_radius: 2.0
+        cost_scaling_factor: 5.0
+        # inflate_unknown: false  # 新增参数
+        # inflate_around_unknown: false  # 新增参数
+      
+      # 始终发送完整代价地图
+      always_send_full_costmap: false
+      qos_overrides:
+        /tf:
+          subscription:
+            depth: 1
+            durability: "volatile"
+            history: "keep_last"
+            reliability: "best_effort"
+        /tf_static:
+          subscription:
+            depth: 1
+            durability: "transient_local"
+            history: "keep_last"
+            reliability: "reliable"
+# =============================================================================
 # Lifecycle Manager Configuration
 # =============================================================================
 lifecycle_manager:
@@ -17,13 +589,13 @@ lifecycle_manager:
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
 
-# 单独的定位生命周期管理器配置
-lifecycle_manager_localization:
-  ros__parameters:
+# # 单独的定位生命周期管理器配置
+# lifecycle_manager_localization:
+#   ros__parameters:
     use_sim_time: true
-    autostart: true
-    node_names: ['map_server', 'amcl']
-    bond_timeout_ms: 10000
+#     autostart: true
+#     node_names: ['map_server', 'amcl']
+#     bond_timeout_ms: 10000
 
 # =============================================================================
 # AMCL Configuration - 模型选择区域
@@ -33,8 +605,8 @@ amcl:
     use_sim_time: true
     
     # 基础参数 - 两个模型共用
-    min_particles: 500
-    max_particles: 4000
+    min_particles: 200
+    max_particles: 2000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.97        # 修正参数名：kld_z -> pf_z
     
@@ -45,30 +617,30 @@ amcl:
     # map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.2            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.07           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.2            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.07           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha1: 0.001            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.001           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.001            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.001           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    robot_model_type: "nav2_amcl::OmniMotionModel"
-    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    # robot_model_type: "nav2_amcl::OmniMotionModel"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
-    update_min_d: 0.3
-    update_min_a: 0.2
+    update_min_d: 1.0
+    update_min_a: 1.0
     resample_interval: 1
     # selective_resampling: false  # 删除不存在的参数
     
     # 恢复参数 - 两个模型共用
-    recovery_alpha_slow: 0.001
-    recovery_alpha_fast: 0.1
+    recovery_alpha_slow: 0.0
+    recovery_alpha_fast: 0.0
     
     # 坐标系配置 - 两个模型共用
     global_frame_id: map
     odom_frame_id: odom
-    base_frame_id: base_link
+    base_frame_id: base_footprint
     scan_topic: /scan
     
     # 初始位姿配置 - 两个模型共用
@@ -77,17 +649,17 @@ amcl:
     first_map_only: false
     # map_padding: 0.3      # 删除不存在的参数
     save_pose_rate: 0.3
-    initial_pose:
-      x: 29.925  
-      y: 15.184 
-      z: 0.5
-      yaw: -1.396 
+    # initial_pose:
+    #   x: 29.925  
+    #   y: 15.184 
+    #   z: 0.5
+    #   yaw: -1.396 
 
     # 激光雷达配置
     laser_min_range: 0.3
-    laser_max_range: 40.0
+    laser_max_range: 100.0
     # laser_beam_step: 4
-    max_beams: 180
+    max_beams: 360
     
     # odom_topic: /lio_sam/mapping/odometry
 
@@ -117,9 +689,9 @@ amcl:
     
     # Likelihood模型特有参数
     lambda_short: 0.1
-    sigma_hit: 0.08
-    z_hit: 0.70
-    z_rand: 0.30
+    sigma_hit: 0.30
+    z_hit: 0.60
+    z_rand: 0.40
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
     # z_short: 0.05  # 注释掉 - Likelihood模型不需要此参数
     
@@ -131,16 +703,23 @@ amcl:
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
-    beam_skip_distance: 0.8  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
-    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    beam_skip_distance: 0.5  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
+    beam_skip_threshold: 0.3   #如果异常束比例 超过 0.6（即 60%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
     
     # # QoS覆盖参数 - 新增
-    # qos_overrides:
-    #   /tf.publisher:
-    #     depth: 100
-    #     durability: "volatile"
-    #     history: "keep_last"
-    #     reliability: "reliable"
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
 
 # =============================================================================
 # BT Navigator Configuration
@@ -149,8 +728,8 @@ bt_navigator:
   ros__parameters:
     use_sim_time: true
     global_frame: map
-    robot_base_frame: base_link
-    bt_loop_duration: 25
+    robot_base_frame: base_footprint
+    bt_loop_duration: 100
     default_server_timeout: 20
     wait_for_service_timeout: 10
     
@@ -242,393 +821,21 @@ bt_navigator:
       - nav2_is_battery_charging_condition_bt_node
       - nav2_progress_checker_selector_bt_node
 
-
-# =============================================================================
-# Controller Server Configuration - MPPI控制器
-# =============================================================================
-controller_server:
-  ros__parameters:
-    controller_server: 
-      verbose: true
-    
-    # 缺失的顶层参数
-    # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: true
-    controller_frequency: 40.0  # 保持10Hz控制器频率
-    failure_tolerance: 5.0
-
-    min_x_velocity_threshold: 0.05
-    min_y_velocity_threshold: 0.1
-    min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
-
-    # odom_topic: "/Odometry"  # 新增参数
-    # publish_zero_velocity: true  # 新增参数
-    # speed_limit_topic: "/speed_limit"  # 新增参数
-    
-    # 插件配置
-    controller_plugins: ["FollowPath"]  # 新增参数
-    # controller_plugin: "FollowPath"
-    
-    # 其他缺失参数
-    goal_checker_plugins: ["goal_checker"]  # 新增参数
-    goal_checker_plugin: "goal_checker"
-    
-    progress_checker_plugin: "progress_checker"  # 新增参数
-  
-    
-    # 进度检查器参数 - 配合新行为树优化
-    progress_checker:
-      plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.10  # 增加移动半径，从0.1增加到0.15，减少误判
-      movement_time_allowance: 30.0  # 减少移动时间容差，从30.0减到20.0，提高响应速度
-    
-    # 目标检查器参数 - 优化终点减速和停止精度
-    goal_checker:
-      plugin: "nav2_controller::StoppedGoalChecker"
-      xy_goal_tolerance: 0.5  # 进一步减小位置容差，提高停止精度
-      yaw_goal_tolerance: 0.3  # 进一步减小角度容差，避免过度修正
-      trans_stopped_velocity: 1.5
-      rot_stopped_velocity: 1.5
-      stateful: true
-
-    # MPPI控制器参数 - 全向移动配置（实时性优化）
-    FollowPath:
-      plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 40  # 大幅减少时间步数，从40减到20，降低计算延迟
-      model_dt: 0.03
-      batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.5  # 减少变换容差，提高实时性
-      
-      # 全向移动速度限制 - 适应机器人结构特性
-      ax_max: 2.0
-      ax_min: -5.0
-      az_max: 3.0
-      az_min: -3.0
-      vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
-      
-      wz_std: 0.25  # 提高角速度采样标准差，增加转向探索性
-      
-
-      # vx_max: 1.2
-      # vy_max: 0.0
-      # vy_std: 0.1  # 降低横移速度采样标准差
-      # vx_min: -0.06
-      wz_max: 1.2
-
-      vx_max: 0.5
-      vy_max: 0.5
-      vy_std: 0.3  # 降低横移速度采样标准差
-      vx_min: -0.5
-      # wz_max: 0.4
-      
-      
-      
-      # 温度参数
-      temperature: 0.2
-      # motion_model: "DiffDrive" 
-      motion_model: "Omni"  # 全向移动模型
-      reset_period: 0.5
-
-      visualize: false
-      publish_optimal_trajectory: false
-      # TrajectoryVisualizer参数
-      TrajectoryVisualizer:
-        time_step: 10  # 新增参数
-        trajectory_step: 10  # 新增参数
-      
-      # # 缺失的MPPI参数
-      enforce_path_inversion: false  # 强制变向
-      inversion_xy_tolerance: 0.4
-      inversion_yaw_tolerance: 0.4
-      # gamma: 0.015  # 新增参数
-      # iteration_count: 1  # 新增参数
-      max_robot_pose_search_dist: 0.5  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
-      # prune_distance: 1.0  # 新增参数
-      # regenerate_noises: true  # 新增参数
-      # retry_attempt_limit: 1  # 新增参数
-      
-      # 评价器参数 - 优化权重以提高停止精度
-      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "GoalCritic", "PreferForwardCritic", "GoalAngleCritic", "VelocityDeadbandCritic"] # "PathAngleCritic", "TwirlingCritic",  
-
-      ConstraintCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 10.0  # 保持安全性权重
-      
-      CostCritic:
-        enabled: true
-        cost_weight: 25.0  # 大幅增加避障成本权重，拐弯时优先避障
-        cost_power: 1
-        collision_cost: 50.0  # 增加碰撞成本，提高避障优先级
-        consider_footprint: true
-        critical_cost: 60.0  # 增加临界成本，更早触发避障
-        inflation_layer_name: "inflation_layer_local"
-        near_goal_distance: 0.8  # 减小近目标距离，使避障更早生效
-        
-      PathFollowCritic:
-        enabled: true
-        cost_weight: 30.0  # 降低路径跟踪权重，让避障优先级更高
-        cost_power: 1
-        offset_from_furthest: 8  # 增加前瞻距离，提前规划拐弯路径
-        threshold_to_consider: 1.5  # 增加阈值，使路径跟踪在更远距离生效，提前规划
-      
-      # PathAngleCritic:
-      #   enabled: false
-      #   cost_weight: 9.0  # 大幅降低权重，减少方向修正的过度反应
-      #   cost_power: 1
-      #   # forward_preference: true
-      #   offset_from_furthest: 4  # 进一步减少前瞻距离，提高实时响应
-      #   threshold_to_consider: 1.0  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
-      #   max_angle_to_furthest: 0.02  # 大幅减少最大角度阈值，避免过度修正
-        
-      PreferForwardCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 10.0  # 降低权重，减少直线前进的强制性
-        threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
-      
-      # TwirlingCritic:
-      #   enabled: false
-      #   cost_weight: 20.0     # 强惩绕圈行为
-
-      VelocityDeadbandCritic: 
-        enabled: true
-        cost_weight: 30.0  # 增加死区评价器权重，减少低速抖动
-        cost_power: 1
-        # deadband_velocities: [0.05, 0.1, 0.1]
-        deadband_velocities: [0.3, 0.3, 0.3]
-        
-      GoalCritic:
-        enabled: true
-        cost_weight: 25.0  # 增加目标对齐评价器权重，强化终点减速
-        cost_power: 1  # 增加成本幂次，使距离目标越近减速效果越明显
-        threshold_to_consider: 1.0  # Minimal distance (m) between robot and goal above which goal distance cost considered. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the path follower critic.
-
-      GoalAngleCritic:
-        enabled: true
-        cost_weight: 25.0  
-        cost_power: 1 
-        threshold_to_consider: 0.5 #Minimal distance (m) between robot and goal above which angle goal cost considered.
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
 
 
-# =============================================================================
-# Velocity Smoother Configuration
-# =============================================================================
-velocity_smoother:
-  ros__parameters:
-    # 缺失的顶层参数
-    # bond_disable_heartbeat_timeout: false  # 新增参数
-    
-    use_sim_time: true
-    smoothing_frequency: 40.0
-    scale_velocities: false
-    feedback: "OPEN_LOOP" 
-
-    # feedback: "CLOSED_LOOP"  
-    # odom_topic: "/Odometry"
-    # odom_duration: 0.1
-    
-    # 移动速度限制
-    max_velocity: [2.5, 2.5, 2.5]  # [vx_max, vy_max, vtheta_max]
-    # min_velocity: [-0.06, -2.5, -1.5]  # [vx_min, vy_min, vtheta_min]
-    min_velocity: [-2.5, -2.5, -2.5]  # [vx_min, vy_min, vtheta_min]
-    
-    # 加速度限制 - 增加角加速度以提高转向响应速度
-    max_accel: [1.0, 1.5, 3.0]  # [ax_max, ay_max, atheta_max] - 增加最大角加速度
-    max_decel: [-20.0, -1.5, -3.0]  # [ax_min, ay_min, atheta_min] - 增加最大角减速度
-    
-    # 其他参数
-    deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
-    velocity_timeout: 1.0
-
-
-# =============================================================================
-# Local Costmap Configuration
-# =============================================================================
-local_costmap:
-  local_costmap:
-    ros__parameters:
-      # 缺失的顶层参数
-      # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: true
-      update_frequency: 10.0
-      publish_frequency: 10.0
-      global_frame: odom
-      robot_base_frame: base_link
-      transform_tolerance: 0.5
-      
-      # 地图参数
-      footprint: "[[-0.2, -0.1], [-0.2, 0.1], [0.1, 0.1], [0.1, -0.1]]"  # 机器狗矩形footprint（base_link前移10cm）
-      footprint_padding: 0.15  # 增加footprint膨胀填充，提供更大的安全边界
-      resolution: 0.05
-      rolling_window: true
-      width: 8
-      height: 8
-      
-      # # 其他缺失参数
-      # footprint: ""  # 新增参数 - 使用robot_radius代替
-      # footprint_padding: 0.01  # 新增参数
-      # lethal_cost_threshold: 100  # 新增参数
-      # map_topic: "/map"  # 新增参数
-      # observation_sources: "scan"  # 新增参数
-      # origin_x: 0.0  # 新增参数
-      # origin_y: 0.0  # 新增参数
-      # track_unknown_space: false  # 新增参数
-      # trinary_costmap: true  # 新增参数
-      # unknown_cost_value: 255  # 新增参数
-      # use_maximum: false  # 新增参数
-      
-      # # 过滤器配置
-      # filters: []  # 新增参数 - 无过滤器
-      
-      # 插件配置
-      plugins: [ "obstacle_layer_local", "inflation_layer_local"] #"voxel_layer",
-      
-      # # 体素层参数
-      # voxel_layer:
-      #   plugin: "nav2_costmap_2d::VoxelLayer"
-      #   enabled: true
-      #   publish_voxel_map: true
-      #   origin_z: 0.0  # 负值以容纳传感器原点的负值z坐标
-      #   z_resolution: 0.05
-      #   z_voxels: 16    # 增加体素数量以保持足够的垂直覆盖范围
-      #   max_obstacle_height: 2.0
-      #   min_obstacle_height: -0.5
-      #   # mark_threshold: 0.5
-      #   observation_sources: scan
-      #   scan:
-      #     topic: /scan
-      #     max_obstacle_height: 1.8
-      #     min_obstacle_height: -0.5
-      #     clearing: true
-      #     marking: false
-      #     data_type: "LaserScan"
-      #     raytrace_max_range: 3.0
-      #     raytrace_min_range: 0.3
-      #     obstacle_max_range: 2.5
-      #     obstacle_min_range: 0.3
-      
-      # 障碍物层参数
-      obstacle_layer_local:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
-        observation_sources: scan
-        combination_method: 1  # 取最大值组合方法
-        footprint_clearing_enabled: true  # 启用footprint清理
-        max_obstacle_height: 100.0
-        min_obstacle_height: -100.0
-        scan:
-          topic: /scan
-          max_obstacle_height: 100.0
-          min_obstacle_height: -100.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 5.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.0
-          # expected_update_rate: 0.0  # 新增参数
-          # inf_is_valid: false  # 新增参数
-          # observation_persistence: 0.0  # 新增参数
-          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
-      
-      # 膨胀层参数 - 优化拐弯避障
-      inflation_layer_local:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        enabled: true
-        cost_scaling_factor: 1.0  # 调整成本缩放因子，使靠近障碍物的路径代价更高
-        inflation_radius: 0.5     # 增加膨胀半径，让拐弯时更安全
-        # inflate_unknown: false
-        # inflate_around_unknown: false
-      
-      # 始终发送完整代价地图
-      always_send_full_costmap: true
-
-# =============================================================================
-# Global Costmap Configuration
-# =============================================================================
-global_costmap:
-  global_costmap:
-    ros__parameters:
-      # 缺失的顶层参数
-      # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: true
-      update_frequency: 0.5
-      publish_frequency: 0.5
-      global_frame: map
-      robot_base_frame: base_link
-      transform_tolerance: 0.5
-      
-      # 地图参数
-      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"  # 机器狗矩形footprint（base_link前移10cm）
-      footprint_padding: 0.15  # 增加footprint膨胀填充，与局部代价地图保持一致
-      resolution: 0.05
-      track_unknown_space: true
-      
-      # # 其他缺失参数
-      # always_send_full_costmap: false  # 新增参数
-      # footprint: ""  # 新增参数 - 使用robot_radius代替
-      # footprint_padding: 0.01  # 新增参数
-      # lethal_cost_threshold: 100  # 新增参数
-      # map_topic: "/map"  # 新增参数
-      # observation_sources: ""  # 新增参数
-      # origin_x: 0.0  # 新增参数
-      # origin_y: 0.0  # 新增参数
-      # rolling_window: false  # 新增参数
-      # trinary_costmap: true  # 新增参数
-      # unknown_cost_value: 255  # 新增参数
-      # use_maximum: false  # 新增参数
-      # transform_tolerance: 0.3  # 新增参数
-      
-      # # 尺寸参数
-      # width: 100  # 新增参数 - 地图宽度(米)
-      # height: 100  # 新增参数 - 地图高度(米)
-      
-      # # 过滤器配置
-      # filters: []  # 新增参数 - 无过滤器
-    
-      # 插件配置
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
-      
-      # 静态层参数
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        enabled: true  # 新增参数
-        map_topic: "/map"  # 新增参数
-        # subscribe_to_updates: false  # 新增参数
-        map_subscribe_transient_local: true
-        # transform_tolerance: 0.3  # 新增参数
-        footprint_clearing_enabled: true  # 新增参数
-      
-      # 障碍物层参数
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 1.8
-          min_obstacle_height: -0.5
-          clearing: false
-          marking: false
-          data_type: "LaserScan"
-          raytrace_max_range: 4.0
-          raytrace_min_range: 1.0
-          obstacle_max_range: 5.0
-          obstacle_min_range: 1.0
-      
-      # 膨胀层参数
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        enabled: true  # 新增参数
-        inflation_radius: 2.0
-        cost_scaling_factor: 1.0
-        # inflate_unknown: false  # 新增参数
-        # inflate_around_unknown: false  # 新增参数
-      
-      # 始终发送完整代价地图
-      always_send_full_costmap: false
 
 # =============================================================================
 # Map Server Configuration
@@ -637,45 +844,6 @@ map_server:
   ros__parameters:
     use_sim_time: true
     yaml_filename: /home/ywj/slam_data/grid_map/map.yaml
-
-# =============================================================================
-# Planner Server Configuration
-# =============================================================================
-planner_server:
-  ros__parameters:
-    use_sim_time: true
-    expected_planner_frequency: 0.2
-    planner_plugins: ["GridBased"]
-
-    GridBased:
-      plugin: "nav2_smac_planner/SmacPlannerHybrid"
-
-      # ---- 启用方向模型（必需，否则没倒车）----
-      motion_model_for_search: "REEDS_SHEPP"
-
-      # ---- 倒车代价（越高越不愿倒车）----
-      # 建议：1.5～3.0：允许倒车但倾向前进
-      reverse_penalty: 5.0
-
-      # ---- 切换前进/倒车的代价 ----
-      change_penalty: 9.9
-
-      # # ---- 转弯代价（可稍微提高让路径更自然）----
-      non_straight_penalty: 1.2
-
-      # retrospective_penalty: 10.0
-
-      tolerance: 0.5
-      planner_timeout: 3.0
-      allow_unknown: true
-      max_iterations: 100000
-      max_on_approach_iterations: 1000
-      minimum_turning_radius: 0.00001
-      angle_quantization_bins: 72
-      cache_obstacle_heuristic: true
-      cache_analytic_expansion: false
-      smooth_path: true
-
 
 # =============================================================================
 # Smoother Server Configuration
@@ -687,7 +855,7 @@ smoother_server:
     use_sim_time: true
     # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     # footprint_topic: "local_costmap/published_footprint"  # 新增参数
-    # robot_base_frame: "base_link"  # 新增参数
+    robot_base_frame: "base_footprint"  # 新增参数
     transform_tolerance: 0.5  # 新增参数
     smoother_plugins: ["simple_smoother"]  # 新增参数
     
@@ -700,7 +868,19 @@ smoother_server:
       # w_data: 0.2  # 新增参数 - 数据权重
       # w_smooth: 1000.0  # 新增参数 - 平滑权重
       
-
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
 
 # =============================================================================
 # Behavior Server Configuration - 配合新行为树优化
@@ -713,16 +893,19 @@ behavior_server:
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false  # 新增参数
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]  # 修正参数名：plugins -> behavior_plugins
-    # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
-    # footprint_topic: "local_costmap/published_footprint"  # 新增参数
+    # costmap_topic: "/local_costmap/costmap"  # 新增参数
+    footprint_topic: "/local_costmap/published_footprint"  # 新增参数
     cycle_frequency: 20.0  # 新增参数
     # global_frame: "odom"  # 新增参数
-    # robot_base_frame: "base_link"  # 新增参数
+    robot_base_frame: "base_footprint"  # 新增参数
     # transform_tolerance: 0.1  # 新增参数
-    # simulate_ahead_time: 2.0  # 新增参数
+    simulate_ahead_time: 0.0  # 新增参数
     # max_rotational_vel: 1.0  # 新增参数
     # min_rotational_vel: 0.1  # 新增参数
     # rotational_acc_lim: 1.0  # 新增参数
+    
+    collision_checker:
+      costmap_admissible_threshold: 1.0  # 允许在极高代价（接近撞击）的区域执行恢复动作
     
     # 旋转行为 - 用于方向调整
     spin:
@@ -747,12 +930,12 @@ behavior_server:
       min_dist: 0.2
       max_dist: 0.8  # 增加最大移动距离，从0.5增加到0.8
       max_speed: 0.5
-      min_speed: 0.06
+      min_speed: 0.11
       min_theta_error: 0.1  # 减小最小角度误差，提高精度
       max_theta_error: 0.3  # 减小最大角度误差，提高精度
       speed_theta_error_scale: 0.3  # 调整角度误差缩放因子
-      simulation_duration: 2.0  # 增加模拟持续时间，从1.0增加到2.0
-      rotate_to_heading: true
+      simulation_duration: 0.0  # 增加模拟持续时间，从1.0增加到2.0
+      rotate_to_heading: false
       # max_rotational_vel: 1.0  # 移动到顶层参数
       # min_rotational_vel: 0.1  # 移动到顶层参数
       # rotational_acc_lim: 1.0  # 移动到顶层参数
@@ -764,6 +947,22 @@ behavior_server:
     wait:
       plugin: "nav2_behaviors/Wait"
       wait_duration: 2.0  # 等待持续时间（秒） 
+      
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
+
+
 
 # =============================================================================
 # Waypoint Follower Configuration
@@ -780,6 +979,20 @@ waypoint_follower:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: true
       waypoint_pause_duration: 200
+
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
 
 
 
@@ -830,7 +1043,7 @@ slam_toolbox_node:
     # 发布频率与变换发布
     # 禁止 slam_toolbox 输出/更新 2D occupancy map（避免覆盖 nav2 的 /map）
     # 将 map_update_interval 设为 0 将停止发布 OccupancyGrid
-    map_update_interval: 1.0
+    map_update_interval: 5.0
     publish_occupancy_map: true
 
     # 地图文件 - 启动时加载的位姿图文件名（可由 launch 时覆盖 map_file_name）
@@ -850,13 +1063,13 @@ slam_toolbox_node:
     # 地图坐标系
     map_frame: map
     # 基座坐标系
-    base_frame: base_link
+    base_frame: base_footprint
 
     # 激光与里程计话题
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
     scan_topic: /scan
     # 里程计话题
-    odom_topic: /Odometry
+    odom_topic: /lio/odom
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
@@ -864,7 +1077,7 @@ slam_toolbox_node:
 
     # 传感器范围与匹配参数（可按需调优）
     # 最大激光范围 - 用于 2D 占用地图栅格化的最大激光范围
-    max_laser_range: 60.0
+    max_laser_range: 100.0
     # 最小激光范围 - 用于 2D 占用地图栅格化的最小激光范围
     min_laser_range: 0.5
 
@@ -895,7 +1108,7 @@ slam_toolbox_node:
     do_loop_closing: true
     
     # # 是否启用交互模式
-    # enable_interactive_mode: false
+    enable_interactive_mode: true
     # interactive_mode: false
     
     # # 暂停新测量处理

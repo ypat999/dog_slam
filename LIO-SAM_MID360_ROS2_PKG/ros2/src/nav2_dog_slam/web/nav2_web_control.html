@@ -130,7 +130,7 @@
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
       <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
-        操作提示：在地图上点击并拖动来设置目标位置和方向
+        操作提示：第一次点击定位置，第二次点击定方向
       </div>
     </div>
     <div style="margin-top: 10px;">
@@ -138,7 +138,7 @@
       <button onclick="clearInitialPose()">清除初始点</button>
       <span id="initial-pose-status">未设置</span>
       <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
-        操作提示：点击"设置初始点"按钮后，在地图上点击并拖动来设置位置和方向
+        操作提示：第一次点击定位置，第二次点击定方向
       </div>
     </div>
     <div style="margin-top: 10px;">
@@ -157,7 +157,7 @@
     </div>
     
     <!-- 机器人控制按钮 -->
-    <div style="margin-top: 20px; border-top: 1px solid #555; padding-top: 10px;">
+    <div style="margin-top: 10px;">
       <h3>机器人控制</h3>
       <div style="margin-bottom: 10px;">
         <button onclick="sendCtrlMode(1)">站立</button>
@@ -171,7 +171,7 @@
     </div>
     
     <!-- Teleop控制按钮 -->
-    <div style="margin-top: 20px; border-top: 1px solid #555; padding-top: 10px;">
+    <div style="margin-top: 10px;">
       <h3>远程控制</h3>
       
       <!-- 9宫格控制按钮（x轴和z旋转） -->
@@ -295,11 +295,6 @@
       // 添加鼠标事件处理 - 只添加到地图Canvas，激光Canvas不拦截事件
       canvas.addEventListener('wheel', handleWheel);
       canvas.addEventListener('click', handleCanvasClick);
-      
-      // 添加方向设置相关的事件处理
-      canvas.addEventListener('mousedown', handleMouseDownForDirection);
-      canvas.addEventListener('mousemove', handleMouseMoveForDirection);
-      canvas.addEventListener('mouseup', handleMouseUpForDirection);
     }
 
     // 更新主机名
@@ -379,254 +374,119 @@
     
 
     
-    // 处理Canvas点击事件（开始设置目标点或初始点）
-     function handleCanvasClick(event) {
-       // 如果刚刚处理了mouseup事件，不再处理click事件
-       if (hasMouseUp) {
-         hasMouseUp = false;
-         event.preventDefault();
-         event.stopPropagation();
-         return;
-       }
-       
-       // 如果发生了拖动操作，不再处理click事件
-       if (hasDragged) {
-         hasDragged = false;
-         hasMouseDown = false;
-         event.preventDefault();
-         event.stopPropagation();
-         return;
-       }
-       
-       // 如果已经处理了mousedown事件，不再处理click事件
-       if (hasMouseDown) {
-         hasMouseDown = false;
-         event.preventDefault();
-         event.stopPropagation();
-         return;
-       }
-       
-       // 如果正在设置方向，则不处理点击事件
-       if (isSettingDirection) {
-         event.preventDefault();
-         event.stopPropagation();
-         return;
-       }
-       
-       // 如果在设置初始点模式，不允许点击（必须通过拖动设置）
-       if (window.settingInitialPose) {
-         showMessage('请拖动鼠标来设置初始点和方向');
-         event.preventDefault();
-         event.stopPropagation();
-         return;
-       }
-       
-       const rect = canvas.getBoundingClientRect();
-       const mouseX = event.clientX - rect.left;
-       const mouseY = event.clientY - rect.top;
-       
-       // 转换为地图坐标（相对于origin）
-       const worldX = (mouseX - offsetX) / scale;
-       const worldY = (offsetY - mouseY) / scale;
-       
-       // 检查坐标是否在有效范围内
-       if (currentMap) {
-         const mapWidth = currentMap.info.width * currentMap.info.resolution;
-         const mapHeight = currentMap.info.height * currentMap.info.resolution;
-         
-         if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
-           // 正常模式：记录拖动起始点用于设置目标点
-           dragStartX = mouseX;
-           dragStartY = mouseY;
-           isSettingDirection = true;
-           canvas.style.cursor = 'crosshair';
-           event.preventDefault();
-           event.stopPropagation();
-         }
-       }
-     }
-     
-     // 添加鼠标按下事件用于拖动设置方向
-     let dragStartX, dragStartY, isSettingDirection = false;
-     let hasMouseDown = false; // 跟踪是否已经处理了mousedown事件
-     let hasDragged = false; // 跟踪是否发生了拖动操作
-     let hasMouseUp = false; // 跟踪是否刚刚处理了mouseup事件
-     
-     function handleMouseDownForDirection(event) {
-       hasMouseDown = true;
-       hasDragged = false;
-       hasMouseUp = false;
-       
-       // 如果在设置初始点模式，允许点击开始拖动
-       if (window.settingInitialPose) {
-         const rect = canvas.getBoundingClientRect();
-         const mouseX = event.clientX - rect.left;
-         const mouseY = event.clientY - rect.top;
-         
-         // 转换为地图坐标
-         const worldX = (mouseX - offsetX) / scale;
-         const worldY = (offsetY - mouseY) / scale;
-         
-         // 检查坐标是否在有效范围内
-         if (currentMap) {
-           const mapWidth = currentMap.info.width * currentMap.info.resolution;
-           const mapHeight = currentMap.info.height * currentMap.info.resolution;
-           
-           if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
-             dragStartX = mouseX;
-             dragStartY = mouseY;
-             isSettingDirection = true;
-             canvas.style.cursor = 'crosshair';
-           }
-         }
-       } else {
-         // 正常模式：记录拖动起始点用于设置目标点
-         const rect = canvas.getBoundingClientRect();
-         const mouseX = event.clientX - rect.left;
-         const mouseY = event.clientY - rect.top;
-         
-         // 转换为地图坐标
-         const worldX = (mouseX - offsetX) / scale;
-         const worldY = (offsetY - mouseY) / scale;
-         
-         // 检查坐标是否在有效范围内
-         if (currentMap) {
-           const mapWidth = currentMap.info.width * currentMap.info.resolution;
-           const mapHeight = currentMap.info.height * currentMap.info.resolution;
-           
-           if (worldX >= 0 && worldX <= mapWidth && worldY >= 0 && worldY <= mapHeight) {
-             dragStartX = mouseX;
-             dragStartY = mouseY;
-             isSettingDirection = true;
-             canvas.style.cursor = 'crosshair';
-           }
-         }
-       }
-     }
-     
-     function handleMouseMoveForDirection(event) {
-      if (isSettingDirection) {
-        hasDragged = true; // 标记发生了拖动
+    // 二次点击相关变量
+    let firstClickPosition = null; // 第一次点击的位置（Canvas坐标）
+    let firstClickWorldPosition = null; // 第一次点击的世界坐标
+    let isWaitingForSecondClick = false; // 是否等待第二次点击
+    let tempMarkerElement = null; // 临时标记元素
+    
+    // 处理Canvas点击事件（二次点击模式）
+    function handleCanvasClick(event) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      
+      // 转换为地图坐标（相对于origin）
+      const originX = currentMap ? currentMap.info.origin.position.x : 0;
+      const originY = currentMap ? currentMap.info.origin.position.y : 0;
+      const worldX = (mouseX - offsetX) / scale + originX;
+      const worldY = (offsetY - mouseY) / scale + originY;
+      
+      // 检查坐标是否在有效范围内
+      if (currentMap) {
+        const mapWidth = currentMap.info.width * currentMap.info.resolution;
+        const mapHeight = currentMap.info.height * currentMap.info.resolution;
         
-        // 取消之前的动画帧
-        if (directionAnimationFrame) {
-          cancelAnimationFrame(directionAnimationFrame);
+        if (worldX < 0 || worldX > mapWidth || worldY < 0 || worldY > mapHeight) {
+          return; // 点击在地图范围外，忽略
+        }
+      }
+      
+      // 如果正在等待第二次点击
+      if (isWaitingForSecondClick && firstClickPosition) {
+        // 计算方向角度
+        const dx = worldX - firstClickWorldPosition.x;
+        const dy = worldY - firstClickWorldPosition.y;
+        const angle = Math.atan2(dy, dx);
+        
+        // 根据当前模式决定是设置目标点还是初始点
+        if (window.settingInitialPose) {
+          publishInitialPose(firstClickWorldPosition.x, firstClickWorldPosition.y, angle);
+          window.settingInitialPose = false;
+          canvas.style.cursor = 'default';
+          
+          // 恢复按钮状态
+          const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
+          if (setInitialPoseButton) {
+            setInitialPoseButton.textContent = '设置初始点';
+            setInitialPoseButton.onclick = setInitialPose;
+          }
+        } else {
+          publishGoal(firstClickWorldPosition.x, firstClickWorldPosition.y, angle);
         }
         
-        // 使用requestAnimationFrame优化重绘
-        directionAnimationFrame = requestAnimationFrame(() => {
-          // 添加视觉反馈，显示一条线表示方向
-          // 清除之前的绘制
-          drawMap();
-          
-          // 绘制方向线
-          const rect = canvas.getBoundingClientRect();
-          const currentX = event.clientX - rect.left;
-          const currentY = event.clientY - rect.top;
-          
-          ctx.beginPath();
-          ctx.moveTo(dragStartX, dragStartY);
-          ctx.lineTo(currentX, currentY);
-          ctx.strokeStyle = '#ff0000';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          
-          // 绘制箭头头部
-          const angle = Math.atan2(currentY - dragStartY, currentX - dragStartX);
-          const arrowSize = 10;
-          
-          ctx.beginPath();
-          ctx.moveTo(currentX, currentY);
-          ctx.lineTo(
-            currentX - arrowSize * Math.cos(angle - Math.PI/6),
-            currentY - arrowSize * Math.sin(angle - Math.PI/6)
-          );
-          ctx.moveTo(currentX, currentY);
-          ctx.lineTo(
-            currentX - arrowSize * Math.cos(angle + Math.PI/6),
-            currentY - arrowSize * Math.sin(angle + Math.PI/6)
-          );
-          ctx.stroke();
-        });
+        // 清除临时标记
+        removeTempMarker();
         
-        event.preventDefault();
+        // 重置状态
+        isWaitingForSecondClick = false;
+        firstClickPosition = null;
+        firstClickWorldPosition = null;
+        
+        // 重绘地图以清除方向线
+        drawMap();
+        
+        return;
+      }
+      
+      // 第一次点击
+      if (window.settingInitialPose) {
+        // 设置初始点模式
+        firstClickPosition = { x: mouseX, y: mouseY };
+        firstClickWorldPosition = { x: worldX, y: worldY };
+        isWaitingForSecondClick = true;
+        
+        // 显示临时标记
+        showTempMarker(mouseX, mouseY, '#ff8800');
+        showMessage('已记录位置，请点击第二点确定方向');
+      } else {
+        // 正常模式 - 设置目标点
+        firstClickPosition = { x: mouseX, y: mouseY };
+        firstClickWorldPosition = { x: worldX, y: worldY };
+        isWaitingForSecondClick = true;
+        
+        // 显示临时标记
+        showTempMarker(mouseX, mouseY, '#00ff00');
+        showMessage('已记录位置，请点击第二点确定方向');
       }
     }
-     
-     function handleMouseUpForDirection(event) {
-       if (isSettingDirection) {
-         const rect = canvas.getBoundingClientRect();
-         const endX = event.clientX - rect.left;
-         const endY = event.clientY - rect.top;
-         
-         // 只有当拖动距离足够大时才设置方向
-         const distance = Math.sqrt(Math.pow(endX - dragStartX, 2) + Math.pow(endY - dragStartY, 2));
-         
-         // 考虑地图origin偏移
-         const originX = currentMap ? currentMap.info.origin.position.x : 0;
-         const originY = currentMap ? currentMap.info.origin.position.y : 0;
-         
-         // 转换为地图坐标（考虑origin偏移）
-         const startX = (dragStartX - offsetX) / scale + originX;
-         const startY = (offsetY - dragStartY) / scale + originY;
-         
-         if (distance > 5) { // 至少拖动5像素才认为是有效的方向设置
-           const endXWorld = (endX - offsetX) / scale + originX;
-           const endYWorld = (offsetY - endY) / scale + originY;
-           
-           // 计算方向角度
-           const dx = endXWorld - startX;
-           const dy = endYWorld - startY;
-           const angle = Math.atan2(dy, dx);
-           
-           // 根据当前模式决定是设置目标点还是初始点
-           if (window.settingInitialPose) {
-             // 设置初始点模式
-             publishInitialPose(startX, startY, angle);
-             window.settingInitialPose = false;
-             canvas.style.cursor = 'default';
-             
-             // 恢复按钮状态
-             const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
-             if (setInitialPoseButton) {
-               setInitialPoseButton.textContent = '设置初始点';
-               setInitialPoseButton.onclick = setInitialPose;
-             }
-           } else {
-             // 正常模式 - 设置目标点
-             publishGoal(startX, startY, angle);
-           }
-         } else {
-           // 如果拖动距离太小，就当作普通点击处理（无方向）
-           if (window.settingInitialPose) {
-             // 设置初始点模式
-             publishInitialPose(startX, startY, 0);
-             window.settingInitialPose = false;
-             canvas.style.cursor = 'default';
-             
-             // 恢复按钮状态
-             const setInitialPoseButton = document.querySelector('button[onclick="setInitialPose()"]');
-             if (setInitialPoseButton) {
-               setInitialPoseButton.textContent = '设置初始点';
-               setInitialPoseButton.onclick = setInitialPose;
-             }
-           } else {
-             // 正常模式 - 设置目标点
-             publishGoal(startX, startY, 0);
-           }
-         }
-         
-         isSettingDirection = false;
-         canvas.style.cursor = 'default';
-         drawMap(); // 重新绘制地图以清除方向线
-         event.preventDefault();
-       }
-       
-       // 重置mousedown标志
-       hasMouseDown = false;
-       hasDragged = false; // 重置拖动标志
-       hasMouseUp = true; // 标记刚刚处理了mouseup
-     }
+    
+    // 显示临时标记
+    function showTempMarker(x, y, color) {
+      removeTempMarker(); // 先清除之前的标记
+      
+      tempMarkerElement = document.createElement('div');
+      tempMarkerElement.style.position = 'absolute';
+      tempMarkerElement.style.width = '16px';
+      tempMarkerElement.style.height = '16px';
+      tempMarkerElement.style.backgroundColor = color;
+      tempMarkerElement.style.borderRadius = '50%';
+      tempMarkerElement.style.transform = 'translate(-50%, -50%)';
+      tempMarkerElement.style.zIndex = '20';
+      tempMarkerElement.style.border = '2px solid #ffffff';
+      tempMarkerElement.style.left = x + 'px';
+      tempMarkerElement.style.top = y + 'px';
+      
+      document.getElementById('map-container').appendChild(tempMarkerElement);
+    }
+    
+    // 移除临时标记
+    function removeTempMarker() {
+      if (tempMarkerElement) {
+        tempMarkerElement.remove();
+        tempMarkerElement = null;
+      }
+    }
     
     // 重置缩放和偏移
     function resetZoom() {
@@ -1707,7 +1567,7 @@
       
       window.settingInitialPose = true;
       canvas.style.cursor = 'crosshair';
-      showMessage('请在地图上点击并拖动来设置初始点和方向');
+      showMessage('请在地图上点击第一点定位置，第二点定方向');
       
       // 更新按钮状态
       const button = event.target;
@@ -1719,6 +1579,10 @@
     function cancelSetInitialPose() {
       window.settingInitialPose = false;
       canvas.style.cursor = 'default';
+      isWaitingForSecondClick = false;
+      firstClickPosition = null;
+      firstClickWorldPosition = null;
+      removeTempMarker();
       showMessage('已取消初始点设置');
       
       // 恢复按钮状态

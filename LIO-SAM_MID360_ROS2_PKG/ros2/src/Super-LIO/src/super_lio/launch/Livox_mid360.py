@@ -152,6 +152,17 @@ def generate_launch_description():
     )
     ld.add_action(static_transform_world_to_imu)
 
+    # # world -> base_footprint (里程计到机器人基坐标系的静态变换)
+    static_transform_world_to_base_footprint = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_world_to_base_footprint',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'world', 'base_footprint'],
+        output='screen'
+    )
+    ld.add_action(static_transform_world_to_base_footprint)
+
     imu_to_livox_frame_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',

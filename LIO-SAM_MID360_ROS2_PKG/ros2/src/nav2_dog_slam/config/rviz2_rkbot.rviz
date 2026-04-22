@@ -5,6 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
         - /MarkerArray1
@@ -55,6 +56,18 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        imu:
+          Value: true
+        livox_frame:
+          Value: false
+        map:
+          Value: true
+        odom:
+          Value: true
         rkbot/base_footprint:
           Value: true
         rkbot/base_link:
@@ -68,6 +81,8 @@ Visualization Manager:
         rkbot/odom:
           Value: true
         rkbot/world:
+          Value: true
+        world:
           Value: true
       Marker Scale: 5
       Name: TF
@@ -477,25 +492,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 44.1534423828125
+      Distance: 27.154403686523438
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.93785572052002
-        Y: 9.190544128417969
-        Z: 0.5671961903572083
+        X: 21.73994255065918
+        Y: 15.808126449584961
+        Z: 0.6312428116798401
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4297964572906494
+      Pitch: 1.5547963380813599
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5033254623413086
+      Yaw: 1.6183253526687622
     Saved: ~
 Window Geometry:
   Displays:

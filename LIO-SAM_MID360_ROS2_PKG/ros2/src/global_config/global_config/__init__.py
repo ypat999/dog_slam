@@ -72,7 +72,7 @@ config_by_machine = {
     },
     'RK3588ZG': {
         # RK3588主机配置 - 全局配置
-        'DEFAULT_NAMESPACE': '',
+        'DEFAULT_NAMESPACE': 'rkbot',
         'DEFAULT_USE_SIM_TIME': False,
         'ONLINE_LIDAR': True,
         

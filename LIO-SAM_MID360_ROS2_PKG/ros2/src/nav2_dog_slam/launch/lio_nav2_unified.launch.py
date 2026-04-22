@@ -35,7 +35,7 @@ try:
         NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE,
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME, SLAM_ALGORITHM,
-        SC_PGO_SAVE_DIRECTORY
+        SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE
     )
 except Exception as e:
     print(f"导入global_config失败: {e}")
@@ -63,6 +63,7 @@ except Exception as e:
     LIVOX_FRAME = 'livox_frame'
     SLAM_ALGORITHM = 'super_lio'  # 默认算法
     SC_PGO_SAVE_DIRECTORY = '/home/ztl/save_data/'
+    DEFAULT_NAMESPACE = ''
 
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -108,7 +109,7 @@ LIO_TOPIC_CONFIGS = {
 
 
 def generate_launch_description():
-    ns = LaunchConfiguration('ns', default='')
+    ns = LaunchConfiguration('ns', default=DEFAULT_NAMESPACE)
     
     # 定义 namespace 感知的 frame 变量
     # 当 ns 非空时，frame 加前缀；为空时保持原值

@@ -22,7 +22,7 @@
             
         preprocess:
             # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR, 4 for any other pointcloud input
-            lidar_type: 5
+            lidar_type: 1
             
             scan_line:  4
             blind: 0.3                   # 减小盲区范围，增加有效点数量

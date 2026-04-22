@@ -20,7 +20,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
-from launch_ros.actions import LoadComposableNodes
+from launch_ros.actions import LoadComposableNodes, PushRosNamespace
 from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
@@ -57,7 +57,6 @@ def generate_launch_description():
     param_substitutions = {
         'use_sim_time': use_sim_time,
         'autostart': autostart,
-        'global_frame': odom_frame,
         'robot_base_frame': base_frame,
         'global_frame_id': map_frame,
         'odom_frame_id': odom_frame,
@@ -135,7 +134,7 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[configured_params,{'global_frame': odom_frame}],
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
@@ -148,7 +147,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
             Node(
                 package='nav2_planner',
@@ -157,9 +156,9 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[configured_params,{'global_frame': map_frame}],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
             Node(
                 package='nav2_behaviors',
@@ -168,9 +167,9 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[configured_params,{'global_frame': odom_frame}],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
             Node(
                 package='nav2_bt_navigator',
@@ -179,9 +178,9 @@ def generate_launch_description():
                 output='screen',
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[configured_params],
+                parameters=[configured_params,{'global_frame': map_frame}],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
             Node(
                 package='nav2_waypoint_follower',
@@ -192,7 +191,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
             Node(
                 package='nav2_velocity_smoother',
@@ -203,7 +202,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings +
                         [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]),
             Node(
@@ -212,7 +211,7 @@ def generate_launch_description():
                 name='lifecycle_manager_navigation',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 1,2,3,4'],
+                prefix=['taskset -c 0,1,2,3'],
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
                             {'node_names': lifecycle_nodes}]),

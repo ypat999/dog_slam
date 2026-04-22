@@ -96,9 +96,9 @@ LIO_TOPIC_CONFIGS = {
         'map_frame': 'map'
     },
     'super_lio_gazebo': {
-        'pointcloud_topic': '/livox/lidar',
-        'odom_topic': '/lio/odom',
-        'octomap_topic': '/livox/lidar',
+        'pointcloud_topic': 'livox/lidar',
+        'odom_topic': 'lio/odom',
+        'octomap_topic': 'livox/lidar',
         'target_frame': 'base_footprint',
         'map_frame': 'map'
     }
@@ -110,9 +110,9 @@ def generate_launch_description():
     
     # 定义 namespace 感知的 frame 变量
     # 当 ns 非空时，frame 加前缀；为空时保持原值
-    ns_map_frame = PythonExpression(["'", ns, "' == '' ? 'map' : str('", ns, "/map')"])
-    ns_odom_frame = PythonExpression(["'", ns, "' == '' ? 'odom' : str('", ns, "/odom')"])
-    ns_base_frame = PythonExpression(["'", ns, "' == '' ? 'base_footprint' : str('", ns, "/base_footprint')"])
+    ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
+    ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
+    ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
     
     # 定义启动参数
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
@@ -143,26 +143,21 @@ def generate_launch_description():
         description='Localization backend to use: amcl or slam_toolbox'
     )
 
-    if namespace != '':
-        have_ns = "True"
-    else:
-        have_ns = "False"
-
-    # 创建RewrittenYaml配置
-    if namespace == '':
+    # 创建RewrittenYaml配置 - 支持namespace
+    if ns == '':
         configured_params = nav2_params_file
     else:
         configured_params = ParameterFile(
             RewrittenYaml(
                 source_file=nav2_params_file,
-                root_key=namespace,
+                root_key=ns,
                 param_rewrites={
-                    'global_frame_id': [namespace, '/map'],
-                    'odom_frame_id': [namespace, '/odom'],
-                    'base_frame_id': [namespace, '/base_footprint'],
-                    'map_frame': [namespace, '/map'], 
-                    'odom_frame': [namespace, '/odom'],
-                    'base_frame': [namespace, '/base_footprint']
+                    'global_frame_id': [ns, '/map'],
+                    'odom_frame_id': [ns, '/odom'],
+                    'base_frame_id': [ns, '/base_footprint'],
+                    'map_frame': [ns, '/map'], 
+                    'odom_frame': [ns, '/odom'],
+                    'base_frame': [ns, '/base_footprint']
                 },
                 convert_types=True),
             allow_substs=True)
@@ -236,7 +231,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([os.path.join(
                 get_package_share_directory('super_lio'), 'launch', 'gazebo_mid360.py')]),
             launch_arguments={
-                'use_sim_time': use_sim_time
+                'use_sim_time': use_sim_time,
+                'ns': ns
             }.items(),
             condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio_gazebo'"]))
         )
@@ -300,6 +296,8 @@ def generate_launch_description():
         remappings=[
             ('/cloud_in', lio_config['pointcloud_topic']),
             ('/scan', 'scan'),
+            ('/tf', '/tf'),
+            ('/tf_static', '/tf_static')
         ],
         parameters=[{
             'transform_tolerance': 0.1,
@@ -400,7 +398,9 @@ def generate_launch_description():
         }],
         prefix=['taskset -c 4,5'],
         remappings=[
-            ('cloud_in', lio_config['octomap_topic'])
+            ('cloud_in', lio_config['octomap_topic']),
+            ('/tf', '/tf'),
+            ('/tf_static', '/tf_static')
         ]
     )
     

@@ -15,7 +15,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: true
+    use_sim_time: false
 
     controller_frequency: 20.0  # 保持10Hz控制器频率
     failure_tolerance: 3.0

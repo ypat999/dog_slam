@@ -134,8 +134,7 @@ controller_server:
         critical_weight: 50.0
         repulsion_weight: 5.0
         collision_margin_distance: 0.5
-        inflation_radius: 1.2
-        inflation_layer_name: "inflation_layer_local"
+        inflation_radius: 1.0
         near_goal_distance: 1.5
         
       PathFollowCritic:
@@ -324,7 +323,7 @@ local_costmap:
       use_sim_time: false
       update_frequency: 10.0
       publish_frequency: 10.0
-      global_frame: odom
+      # global_frame: odom
       robot_base_frame: base_footprint
       transform_tolerance: 0.5
       
@@ -409,7 +408,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 1.0
-        cost_scaling_factor: 20.0
+        cost_scaling_factor: 15.0
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -441,7 +440,7 @@ global_costmap:
       use_sim_time: false
       update_frequency: 0.5
       publish_frequency: 0.5
-      global_frame: map
+      # global_frame: map
       robot_base_frame: base_footprint
       transform_tolerance: 0.5
       
@@ -675,7 +674,7 @@ amcl:
 bt_navigator:
   ros__parameters:
     use_sim_time: false
-    global_frame: map
+    # global_frame: map
     robot_base_frame: base_footprint
     bt_loop_duration: 100
     default_server_timeout: 200

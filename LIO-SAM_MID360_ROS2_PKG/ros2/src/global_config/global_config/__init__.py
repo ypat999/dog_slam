@@ -296,6 +296,7 @@ default_config = {
 selected_config = config_by_machine.get(current_machine, default_config)
 
 # ========== 导出LIO-SAM配置参数 ==========
+DEFAULT_NAMESPACE = selected_config['DEFAULT_NAMESPACE']
 ONLINE_LIDAR = selected_config['ONLINE_LIDAR']
 LIO_SAM_BASE_CODE_PATH = selected_config['LIO_SAM_BASE_CODE_PATH']
 DEFAULT_BAG_PATH = selected_config['DEFAULT_BAG_PATH']

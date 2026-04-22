@@ -212,14 +212,14 @@
     // === 配置部分 ===
     let ROSBRIDGE_SERVER_IP = localStorage.getItem('ros_hostname') || location.hostname; // 优先使用本地存储的主机名
     const ROSBRIDGE_SERVER_PORT = 9090;
-    const MAP_TOPIC = "/map";
-    const ROBOT_FRAME = "base_footprint";
-    const SUPER_LIO_ODOM_TOPIC = "/lio/odom"; // super_lio发布的里程计话题
-  const AMCL_POSE_TOPIC = "/amcl_pose"; // AMCL发布的定位话题
+    const MAP_TOPIC = "/rkbot/map";
+    const ROBOT_FRAME = "rkbot/base_footprint";
+    const SUPER_LIO_ODOM_TOPIC = "/rkbot/lio/odom"; // super_lio发布的里程计话题
+  const AMCL_POSE_TOPIC = "/rkbot/amcl_pose"; // AMCL发布的定位话题
     const CMD_TOPIC = "/cmd_vel";
     const GOAL_TOPIC = "/goal_pose";
     const INITIAL_POSE_TOPIC = "/initialpose";
-    const SCAN_TOPIC = "/scan"; // 激光扫描话题
+    const SCAN_TOPIC = "/rkbot/scan"; // 激光扫描话题
   // 位置源选择：'super_lio' 或 'amcl'
   let positionSource = 'super_lio'; // 默认使用super_lio定位信息
     

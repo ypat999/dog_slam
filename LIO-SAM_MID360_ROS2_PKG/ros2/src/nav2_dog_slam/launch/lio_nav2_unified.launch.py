@@ -3,9 +3,13 @@ from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDesc
 from launch.conditions import IfCondition
 from launch_ros.actions import PushRosNamespace, Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.descriptions import ParameterFile
 import os
+
+# 导入nav2_common的RewrittenYaml
+from nav2_common.launch import RewrittenYaml
 
 # 导入全局配置
 from ament_index_python.packages import get_package_share_directory
@@ -64,28 +68,39 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # 定义不同LIO算法的话题映射配置
 LIO_TOPIC_CONFIGS = {
     'fast_lio': {
-        'pointcloud_topic': '/cloud_registered_body',
-        'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registered',
-        'target_frame': 'base_footprint'
+        'pointcloud_topic': 'cloud_registered_body',
+        'odom_topic': 'Odometry',
+        'octomap_topic': 'cloud_registered',
+        'target_frame': 'base_footprint',
+        'map_frame': 'map'
     },
     'lio_sam': {
-        'pointcloud_topic': '/lio_sam/mapping/cloud_registered_raw',
-        'odom_topic': '/lio_sam/mapping/odometry',
-        'octomap_topic': '/lio_sam/mapping/cloud_registered',
-        'target_frame': 'base_footprint'
+        'pointcloud_topic': 'lio_sam/mapping/cloud_registered_raw',
+        'odom_topic': 'lio_sam/mapping/odometry',
+        'octomap_topic': 'lio_sam/mapping/cloud_registered',
+        'target_frame': 'base_footprint',
+        'map_frame': 'map'
     },
     'point_lio': {
-        'pointcloud_topic': '/cloud_registered_body',
-        'odom_topic': '/Odometry',
-        'octomap_topic': '/cloud_registeredy',
-        'target_frame': 'base_footprint'
+        'pointcloud_topic': 'cloud_registered_body',
+        'odom_topic': 'Odometry',
+        'octomap_topic': 'cloud_registeredy',
+        'target_frame': 'base_footprint',
+        'map_frame': 'map'
     },
     'super_lio': {
         'pointcloud_topic': 'lio/body/cloud',
         'odom_topic': 'lio/odom',
         'octomap_topic': 'lio/cloud_world',
-        'target_frame': 'base_footprint'
+        'target_frame': 'base_footprint',
+        'map_frame': 'map'
+    },
+    'super_lio_gazebo': {
+        'pointcloud_topic': '/livox/lidar',
+        'odom_topic': '/lio/odom',
+        'octomap_topic': '/livox/lidar',
+        'target_frame': 'base_footprint',
+        'map_frame': 'map'
     }
 }
 
@@ -101,6 +116,10 @@ def generate_launch_description():
     
     # 定义启动参数
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value=str(DEFAULT_USE_SIM_TIME_STRING),
+        description='Use simulation (Gazebo) clock')
     map_file = LaunchConfiguration('map_file')
     nav2_params_file = LaunchConfiguration('nav2_params_file')
     
@@ -123,6 +142,30 @@ def generate_launch_description():
         default_value='amcl',
         description='Localization backend to use: amcl or slam_toolbox'
     )
+
+    if namespace != '':
+        have_ns = "True"
+    else:
+        have_ns = "False"
+
+    # 创建RewrittenYaml配置
+    if namespace == '':
+        configured_params = nav2_params_file
+    else:
+        configured_params = ParameterFile(
+            RewrittenYaml(
+                source_file=nav2_params_file,
+                root_key=namespace,
+                param_rewrites={
+                    'global_frame_id': [namespace, '/map'],
+                    'odom_frame_id': [namespace, '/odom'],
+                    'base_frame_id': [namespace, '/base_footprint'],
+                    'map_frame': [namespace, '/map'], 
+                    'odom_frame': [namespace, '/odom'],
+                    'base_frame': [namespace, '/base_footprint']
+                },
+                convert_types=True),
+            allow_substs=True)
     
     # 根据SLAM_ALGORITHM参数选择启动不同的SLAM算法
     # 获取当前选择的LIO算法的话题配置
@@ -186,6 +229,38 @@ def generate_launch_description():
         print(f"Super-LIO package not found: {e}")
         from launch.actions import LogInfo
         super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
+
+    # Super-LIO
+    try:
+        super_lio_gazebo_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('super_lio'), 'launch', 'gazebo_mid360.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio_gazebo'"]))
+        )
+    except Exception as e:
+        print(f"Super-LIO package not found: {e}")
+        # 创建一个空的动作作为占位符
+        from launch.actions import LogInfo
+        super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
+
+    # Super-LIO
+    try:
+        super_lio_gazebo_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('super_lio'), 'launch', 'gazebo_mid360.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio_gazebo'"]))
+        )
+    except Exception as e:
+        print(f"Super-LIO package not found: {e}")
+        # 创建一个空的动作作为占位符
+        from launch.actions import LogInfo
+        super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
     
 
 
@@ -213,6 +288,11 @@ def generate_launch_description():
     # 注意：dynamic_base_footprint发布功能已迁移到各LIO算法的C++部分，此处不再需要
     
     # PointCloud to LaserScan 节点
+    if str(SLAM_ALGORITHM).endswith('gazebo'):
+        min_height = 0.2
+    else:
+        min_height = -0.3
+
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
@@ -223,7 +303,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.1,
-            'min_height': -0.3,
+            'min_height': min_height,
             'max_height': 1.0,
             'angle_min': -3.14,
             'angle_max': 3.14,
@@ -266,11 +346,11 @@ def generate_launch_description():
     
     # 2. 建图工具节点
     # 合并后的slam_toolbox节点（支持建图和导航两种模式）
-    slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
-    declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
-        'slam_toolbox_params',
-        default_value=NAV2_DEFAULT_PARAMS_FILE,
-        description='Full path to slam_toolbox parameters file')
+    # slam_toolbox_params = LaunchConfiguration('slam_toolbox_params')
+    # declare_slam_toolbox_params_cmd = DeclareLaunchArgument(
+    #     'slam_toolbox_params',
+    #     default_value=NAV2_DEFAULT_PARAMS_FILE,
+    #     description='Full path to slam_toolbox parameters file')
     
     slam_toolbox_node = Node(
         package='slam_toolbox',
@@ -278,7 +358,7 @@ def generate_launch_description():
         name='slam_toolbox_node',
         output='screen',
         parameters=[
-            slam_toolbox_params,
+            configured_params,
             {
                 'use_sim_time': use_sim_time,
                 'map_update_interval': 1.0,
@@ -320,11 +400,12 @@ def generate_launch_description():
         }],
         prefix=['taskset -c 4,5'],
         remappings=[
-            ('/cloud_in', lio_config['octomap_topic'])
+            ('cloud_in', lio_config['octomap_topic'])
         ]
     )
     
     # 3. 导航相关节点
+    
     # map_server节点
     map_server_node = Node(
         package='nav2_map_server',
@@ -342,7 +423,6 @@ def generate_launch_description():
         ]
     )
 
-    # amcl节点
     amcl_node = Node(
         package='nav2_amcl',
         executable='amcl',
@@ -515,7 +595,7 @@ def generate_launch_description():
     if MANUAL_BUILD_MAP:
         if BUILD_TOOL == 'slam_toolbox':
             # 建图模式 + slam_toolbox
-            unified_nodes.append(declare_slam_toolbox_params_cmd)
+            # unified_nodes.append(declare_slam_toolbox_params_cmd)
             unified_nodes.append(
                 TimerAction(
                     period=5.0,
@@ -584,18 +664,18 @@ def generate_launch_description():
             )
         )
         
-        # GPS融合节点
-        nav2_actions.append(
-            TimerAction(
-                period=2.5,
-                actions=[
-                    gps_preprocessor_node, 
-                    # navsat_transform_node, 
-                    # ekf_filter_node, 
-                    # lifecycle_manager_gps
-                    ]
-            )
-        )
+        # # GPS融合节点
+        # nav2_actions.append(
+        #     TimerAction(
+        #         period=2.5,
+        #         actions=[
+        #             gps_preprocessor_node, 
+        #             # navsat_transform_node, 
+        #             # ekf_filter_node, 
+        #             # lifecycle_manager_gps
+        #             ]
+        #     )
+        # )
         
     # 导航栈
     nav2_actions.append(
@@ -620,6 +700,8 @@ def generate_launch_description():
     # 创建并返回完整的launch description
     # 注意: 启动参数声明必须在使用它们的操作之前
     launch_actions = [
+        # declare_namespace_cmd,
+        declare_use_sim_time_cmd,
         PushRosNamespace(ns),
         # 1. 声明所有启动参数
         declare_map_file_cmd,
@@ -630,6 +712,7 @@ def generate_launch_description():
         point_lio_launch,
         lio_sam_launch,
         super_lio_launch,
+        super_lio_gazebo_launch,
         # 3. 添加统一的节点配置
         *unified_nodes
     ]

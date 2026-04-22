@@ -1,6 +1,6 @@
 # 编译（狗里面，排除gazebo模拟环境，如果要模拟则去掉--packages-skip livox_gazebo_ros2_gpu_simulation）
 cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/ && source install/setup.bash
-colcon build --symlink-install --parallel-workers 8 --packages-skip livox_gazebo_ros2_gpu_simulation
+colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_garden
 
 
 
@@ -45,7 +45,7 @@ MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=super_lio ros2 laun
 
 # 保存二维地图(amcl)：
 cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/ && source install/setup.bash
-ros2 run nav2_map_server map_saver_cli -t /projected_map -f /home/ztl/slam_data/map_10 --fmt png
+ros2 run nav2_map_server map_saver_cli -t /map -f /home/ztl/slam_data/map_10 --fmt png
 
 # 保存位姿图(slam_toolbox)：
 # 调用 serialize_map 服务保存序列化地图
@@ -118,10 +118,16 @@ lsof -i:8083
 
 
 # 启动模拟
-ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
+###### ros2 launch livox_gazebo_ros2_gpu_simulation my_robot.launch.py
+ros2 launch livox_gazebo_garden livox_garden.launch.py
+ros2 launch super_lio gazebo_mid360.py
+MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=super_lio_gazebo ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
+SLAM_ALGORITHM=super_lio_gazebo ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+
+
 
 # 手动控制
-ros2 run livox_gazebo_ros2_gpu_simulation omni_teleop.py
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
 
 # slam_toolbox + nav2 + pointlio建图导航
 MANUAL_BUILD_MAP=true BUILD_TOOL=slam_toolbox SLAM_ALGORITHM=point_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py localization:=slam_toolbox
@@ -266,3 +272,118 @@ ros2 launch fast_lio mapping.launch.py
 
 
 nohup ros2 launch fast_lio mapping.launch.py > recordlio.log & && nohup ros2 launch sc_pgo_ros2 sc_pgo.launch.py > recordsc.log &
+
+
+
+ros2 param set controller_server
+
+ros2 param set controller_server  FollowPath.AckermannConstraints.min_turning_r
+ros2 param set controller_server  FollowPath.ConstraintCritic.cost_power
+ros2 param set controller_server  FollowPath.ConstraintCritic.cost_weight
+ros2 param set controller_server  FollowPath.ConstraintCritic.enabled
+ros2 param set controller_server  FollowPath.CostCritic.collision_cost
+ros2 param set controller_server  FollowPath.CostCritic.consider_footprint
+ros2 param set controller_server  FollowPath.CostCritic.cost_power
+ros2 param set controller_server  FollowPath.CostCritic.cost_weight
+ros2 param set controller_server  FollowPath.CostCritic.critical_cost
+ros2 param set controller_server  FollowPath.CostCritic.enabled
+ros2 param set controller_server  FollowPath.CostCritic.inflation_layer_name
+ros2 param set controller_server  FollowPath.CostCritic.near_goal_distance
+ros2 param set controller_server  FollowPath.GoalAngleCritic.cost_power
+ros2 param set controller_server  FollowPath.GoalAngleCritic.cost_weight
+ros2 param set controller_server  FollowPath.GoalAngleCritic.enabled
+ros2 param set controller_server  FollowPath.GoalAngleCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.GoalCritic.cost_power
+ros2 param set controller_server  FollowPath.GoalCritic.cost_weight
+ros2 param set controller_server  FollowPath.GoalCritic.enabled
+ros2 param set controller_server  FollowPath.GoalCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.ObstaclesCritic.collision_cost
+ros2 param set controller_server  FollowPath.ObstaclesCritic.collision_margin_distance
+ros2 param set controller_server  FollowPath.ObstaclesCritic.consider_footprint
+ros2 param set controller_server  FollowPath.ObstaclesCritic.cost_power
+ros2 param set controller_server  FollowPath.ObstaclesCritic.cost_scaling_factor
+ros2 param set controller_server  FollowPath.ObstaclesCritic.critical_weight
+ros2 param set controller_server  FollowPath.ObstaclesCritic.enabled
+ros2 param set controller_server  FollowPath.ObstaclesCritic.inflation_radius
+ros2 param set controller_server  FollowPath.ObstaclesCritic.near_goal_distance
+ros2 param set controller_server  FollowPath.ObstaclesCritic.repulsion_weight
+ros2 param set controller_server  FollowPath.PathAlignCritic.cost_power
+ros2 param set controller_server  FollowPath.PathAlignCritic.cost_weight
+ros2 param set controller_server  FollowPath.PathAlignCritic.enabled true
+ros2 param set controller_server  FollowPath.PathAlignCritic.max_path_occupancy_ratio
+ros2 param set controller_server  FollowPath.PathAlignCritic.offset_from_furthest
+ros2 param set controller_server  FollowPath.PathAlignCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.PathAlignCritic.trajectory_point_step
+ros2 param set controller_server  FollowPath.PathAlignCritic.use_path_orientations
+ros2 param set controller_server  FollowPath.PathAngleCritic.cost_power
+ros2 param set controller_server  FollowPath.PathAngleCritic.cost_weight
+ros2 param set controller_server  FollowPath.PathAngleCritic.enabled true
+ros2 param set controller_server  FollowPath.PathAngleCritic.forward_preference
+ros2 param set controller_server  FollowPath.PathAngleCritic.max_angle_to_furthest
+ros2 param set controller_server  FollowPath.PathAngleCritic.offset_from_furthest
+ros2 param set controller_server  FollowPath.PathAngleCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.PathFollowCritic.cost_power
+ros2 param set controller_server  FollowPath.PathFollowCritic.cost_weight
+ros2 param set controller_server  FollowPath.PathFollowCritic.enabled true
+ros2 param set controller_server  FollowPath.PathFollowCritic.offset_from_furthest
+ros2 param set controller_server  FollowPath.PathFollowCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.PreferForwardCritic.cost_power
+ros2 param set controller_server  FollowPath.PreferForwardCritic.cost_weight
+ros2 param set controller_server  FollowPath.PreferForwardCritic.enabled
+ros2 param set controller_server  FollowPath.PreferForwardCritic.threshold_to_consider
+ros2 param set controller_server  FollowPath.TrajectoryVisualizer.time_step
+ros2 param set controller_server  FollowPath.TrajectoryVisualizer.trajectory_step
+ros2 param set controller_server  FollowPath.VelocityDeadbandCritic.cost_power
+ros2 param set controller_server  FollowPath.VelocityDeadbandCritic.cost_weight
+ros2 param set controller_server  FollowPath.VelocityDeadbandCritic.deadband_velocities
+ros2 param set controller_server  FollowPath.VelocityDeadbandCritic.enabled
+ros2 param set controller_server  FollowPath.batch_size
+ros2 param set controller_server  FollowPath.critics
+ros2 param set controller_server  FollowPath.enforce_path_inversion
+ros2 param set controller_server  FollowPath.gamma
+ros2 param set controller_server  FollowPath.iteration_count
+ros2 param set controller_server  FollowPath.max_robot_pose_search_dist
+ros2 param set controller_server  FollowPath.model_dt
+ros2 param set controller_server  FollowPath.motion_model
+ros2 param set controller_server  FollowPath.plugin
+ros2 param set controller_server  FollowPath.prune_distance
+ros2 param set controller_server  FollowPath.regenerate_noises
+ros2 param set controller_server  FollowPath.reset_period
+ros2 param set controller_server  FollowPath.retry_attempt_limit
+ros2 param set controller_server  FollowPath.temperature
+ros2 param set controller_server  FollowPath.time_steps
+ros2 param set controller_server  FollowPath.transform_tolerance
+ros2 param set controller_server  FollowPath.visualize
+ros2 param set controller_server  FollowPath.vx_max
+ros2 param set controller_server  FollowPath.vx_min
+ros2 param set controller_server  FollowPath.vx_std
+ros2 param set controller_server  FollowPath.vy_max
+ros2 param set controller_server  FollowPath.vy_std
+ros2 param set controller_server  FollowPath.wz_max 2.0
+ros2 param set controller_server  FollowPath.wz_std
+ros2 param set controller_server  controller_frequency
+ros2 param set controller_server  controller_plugins
+ros2 param set controller_server  controller_server.verbose
+ros2 param set controller_server  failure_tolerance
+ros2 param set controller_server  goal_checker.plugin
+ros2 param set controller_server  goal_checker.rot_stopped_velocity
+ros2 param set controller_server  goal_checker.stateful
+ros2 param set controller_server  goal_checker.trans_stopped_velocity
+ros2 param set controller_server  goal_checker.xy_goal_tolerance
+ros2 param set controller_server  goal_checker.yaw_goal_tolerance
+ros2 param set controller_server  goal_checker_plugins
+ros2 param set controller_server  min_theta_velocity_threshold
+ros2 param set controller_server  min_x_velocity_threshold
+ros2 param set controller_server  min_y_velocity_threshold
+ros2 param set controller_server  odom_topic
+ros2 param set controller_server  progress_checker.movement_time_allowance
+ros2 param set controller_server  progress_checker.plugin
+ros2 param set controller_server  progress_checker.required_movement_radius
+ros2 param set controller_server  progress_checker_plugin
+ros2 param set controller_server  publish_zero_velocity
+ros2 param set controller_server  qos_overrides./clock.subscription.depth
+ros2 param set controller_server  qos_overrides./clock.subscription.durability
+ros2 param set controller_server  qos_overrides./clock.subscription.history
+ros2 param set controller_server  qos_overrides./clock.subscription.reliability
+ros2 param set controller_server  speed_limit_topic
+ros2 param set controller_server  use_sim_time

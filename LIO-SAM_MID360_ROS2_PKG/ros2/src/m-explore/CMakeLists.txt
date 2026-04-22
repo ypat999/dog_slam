@@ -99,6 +99,8 @@ target_include_directories(explore PUBLIC
 ament_target_dependencies(explore ${DEPENDENCIES})
 
 # Add dependency on generated messages
+add_dependencies(explore ${PROJECT_NAME}__rosidl_generator_c)
+
 target_link_libraries(explore
   ${rclcpp_LIBRARIES}
   ${PROJECT_NAME}__rosidl_generator_c

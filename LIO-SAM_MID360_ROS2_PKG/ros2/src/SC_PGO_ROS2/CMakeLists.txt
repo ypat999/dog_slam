@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -33,10 +34,10 @@ include_directories(
 
 add_executable(alaserPGO 
   src/laserPosegraphOptimization.cpp
-  include/scancontext/Scancontext.cpp
+  src/btc.cpp
 )
 ament_target_dependencies(alaserPGO 
-  rclcpp sensor_msgs geometry_msgs nav_msgs std_msgs tf2 tf2_ros cv_bridge pcl_conversions pcl_msgs
+  rclcpp sensor_msgs geometry_msgs nav_msgs std_msgs tf2 tf2_ros cv_bridge pcl_conversions pcl_msgs ament_index_cpp
 )
 target_compile_options(alaserPGO 
   PRIVATE ${OpenMP_CXX_FLAGS}
@@ -57,7 +58,7 @@ install( DIRECTORY launch/ DESTINATION share/${PROJECT_NAME}/launch
 )
 
 install(
-  DIRECTORY rviz_cfg
+  DIRECTORY rviz_cfg config
   DESTINATION share/${PROJECT_NAME}
 )
 ament_package()

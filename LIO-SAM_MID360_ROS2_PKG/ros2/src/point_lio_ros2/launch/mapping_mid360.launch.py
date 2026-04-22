@@ -120,14 +120,14 @@ def generate_launch_description():
         output='screen'
     )
 
-    base_link_to_base_footprint_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='base_link_to_base_footprint_tf',
-        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'base_link', 'base_footprint'],
-        output='screen'
-    )
+    # base_link_to_base_footprint_tf = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     name='base_link_to_base_footprint_tf',
+    #     parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+    #     arguments=['0.0', '0', '0.0', '0', '0.0', '0', 'base_link', 'base_footprint'],
+    #     output='screen'
+    # )
 
 
 
@@ -162,7 +162,7 @@ def generate_launch_description():
         livox_driver_node,
         static_transform_map_to_odom,
         static_transform_odom_to_base_link,
-        base_link_to_base_footprint_tf,
+        # base_link_to_base_footprint_tf,
         base_link_to_livox_frame_tf,
         laser_mapping_node,
         # GroupAction(

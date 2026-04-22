@@ -1,0 +1,26 @@
+%YAML:1.0
+useful_corner_num: 30
+plane_merge_normal_thre: 0.1
+plane_merge_dis_thre: 0.3
+plane_detection_thre: 0.01
+voxel_size: 1.0
+voxel_init_num: 10
+proj_plane_num: 1
+proj_image_resolution: 0.5
+proj_image_high_inc: 0.5
+proj_dis_min: 0
+proj_dis_max: 5
+summary_min_thre: 10
+line_filter_enable: 0
+descriptor_near_num: 10
+descriptor_min_len: 1
+descriptor_max_len: 10
+max_constrait_dis: 3.0
+triangle_resolution: 0.2
+skip_near_num: 20
+candidate_num: 50
+rough_dis_threshold: 0.03
+similarity_threshold: 0.7
+icp_threshold: 0.5
+normal_threshold: 0.1
+dis_threshold: 0.3

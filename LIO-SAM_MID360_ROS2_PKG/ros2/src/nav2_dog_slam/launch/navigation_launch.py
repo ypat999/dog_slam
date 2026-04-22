@@ -75,6 +75,7 @@ def generate_launch_description():
             convert_types=True),
         allow_substs=True)
 
+
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1')
 
@@ -136,7 +137,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 5'],
+                prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
             Node(
                 package='nav2_smoother',

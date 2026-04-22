@@ -18,12 +18,12 @@
 #include <pcl/common/transforms.h>
 // #include <pcl/filters/extract_indices.h>
 #include <pcl/registration/icp.h>
-// #include <pcl/io/pcd_io.h>
+#include <pcl/io/pcd_io.h>
 // #include <pcl/filters/filter.h>
 #include <pcl/filters/voxel_grid.h>
 // #include <pcl/octree/octree_pointcloud_voxelcentroid.h>
 // #include <pcl/filters/crop_box.h>
-// #include <pcl_conversions/pcl_conversions.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 // #include <sensor_msgs/Imu.h>
 // #include <tf/transform_datatypes.h>
@@ -59,7 +59,8 @@
 
 #include "aloam_velodyne/common.h"
 #include "aloam_velodyne/tic_toc.h"
-#include "scancontext/Scancontext.h"
+#include "btc/btc.h"
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 using namespace gtsam;
 
@@ -79,8 +80,6 @@ Pose6D odom_pose_curr{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};  // init pose is zero
 std::queue<std::shared_ptr<nav_msgs::msg::Odometry>> odometryBuf;
 std::queue<std::shared_ptr<sensor_msgs::msg::PointCloud2>> fullResBuf;
 std::queue<std::shared_ptr<sensor_msgs::msg::NavSatFix>> gpsBuf;
-std::queue<std::pair<int, int>> scLoopICPBuf;
-std::queue<std::tuple<int, int, float>> scLoopICPBufWithYaw;
 
 std::mutex mBuf;
 std::mutex mKF;
@@ -111,11 +110,9 @@ noiseModel::Base::shared_ptr robustLoopNoise;
 noiseModel::Base::shared_ptr robustGPSNoise;
 
 pcl::VoxelGrid<PointType> downSizeFilterScancontext;
-SCManager scManager;
+BtcDescManager btcManager;
 double scDistThres, scMaximumRadius;
 
-pcl::VoxelGrid<PointType> downSizeFilterICP;
-std::mutex mtxICP;
 std::mutex mtxPosegraph;
 std::mutex mtxRecentPose;
 
@@ -463,8 +460,8 @@ void loopFindNearKeyframesCloud(pcl::PointCloud<PointType>::Ptr &nearKeyframes,
 
   // downsample near keyframes
   pcl::PointCloud<PointType>::Ptr cloud_temp(new pcl::PointCloud<PointType>());
-  downSizeFilterICP.setInputCloud(nearKeyframes);
-  downSizeFilterICP.filter(*cloud_temp);
+  downSizeFilterScancontext.setInputCloud(nearKeyframes);
+  downSizeFilterScancontext.filter(*cloud_temp);
   *nearKeyframes = *cloud_temp;
 }  // loopFindNearKeyframesCloud
 
@@ -717,7 +714,12 @@ void process_pg() {
            << ", z: " << pose_curr.z << ", roll: " << pose_curr.roll 
            << ", pitch: " << pose_curr.pitch << ", yaw: " << pose_curr.yaw << endl;
 
-      scManager.makeAndSaveScancontextAndKeys(*thisKeyFrameDS);
+      int curr_frame_id = keyframePoses.size() - 1;
+      std::vector<BTC> btcs_vec;
+      pcl::PointCloud<pcl::PointXYZI>::Ptr btcCloud(new pcl::PointCloud<pcl::PointXYZI>);
+      pcl::copyPointCloud(*thisKeyFrameDS, *btcCloud);
+      btcManager.GenerateBtcDescs(btcCloud, curr_frame_id, btcs_vec);
+      btcManager.AddBtcDescs(btcs_vec);
 
       laserCloudMapPGORedraw = true;
       mKF.unlock();
@@ -832,38 +834,62 @@ void process_pg() {
   }
 }  // process_pg
 
+bool validateLoopClosure(int prev_idx, int curr_idx, gtsam::Pose3 relative_pose);
+
 void performSCLoopClosure(void) {
-  if (int(keyframePoses.size()) <
-      scManager.NUM_EXCLUDE_RECENT)  // do not try too early
+  if (int(keyframePoses.size()) < 20)
     return;
 
-  auto detectResult =
-      scManager.detectLoopClosureID();  // first: nn index, second: yaw diff
-  int SCclosestHistoryFrameID = detectResult.first;
-  float yaw_diff = detectResult.second;
-  if (SCclosestHistoryFrameID != -1) {
-    const int prev_node_idx = SCclosestHistoryFrameID;
-    const int curr_node_idx =
-        keyframePoses.size() - 1;  // because cpp starts 0 and ends n-1
-    cout << "Loop detected! - between " << prev_node_idx << " and "
-         << curr_node_idx << " with yaw diff: " << yaw_diff << " rad" << endl;
+  int curr_frame_id = keyframePoses.size() - 1;
+  std::vector<BTC> btcs_vec;
+  pcl::PointCloud<pcl::PointXYZI>::Ptr btcCloud(new pcl::PointCloud<pcl::PointXYZI>);
 
-    mBuf.lock();
-    scLoopICPBuf.push(std::pair<int, int>(prev_node_idx, curr_node_idx));
-    scLoopICPBufWithYaw.push(std::tuple<int, int, float>(prev_node_idx, curr_node_idx, yaw_diff));
-    // addding actual 6D constraints in the other thread, icp_calculation.
-    mBuf.unlock();
+  mKF.lock();
+  auto currKeyDS = keyframeLaserClouds[curr_frame_id];
+  mKF.unlock();
+
+  pcl::copyPointCloud(*currKeyDS, *btcCloud);
+  btcManager.GenerateBtcDescs(btcCloud, curr_frame_id, btcs_vec);
+
+  std::pair<int, double> loop_result(-1, 0);
+  std::pair<Eigen::Vector3d, Eigen::Matrix3d> loop_transform;
+  std::vector<std::pair<BTC, BTC>> loop_std_pair;
+  btcManager.SearchLoop(btcs_vec, loop_result, loop_transform, loop_std_pair);
+
+  int BTCclosestHistoryFrameID = loop_result.first;
+  double loopScore = loop_result.second;
+
+  if (BTCclosestHistoryFrameID != -1) {
+    const int prev_node_idx = BTCclosestHistoryFrameID;
+    const int curr_node_idx = keyframePoses.size() - 1;
+    cout << "[BTC Loop] detected! - between " << prev_node_idx << " and "
+         << curr_node_idx << ", score: " << loopScore << endl;
+
+    Eigen::Matrix3d rot = loop_transform.second;
+    Eigen::Vector3d t = loop_transform.first;
+    Eigen::Matrix4d relative_pose_matrix = Eigen::Matrix4d::Identity();
+    relative_pose_matrix.block<3, 3>(0, 0) = rot;
+    relative_pose_matrix.block<3, 1>(0, 3) = t;
+    gtsam::Pose3 relative_pose(relative_pose_matrix.cast<double>());
+
+    if (validateLoopClosure(prev_node_idx, curr_node_idx, relative_pose)) {
+      mtxPosegraph.lock();
+      gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(
+          prev_node_idx, curr_node_idx, relative_pose, robustLoopNoise));
+      mtxPosegraph.unlock();
+      cout << "[BTC Loop] constraint added between " << prev_node_idx
+           << " and " << curr_node_idx << endl;
+    }
   }
 }  // performSCLoopClosure
 
 void process_lcd() {
-  float loopClosureFrequency = 1.0;  // Hz
+  float loopClosureFrequency = 1.0;
   rclcpp::Rate rate(loopClosureFrequency);
 
   while (rclcpp::ok()) {
     rate.sleep();
     performSCLoopClosure();
-    // performRSLoopClosure(); // TODO
   }
 }
 
@@ -896,47 +922,9 @@ bool validateLoopClosure(int prev_idx, int curr_idx, gtsam::Pose3 relative_pose)
   return true;
 }
 
-void process_icp(void) {
-  while (1) {
-    while (!scLoopICPBufWithYaw.empty()) {
-      if (scLoopICPBufWithYaw.size() > 30) {
-        RCLCPP_WARN(
-            nh->get_logger(),
-            "Too many loop closure candidates to be ICPed is waiting ... "
-            "Do process_lcd less frequently (adjust loopClosureFrequency)");
-      }
-
-      mBuf.lock();
-      auto loop_idx_tuple = scLoopICPBufWithYaw.front();
-      scLoopICPBufWithYaw.pop();
-      scLoopICPBuf.pop();
-      mBuf.unlock();
-
-      const int prev_node_idx = std::get<0>(loop_idx_tuple);
-      const int curr_node_idx = std::get<1>(loop_idx_tuple);
-      float yaw_diff = std::get<2>(loop_idx_tuple);
-      
-      auto relative_pose_optional =
-          doICPVirtualRelative(prev_node_idx, curr_node_idx, yaw_diff);
-
-      if (relative_pose_optional) {
-        gtsam::Pose3 relative_pose = relative_pose_optional.value();
-        
-        if (validateLoopClosure(prev_node_idx, curr_node_idx, relative_pose)) {
-          mtxPosegraph.lock();
-          gtSAMgraph.add(gtsam::BetweenFactor<gtsam::Pose3>(
-              prev_node_idx, curr_node_idx, relative_pose, robustLoopNoise));
-          // runISAM2opt();
-          mtxPosegraph.unlock();
-        }
-      }
-    }
-
-    // wait (must required for running the while loop)
-    std::chrono::milliseconds dura(2);
-    std::this_thread::sleep_for(dura);
-  }
-}  // process_icp
+// process_icp removed: BTC's SearchLoop already includes planar geometric ICP,
+// so the separate ICP verification thread is no longer needed.
+// doICPVirtualRelative is kept for potential future use.
 
 void process_viz_path() {
   float hz = 10.0;
@@ -1037,8 +1025,7 @@ int main(int argc, char **argv) {
 
   nh->declare_parameter<double>(
       "sc_max_radius",
-      20.0);  // 80 is recommended for outdoor, and lower (e.g., 20, 40) values
-              // are recommended for indoor
+      20.0);
   scMaximumRadius = nh->get_parameter("sc_max_radius").as_double();
 
   ISAM2Params parameters;
@@ -1047,12 +1034,18 @@ int main(int argc, char **argv) {
   isam = new ISAM2(parameters);
   initNoises();
 
-  scManager.setSCdistThres(scDistThres);
-  scManager.setMaximumRadius(scMaximumRadius);
+  nh->declare_parameter<std::string>("btc_config_file", "");
+  std::string btc_config_file = nh->get_parameter("btc_config_file").as_string();
+  if (btc_config_file.empty()) {
+    std::string pkg_share_dir = ament_index_cpp::get_package_share_directory("sc_pgo_ros2");
+    btc_config_file = pkg_share_dir + "/config/btc_config.yaml";
+  }
+  ConfigSetting btc_config;
+  load_config_setting(btc_config_file, btc_config);
+  btcManager = BtcDescManager(btc_config);
 
   float filter_size = 0.4;
   downSizeFilterScancontext.setLeafSize(filter_size, filter_size, filter_size);
-  downSizeFilterICP.setLeafSize(filter_size, filter_size, filter_size);
 
   double mapVizFilterSize;
   nh->declare_parameter<double>("mapviz_filter_size", 0.4);
@@ -1091,8 +1084,7 @@ int main(int argc, char **argv) {
 
   std::thread posegraph_slam{process_pg};  // pose graph construction
   std::thread lc_detection{process_lcd};   // loop closure detection
-  std::thread icp_calculation{
-      process_icp};  // loop constraint calculation via icp
+  // process_icp thread removed: BTC's SearchLoop already includes planar geometric ICP
   std::thread isam_update{
       process_isam};  // if you want to call less isam2 run (for saving
                       // redundant computations and no real-time visulization is

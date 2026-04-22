@@ -699,7 +699,7 @@ amcl:
     # beam_skip_error_threshold: 0.1  # 新增参数
     
     # Likelihood距离参数
-    laser_likelihood_max_dist: 40.0
+    laser_likelihood_max_dist: 2.0
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束

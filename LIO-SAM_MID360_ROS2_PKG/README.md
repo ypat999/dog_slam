@@ -9,7 +9,7 @@
 - **多机器人支持**: 通过 namespace 实现多个导航系统隔离
 - **实时建图**: 支持在线建图和离线地图构建
 - **稳定导航**: 优化base_footprint，实现高速稳定导航
-- **Gazebo仿真**: 支持Gazebo GPU加速仿真
+- **Gazebo Garden仿真**: 支持Gazebo Garden GPU加速仿真，提供多种仿真环境
 
 ## 系统要求
 
@@ -296,11 +296,29 @@ LIO-SAM_MID360_ROS2_PKG/
 │   ├── SC_PGO_ROS2/                  # SC-PGO姿态图优化
 │   ├── nav2_dog_slam/                # 统一导航系统
 │   ├── livox_ros_driver2/            # Livox雷达驱动
+│   ├── livox_gazebo_garden/          # Gazebo Garden仿真环境
 │   ├── global_config/                # 全局配置管理
 │   └── m-explore/                    # 自主探索
 ├── map_sample/                       # 地图示例
 └── build_ros2.sh                     # 构建脚本
 ```
+
+## 最新更新
+
+- **2026-04-09**: Gazebo7可正常运行，删除旧gazebo版本，添加Gazebo Garden仿真支持
+- **2026-04-08**: 模拟小车已能发出点云，优化MPPI和AMCL参数，建图导航都可在无namespace情况使用
+- **2026-04-07**: 修正namespace问题，目前无namespace可建图
+- **2026-04-06**: Web控制界面添加路线和footprint显示
+- **2026-02-11**: 去除fasterlio和dio（未使用），修正pointlio的footprint参考问题，微调superlio点云保存参数
+- **2026-02-10**: 将base_footprint移至各lio算法输出
+- **2026-02-09**: 修正footprint计算
+- **2026-02-08**: 改进base_footprint计算
+- **2026-02-07**: 参数微调，superlio疑似会影响odom使其倾斜，需调试
+- **2026-02-06**: super lio导航可用
+- **2026-02-05**: 添加Super-LIO支持到SLAM导航系统
+- **2026-02-04**: superlio添加body cloud
+- **2026-01-30**: 修正base_footprint相关问题，实现稳定高速导航
+- **2026-01-27**: 导航算法集中到一起，统一启动文件
 
 ## 故障排除
 

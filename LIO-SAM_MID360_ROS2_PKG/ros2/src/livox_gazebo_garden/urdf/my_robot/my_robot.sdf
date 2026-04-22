@@ -1,0 +1,589 @@
+<?xml version="1.0" ?>
+<sdf version='1.9'>
+  <model name='car'>
+    <link name='base_footprint'>
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0.04 0 0 0</pose>
+        <mass>50.0</mass>
+        <inertia>
+          <ixx>0.1</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.1</iyy>
+          <iyz>0</iyz>
+          <izz>0.1</izz>
+        </inertia>
+      </inertial>
+
+      <collision name='base_link_collision'>
+        <pose>0 0 0.04 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.24 0.1 0.08</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name='base_link_visual'>
+        <pose>0 0 0.04 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.24 0.1 0.08</size>
+          </box>
+        </geometry>
+        <material>
+          <diffuse>1 1 1 0.5</diffuse>
+          <ambient>1 1 1 0.5</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <link name='livox_frame'>
+      <pose>0.07 0 0.1 0 0 0</pose>
+      <inertial>
+        <mass>0.4</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.0004</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0004</iyy>
+          <iyz>0</iyz>
+          <izz>0.0004</izz>
+        </inertia>
+      </inertial>
+      <gravity>true</gravity>
+
+      <visual name='livox_frame_visual'>
+        <geometry>
+          <mesh>
+            <uri>package://livox_gazebo_garden/meshes/mid-360-scaled.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name='livox_frame_collision'>
+        <geometry>
+          <box>
+            <size>0.088 0.088 0.04</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <sensor name='lidar' type='gpu_lidar'>
+        <topic>livox/lidar</topic>
+        <update_rate>10</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.1415926</min_angle>
+              <max_angle>3.1415926</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>60</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.126012</min_angle>
+              <max_angle>0.963771</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>100.0</max>
+            <resolution>0.005</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.002</stddev>
+          </noise>
+        </ray>
+      </sensor>
+
+      <sensor name='mid360_imu' type='imu'>
+        <topic>livox/imu</topic>
+        <update_rate>200</update_rate>
+        <always_on>true</always_on>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </link>
+
+    <joint name='livox_frame_joint' type='fixed'>
+      <parent>base_footprint</parent>
+      <child>livox_frame</child>
+    </joint>
+
+    <!-- ==================== 后轮驱动系统 ==================== -->
+    <!-- 左后轮 -->
+    <link name='rear_left_wheel'>
+      <pose>-0.10 0.10 0.04 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.015</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.015</iyy>
+          <iyz>0</iyz>
+          <izz>0.015</izz>
+        </inertia>
+      </inertial>
+      <collision name='rear_left_wheel_collision'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <soft_cfm>0.0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1000000.0</kp>
+              <kd>1.0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name='rear_left_wheel_visual'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <ambient>0.1 0.1 0.1 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='rear_left_wheel_joint' type='revolute'>
+      <parent>base_footprint</parent>
+      <child>rear_left_wheel</child>
+      <pose relative_to='rear_left_wheel'>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <!-- 右后轮 -->
+    <link name='rear_right_wheel'>
+      <pose>-0.10 -0.10 0.04 0 0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.015</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.015</iyy>
+          <iyz>0</iyz>
+          <izz>0.015</izz>
+        </inertia>
+      </inertial>
+      <collision name='rear_right_wheel_collision'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>1.0</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <soft_cfm>0.0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1000000.0</kp>
+              <kd>1.0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name='rear_right_wheel_visual'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <ambient>0.1 0.1 0.1 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <joint name='rear_right_wheel_joint' type='revolute'>
+      <parent>base_footprint</parent>
+      <child>rear_right_wheel</child>
+      <pose relative_to='rear_right_wheel'>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <!-- ==================== 前轮转向系统 ==================== -->
+    <!-- 左前转向节 -->
+    <link name='front_left_steer_link'>
+      <pose>0.10 0.10 0.04 0 0 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='front_left_steer_link_visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.8 0.2 0.2 1</diffuse>
+          <ambient>0.8 0.2 0.2 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <!-- 左前转向关节 (绕Z轴转向) -->
+    <joint name='front_left_steer_joint' type='revolute'>
+      <parent>base_footprint</parent>
+      <child>front_left_steer_link</child>
+      <pose relative_to='front_left_steer_link'>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1.047</lower>
+          <upper>1.047</upper>
+          <effort>500</effort>
+          <velocity>10</velocity>
+        </limit>
+        <dynamics>
+          <damping>0.5</damping>
+          <friction>0.0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- 左前轮 -->
+    <link name='front_left_wheel'>
+      <pose relative_to='front_left_steer_link'>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.01</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.01</iyy>
+          <iyz>0</iyz>
+          <izz>0.01</izz>
+        </inertia>
+      </inertial>
+      <collision name='front_left_wheel_collision'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>2.0</mu>
+              <mu2>2.0</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <soft_cfm>0.0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1000000.0</kp>
+              <kd>1.0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name='front_left_wheel_visual'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <ambient>0.1 0.1 0.1 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <!-- 左前轮滚动关节 (绕Y轴滚动) -->
+    <joint name='front_left_wheel_joint' type='revolute'>
+      <parent>front_left_steer_link</parent>
+      <child>front_left_wheel</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <!-- 右前转向节 -->
+    <link name='front_right_steer_link'>
+      <pose>0.10 -0.10 0.04 0 0 0</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+      <visual name='front_right_steer_link_visual'>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.8 0.2 0.2 1</diffuse>
+          <ambient>0.8 0.2 0.2 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <!-- 右前转向关节 (绕Z轴转向) -->
+    <joint name='front_right_steer_joint' type='revolute'>
+      <parent>base_footprint</parent>
+      <child>front_right_steer_link</child>
+      <pose relative_to='front_right_steer_link'>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1.047</lower>
+          <upper>1.047</upper>
+          <effort>100</effort>
+          <velocity>10</velocity>
+        </limit>
+        <dynamics>
+          <damping>0.5</damping>
+          <friction>0.0</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- 右前轮 -->
+    <link name='front_right_wheel'>
+      <pose relative_to='front_right_steer_link'>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>1.0</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.01</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.01</iyy>
+          <iyz>0</iyz>
+          <izz>0.01</izz>
+        </inertia>
+      </inertial>
+      <collision name='front_right_wheel_collision'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>2.0</mu>
+              <mu2>2.0</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.0</slip1>
+              <slip2>0.0</slip2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <soft_cfm>0.0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1000000.0</kp>
+              <kd>1.0</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+      <visual name='front_right_wheel_visual'>
+        <pose>0 0 0 1.57079 0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.04</length>
+            <radius>0.045</radius>
+          </cylinder>
+        </geometry>
+        <material>
+          <diffuse>0.1 0.1 0.1 1</diffuse>
+          <ambient>0.1 0.1 0.1 1</ambient>
+        </material>
+      </visual>
+    </link>
+
+    <!-- 右前轮滚动关节 (绕Y轴滚动) -->
+    <joint name='front_right_wheel_joint' type='revolute'>
+      <parent>front_right_steer_link</parent>
+      <child>front_right_wheel</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e16</lower>
+          <upper>1e16</upper>
+        </limit>
+      </axis>
+    </joint>
+
+    <!-- ==================== 后轮差速驱动插件 ==================== -->
+    <plugin name='gz::sim::systems::DiffDrive' filename='gz-sim-diff-drive-system'>
+      <left_joint>rear_left_wheel_joint</left_joint>
+      <right_joint>rear_right_wheel_joint</right_joint>
+      <wheel_separation>0.2</wheel_separation>
+      <wheel_radius>0.045</wheel_radius>
+      <topic>/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <tf_topic>/tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
+    </plugin>
+
+    <!-- ==================== 前轮差速驱动插件 ==================== -->
+    <plugin name='gz::sim::systems::DiffDrive' filename='gz-sim-diff-drive-system'>
+      <left_joint>front_left_wheel_joint</left_joint>
+      <right_joint>front_right_wheel_joint</right_joint>
+      <wheel_separation>0.2</wheel_separation>
+      <wheel_radius>0.045</wheel_radius>
+      <topic>/cmd_vel</topic>
+    </plugin>
+
+    <!-- ==================== 前轮转向控制器（阿克曼转向，仅转向） ==================== -->
+    <plugin name='gz::sim::systems::AckermannSteering' filename='gz-sim-ackermann-steering-system'>
+      <steering_only>true</steering_only>
+      <left_steering_joint>front_left_steer_joint</left_steering_joint>
+      <right_steering_joint>front_right_steer_joint</right_steering_joint>
+      <wheel_separation>0.2</wheel_separation>
+      <wheel_base>0.2</wheel_base>
+      <steering_limit>1.047</steering_limit>
+      <steer_p_gain>50.0</steer_p_gain>
+      <topic>/cmd_vel</topic>
+    </plugin>
+  </model>
+</sdf>

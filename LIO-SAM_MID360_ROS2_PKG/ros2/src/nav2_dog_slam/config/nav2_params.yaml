@@ -15,7 +15,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: false
+    use_sim_time: true
 
     controller_frequency: 20.0  # 保持10Hz控制器频率
     failure_tolerance: 3.0
@@ -24,7 +24,7 @@ controller_server:
     min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
 
-    odom_topic: "lio/robo/odom"
+    odom_topic: "/lio/robo/odom"  # 新增参数
     # publish_zero_velocity: true  # 新增参数
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
@@ -56,27 +56,27 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
 
-      time_steps: 56
+      time_steps: 30  # 大幅减少时间步数，从40减到20，降低计算延迟
       # time_steps: 30
       model_dt: 0.05
-      batch_size: 400  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.5  # 减少变换容差，提高实时性
+      batch_size: 200  # 大幅减少批量大小，从1500减到800，提高计算速度
+      transform_tolerance: 0.2  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 1.0
       ax_min: -1.0
-      az_max: 1.0
-      az_min: -1.0
-      vx_std: 0.5  # 降低线速度采样标准差，减少速度波动
+      az_max: 1.5
+      az_min: -1.5
+      vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.3  # 提高角速度采样标准差，增加转向探索性
       
       # vx_max: 2.0
       vx_max: 1.0
       # vx_max: 0.6
-      vy_max: 0.2
-      vy_std: 0.1  # 降低横移速度采样标准差
-      vx_min: -0.5
-      # wz_max: 2.0
+      vy_max: 0.0
+      vy_std: 0.2  # 降低横移速度采样标准差
+      vx_min: -0.1
+      wz_max: 1.0
       # wz_max: 1.2
       wz_max: 0.8
       
@@ -92,7 +92,7 @@ controller_server:
       publish_optimal_trajectory: false
       # TrajectoryVisualizer参数
       TrajectoryVisualizer:
-        time_step: 5  # 新增参数
+        time_step: 1  # 新增参数
         trajectory_step: 20  # 新增参数
       
       # # 缺失的MPPI参数
@@ -115,7 +115,7 @@ controller_server:
         cost_weight: 30.0  # 保持安全性权重
       
       CostCritic:
-        enabled: false
+        enabled: true
         cost_weight: 5.0  # 大幅增加避障成本权重，强制避障
         cost_power: 2      # 大幅增加成本幂次，使靠近障碍物时成本急剧增加
         collision_cost: 254.0  # 碰撞成本设为最大值
@@ -126,15 +126,11 @@ controller_server:
 
       ObstaclesCritic:
         enabled: true
-        cost_weight: 50.0
-        cost_power: 2
-        collision_cost: 10000.0
+        cost_weight: 30.0
+        cost_power: 3
+        collision_cost: 254.0
         consider_footprint: true
-        critical_cost: 500.0
-        critical_weight: 50.0
-        repulsion_weight: 5.0
-        collision_margin_distance: 0.5
-        inflation_radius: 1.2
+        critical_cost: 254.0
         inflation_layer_name: "inflation_layer_local"
         near_goal_distance: 1.5
         
@@ -161,13 +157,12 @@ controller_server:
         offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
         threshold_to_consider: 0.5  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
         max_angle_to_furthest: 0.5  # 大幅减少最大角度阈值，避免过度修正
-        # mode: 0
         
       PreferForwardCritic:
         enabled: true
-        cost_power: 1
-        cost_weight: 10.0
-        threshold_to_consider: 2.0
+        cost_power: 2
+        cost_weight: 20.0  # 降低权重，减少直线前进的强制性
+        threshold_to_consider: 1.0  #Distance (m) between robot and goal to stop considering preferring forward and allow goal critics to take over.
       
       # TwirlingCritic:
       #   enabled: false
@@ -175,23 +170,22 @@ controller_server:
 
       VelocityDeadbandCritic: 
         enabled: true
-        cost_weight: 40.0  # 增加死区评价器权重，减少低速抖动
-        cost_power: 1
-        deadband_velocities: [0.1, 0.1, 0.1]
+        cost_weight: 50.0  # 增加死区评价器权重，减少低速抖动
+        cost_power: 2
+        deadband_velocities: [0.05, 0.1, 0.1]
         
       GoalCritic:
         enabled: true
-        cost_weight: 50.0  # 增加目标对齐评价器权重，强化终点减速
+        cost_weight: 15.0  # 增加目标对齐评价器权重，强化终点减速
         cost_power: 1  # 增加成本幂次，使距离目标越近减速效果越明显
         threshold_to_consider: 2.0  # Minimal distance (m) between robot and goal above which goal distance cost considered. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the path follower critic.
 
       GoalAngleCritic:
         enabled: true
-        cost_weight: 35.0  
+        cost_weight: 15.0  
         cost_power: 1 
         threshold_to_consider: 0.5 #Minimal distance (m) between robot and goal above which angle goal cost considered.
-        
-        
+
     qos_overrides:
       /tf:
         subscription:
@@ -235,7 +229,7 @@ velocity_smoother:
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
     velocity_timeout: 1.0
-    
+
     qos_overrides:
       /tf:
         subscription:
@@ -249,7 +243,6 @@ velocity_smoother:
           durability: "transient_local"
           history: "keep_last"
           reliability: "reliable"
-
 
 # =============================================================================
 # Planner Server Configuration
@@ -292,12 +285,6 @@ planner_server:
       downsampling_factor: 2
       
       smooth_path: true
-      smoother:
-        do_refinement: true
-        max_iterations: 1000
-        tolerance: 1.0e-10
-        w_data: 0.2
-        w_smooth: 0.3
 
     qos_overrides:
       /tf:
@@ -333,8 +320,8 @@ local_costmap:
       footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       rolling_window: true
-      width: 10
-      height: 10
+      width: 8
+      height: 8
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -404,14 +391,14 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.2
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.4     # 大幅增加局部膨胀半径，避免贴边行走
+        cost_scaling_factor: 1.5  # 大幅增加成本缩放因子，使靠近障碍物的路径代价急剧增加
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
       # 始终发送完整代价地图
       always_send_full_costmap: true
-      
+
       qos_overrides:
         /tf:
           subscription:
@@ -425,7 +412,6 @@ local_costmap:
             durability: "transient_local"
             history: "keep_last"
             reliability: "reliable"
-
 # =============================================================================
 # Global Costmap Configuration
 # =============================================================================
@@ -500,13 +486,26 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true  # 新增参数
-        inflation_radius: 1.0
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.8
+        cost_scaling_factor: 1.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
       # 始终发送完整代价地图
       always_send_full_costmap: false
+      qos_overrides:
+        /tf:
+          subscription:
+            depth: 1
+            durability: "volatile"
+            history: "keep_last"
+            reliability: "best_effort"
+        /tf_static:
+          subscription:
+            depth: 1
+            durability: "transient_local"
+            history: "keep_last"
+            reliability: "reliable"
       qos_overrides:
         /tf:
           subscription:
@@ -547,7 +546,7 @@ amcl:
     
     # 基础参数 - 两个模型共用
     min_particles: 200
-    max_particles: 4000
+    max_particles: 2000
     pf_err: 0.03      # 修正参数名：kld_err -> pf_err
     pf_z: 0.97        # 修正参数名：kld_z -> pf_z
     
@@ -558,10 +557,10 @@ amcl:
     # map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.01            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.01           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.01            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.01           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha1: 0.001            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.001           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.001            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.001           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
@@ -569,12 +568,14 @@ amcl:
     # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
-    update_min_d: 0.3
-    update_min_a: 0.2
+    update_min_d: 1.0
+    update_min_a: 1.0
     resample_interval: 1
     # selective_resampling: false  # 删除不存在的参数
     
     # 恢复参数 - 两个模型共用
+    recovery_alpha_slow: 0.0
+    recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     recovery_alpha_fast: 0.0
     
@@ -630,7 +631,7 @@ amcl:
     
     # Likelihood模型特有参数
     lambda_short: 0.1
-    sigma_hit: 0.08
+    sigma_hit: 0.30
     z_hit: 0.60
     z_rand: 0.40
     # z_max: 0.15    # 注释掉 - Likelihood模型不需要此参数
@@ -640,14 +641,27 @@ amcl:
     # beam_skip_error_threshold: 0.1  # 新增参数
     
     # Likelihood距离参数
-    laser_likelihood_max_dist: 40.0
+    laser_likelihood_max_dist: 2.0
     
     # Beam跳过参数（Likelihood模型也使用）
     do_beamskip: true    #AMCL 会在计算权重时自动跳过异常束
-    beam_skip_distance: 0.8  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
-    beam_skip_threshold: 0.4   #如果异常束比例 超过 0.4（即 40%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
+    beam_skip_distance: 0.5  #如果某个激光束测得的距离与地图上预测的距离相差超过 0.5 米，AMCL 认为这根束"异常"，不参与粒子权重计算。
+    beam_skip_threshold: 0.3   #如果异常束比例 超过 0.6（即 60%），则认为当前帧激光数据整体质量太差，不进行正常权重更新，以免错误影响定位。
     
     # # QoS覆盖参数 - 新增
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
     qos_overrides:
       /tf:
         subscription:
@@ -762,6 +776,19 @@ bt_navigator:
       - nav2_is_battery_charging_condition_bt_node
       - nav2_progress_checker_selector_bt_node
 
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
 
 
 
@@ -795,7 +822,7 @@ smoother_server:
       # tolerance: 1.0e-10  # 新增参数
       # w_data: 0.2  # 新增参数 - 数据权重
       # w_smooth: 1000.0  # 新增参数 - 平滑权重
-    
+      
     qos_overrides:
       /tf:
         subscription:
@@ -809,8 +836,6 @@ smoother_server:
           durability: "transient_local"
           history: "keep_last"
           reliability: "reliable"
-      
-
 
 # =============================================================================
 # Behavior Server Configuration - 配合新行为树优化
@@ -823,16 +848,19 @@ behavior_server:
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false  # 新增参数
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]  # 修正参数名：plugins -> behavior_plugins
-    # costmap_topic: "local_costmap/costmap_raw"  # 新增参数
+    # costmap_topic: "/local_costmap/costmap"  # 新增参数
     footprint_topic: "/local_costmap/published_footprint"  # 新增参数
-    cycle_frequency: 10.0  # 新增参数
+    cycle_frequency: 20.0  # 新增参数
     # global_frame: "odom"  # 新增参数
     robot_base_frame: "base_footprint"  # 新增参数
-    transform_tolerance: 0.5  # 新增参数
+    # transform_tolerance: 0.1  # 新增参数
     simulate_ahead_time: 0.0  # 新增参数
     # max_rotational_vel: 1.0  # 新增参数
     # min_rotational_vel: 0.1  # 新增参数
     # rotational_acc_lim: 1.0  # 新增参数
+    
+    collision_checker:
+      costmap_admissible_threshold: 1.0  # 允许在极高代价（接近撞击）的区域执行恢复动作
     
     collision_checker:
       costmap_admissible_threshold: 1.0  # 允许在极高代价（接近撞击）的区域执行恢复动作
@@ -848,7 +876,7 @@ behavior_server:
     # 后退行为 - 用于脱离障碍物
     backup:
       plugin: "nav2_behaviors/BackUp"
-      backup_dist: 0.3  # 增加后退距离，从0.15增加到0.25
+      backup_dist: 0.5  # 增加后退距离，从0.15增加到0.25
       backup_speed: 0.2  # 增加后退速度，从0.025增加到0.1
       acceleration_limit: 1.5  # 新增参数
       deceleration_limit: -2.0  # 新增参数
@@ -893,6 +921,22 @@ behavior_server:
           reliability: "reliable"
 
 
+      
+    qos_overrides:
+      /tf:
+        subscription:
+          depth: 1
+          durability: "volatile"
+          history: "keep_last"
+          reliability: "best_effort"
+      /tf_static:
+        subscription:
+          depth: 1
+          durability: "transient_local"
+          history: "keep_last"
+          reliability: "reliable"
+
+
 
 # =============================================================================
 # Waypoint Follower Configuration
@@ -909,7 +953,7 @@ waypoint_follower:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
       enabled: true
       waypoint_pause_duration: 200
-      
+
     qos_overrides:
       /tf:
         subscription:

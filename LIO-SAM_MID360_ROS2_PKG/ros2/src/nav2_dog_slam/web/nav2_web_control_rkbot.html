@@ -213,7 +213,7 @@
     let ROSBRIDGE_SERVER_IP = localStorage.getItem('ros_hostname') || location.hostname; // 优先使用本地存储的主机名
     const ROSBRIDGE_SERVER_PORT = 9090;
     const MAP_TOPIC = "/rkbot/map";
-    const ROBOT_FRAME = "rkbot/base_footprint";
+    const ROBOT_FRAME = "rkbot/base_link";
     const SUPER_LIO_ODOM_TOPIC = "/rkbot/lio/odom"; // super_lio发布的里程计话题
   const AMCL_POSE_TOPIC = "/rkbot/amcl_pose"; // AMCL发布的定位话题
     const CMD_TOPIC = "/cmd_vel";
@@ -1317,7 +1317,7 @@
           // 遍历所有变换，查找map->odom
           if (tfMsg.transforms) {
             for (let transform of tfMsg.transforms) {
-              if (transform.header.frame_id === 'map' && transform.child_frame_id === 'odom') {
+              if (transform.header.frame_id === 'rkbot/map' && transform.child_frame_id === 'rkbot/odom') {
                 // 更新map->odom变换
                 mapToOdomTransform = {
                   translation: {
@@ -1519,7 +1519,7 @@
             sec: Math.floor(now), 
             nanosec: Math.floor((now % 1) * 1e9)
           },
-          frame_id: "map"
+          frame_id: "rkbot/map"
         },
         pose: {
           pose: {
@@ -1868,7 +1868,7 @@
             sec: Math.floor(now), 
             nanosec: Math.floor((now % 1) * 1e9) // 修复：确保nanosec是整数类型
           },
-          frame_id: "map"
+          frame_id: "rkbot/map"
         },
         pose: {
           position: { x: x, y: y, z: 0 },
@@ -1989,7 +1989,7 @@
                 sec: Math.floor(now), 
                 nanosec: Math.floor((now % 1) * 1e9)
               },
-              frame_id: "map"
+              frame_id: "rkbot/map"
             },
             poses: [] // 空路径
           });

@@ -29,7 +29,7 @@ controller_server:
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
     # 插件配置
-    controller_plugins: ["FollowPath"]  # 使用DWB控制器替代MPPI
+    controller_plugins: ["FollowPath", "FollowPathVP"]  # 添加VP控制器
     
     # 其他缺失参数
     goal_checker_plugins: ["goal_checker"]  # 新增参数
@@ -243,6 +243,61 @@ controller_server:
       PreferForward.scale: 1.0
       PreferForward.penalty: 1.0
 
+    # Vector Pursuit Controller - 向量追踪控制器
+    FollowPathVP:
+      plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
+      desired_linear_vel: 2.0
+      lookahead_dist: 0.6
+      min_lookahead_dist: 0.3
+      max_lookahead_dist: 0.9
+      lookahead_time: 1.5
+      rotate_to_heading_angular_vel: 1.8
+      transform_tolerance: 0.1
+      use_velocity_scaled_lookahead_dist: false
+      min_velocity_scaled_lookahead_dist: 0.3
+      max_velocity_scaled_lookahead_dist: 0.9
+      use_velocity_scaled_rotation_threshold: false
+      min_velocity_scaled_rotation_threshold: 0.5
+      max_velocity_scaled_rotation_threshold: 1.0
+      use_cost_regulated_linear_velocity_scaling: true
+      use_rotation_to_heading: true
+      allow_reversing: false
+      max_angular_accel: 3.2
+      max_robot_pose_search_dist: 10.0
+      
+      # Vector Pursuit 特定参数
+      use_vector_pursuit: true  # 启用向量追踪
+      vector_pursuit_gain: 1.0  # 向量追踪增益
+      curvature_gain: 1.0  # 曲率增益
+      velocity_gain: 1.0  # 速度增益
+      
+      # 速度限制
+      max_vel_x: 5.0
+      max_vel_theta: 2.0
+      min_vel_x: 0.0
+      min_vel_theta: -2.0
+      
+      # 加速度限制
+      acc_lim_x: 2.5
+      acc_lim_theta: 3.2
+      decel_lim_x: -2.5
+      decel_lim_theta: -3.2
+      
+      # 路径跟踪参数
+      path_distance_bias: 32.0
+      goal_distance_bias: 24.0
+      path_angle_bias: 20.0
+      
+      # 碰撞避免
+      use_collision_detection: true
+      collision_margin: 0.3
+      
+      # 目标到达参数
+      xy_goal_tolerance: 0.5
+      yaw_goal_tolerance: 0.3
+      trans_stopped_velocity: 0.25
+      rot_stopped_velocity: 0.25
+
     qos_overrides:
       /tf:
         subscription:
@@ -308,9 +363,10 @@ planner_server:
   ros__parameters:
     use_sim_time: true
     expected_planner_frequency: 0.2
-    planner_plugins: ["GridBased"]
+    planner_plugins: ["GridBased", "LatticeBased"]  # 添加Lattice规划器
     bond_disable_heartbeat_timeout: false
 
+    # Smac Hybrid A* 规划器 - 原配置保留
     GridBased:
       plugin: "nav2_smac_planner/SmacPlannerHybrid"
 
@@ -351,6 +407,58 @@ planner_server:
         tolerance: 1.0e-10
         w_data: 0.2
         w_smooth: 0.3
+
+    # Smac Lattice 规划器 - 状态格子规划器
+    LatticeBased:
+      plugin: "nav2_smac_planner/SmacPlannerLattice"
+      
+      # 基本参数
+      tolerance: 0.5
+      allow_unknown: true
+      max_iterations: 100000
+      max_on_approach_iterations: 10000
+      max_planning_time: 5.0
+      
+      # Lattice 特定参数
+      lattice_filepath: ""  # 留空使用默认lattice
+      minimum_turning_radius: 0.2  # 最小转弯半径
+      reverse_penalty: 2.0  # 倒车惩罚
+      change_penalty: 0.5  # 方向改变惩罚
+      non_straight_penalty: 1.2  # 非直线惩罚
+      cost_penalty: 2.0  # 代价惩罚
+      retrospective_penalty: 0.015
+      
+      # 轨迹生成参数
+      analytic_expansion_ratio: 3.5
+      analytic_expansion_max_length: 3.0
+      lattice_metadata_filepath: ""
+      
+      # 搜索参数
+      angle_quantization_bins: 72
+      cache_obstacle_heuristic: true
+      cache_analytic_expansion: false
+      
+      # 地图处理
+      downsample_costmap: true
+      downsampling_factor: 2
+      
+      # 路径平滑
+      smooth_path: true
+      smoother:
+        do_refinement: true
+        max_iterations: 1000
+        tolerance: 1.0e-10
+        w_data: 0.2
+        w_smooth: 0.3
+      
+      # 运动模型
+      motion_model_for_search: "REEDS_SHEPP"  # 运动模型：REEDS_SHEPP, DUBIN, ACKERMANN
+      allow_reverse_expansion: true  # 允许倒车扩展
+      
+      # 车辆参数（如果是Ackermann模型）
+      # AckermannConstraints:
+      #   min_turning_r: 0.3
+      #   wheelbase: 0.4
 
     qos_overrides:
       /tf:
@@ -405,10 +513,42 @@ local_costmap:
       # # 过滤器配置
       # filters: []  # 新增参数 - 无过滤器
       
-      # 插件配置
-      plugins: [ "obstacle_layer_local", "inflation_layer_local"] #"voxel_layer",
+      # 插件配置 - 新增STVL插件读取点云
+      plugins: ["stvl_layer", "obstacle_layer_local", "inflation_layer_local"]
       
-      # # 体素层参数
+      # STVL (Spatio-Temporal Voxel Layer) - 3D点云障碍物层
+      stvl_layer:
+        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+        enabled: true
+        voxel_decay: 15.0  # 体素衰减时间（秒）
+        decay_model: 0  # 衰减模型：0=线性，1=指数
+        voxel_size: 0.05  # 体素大小（米）
+        track_unknown_space: true
+        observation_persistence: 0.0
+        max_obstacle_height: 2.0
+        min_obstacle_height: -0.5
+        publish_voxel_map: true
+        observation_sources: pointcloud
+        pointcloud:
+          topic: /cloud_registered  # 点云话题
+          max_obstacle_height: 2.0
+          min_obstacle_height: -0.5
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.3
+          raytrace_max_range: 12.0
+          raytrace_min_range: 0.0
+          clearing: true
+          marking: true
+          data_type: "PointCloud2"
+          sensor_frame: "mid360_link"  # 点云传感器坐标系
+          observation_persistence: 0.0
+          inf_is_valid: false
+          filter: "voxel"  # 点云滤波器
+          voxel_min_points: 2  # 体素最小点数
+          clear_after_reading: true
+          max_update_rate: 10.0
+      
+      # # 体素层参数 - 已被STVL替代，保留作为参考
       # voxel_layer:
       #   plugin: "nav2_costmap_2d::VoxelLayer"
       #   enabled: true
@@ -432,30 +572,41 @@ local_costmap:
       #     obstacle_max_range: 2.5
       #     obstacle_min_range: 0.3
       
-      # 障碍物层参数
+      # 障碍物层参数 - 改为读取点云数据
       obstacle_layer_local:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: scan
+        observation_sources: pointcloud  # 改为点云数据源
         combination_method: 1  # 取最大值组合方法
         footprint_clearing_enabled: true  # 启用footprint清理
-        max_obstacle_height: 100.0
-        min_obstacle_height: -100.0
-        scan:
-          topic: /scan
-          max_obstacle_height: 100.0
-          min_obstacle_height: -100.0
+        max_obstacle_height: 2.0
+        min_obstacle_height: -0.5
+        pointcloud:  # 点云配置
+          topic: /cloud_registered  # 点云话题
+          max_obstacle_height: 2.0
+          min_obstacle_height: -0.5
           clearing: true
           marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 15.0
+          data_type: "PointCloud2"
+          raytrace_max_range: 12.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 15.0
-          obstacle_min_range: 0.0
-          # expected_update_rate: 0.0  # 新增参数
-          # inf_is_valid: false  # 新增参数
-          # observation_persistence: 0.0  # 新增参数
-          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.3
+          sensor_frame: "mid360_link"
+          observation_persistence: 0.0
+          inf_is_valid: false
+          expected_update_rate: 10.0
+        # scan:  # 原激光雷达配置 - 已被点云替代，保留作为参考
+        #   topic: /scan
+        #   max_obstacle_height: 100.0
+        #   min_obstacle_height: -100.0
+        #   clearing: true
+        #   marking: true
+        #   data_type: "LaserScan"
+        #   raytrace_max_range: 15.0
+        #   raytrace_min_range: 0.0
+        #   obstacle_max_range: 15.0
+        #   obstacle_min_range: 0.0
       
       # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
       inflation_layer_local:
@@ -538,22 +689,37 @@ global_costmap:
         # transform_tolerance: 0.3  # 新增参数
         footprint_clearing_enabled: true  # 新增参数
       
-      # 障碍物层参数
+      # 障碍物层参数 - 改为读取点云数据
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: scan
-        scan:
-          topic: /scan
-          max_obstacle_height: 1.8
-          min_obstacle_height: -0.1
+        observation_sources: pointcloud  # 改为点云数据源
+        pointcloud:  # 点云配置
+          topic: /cloud_registered  # 点云话题
+          max_obstacle_height: 2.0
+          min_obstacle_height: -0.5
           clearing: true
           marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 10.0
+          data_type: "PointCloud2"
+          raytrace_max_range: 15.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 10.0
-          obstacle_min_range: 0.0
+          obstacle_max_range: 12.0
+          obstacle_min_range: 0.3
+          sensor_frame: "mid360_link"
+          observation_persistence: 0.0
+          inf_is_valid: false
+          expected_update_rate: 5.0
+        # scan:  # 原激光雷达配置 - 已被点云替代，保留作为参考
+        #   topic: /scan
+        #   max_obstacle_height: 1.8
+        #   min_obstacle_height: -0.1
+        #   clearing: true
+        #   marking: true
+        #   data_type: "LaserScan"
+        #   raytrace_max_range: 10.0
+        #   raytrace_min_range: 0.0
+        #   obstacle_max_range: 10.0
+        #   obstacle_min_range: 0.0
       
       # 膨胀层参数
       inflation_layer:

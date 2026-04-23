@@ -1,0 +1,10 @@
+<library path="traversability_layer">
+  <class type="traversability_layer::TraversabilityLayer" base_class_type="nav2_costmap_2d::Layer">
+    <description>
+      A costmap layer that analyzes 3D traversability based on point cloud data.
+      It computes slope/gradient from height differences and assigns costs based on
+      step height threshold and slope angle. Areas exceeding the step height or
+      maximum traversable slope are marked as lethal obstacles.
+    </description>
+  </class>
+</library>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>traversability_layer</name>
+  <version>1.0.0</version>
+  <description>
+    A nav2_costmap_2d layer plugin that analyzes 3D traversability from point cloud data.
+    Computes slope/gradient from height differences and assigns costs based on
+    step height threshold and slope angle for quadruped robot navigation.
+  </description>
+
+  <maintainer email="todo@todo.com">dog_slam</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav2_costmap_2d</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>pcl_conversions</depend>
+
+  <build_depend>libpcl-all-dev</build_depend>
+  <exec_depend>libpcl-all</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

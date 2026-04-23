@@ -514,7 +514,7 @@ local_costmap:
       # filters: []  # 新增参数 - 无过滤器
       
       # 插件配置 - 新增STVL插件读取点云
-      plugins: ["stvl_layer", "obstacle_layer_local", "inflation_layer_local"]
+      plugins: ["stvl_layer", "obstacle_layer_local", "traversability_layer", "inflation_layer_local"]
       
       # STVL (Spatio-Temporal Voxel Layer) - 3D点云障碍物层
       stvl_layer:
@@ -605,8 +605,24 @@ local_costmap:
         #   data_type: "LaserScan"
         #   raytrace_max_range: 15.0
         #   raytrace_min_range: 0.0
-        #   obstacle_max_range: 15.0
-        #   obstacle_min_range: 0.0
+          #   obstacle_max_range: 15.0
+          #   obstacle_min_range: 0.0
+      
+      # 三维通过性分析层 - 基于点云梯度检测台阶/坡度
+      traversability_layer:
+        plugin: "traversability_layer::TraversabilityLayer"
+        enabled: true
+        pointcloud_topic: "/cloud_registered"
+        sensor_frame: ""
+        max_obstacle_height: 2.0
+        min_obstacle_height: -0.5
+        max_slope_traversable: 45.0
+        step_height_threshold: 0.15
+        slope_cost_scale: 2.0
+        height_cost_scale: 3.0
+        lethal_cost_threshold: 254.0
+        cloud_buffer_size: 5
+        publish_slope_map: false
       
       # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
       inflation_layer_local:

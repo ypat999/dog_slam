@@ -18,3 +18,12 @@ costmap 使用点云体素         STVL插件
 costmap使用梯度地图检测三维通过性
 https://github.com/ANYbotics/grid_map/tree/master/grid_map_costmap_2d
 https://github.com/roboskel/traversability_layer
+
+参数 默认值 说明 pointcloud_topic /cloud_registered_body 点云话题 
+step_height_threshold 0.15 台阶高度阈值（米），超过此值开始分配 
+cost max_slope_traversable 45.0 最大可通行坡度（度），超过则 lethal 
+slope_cost_scale 2.0 坡度 cost 缩放因子 
+height_cost_scale 3.0 高度差 cost 缩放因子 
+max_obstacle_height 2.0 最高考虑高度 
+min_obstacle_height -0.5 最低考虑高度 
+publish_slope_map false 是否发布坡度可视化点云

@@ -612,17 +612,20 @@ local_costmap:
       traversability_layer:
         plugin: "traversability_layer::TraversabilityLayer"
         enabled: true
-        pointcloud_topic: "/cloud_registered"
-        sensor_frame: ""
+        pointcloud_topic: "/lio/body/cloud"
+        sensor_frame: "body"
         max_obstacle_height: 2.0
         min_obstacle_height: -0.5
         max_slope_traversable: 45.0
+        slope_cost_start: 15.0
         step_height_threshold: 0.15
-        slope_cost_scale: 2.0
-        height_cost_scale: 3.0
+        slope_cost_scale: 5.0
+        height_cost_scale: 10.0
         lethal_cost_threshold: 254.0
+        observation_persistence: 5.0
+        clearing_duration: 10.0
         cloud_buffer_size: 5
-        publish_slope_map: false
+        publish_slope_map: true
       
       # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
       inflation_layer_local:

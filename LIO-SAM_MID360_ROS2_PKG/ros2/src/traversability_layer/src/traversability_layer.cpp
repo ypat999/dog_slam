@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <functional>
+#include <set>
 
 PLUGINLIB_EXPORT_CLASS(traversability_layer::TraversabilityLayer, nav2_costmap_2d::Layer)
 
@@ -30,15 +31,18 @@ void TraversabilityLayer::onInitialize()
   }
 
   declareParameter("enabled", rclcpp::ParameterValue(true));
-  declareParameter("pointcloud_topic", rclcpp::ParameterValue(std::string("/cloud_registered_body")));
-  declareParameter("sensor_frame", rclcpp::ParameterValue(std::string("")));
+  declareParameter("pointcloud_topic", rclcpp::ParameterValue(std::string("/lio/body/cloud")));
+  declareParameter("sensor_frame", rclcpp::ParameterValue(std::string("body")));
   declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
   declareParameter("min_obstacle_height", rclcpp::ParameterValue(-0.5));
   declareParameter("max_slope_traversable", rclcpp::ParameterValue(45.0));
+  declareParameter("slope_cost_start", rclcpp::ParameterValue(15.0));
   declareParameter("step_height_threshold", rclcpp::ParameterValue(0.15));
-  declareParameter("slope_cost_scale", rclcpp::ParameterValue(2.0));
-  declareParameter("height_cost_scale", rclcpp::ParameterValue(3.0));
+  declareParameter("slope_cost_scale", rclcpp::ParameterValue(5.0));
+  declareParameter("height_cost_scale", rclcpp::ParameterValue(10.0));
   declareParameter("lethal_cost_threshold", rclcpp::ParameterValue(254.0));
+  declareParameter("observation_persistence", rclcpp::ParameterValue(5.0));
+  declareParameter("clearing_duration", rclcpp::ParameterValue(10.0));
   declareParameter("cloud_buffer_size", rclcpp::ParameterValue(5));
   declareParameter("publish_slope_map", rclcpp::ParameterValue(false));
 
@@ -48,21 +52,27 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".max_obstacle_height", max_obstacle_height_);
   node->get_parameter(name_ + ".min_obstacle_height", min_obstacle_height_);
   node->get_parameter(name_ + ".max_slope_traversable", max_slope_traversable_);
+  node->get_parameter(name_ + ".slope_cost_start", slope_cost_start_);
   node->get_parameter(name_ + ".step_height_threshold", step_height_threshold_);
   node->get_parameter(name_ + ".slope_cost_scale", slope_cost_scale_);
   node->get_parameter(name_ + ".height_cost_scale", height_cost_scale_);
   node->get_parameter(name_ + ".lethal_cost_threshold", lethal_cost_threshold_);
+  node->get_parameter(name_ + ".observation_persistence", observation_persistence_);
+  node->get_parameter(name_ + ".clearing_duration", clearing_duration_);
   node->get_parameter(name_ + ".cloud_buffer_size", cloud_buffer_size_);
   node->get_parameter(name_ + ".publish_slope_map", publish_slope_map_);
 
   max_slope_traversable_ = max_slope_traversable_ * M_PI / 180.0;
+  slope_cost_start_ = slope_cost_start_ * M_PI / 180.0;
 
   RCLCPP_INFO(
     node->get_logger(),
     "TraversabilityLayer: step_height_threshold=%.3f, max_slope_traversable=%.1f deg, "
-    "pointcloud_topic=%s",
+    "slope_cost_start=%.1f deg, pointcloud_topic=%s, observation_persistence=%.1fs, "
+    "clearing_duration=%.1fs",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
-    pointcloud_topic_.c_str());
+    slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
+    observation_persistence_, clearing_duration_);
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -104,14 +114,11 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
       target_frame, source_frame, msg->header.stamp,
       rclcpp::Duration::from_seconds(0.5));
   } catch (tf2::TransformException & ex) {
-    RCLCPP_WARN(
+    RCLCPP_DEBUG(
       rclcpp::get_logger("traversability_layer"),
       "TraversabilityLayer: TF transform failed: %s", ex.what());
     return;
   }
-
-  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-  transformed_cloud->reserve(cloud->size());
 
   double tx = transform.transform.translation.x;
   double ty = transform.transform.translation.y;
@@ -130,6 +137,12 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   double r20 = 2.0 * (qx * qz - qy * qw);
   double r21 = 2.0 * (qy * qz + qx * qw);
   double r22 = 1.0 - 2.0 * (qx * qx + qy * qy);
+
+  double sensor_x = tx;
+  double sensor_y = ty;
+
+  pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  transformed_cloud->reserve(cloud->size());
 
   for (const auto & pt : cloud->points) {
     if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
@@ -151,10 +164,12 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
         static_cast<float>(z_local)));
   }
 
-  processCloud(transformed_cloud);
+  processCloud(transformed_cloud, msg->header.stamp);
 }
 
-void TraversabilityLayer::processCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr & cloud)
+void TraversabilityLayer::processCloud(
+  const pcl::PointCloud<pcl::PointXYZ>::Ptr & cloud,
+  const rclcpp::Time & stamp)
 {
   unsigned int size_x = getSizeInCellsX();
   unsigned int size_y = getSizeInCellsY();
@@ -169,21 +184,14 @@ void TraversabilityLayer::processCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr
     height_map_size_y_ = size_y;
   }
 
-  for (auto & cell : height_map_) {
-    cell.min_z = std::numeric_limits<float>::max();
-    cell.max_z = std::numeric_limits<float>::lowest();
-    cell.mean_z = 0.0f;
-    cell.point_count = 0;
-    cell.height_diff = 0.0f;
-    cell.slope_x = 0.0f;
-    cell.slope_y = 0.0f;
-    cell.slope_magnitude = 0.0f;
-    cell.has_data = false;
-  }
-
   double ox = getOriginX();
   double oy = getOriginY();
   double res = getResolution();
+
+  std::vector<std::pair<int, int>> marked_cells;
+  marked_cells.reserve(cloud->size());
+
+  std::set<size_t> updated_indices;
 
   for (const auto & pt : cloud->points) {
     int mx = static_cast<int>((pt.x - ox) / res);
@@ -195,24 +203,163 @@ void TraversabilityLayer::processCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr
       continue;
     }
 
-    auto & cell = height_map_[static_cast<size_t>(mx) + static_cast<size_t>(my) * size_x];
+    size_t idx = static_cast<size_t>(mx) + static_cast<size_t>(my) * size_x;
+
+    if (updated_indices.find(idx) == updated_indices.end()) {
+      auto & cell = height_map_[idx];
+      cell.min_z = std::numeric_limits<float>::max();
+      cell.max_z = std::numeric_limits<float>::lowest();
+      cell.mean_z = 0.0f;
+      cell.point_count = 0;
+      cell.height_diff = 0.0f;
+      cell.slope_x = 0.0f;
+      cell.slope_y = 0.0f;
+      cell.slope_magnitude = 0.0f;
+      cell.has_data = false;
+      cell.ray_cleared = false;
+      updated_indices.insert(idx);
+    }
+
+    auto & cell = height_map_[idx];
 
     if (pt.z < cell.min_z) cell.min_z = pt.z;
     if (pt.z > cell.max_z) cell.max_z = pt.z;
     cell.mean_z += pt.z;
     cell.point_count++;
     cell.has_data = true;
+    cell.last_seen_time = stamp;
+
+    marked_cells.emplace_back(mx, my);
   }
 
-  for (auto & cell : height_map_) {
+  for (size_t idx : updated_indices) {
+    auto & cell = height_map_[idx];
     if (cell.has_data && cell.point_count > 0) {
       cell.mean_z /= static_cast<float>(cell.point_count);
       cell.height_diff = cell.max_z - cell.min_z;
     }
   }
 
+  geometry_msgs::msg::TransformStamped sensor_transform;
+  std::string target_frame = layered_costmap_->getGlobalFrameID();
+  std::string source_frame = sensor_frame_.empty() ? target_frame : sensor_frame_;
+
+  try {
+    sensor_transform = tf_buffer_->lookupTransform(
+      target_frame, source_frame, stamp,
+      rclcpp::Duration::from_seconds(0.1));
+    double sx = sensor_transform.transform.translation.x;
+    double sy = sensor_transform.transform.translation.y;
+    raycastClear(sx, sy, marked_cells);
+  } catch (tf2::TransformException & ex) {
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("traversability_layer"),
+      "TraversabilityLayer: sensor TF for raycast failed: %s", ex.what());
+  }
+
+  decayOldObservations(stamp);
+
   computeSlope();
   height_map_valid_ = true;
+}
+
+void TraversabilityLayer::raycastClear(
+  double sensor_x, double sensor_y,
+  const std::vector<std::pair<int, int>> & marked_cells)
+{
+  unsigned int size_x = height_map_size_x_;
+  unsigned int size_y = height_map_size_y_;
+  double ox = getOriginX();
+  double oy = getOriginY();
+  double res = getResolution();
+
+  int sensor_mx = static_cast<int>((sensor_x - ox) / res);
+  int sensor_my = static_cast<int>((sensor_y - oy) / res);
+
+  std::set<size_t> marked_set;
+  for (const auto & mc : marked_cells) {
+    marked_set.insert(static_cast<size_t>(mc.first) + static_cast<size_t>(mc.second) * size_x);
+  }
+
+  for (const auto & mc : marked_cells) {
+    int end_mx = mc.first;
+    int end_my = mc.second;
+
+    int dx = std::abs(end_mx - sensor_mx);
+    int dy = std::abs(end_my - sensor_my);
+    int sx = (sensor_mx < end_mx) ? 1 : -1;
+    int sy = (sensor_my < end_my) ? 1 : -1;
+    int err = dx - dy;
+
+    int cx = sensor_mx;
+    int cy = sensor_my;
+
+    while (true) {
+      if (cx == end_mx && cy == end_my) {
+        break;
+      }
+
+      if (cx >= 0 && cx < static_cast<int>(size_x) &&
+          cy >= 0 && cy < static_cast<int>(size_y))
+      {
+        size_t idx = static_cast<size_t>(cx) + static_cast<size_t>(cy) * size_x;
+        if (marked_set.find(idx) == marked_set.end()) {
+          auto & cell = height_map_[idx];
+          if (cell.has_data) {
+            cell.has_data = false;
+            cell.min_z = std::numeric_limits<float>::max();
+            cell.max_z = std::numeric_limits<float>::lowest();
+            cell.mean_z = 0.0f;
+            cell.point_count = 0;
+            cell.height_diff = 0.0f;
+            cell.slope_x = 0.0f;
+            cell.slope_y = 0.0f;
+            cell.slope_magnitude = 0.0f;
+            cell.ray_cleared = true;
+          }
+        }
+      }
+
+      int e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        cx += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        cy += sy;
+      }
+
+      if (cx < -1 || cx > static_cast<int>(size_x) ||
+          cy < -1 || cy > static_cast<int>(size_y))
+      {
+        break;
+      }
+    }
+  }
+}
+
+void TraversabilityLayer::decayOldObservations(const rclcpp::Time & now)
+{
+  for (auto & cell : height_map_) {
+    if (!cell.has_data) {
+      continue;
+    }
+
+    double age_sec = (now - cell.last_seen_time).seconds();
+
+    if (age_sec > clearing_duration_) {
+      cell.has_data = false;
+      cell.min_z = std::numeric_limits<float>::max();
+      cell.max_z = std::numeric_limits<float>::lowest();
+      cell.mean_z = 0.0f;
+      cell.point_count = 0;
+      cell.height_diff = 0.0f;
+      cell.slope_x = 0.0f;
+      cell.slope_y = 0.0f;
+      cell.slope_magnitude = 0.0f;
+    }
+  }
 }
 
 void TraversabilityLayer::computeSlope()
@@ -275,41 +422,33 @@ unsigned char TraversabilityLayer::computeCost(const CellData & cell) const
     return nav2_costmap_2d::NO_INFORMATION;
   }
 
+  unsigned char height_cost = 0;
   if (cell.height_diff > step_height_threshold_) {
-    float height_excess = cell.height_diff - step_height_threshold_;
-    float height_cost = height_excess * height_cost_scale_ * 100.0f;
-    if (height_cost >= lethal_cost_threshold_) {
-      return nav2_costmap_2d::LETHAL_OBSTACLE;
-    }
-    return static_cast<unsigned char>(
+    float excess = cell.height_diff - static_cast<float>(step_height_threshold_);
+    float ratio = 1.0f - std::exp(-static_cast<float>(height_cost_scale_) * excess);
+    height_cost = static_cast<unsigned char>(
       std::min(static_cast<float>(nav2_costmap_2d::LETHAL_OBSTACLE),
-               height_cost));
+               ratio * static_cast<float>(lethal_cost_threshold_)));
   }
 
+  unsigned char slope_cost = 0;
   float slope_angle = std::atan(cell.slope_magnitude);
 
   if (slope_angle > max_slope_traversable_) {
-    return nav2_costmap_2d::LETHAL_OBSTACLE;
+    slope_cost = nav2_costmap_2d::LETHAL_OBSTACLE;
+  } else if (slope_angle > slope_cost_start_) {
+    float excess_angle = slope_angle - static_cast<float>(slope_cost_start_);
+    float max_excess = static_cast<float>(max_slope_traversable_) - static_cast<float>(slope_cost_start_);
+    if (max_excess > 1e-6f) {
+      float ratio = excess_angle / max_excess;
+      float cost_f = (1.0f - std::exp(-static_cast<float>(slope_cost_scale_) * ratio)) *
+                     static_cast<float>(lethal_cost_threshold_);
+      slope_cost = static_cast<unsigned char>(
+        std::min(static_cast<float>(nav2_costmap_2d::LETHAL_OBSTACLE), cost_f));
+    }
   }
 
-  if (slope_angle < 1e-6f) {
-    return nav2_costmap_2d::FREE_SPACE;
-  }
-
-  float slope_ratio = slope_angle / max_slope_traversable_;
-  float slope_cost = slope_ratio * slope_cost_scale_ * 100.0f;
-  float height_cost = cell.height_diff * height_cost_scale_ * 100.0f;
-
-  float total_cost = slope_cost + height_cost;
-
-  if (total_cost >= lethal_cost_threshold_) {
-    return nav2_costmap_2d::LETHAL_OBSTACLE;
-  }
-
-  return static_cast<unsigned char>(
-    std::min(static_cast<float>(nav2_costmap_2d::LETHAL_OBSTACLE),
-             std::max(static_cast<float>(nav2_costmap_2d::FREE_SPACE),
-                      total_cost)));
+  return std::max(height_cost, slope_cost);
 }
 
 void TraversabilityLayer::updateBounds(
@@ -342,13 +481,10 @@ void TraversabilityLayer::updateBounds(
       double wx = ox + (mx + 0.5) * res;
       double wy = oy + (my + 0.5) * res;
 
-      if (cell.height_diff > step_height_threshold_ ||
-          cell.slope_magnitude > std::tan(max_slope_traversable_)) {
-        *min_x = std::min(*min_x, wx - res);
-        *min_y = std::min(*min_y, wy - res);
-        *max_x = std::max(*max_x, wx + res);
-        *max_y = std::max(*max_y, wy + res);
-      }
+      *min_x = std::min(*min_x, wx - res);
+      *min_y = std::min(*min_y, wy - res);
+      *max_x = std::max(*max_x, wx + res);
+      *max_y = std::max(*max_y, wy + res);
     }
   }
 }

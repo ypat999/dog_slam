@@ -31,6 +31,8 @@ struct CellData
   float slope_y = 0.0f;
   float slope_magnitude = 0.0f;
   bool has_data = false;
+  rclcpp::Time last_seen_time{0, 0, RCL_ROS_TIME};
+  bool ray_cleared = false;
 };
 
 class TraversabilityLayer : public nav2_costmap_2d::CostmapLayer
@@ -55,10 +57,16 @@ public:
 
 private:
   void pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
-  void processCloud(const pcl::PointCloud<pcl::PointXYZ>::Ptr & cloud);
+  void processCloud(
+    const pcl::PointCloud<pcl::PointXYZ>::Ptr & cloud,
+    const rclcpp::Time & stamp);
+  void raycastClear(
+    double sensor_x, double sensor_y,
+    const std::vector<std::pair<int, int>> & marked_cells);
   void computeSlope();
   unsigned char computeCost(const CellData & cell) const;
   void resetMaps();
+  void decayOldObservations(const rclcpp::Time & now);
 
   std::mutex mutex_;
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr cloud_sub_;
@@ -68,10 +76,13 @@ private:
   double max_obstacle_height_;
   double min_obstacle_height_;
   double max_slope_traversable_;
+  double slope_cost_start_;
   double step_height_threshold_;
   double slope_cost_scale_;
   double height_cost_scale_;
   double lethal_cost_threshold_;
+  double observation_persistence_;
+  double clearing_duration_;
   int cloud_buffer_size_;
   bool enabled_;
   bool publish_slope_map_;

@@ -408,7 +408,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 1.0
-        cost_scaling_factor: 15.0
+        cost_scaling_factor: 20.0
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -591,7 +591,7 @@ amcl:
     scan_topic: scan
     
     # 初始位姿配置 - 两个模型共用
-    set_initial_pose: false
+    set_initial_pose: true
     always_reset_initial_pose: true
     first_map_only: false
     # map_padding: 0.3      # 删除不存在的参数

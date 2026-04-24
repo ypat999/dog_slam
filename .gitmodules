@@ -1,3 +1,6 @@
 [submodule "Super-LIO"]
 	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO
 	url = https://github.com/ypat999/Super-LIO.git
+[submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/fast_lio_robosenseAiry"]
+	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/fast_lio_robosenseAiry
+	url = https://github.com/KiiiLin/fast_lio_robosenseAiry.git

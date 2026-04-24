@@ -364,18 +364,29 @@
   //   {
   //     /// 可选 ID，必须唯一
   //     id: "wlan0egress",
-  //     /// 流量方向列表，降采样将应用于这些方向（"egress" 和/或 "ingress"）
-  //     flows: ["egress"],
-  //     /// 一个或多个键表达式列表，降采样规则将应用于这些表达式
-  //     key_exprs: [
-  //       "demo/example/**",
+  //  将处理消息的网络接口的可选列表，其余接口的消息将原样传递。
+  //     /// 如果不存在，规则将应用于所有接口。空列表无效。
+  //     interfaces: [ "wlan0" ],
+  //     /// 链路协议的可选列表。至少具有这些链路之一的传输将过滤其消息。
+  //     /// 如果不存在，规则将应用于所有传输。空列表无效。
+  //     link_protocols: [ "tcp", "udp", "tls", "quic", "ws", "serial", "unixsock-stream", "unixpipe", "vsock"],
+  //     /// 将处理消息的数据流的可选列表（"egress" 和/或 "ingress"）。
+  //     /// 如果不存在，规则将应用于两个流。
+  //     flows: ["ingress", "egress"],
+  //     /// 将应用降采样的消息类型列表。不能为空。
+  //     messages: [
+  //       /// 删除
+  //       "delete",
+  //       /// 放置
+  //       "put",
+  //       /// 获取
+  //       "query",
+  //       /// 对查询的可查询回复
+  //       "reply",
   //     ],
-  //     /// 降采样规则列表，按顺序应用
+  //     /// 降采样规则列表：key_expression 和最大频率（赫兹）
   //     rules: [
-  //       {
-  //         /// 每个时间单位（毫秒）允许的消息数
-  //         freq: 10,
-  //       },
+  //       { key_expr: "demo/example/zenoh-rs-pub", freq: 0.1 },
   //     ],
   //   },
   // ],
@@ -409,42 +420,145 @@
     ],
   },
 
-  /// 配置管理
-  adminspace: {
-    /// 是否启用管理空间
-    enabled: true,
-    /// 管理空间的权限
-    /// 可能的值："read" | "write" | "readwrite" | "none"
-    permissions: "read",
-  },
+  // /// 配置访问控制（ACL）规则
+  // access_control: {
+  //   /// [true/false] 只有设置为 true 时才会激活 acl
+  //   "enabled": false,
+  //   /// [deny/allow] 默认权限是 deny（即使留空或未指定）
+  //   "default_permission": "deny",
+  //   /// 允许或拒绝访问键表达式的权限规则集
+  //   "rules":
+  //   [
+  //     {
+  //       /// Id 在规则集中必须唯一
+  //       "id": "rule1",
+  //       "messages": [
+  //         "put", "delete", "declare_subscriber",
+  //         "query", "reply", "declare_queryable",
+  //         "liveliness_token", "liveliness_query", "declare_liveliness_subscriber",
+  //       ],
+  //       "flows":["egress","ingress"],
+  //       "permission": "allow",
+  //       "key_exprs": [
+  //         "test/demo"
+  //       ],
+  //     },
+  //     {
+  //       "id": "rule2",
+  //       "messages": [
+  //         "put", "delete", "declare_subscriber",
+  //         "query", "reply", "declare_queryable",
+  //       ],
+  //       "flows":["ingress"],
+  //       "permission": "allow",
+  //       "key_exprs": [
+  //         "**"
+  //       ],
+  //     },
+  //   ],
+  //   /// 主体组合列表。
+  //   ///
+  //   /// 如果主体属性（即用户名、证书通用名或接口）为空，
+  //   /// 则解释为通配符。此外，主体属性不能为空列表。
+  //   "subjects":
+  //   [
+  //     {
+  //       /// Id 在主体列表中必须唯一
+  //       "id": "subject1",
+  //       /// 主体可以是接口
+  //       "interfaces": [
+  //         "lo0",
+  //         "en0",
+  //       ],
+  //       /// 使用 TLS 或 Quic 时，主体可以是 cert_common_names
+  //       "cert_common_names": [
+  //         "example.zenoh.io"
+  //       ],
+  //       /// 使用用户/密码认证时，主体可以是用户名
+  //       "usernames": [
+  //         "zenoh-example"
+  //       ],
+  //       /// 此实例在内部转换为此过滤器：
+  //       /// (interface="lo0" && cert_common_name="example.zenoh.io" && username="zenoh-example") ||
+  //       /// (interface="en0" && cert_common_name="example.zenoh.io" && username="zenoh-example")
+  //     },
+  //     {
+  //       "id": "subject2",
+  //       "interfaces": [
+  //         "lo0",
+  //         "en0",
+  //       ],
+  //       "cert_common_names": [
+  //         "example2.zenoh.io"
+  //       ],
+  //       /// 此实例在内部转换为此过滤器：
+  //       /// (interface="lo0" && cert_common_name="example2.zenoh.io") ||
+  //       /// (interface="en0" && cert_common_name="example2.zenoh.io")
+  //     },
+  //     {
+  //       "id": "subject3",
+  //       /// 空的主体组合是通配符
+  //     },
+  //     {
+  //       "id": "subject4",
+  //       /// 链路协议也可用于标识要过滤消息的传输。
+  //       /// 如果不存在，规则将应用于所有传输。空列表无效。
+  //       link_protocols: [ "tcp", "udp", "tls", "quic", "ws", "serial", "unixsock-stream", "unixpipe", "vsock"],
+  //       /// ZID 也可用于标识要过滤消息的传输。
+  //       /// 注意：ZID 不由认证机制支持，只有在通过专用的 Zenoh 机制在传输打开/关闭时
+  //       ///       动态添加/删除时，才能在 ACL 中信任。
+  //       ///       如果在 ACL 配置中手动管理，可用于原型设计，但不应用于生产环境！
+  //       zids: ["38a4829bce9166ee"],
+  //     },
+  //   ],
+  //   /// 策略列表将规则关联到主体
+  //   "policies":
+  //   [
+  //     /// 每个策略将一个或多个规则关联到一个或多个主体组合
+  //     {
+  //       /// Id 是可选的。如果提供，它必须在策略列表中唯一
+  //       "id": "policy1",
+  //       /// 规则和主体通过上面声明的唯一 ID 标识
+  //       "rules": ["rule1"],
+  //       "subjects": ["subject1", "subject2"],
+  //     },
+  //     {
+  //       "rules": ["rule2"],
+  //       "subjects": ["subject3", "subject4"],
+  //     },
+  //   ]
+  // },
 
-  /// 插件配置
-  plugins: {
-    /// 插件搜索路径列表
-    search_dirs: [
-      // "/path/to/plugins",
-    ],
-    /// 插件配置
-    // plugin_name: {
-    //   // 插件特定配置
-    // },
-  },
+  // low_pass_filter: [
+  //   {
+  //     /// 可选 ID，必须唯一
+  //     "id": "filter1",
+  //     /// 将处理消息的网络接口的可选列表，其余接口的消息将不会被过滤。
+  //     /// 如果不存在，过滤器将应用于所有接口。
+  //     interfaces: [ "wlan0" ],
+  //     /// 链路协议的可选列表。至少具有这些链路之一的传输将过滤其消息。
+  //     /// 如果不存在，规则将应用于所有传输。空列表无效。
+  //     link_protocols: [ "tcp", "udp", "tls", "quic", "ws", "serial", "unixsock-stream", "unixpipe", "vsock"],
+  //     /// 将处理消息的数据流的可选列表（"egress" 和/或 "ingress"）。
+  //     /// 如果不存在，过滤器将应用于两个流。
+  //     flows: ["ingress", "egress"],
+  //     /// 将应用过滤器的消息类型列表。不能为空。
+  //     messages: [
+  //       "put",
+  //       "delete",
+  //       "query",
+  //       "reply"
+  //     ],
+  //     /// 匹配消息将被过滤的 key_expressions 列表
+  //     key_exprs: [
+  //       "demo/**",
+  //     ],
+  //     /// 序列化有效负载 + 序列化附件的包含最大大小
+  //     size_limit: 8192,
+  //   },
+  // ],
 
-  /// 日志配置
-  log: {
-    /// 日志级别
-    /// 可能的值："trace" | "debug" | "info" | "warn" | "error" | "off"
-    level: "info",
-    /// 日志输出
-    /// 可能的值："stdout" | "stderr" | 文件路径
-    output: "stdout",
-    /// 是否包含文件和行号
-    file_and_line: false,
-    /// 是否包含线程 ID
-    thread: false,
-  },
-
-  /// 传输配置
+  /// Configure internal transport parameters
   transport: {
     unicast: {
       /// 打开链路时的超时时间（毫秒）
@@ -676,19 +790,14 @@
       },
     },
     auth: {
-      /// 是否启用认证
-      enabled: false,
-      /// 认证方法
-      /// 可能的值："none" | "userpass" | "pubkey"
-      method: "none",
-      /// 用户名密码认证配置
-      userpass: {
-        /// 用户名
-        user: "user",
-        /// 密码
-        password: "password",
+      /// 认证配置。
+      /// 密码意味着需要用户名。
+      usrpwd: {
+        user: null,
+        password: null,
+        /// 包含用户密码字典的文件路径
+        dictionary_file: null,
       },
-      /// 公钥认证配置
       pubkey: {
         public_key_pem: null,
         private_key_pem: null,

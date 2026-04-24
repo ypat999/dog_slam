@@ -1,0 +1,715 @@
+/// 此文件尝试列出并记录可用的配置元素。
+/// 要查看配置结构的更完整视图，请查看 `zenoh/src/config.rs` 中的 `Config` 结构。
+/// 注意：这里的值类型正确，但可能不合理，因此仅复制此文件并更改您关心的部分并不是好的做法。
+{
+  /// zenoh 运行时将使用的标识符（十六进制小写的无符号128位整数 - 不接受前导零）。
+  /// 如果未设置，将使用随机的无符号128位整数。
+  /// 警告：此 id 在您的 zenoh 网络中必须是唯一的。
+  // id: "1234567890abcdef",
+
+  /// 节点的模式（router、peer 或 client）
+  mode: "router",
+
+  /// 要连接的端点。例如：tcp/localhost:7447。
+  /// 通过配置端点，可以告诉 zenoh 在启动时连接到哪个路由器/对等节点。
+  ///
+  /// 对于 Linux 上的 TCP/UDP，可以额外指定要连接的接口：
+  /// 例如：tcp/192.168.0.1:7447#iface=eth0，仅当 IP 地址可通过接口 eth0 访问时才连接
+  ///
+  /// 还可以指定要在链路上使用的优先级范围和/或可靠性设置。
+  /// 例如 `tcp/localhost?prio=6-7;rel=0` 为建立的链路分配优先级"data_low"和"background"。
+  ///
+  /// 对于 TCP 和 TLS 链路，可以指定 TCP 缓冲区大小：
+  /// 例如：tcp/192.168.0.1:7447#so_sndbuf=65000;so_rcvbuf=65000
+  /// 对于 TCP、UDP、Quic 和 TLS 链路，可以为本地套接字指定 `bind` 地址：
+  /// 例如：tcp/192.168.0.1:7447#bind=192.168.0.1:0
+  ///  注意！：目前不支持同时指定 `bind` 和 `iface`。
+  ///
+  /// 对于 TCP/UDP 链路，可以指定 IP 头的 DSCP 字段：
+  /// 例如：tcp/192.168.0.1:7447#dscp=0x08
+  connect: {
+    /// 等待所有端点连接的超时时间（0：不重试，-1：无限超时）
+    /// 接受单个值（例如：timeout_ms: 0）
+    /// 或为 router、peer 和 client 指定不同的值（例如：timeout_ms: { router: -1, peer: -1, client: 0 }）。
+    timeout_ms: { router: -1, peer: -1, client: 0 },
+
+    /// 要连接的端点列表。
+    /// 接受单个列表（例如：endpoints: ["tcp/10.10.10.10:7447", "tcp/11.11.11.11:7447"]）
+    /// 或为 router、peer 和 client 指定不同的列表（例如：endpoints: { router: ["tcp/10.10.10.10:7447"], peer: ["tcp/11.11.11.11:7447"] }）。
+    ///
+    /// 参见 https://docs.rs/zenoh/latest/zenoh/config/struct.EndPoint.html
+    endpoints: [
+      "tcp/192.168.168.100:7447"
+    ],
+
+    /// 全局连接配置，
+    /// 接受单个值或为 router、peer 和 client 指定不同的值。
+    /// 配置也可以为单独的端点指定
+    /// 它将覆盖全局配置
+    /// 例如：tcp/192.168.0.1:7447#retry_period_init_ms=20000;retry_period_max_ms=10000"
+
+    /// 如果超过超时时间，则退出应用程序
+    exit_on_failure: { router: false, peer: false, client: true },
+    /// 连接建立重试配置
+    retry: {
+      /// 直到下次连接尝试的初始等待超时
+      period_init_ms: 1000,
+      /// 直到下次连接尝试的最大等待超时
+      period_max_ms: 4000,
+      /// 下次连接尝试超时的增加因子
+      period_increase_factor: 2,
+    },
+  },
+
+  /// 要监听的端点。例如：tcp/0.0.0.0:7447。
+  /// 通过配置端点，可以告诉 zenoh 其他路由器、对等节点或客户端可以使用哪些端点来建立 zenoh 会话。
+  ///
+  /// 对于 Linux 上的 TCP/UDP，可以额外指定要监听的接口：
+  /// 例如：tcp/0.0.0.0:7447#iface=eth0，仅在 eth0 上监听连接
+  ///
+  /// 还可以指定要在链路上使用的优先级范围和/或可靠性设置。
+  /// 例如 `tcp/localhost?prio=6-7;rel=0` 为建立的链路分配优先级"data_low"和"background"。
+  ///
+  /// 对于 TCP 和 TLS 链路，可以指定 TCP 缓冲区大小：
+  /// 例如：tcp/192.168.0.1:7447#so_sndbuf=65000;so_rcvbuf=65000
+  ///
+  /// 对于 TCP/UDP 链路，可以指定 IP 头的 DSCP 字段：
+  /// 例如：tcp/192.168.0.1:7447#dscp=0x08
+  listen: {
+    /// 等待所有监听端点的超时时间（0：不重试，-1：无限超时）
+    /// 接受单个值（例如：timeout_ms: 0）
+    /// 或为 router、peer 和 client 指定不同的值（例如：timeout_ms: { router: -1, peer: -1, client: 0 }）。
+    timeout_ms: 0,
+
+    /// 要监听的端点列表。
+    /// 接受单个列表（例如：endpoints: ["tcp/[::]:7447", "udp/[::]:7447"]）
+    /// 或为 router、peer 和 client 指定不同的列表（例如：endpoints: { router: ["tcp/[::]:7447"], peer: ["tcp/[::]:0"] }）。
+    ///
+    /// 参见 https://docs.rs/zenoh/latest/zenoh/config/struct.EndPoint.html
+    endpoints: [
+      "tcp/0.0.0.0:7447"
+    ],
+
+    /// 全局监听配置，
+    /// 接受单个值或为 router、peer 和 client 指定不同的值。
+    /// 配置也可以为单独的端点指定
+    /// 它将覆盖全局配置
+    /// 例如：tcp/192.168.0.1:7447#exit_on_failure=false;retry_period_max_ms=1000"
+
+    /// 如果超过超时时间，则退出应用程序
+    exit_on_failure: true,
+    /// 监听重试配置
+    retry: {
+      /// 直到下次尝试的初始等待超时
+      period_init_ms: 1000,
+      /// 直到下次尝试的最大等待超时
+      period_max_ms: 4000,
+      /// 下次尝试超时的增加因子
+      period_increase_factor: 2,
+    },
+  },
+
+  /// 配置会话打开行为。
+  open: {
+    /// 配置会话打开返回前需要满足的条件。
+    return_conditions: {
+      /// 会话打开在返回前等待连接到发现的节点和路由器。
+      /// 设置为 false 时，对等节点在会话打开后的首次发布和查询可能会丢失。
+      connect_scouted: true,
+      /// 会话打开在返回前等待从连接的对等节点接收初始声明。
+      /// 设置为 false 可能会导致启动时来自对等节点的额外流量。
+      declares: true,
+    },
+  },
+
+  /// 配置发现机制及其行为
+  scouting: {
+    /// 在客户端模式下，在失败前用于发现路由器的毫秒数周期。
+    timeout: 3000,
+    /// 在对等模式下，在尝试其他操作前用于发现远程对等节点的最大毫秒数周期。
+    delay: 500,
+    /// 组播发现配置。
+    multicast: {
+      /// 是否启用组播发现
+      ///
+      /// ROS 设置：默认禁用组播发现
+      enabled: true,
+      /// 用于组播发现的套接字
+      address: "224.0.0.224:7446",
+      /// 用于组播发现的网络接口
+      interface: "auto", // 如果未设置或设置为"auto"，则自动选择接口
+      /// 组播发现数据包的生存时间
+      ttl: 1,
+      /// 在 UDP 组播上发现时自动建立会话的 Zenoh 实例类型。
+      /// 接受单个值（例如：autoconnect: ["router", "peer"]），无论配置的"mode"是什么，
+      /// 或为 router、peer 或 client 模式指定不同的值（例如：autoconnect: { router: [], peer: ["router", "peer"] }）。
+      /// 每个值是以下项的列表："peer"、"router" 和/或 "client"。
+      autoconnect: { router: [], peer: ["router", "peer"], client: ["router"] },
+      /// 自动连接策略，主要用于避免节点之间冗余连接。
+      /// 可能的选项有：
+      /// - "always"：始终尝试自动连接，可能导致冗余连接。
+      /// - "greater-zid"：仅当自己的 zid 大于对方的 zid 时才尝试连接到另一个节点。
+      ///   如果两个节点都使用此策略，则只有一个会尝试连接。
+      ///   如果其中一个节点不能被另一个节点访问（例如由于私有 IP），此策略可能不适用。
+      /// 接受单个值（例如：autoconnect: "always"），无论要自动连接到哪个节点，
+      /// 或根据检测到的节点类型为 router 和/或 peer 指定不同的值
+      /// （例如：autoconnect_strategy : { to_router:  "always", to_peer: "greater-zid" }），
+      /// 或为 router 或 peer 模式指定不同的值
+      /// （例如：autoconnect_strategy : { peer: { to_router:  "always", to_peer: "greater-zid" } }）。
+      autoconnect_strategy: { router: { to_router: "always", to_peer: "always" } },
+      /// 是否在 UDP 组播上监听发现消息并回复它们。
+      listen: true,
+    },
+    /// Gossip 发现配置。注意："client" 模式下的实例不参与 gossip。
+    gossip: {
+      /// 是否启用 gossip 发现
+      enabled: true,
+      /// 当为 true 时，gossip 发现信息会多跳传播到本地网络中的所有节点。
+      /// 当为 false 时，gossip 发现信息仅传播到下一跳。
+      /// 激活多跳 gossip 意味着更多的发现流量和较低的可扩展性。
+      /// 这在使用"linkstate"路由模式时最有意义，其中子系统中的所有节点彼此之间没有直接连接。
+      multihop: false,
+      /// 向其发送 gossip 消息的 Zenoh 实例类型。
+      /// 接受单个值（例如：target: ["router", "peer"]），无论配置的"mode"是什么，
+      /// 或为 router 或 peer 模式指定不同的值（例如：target: { router: ["router", "peer"], peer: ["router"] }）。
+      /// 每个值是 "peer" 和/或 "router" 的列表。
+      /// ROS 设置：默认情况下，所有对等节点依赖路由器来相互发现。因此配置对等节点仅向路由器发送 gossip
+      ///           消息就足够了，避免了启动时节点之间不必要的流量。
+      target: { router: ["router", "peer"], peer: ["router"]},
+      /// 在 gossip 发现时自动建立会话的 Zenoh 实例类型。
+      /// 接受单个值（例如：autoconnect: ["router", "peer"]），无论配置的"mode"是什么，
+      /// 或为 router 或 peer 模式指定不同的值（例如：autoconnect: { router: [], peer: ["router", "peer"] }）。
+      /// 每个值是以下项的列表："peer" 和/或 "router"。
+      autoconnect: { router: [], peer: ["router", "peer"] },
+      /// 自动连接策略，主要用于避免节点之间冗余连接。
+      /// 可能的选项有：
+      /// - "always"：始终尝试自动连接，可能导致冗余连接。
+      /// - "greater-zid"：仅当自己的 zid 大于对方的 zid 时才尝试连接到另一个节点。
+      ///   如果两个节点都使用此策略，则只有一个会尝试连接。
+      ///   如果其中一个节点不能被另一个节点访问（例如由于私有 IP），此策略可能不适用。
+      /// 接受单个值（例如：autoconnect: "always"），无论要自动连接到哪个节点，
+      /// 或根据检测到的节点类型为 router 和/或 peer 指定不同的值
+      /// （例如：autoconnect_strategy : { to_router:  "always", to_peer: "greater-zid" }），
+      /// 或为 router 或 peer 模式指定不同的值
+      /// （例如：autoconnect_strategy : { peer: { to_router:  "always", to_peer: "greater-zid" } }）。
+      autoconnect_strategy: { router: { to_router: "always", to_peer: "always" } },
+    },
+  },
+
+  /// 数据消息时间戳管理配置。
+  timestamping: {
+    /// 如果尚未添加时间戳，是否为数据消息添加时间戳。
+    /// 接受单个布尔值或为 router、peer 和 client 指定不同的值。
+    ///
+    /// ROS 设置：transient_local 持久性所需的 PublicationCache
+    ///           仅在启用时间戳时才工作。
+    enabled: { router: true, peer: true, client: true },
+    /// 是否丢弃带有未来时间戳的数据消息。
+    /// 如果设置为 false（默认值），带有未来时间戳的消息将被重新标记时间戳。
+    /// 如果禁用时间戳，则忽略时间戳。
+    drop_future_timestamp: false,
+  },
+
+  /// 应用于查询的默认超时时间（毫秒）。
+  /// ROS 设置：默认值 600000 毫秒（10 分钟）已经相当高，但如果需要可以增加。
+  ///           例如，为了避免无响应或滞后的服务服务器超时，
+  ///           这可能在大量节点同时启动时发生。
+  ///           建议配置一个超过任何 `spin_until_complete(service_call_future_result, timeout)` 调用中
+  ///           指定的最长超时时间的值。
+  ///           注意，与操作相关的服务"get_result"被硬编码为无限超时，
+  ///           因为在某些用例中，操作可能需要几个小时（例如任务计划）。
+  queries_default_timeout: 600000,
+
+  /// 要使用的路由策略及其配置。
+  routing: {
+    /// 路由器中使用的路由策略及其配置。
+    router: {
+      /// 当设置为 true 时，如果路由器检测到两个直接连接到它的对等节点
+      /// 彼此之间没有连接，它将在它们之间转发数据。
+      /// 故障转移代理仅在启用 gossip 发现且对等节点配置了 gossip 目标"router"时才工作。
+      /// ROS 设置：为多机器人场景启用，其中不同机器人上的对等节点
+      ///           通过互连的路由器通信
+      peers_failover_brokering: true,
+      /// 链路状态模式配置。
+      linkstate: {
+        /// 链路状态下传出传输的权重。
+        /// 如果传输的两个端点节点都没有指定其权重，则应用权重 100。
+        /// 如果传输的两个端点节点中只有一个指定了其权重，则应用指定的权重。
+        /// 如果传输的两个端点节点都指定了其权重，则应用较大的权重。
+        // transport_weights: [
+        //   { dst_zid: "1", weight: "10" },
+        //   { dst_zid: "2", weight: "200" },
+        // ]
+      },
+    },
+    /// 对等节点中使用的路由策略及其配置。
+    peer: {
+      /// 对等节点中使用的路由策略。（"peer_to_peer" 或 "linkstate"）。
+      /// 此选项需要在子系统的所有对等节点和路由器中设置为相同的值。
+      mode: "peer_to_peer",
+      /// 链路状态模式配置（仅在 mode == "linkstate" 时生效）。
+      linkstate: {
+        /// 链路状态下传出传输的权重。
+        /// 如果传输的两个端点节点都没有指定其权重，则应用权重 100。
+        /// 如果传输的两个端点节点中只有一个指定了其权重，则应用指定的权重。
+        /// 如果传输的两个端点节点都指定了其权重，则应用较大的权重。
+        // transport_weights: [
+        //   { dst_zid: "1", weight: "10" },
+        //   { dst_zid: "2", weight: "200" },
+        // ]
+      },
+    },
+    /// 基于兴趣的路由配置。
+    /// 此配置无论模式如何（router、peer 或 client）都适用。
+    interests: {
+      /// 等待传入兴趣声明的超时时间（毫秒）。
+      /// 此超时的过期意味着发现协议可能不完整，
+      /// 导致消息、查询或活跃性令牌的潜在丢失。
+      timeout: 10000,
+    },
+  },
+
+  // /// 按键表达式覆盖 Zenoh 消息的 QoS 选项（忽略被覆盖值的 Zenoh API QoS 配置）
+  // qos: {
+  //   /// 覆盖 PUT 和 DELETE 消息的 QoS 选项
+  //   publication: [
+  //     {
+  //       /// 这些键表达式包含的键表达式上的 PUT 和 DELETE 消息
+  //       /// 将被给定配置覆盖其 QoS 选项。
+  //       key_exprs: ["demo/**", "example/key"],
+  //       /// 将应用于发布者的配置。
+  //       /// 这里提供的选项将覆盖 Zenoh API 中给出的配置
+  //       config: {
+  //         congestion_control: "block",
+  //         priority: "data_high",
+  //         express: true,
+  //         reliability: "best_effort",
+  //         allowed_destination: "remote",
+  //       },
+  //     },
+  //   ],
+  //   /// 覆盖从/到网络发送和接收的消息的 QoS 选项
+  //   /// 这允许更细粒度的规则（按网卡等），但
+  //   /// 性能不如上面的发布选项。
+  //   network: [
+  //     {
+  //       /// 可选 ID，必须唯一。
+  //       id: "lo0_en0_qos_overwrite",
+  //       /// 可选的 ZID 列表，在与这些 ZID 通信时将覆盖 qos。
+  //       // zids: ["38a4829bce9166ee"],
+  //       /// 可选的接口列表，如果未指定，将应用于所有接口。
+  //       interfaces: [
+  //         "lo0",
+  //         "en0",
+  //       ],
+  //       /// 可选的链路协议列表。至少具有这些链路之一的传输将覆盖其 qos。
+  //       /// 如果不存在，覆盖将应用于所有传输。空列表无效。
+  //       link_protocols: [ "tcp", "udp", "tls", "quic", "ws", "serial", "unixsock-stream", "unixpipe", "vsock"],
+  //       /// 要应用的消息类型列表。
+  //       messages: [
+  //         "put", // put 发布
+  //         "delete", // delete 发布
+  //         "query", // get 查询
+  //         "reply", // 查询回复
+  //       ],
+  //       /// 可选的数据流列表，消息将在这些流上处理（"egress" 和/或 "ingress"）。
+  //       /// 如果不存在，规则将应用于两个流。
+  //       flows: ["egress", "ingress"],
+  //       /// 应用于匹配此项目的消息的 QoS 过滤器。
+  //       qos: {
+  //         congestion_control: "drop",
+  //         priority: "data",
+  //         express: true,
+  //         reliability: "reliable",
+  //       },
+  //       /// 匹配此项目的消息的有效负载大小范围。
+  //       payload_size: "1000000..",
+  //       key_exprs: ["test/demo"],
+  //       overwrite: {
+  //         /// 可选的新优先级值，如果未指定，消息的优先级将保持不变。
+  //         priority: "real_time",
+  //         /// 可选的新拥塞控制值，如果未指定，消息的拥塞控制将保持不变。
+  //         congestion_control: "block",
+  //         /// 可选的新快速标志值，如果未指定，消息的快速标志将保持不变。
+  //         express: true,
+  //       },
+  //     },
+  //   ],
+  // },
+
+  // /// 声明聚合策略。
+  // aggregation: {
+  //   /// 键表达式列表，所有包含的订阅者将被聚合到其中。
+  //   subscribers: [
+  //     // key_expression
+  //   ],
+  //   /// 键表达式列表，所有包含的发布者将被聚合到其中。
+  //   publishers: [
+  //     // key_expression
+  //   ],
+  // },
+
+  // /// 命名空间前缀。
+  // /// 如果指定，所有传出的键表达式将自动添加指定字符串作为前缀，
+  // /// 所有传入的键表达式将去除指定的前缀。
+  // /// 命名空间前缀应满足所有键表达式约束，
+  // /// 此外它不能包含通配符（'*'）。
+  // /// 命名空间应用于会话。
+  // /// 例如，如果会话的命名空间为"1"，则 session.put("my/keyexpr", my_message)，
+  // /// 将把消息放入 1/my/keyexpr。这同样适用于此会话中的所有其他操作。
+  // namespace: "my/namespace",
+
+  // /// 降采样声明。
+  // downsampling: [
+  //   {
+  //     /// 可选 ID，必须唯一
+  //     id: "wlan0egress",
+  //     /// 流量方向列表，降采样将应用于这些方向（"egress" 和/或 "ingress"）
+  //     flows: ["egress"],
+  //     /// 一个或多个键表达式列表，降采样规则将应用于这些表达式
+  //     key_exprs: [
+  //       "demo/example/**",
+  //     ],
+  //     /// 降采样规则列表，按顺序应用
+  //     rules: [
+  //       {
+  //         /// 每个时间单位（毫秒）允许的消息数
+  //         freq: 10,
+  //       },
+  //     ],
+  //   },
+  // ],
+
+  /// 访问控制配置
+  access_control: {
+    /// 访问控制是否启用
+    enabled: false,
+    /// 默认权限
+    /// 权限可以是："allow" | "deny"
+    /// 默认权限将应用于所有未在规则中指定的用户/主题
+    default_permission: "deny",
+    /// 规则列表
+    /// 规则按顺序评估，第一个匹配的规则将被应用
+    rules: [
+      // {
+      //   /// 此规则应用的权限
+      //   permission: "allow",
+      //   /// 规则应用的主题
+      //   key_exprs: [
+      //     "demo/**",
+      //     "example/**",
+      //   ],
+      //   /// 允许或拒绝的消息类型
+      //   /// 可能的值："put" | "delete" | "query" | "reply" | "declare_subscriber" | "declare_publisher" | "declare_queryable" | "declare_token"
+      //   messages: [
+      //     "put",
+      //     "query",
+      //   ],
+      // },
+    ],
+  },
+
+  /// 配置管理
+  adminspace: {
+    /// 是否启用管理空间
+    enabled: true,
+    /// 管理空间的权限
+    /// 可能的值："read" | "write" | "readwrite" | "none"
+    permissions: "read",
+  },
+
+  /// 插件配置
+  plugins: {
+    /// 插件搜索路径列表
+    search_dirs: [
+      // "/path/to/plugins",
+    ],
+    /// 插件配置
+    // plugin_name: {
+    //   // 插件特定配置
+    // },
+  },
+
+  /// 日志配置
+  log: {
+    /// 日志级别
+    /// 可能的值："trace" | "debug" | "info" | "warn" | "error" | "off"
+    level: "info",
+    /// 日志输出
+    /// 可能的值："stdout" | "stderr" | 文件路径
+    output: "stdout",
+    /// 是否包含文件和行号
+    file_and_line: false,
+    /// 是否包含线程 ID
+    thread: false,
+  },
+
+  /// 传输配置
+  transport: {
+    unicast: {
+      /// 打开链路时的超时时间（毫秒）
+      /// ROS 设置：增加该值以避免大量节点同时启动时的超时
+      open_timeout: 60000,
+      /// 接受链路时的超时时间（毫秒）
+      /// ROS 设置：增加该值以避免大量节点同时启动时的超时
+      accept_timeout: 60000,
+      /// 执行握手以接受链路时处于挂起状态的最大链路数
+      /// ROS 设置：增加该值以支持大量节点同时启动
+      accept_pending: 10000,
+      /// 单个 zenoh 会话可以同时存活的最大传输数
+      /// ROS 设置：增加该值以支持大量节点同时启动
+      max_sessions: 10000,
+      /// 每个传输允许的最大传入链路数
+      max_links: 1,
+      /// 启用低延迟传输
+      /// 此选项不会强制使用低延迟传输，实际使用的传输实现
+      /// 取决于建立过程和其他方的设置
+      ///
+      /// 注意：目前，低延迟传输不保留 QoS 优先级。
+      /// 注意：由于上述原因，'lowlatency' 与 'qos' 选项不兼容，因此要
+      ///       启用 'lowlatency'，您需要显式禁用 'qos'。
+      /// 注意：低延迟传输不支持分片，因此消息大小应
+      ///       小于 tx batch_size。
+      lowlatency: false,
+      /// 在单播通信上启用 QoS。
+      qos: {
+        enabled: true,
+      },
+      /// 在单播通信上启用压缩。
+      /// 压缩能力在会话建立期间协商。
+      /// 如果两个 Zenoh 节点都支持压缩，则激活压缩。
+      compression: {
+        enabled: false,
+      },
+    },
+    /// 警告：组播通信在加入组时不执行任何协商。
+    ///   因此，重要的是所有传输参数都相同，以确保
+    ///   系统中的所有节点都能通信。一个常见的配置参数是
+    ///   "transport/link/tx/batch_size"，因为其默认值取决于实际平台
+    ///   在组播上操作时。
+    ///   例如，Linux 和 Windows 上的批处理大小为 65535 字节，Mac OS X 上为 9216，其他平台为 8192。
+    multicast: {
+      /// JOIN 消息传输间隔（毫秒）。
+      join_interval: 2500,
+      /// 组播会话的最大数量。
+      max_sessions: 1000,
+      /// 在组播通信上启用 QoS。
+      /// 默认为 false，以便 Zenoh-to-Zenoh-Pico 开箱即用兼容。
+      qos: {
+        enabled: true,
+      },
+      /// 在组播通信上启用压缩。
+      /// 默认为 false，以便 Zenoh-to-Zenoh-Pico 开箱即用兼容。
+      compression: {
+        enabled: false,
+      },
+    },
+    link: {
+      /// 用于接受和打开会话的协议的可选白名单。如果未
+      /// 配置，所有支持的协议将自动列入白名单。支持的
+      /// 协议有：["tcp" , "udp", "tls", "quic", "ws", "unixsock-stream", "vsock"] 例如，
+      /// 要仅启用 "tls" 和 "quic"：protocols: ["tls", "quic"],
+      ///
+      /// 配置链路的 zenoh TX 参数
+      tx: {
+        /// 用于消息序列号的分辨率（位数）。
+        /// 与另一个 Zenoh 实例建立会话时，将使用两个实例中较低的值。
+        /// 接受的值：8bit、16bit、32bit、64bit。
+        sequence_number_resolution: "32bit",
+        /// 向其他 zenoh 节点宣布的链路租约持续时间（毫秒）
+        /// ROS 设置：增加该值以避免大量节点同时启动时的租约过期
+        lease: 30000,
+        /// 链路租约持续时间内的保活消息数。如果没有发送数据，保活
+        /// 消息将按配置的时间间隔发送。
+        /// 注意：为了考虑可能的丢包和传输延迟及抖动，
+        ///       将实际 keep_alive 间隔设置为租约时间的四分之一：即发送
+        ///       4 条 keep_alive 消息在一个租约周期内。更改租约时间将使
+        ///       keep_alive 消息发送得更频繁或更少。
+        ///       这符合 ITU-T G.8013/Y.1731 规范关于连续连接性
+        ///       检查，该规范认为在目标间隔的 3.5 倍时间内未收到消息时
+        ///       链路失败。
+        /// ROS 设置：增加该值以更快检测断开连接的对等节点
+        keep_alive: 4,
+        /// 批处理大小（字节）表示为 16 位无符号整数。
+        /// 因此，最大批处理大小为 2^16-1（即 65535）。
+        /// 默认批处理大小值为最大批处理大小：65535。
+        batch_size: 65535,
+        /// 每个 zenoh 链路都有一个可配置的传输队列
+        queue: {
+          /// 每个优先级队列的大小表示给定队列可以包含的批次数。
+          /// 注意：每个优先级的批次数必须包含在 1 到 16 之间。不同的值将导致错误。
+          /// 为每个队列分配的内存量为 SIZE_XXX * BATCH_SIZE。
+          /// 如果传输链路 MTU 小于 ZN_BATCH_SIZE，
+          /// 则为每个队列分配的内存量为 SIZE_XXX * LINK_MTU。
+          /// 如果 qos 为 false，则只分配 DATA 优先级。
+          size: {
+            control: 8,
+            real_time: 8,
+            interactive_high: 8,
+            interactive_low: 8,
+            data_high: 8,
+            data: 8,
+            data_low: 8,
+            background: 8,
+          },
+          /// 当队列为空（没有可用批次）时发生拥塞。
+          congestion_control: {
+            /// 将 CongestionControl::Drop 消息推送到队列的行为。
+            drop: {
+              /// 在丢弃可丢弃消息之前等待可用批次的最大时间（微秒）（如果仍然没有可用批次）。
+              wait_before_drop: 100,
+              /// 多分片消息的最大截止期限。
+              max_wait_before_drop_fragments: 1000,
+            },
+            /// 将 CongestionControl::Block 消息推送到队列的行为。
+            block: {
+              /// 在发送阻塞消息时关闭传输会话之前等待可用批次的最大时间（微秒）
+              /// 如果仍然没有可用批次。
+              /// ROS 设置：与 DEFAULT_RMW_ZENOH_SESSION_CONFIG.json5 不同，此处无更改：
+              ///              因为路由器将消息路由到机器人外部，可能通过 WiFi，
+              ///              保持较低的值可确保路由器在 WiFi 拥塞时不会被阻塞太久。
+              wait_before_close: 5000000,
+            },
+          },
+          /// 如果消息小于 batch_size，则执行消息批处理
+          batching: {
+            /// 如果消息小于 batch_size，则执行自适应批处理。
+            /// 当检测到网络不够快以致无法单独传输每条消息时，许多小消息可能会
+            /// 批量处理并一次性发送到线路上，从而减少整体网络开销。这通常是高吞吐量
+            /// 场景，主要由小消息组成。换句话说，批处理由网络背压激活。
+            enabled: true,
+            /// 发生背压时消息应保留用于批处理的最大时间限制（毫秒）。
+            time_limit: 1,
+          },
+          allocation: {
+            /// 优先级队列中批次的内存分配模式。
+            /// - "init"：批次在队列初始化时分配。
+            /// - "lazy"：批次在需要时分配，直到大小配置参数中配置的最大批次数。
+            mode: "init",
+          },
+        },
+      },
+      /// 配置链路的 zenoh RX 参数
+      rx: {
+        /// 每个链路的接收缓冲区大小（字节）
+        /// 默认的 rx_buffer_size 值与默认批处理大小相同：65535。
+        /// 对于非常高吞吐量的场景，可以增加 rx_buffer_size 以容纳
+        /// 更多在途数据。这在处理大消息时特别相关。
+        /// 例如，对于 16MiB rx_buffer_size，将值设置为：16777216。
+        buffer_size: 16777216,
+        /// 接收端重组缓冲区的最大大小。
+        /// 大于配置大小的分片消息将被丢弃。
+        /// 默认值为 1GiB。这在大多数场景中都有效。
+        /// 注意：如果您在内存受限的设备上运行，请减小该值。
+        max_message_size: 1073741824,
+      },
+      /// 配置 TLS 特定参数
+      tls: {
+        /// 用于验证服务器或客户端密钥和证书的证书颁发机构证书路径，
+        /// 取决于节点的模式。如果在路由器模式下未指定，
+        /// 则使用默认的 WebPKI 证书。
+        root_ca_certificate: null,
+        /// TLS 监听端私钥路径
+        listen_private_key: null,
+        /// TLS 监听端公钥证书路径
+        listen_certificate: null,
+        /// 启用 mTLS（双向认证），客户端认证
+        enable_mtls: false,
+        /// TLS 连接端私钥路径
+        connect_private_key: null,
+        /// TLS 连接端证书路径
+        connect_certificate: null,
+        /// 连接时是否验证主机名/dns 与证书的匹配，
+        /// 如果设置为 false，zenoh 将在验证服务器时忽略证书的通用名称。
+        /// 这可能是危险的，因为您的 CA 可能为 foo.com 签署了服务器证书，后来该证书被用于在 baz.com 上托管服务器。如果您希望您的
+        /// ca 验证 baz.com 上的服务器实际上是 baz.com，请将其保持为 true（默认）。
+        verify_name_on_connect: true,
+        /// 远程证书过期时是否关闭链路。
+        /// 如果设置为 true，当达到远程证书链的过期时间时，需要证书的链路（tls/quic）将自动断开
+        /// 注意，监听器需要 mTLS（客户端认证）才能在过期时断开客户端
+        close_link_on_expiration: false,
+        /// TLS 链路的 TCP 系统缓冲区大小的可选配置
+        ///
+        /// 配置 TCP 读取缓冲区大小（字节）
+        // so_rcvbuf: 123456,
+        /// 配置 TCP 写入缓冲区大小（字节）
+        // so_sndbuf: 123456,
+      },
+      // // 配置可选的 TCP 链路特定参数
+      // tcp: {
+      //   /// TCP 链路的 TCP 系统缓冲区大小的可选配置
+      //   ///
+      //   /// 配置 TCP 读取缓冲区大小（字节）
+      //   // so_rcvbuf: 123456,
+      //   /// 配置 TCP 写入缓冲区大小（字节）
+      //   // so_sndbuf: 123456,
+      // },
+    },
+    /// 共享内存配置。
+    /// 注意：只有在使用 "shared-memory" 功能编译 zenoh 时才能使用共享内存，否则
+    /// 此部分的设置无效。
+    shared_memory: {
+      /// 是否启用共享内存。
+      /// 如果设置为 `true`，SHM 缓冲区优化支持将通知给其他方。（默认 `true`）。
+      /// 此选项不会强制使用 SHM 缓冲区优化，实际支持取决于其他方的设置。
+      /// 在会话打开时会执行共享内存探测过程。要使 zenoh 能够在共享内存上运行
+      /// （而不回退到网络模式），还需要在订阅者端启用共享内存。
+      /// 这样，探测过程将成功，共享内存将按预期工作。
+      ///
+      /// ROS 设置：默认禁用，直到完全测试
+      enabled: false,
+      /// SHM 资源初始化模式（默认 "lazy"）。
+      /// - "lazy"：SHM 子系统内部将在首次 SHM 缓冲区分配或接收时延迟初始化。
+      ///   此设置提供更好的启动时间并优化资源使用，
+      ///   但在首次 SHM 缓冲区交互时会产生额外延迟。
+      /// - "init"：SHM 子系统内部将在会话打开时初始化。此设置牺牲
+      ///   启动时间，但保证在处理首个 SHM 缓冲区时没有延迟影响。
+      mode: "lazy",
+      transport_optimization: {
+          /// 为大消息启用传输优化（默认 `true`）。
+          /// 对于具有 SHM 兼容连接的传输，隐式将大消息放入共享内存。
+          enabled: true,
+          /// 用于传输优化的 SHM 内存大小（字节）（默认 `16 * 1024 * 1024`）。
+          pool_size: 16777216,
+          /// 允许优化等于或大于此阈值的消息（字节）（默认 `3072`）。
+          message_size_threshold: 3072,
+      },
+    },
+    auth: {
+      /// 是否启用认证
+      enabled: false,
+      /// 认证方法
+      /// 可能的值："none" | "userpass" | "pubkey"
+      method: "none",
+      /// 用户名密码认证配置
+      userpass: {
+        /// 用户名
+        user: "user",
+        /// 密码
+        password: "password",
+      },
+      /// 公钥认证配置
+      pubkey: {
+        public_key_pem: null,
+        private_key_pem: null,
+        public_key_file: null,
+        private_key_file: null,
+        key_size: null,
+        known_keys_file: null,
+      },
+    },
+  },
+
+  /// 配置管理空间
+  /// 不稳定：此配置部分按预期工作，但可能会在将来的版本中更改
+  adminspace: {
+    /// 启用管理空间
+    enabled: true,
+    /// 管理空间的读和/或写权限
+    permissions: {
+      read: true,
+      write: false,
+    },
+  },
+
+}

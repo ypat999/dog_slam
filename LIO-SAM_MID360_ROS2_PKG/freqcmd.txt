@@ -1,6 +1,6 @@
 # 编译（狗里面，排除gazebo模拟环境，如果要模拟则去掉--packages-skip livox_gazebo_ros2_gpu_simulation）
 cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/ && source install/setup.bash
-colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_garden
+colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_garden fast_lio_robosense
 
 
 

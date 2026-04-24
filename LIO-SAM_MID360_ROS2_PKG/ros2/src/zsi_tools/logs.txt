@@ -1,247 +1,325 @@
-robot@orin-nx:~$ ros2 topic list
-/aligned_points
-/arc/arc_change_flag
-/arc/arc_change_flag_test
-/arc/arc_module_states_debug_info
-/arc/arc_state
-/arc/arc_state_debug_info
-/arc/calibration_state
-/arc/dock_pose
-/arc/dock_state
-/arc/mc_mode_cmd
-/arc/mc_state
-/arc/nav_alignment/cmd_vel_raw
-/arc/nav_alignment/debug_info
-/arc/nav_alignment/error_vector
-/arc/nav_coarse_alignment_mode_cmd
-/arc/nav_coarse_alignment_state
-/arc/nav_contact_alignment_mode_cmd
-/arc/nav_contact_alignment_state
-/arc/nav_fine_alignment_mode_cmd
-/arc/nav_fine_alignment_state
-/arc/perception_calibration_cmd
-/arc/perception_dock_pose
-/arc/perception_mode_cmd
-/arc/perception_state
-/arc/pile_ele_cmd
-/arc/pile_ele_result
-/arc/slam_dock_pose
-/arc/slam_mode_cmd
-/arc/slam_state
-/arc/start_arc
-/arc_mapping_state
-/body_points
-/cmd_pos
+
+firefly@firefly:~$ ros2 topic list
+/behavior_server/transition_event
+/behavior_tree_log
+/bond
+/bt_navigator/transition_event
+/candidate_paths
+/clean_obstacles_around_goal
+/clicked_points
 /cmd_vel
+/cmd_vel_nav
+/cmd_vel_smoothed
 /cmd_vel_with_mc_trajectory
+/collision_monitor/transition_event
+/controller_server/transition_event
+/curvature_lookahead_point
 /diagnostics
+/diagnostics/nav_error
+/diagnostics/nav_error_clear
+/diagnostics/nav_error_primary
 /diagnostics/nav_error_report
+/diagnostics/nav_errors
+/diagnostics/nav_lifecycle/behavior_server/state
+/diagnostics/nav_lifecycle/bt_navigator/state
+/diagnostics/nav_lifecycle/collision_monitor/state
+/diagnostics/nav_lifecycle/controller_server/state
+/diagnostics/nav_lifecycle/map_server/state
+/diagnostics/nav_lifecycle/planner_server/state
+/diagnostics/nav_lifecycle/velocity_optimizer/state
+/diagnostics/nav_lifecycle/waypoint_follower/state
+/each_expansion_step_planner_goal
 /electronic_fence
 /electronic_map
-/front_camera/image_compressed
-/front_lidar
-/front_lidar/imu
-/global_map_points
-/gnss/data
+/evaluated_goal
+/exploration_map
+/fault_info
+/front_end_exploration_traj_visualization
+/front_end_goal_connection_traj_visualization
+/front_end_middle_traj_visualization
+/front_end_shot_traj_visualization
+/front_end_start_connection_traj_visualization
+/front_end_traj_visualization
+/global_costmap/costmap
+/global_costmap/costmap_raw
+/global_costmap/costmap_updates
+/global_costmap/footprint
+/global_costmap/global_costmap/transition_event
+/global_costmap/published_footprint
+/global_esdf_pos_distance
 /goal
-/gps/rtk
-/handle_vel
-/imu_driver/imu_central
-/initialpose
+/goals
+/grouped_frontiers_map
+/hybrid_astar_exploration_points
+/include_frontiers_map
+/is_rotating_to_heading
+/joint_states/gui_cmd
+/joint_states/mc
 /laser_scan
-/lio_pose
-/localization_info
-/localization_path
-/localization_state
-/meb/collision_debug
-/meb/pred_path
-/meb/safety_corridor
-/meb_brake
-/meb_status
-/meb_switch
-/navigation_cmd
+/local_costmap/costmap
+/local_costmap/costmap_raw
+/local_costmap/costmap_updates
+/local_costmap/footprint
+/local_costmap/local_costmap/transition_event
+/local_costmap/published_footprint
+/local_costmap/published_goal_safe_area
+/local_costmap_controller/costmap
+/local_costmap_controller/costmap_raw
+/local_costmap_controller/costmap_updates
+/local_costmap_controller/footprint
+/local_costmap_controller/local_costmap_controller/transition_event
+/local_costmap_controller/published_footprint
+/local_costmap_controller/published_goal_safe_area
+/local_esdf_pos_distance
+/local_map_boxes
+/lookahead_collision_arc
+/lookahead_point
+/map
+/map_server/transition_event
+/mode_switch_cmd
+/monitor
+/motor_cmd
 /navigation_state
-/navigo/bn/cmn/dbg/behavior_tree_log
-/navigo/bn/cmn/vis/candidate_local_paths
-/navigo/bn/cmn/vis/evaluated_goal
-/navigo/bn/cmn/vis/global_path
-/navigo/bn/cmn/vis/goal
-/navigo/bn/cmn/vis/goals
-/navigo/bn/cmn/vis/local_path
-/navigo/bn/cmn/vis/predicted_goal
-/navigo/bn/cmn/vis/predicted_goal_path
-/navigo/bn/cmn/vis/relocalization_goal
-/navigo/cm/cmn/vis/polygon_stop
-/navigo/cm/cmn/vis/selective_stop
-/navigo/cs/cmn/intf/cmd_vel_raw
-/navigo/cs/cmn/intf/cmd_vel_valid
-/navigo/cs/lpc/vis/base_candidate_plan
-/navigo/cs/lpc/vis/best_local_plan
-/navigo/cs/lpc/vis/footprint_collision
-/navigo/cs/lpc/vis/footprint_samples
-/navigo/cs/lpc/vis/free_paths
-/navigo/cs/lpc/vis/laser_point_cloud
-/navigo/cs/lpc/vis/local_planner_goal
-/navigo/cs/lpc/vis/lookahead_point
-/navigo/cs/lpc/vis/received_global_plan
-/navigo/cs/ppc/vis/curvature_lookahead_point
-/navigo/cs/ppc/vis/lookahead_collision_arc
-/navigo/cs/ppc/vis/lookahead_point
-/navigo/cs/ppc/vis/predicted_points
-/navigo/cs/ppc/vis/received_global_plan
-/navigo/ea/cmn/intf/nav_error
-/navigo/ea/cmn/intf/nav_error_clear
-/navigo/ea/cmn/intf/nav_error_primary
-/navigo/ea/cmn/intf/nav_error_report
-/navigo/ea/cmn/intf/nav_errors
-/navigo/ea/cmn/intf/nav_lifecycle/behavior_server/state
-/navigo/ea/cmn/intf/nav_lifecycle/bt_navigator/state
-/navigo/ea/cmn/intf/nav_lifecycle/collision_monitor/state
-/navigo/ea/cmn/intf/nav_lifecycle/controller_server/state
-/navigo/ea/cmn/intf/nav_lifecycle/global_costmap/global_costmap/state
-/navigo/ea/cmn/intf/nav_lifecycle/local_costmap/local_costmap/state
-/navigo/ea/cmn/intf/nav_lifecycle/local_costmap_controller/local_costmap_controller/state
-/navigo/ea/cmn/intf/nav_lifecycle/map_server/state
-/navigo/ea/cmn/intf/nav_lifecycle/planner_server/state
-/navigo/ea/cmn/intf/nav_lifecycle/velocity_optimizer/state
-/navigo/ea/cmn/intf/nav_lifecycle/waypoint_follower/state
-/navigo/gc/cmn/intf/footprint
-/navigo/gc/cmn/vis/costmap
-/navigo/gc/cmn/vis/costmap_raw
-/navigo/gc/cmn/vis/costmap_updates
-/navigo/gc/cmn/vis/published_footprint
-/navigo/gc/ftr/vis/grouped_frontiers_map
-/navigo/gc/ftr/vis/include_frontiers_map
-/navigo/gc/ftr/vis/processed_map
-/navigo/lc/cmn/intf/footprint
-/navigo/lc/cmn/vis/costmap
-/navigo/lc/cmn/vis/costmap_raw
-/navigo/lc/cmn/vis/costmap_updates
-/navigo/lc/cmn/vis/published_footprint
-/navigo/lc/obs/vis/published_goal_safe_area
-/navigo/lcc/cmn/intf/footprint
-/navigo/lcc/cmn/vis/costmap
-/navigo/lcc/cmn/vis/costmap_raw
-/navigo/lcc/cmn/vis/costmap_updates
-/navigo/lcc/cmn/vis/published_footprint
-/navigo/lcc/obs/vis/published_goal_safe_area
-/navigo/lm/cmn/dbg/behavior_server/transition_event
-/navigo/lm/cmn/dbg/bt_navigator/transition_event
-/navigo/lm/cmn/dbg/collision_monitor/transition_event
-/navigo/lm/cmn/dbg/controller_server/transition_event
-/navigo/lm/cmn/dbg/global_costmap/global_costmap/transition_event
-/navigo/lm/cmn/dbg/local_costmap/local_costmap/transition_event
-/navigo/lm/cmn/dbg/local_costmap_controller/local_costmap_controller/transition_event
-/navigo/lm/cmn/dbg/map_server/transition_event
-/navigo/lm/cmn/dbg/planner_server/transition_event
-/navigo/lm/cmn/dbg/velocity_optimizer/transition_event
-/navigo/lm/cmn/dbg/waypoint_follower/transition_event
-/navigo/lm/cmn/intf/bond
-/navigo/ms/cmn/intf/map
-/navigo/ps/cmn/intf/clean_obstacles_around_goal
-/navigo/ps/cmn/vis/get_optimized_path_all_paths_visualization
-/navigo/ps/cmn/vis/get_optimized_path_corridor_visualization
-/navigo/ps/cmn/vis/get_optimized_path_matched_points_markers
-/navigo/ps/cmn/vis/global_esdf_pos_distance
-/navigo/ps/cmn/vis/local_esdf_pos_distance
-/navigo/ps/cmn/vis/planned_path
-/navigo/ps/cmn/vis/planned_trajectories
-/navigo/ps/cmn/vis/quadtree_topo_graph
-/navigo/ps/slp/vis/start_end_visualization
-/navigo/ps/stp/dbg/planner_debug_info
-/navigo/ps/stp/vis/corridor_clearance_visualization
-/navigo/ps/stp/vis/front_end_exploration_traj_visualization
-/navigo/ps/stp/vis/front_end_goal_connection_traj_visualization
-/navigo/ps/stp/vis/front_end_middle_traj_visualization
-/navigo/ps/stp/vis/front_end_shot_traj_visualization
-/navigo/ps/stp/vis/front_end_start_connection_traj_visualization
-/navigo/ps/stp/vis/front_end_traj_visualization
-/navigo/ps/stp/vis/guidance_path
-/navigo/ps/stp/vis/hybrid_astar_exploration_points
-/navigo/ps/stp/vis/hybrid_astar_search/candidate_inputs
-/navigo/ps/stp/vis/hybrid_astar_search/cost_indicators
-/navigo/ps/stp/vis/hybrid_astar_search/direction_arrows
-/navigo/ps/stp/vis/hybrid_astar_search/explored_nodes
-/navigo/ps/stp/vis/hybrid_astar_search/robot_footprint
-/navigo/ps/stp/vis/hybrid_astar_search/selected_input
-/navigo/ps/stp/vis/hybrid_astar_search/shot_path
-/navigo/ps/stp/vis/hybrid_astar_start_end_sampling_points
-/navigo/ps/stp/vis/quadtree_dijkstra_progress
-/navigo/ps/stp/vis/quadtree_multi_inflation_results
-/navigo/ps/stp/vis/quadtree_path_visualization
-/navigo/ps/stp/vis/quadtree_start_goal_grids
-/navigo/ps/stp/vis/safe_drive_corridor
-/navigo/ps/stp/vis/start_end_visualization
-/navigo/ps/stp/vis/tracking_searcher_each_expansion_step_planner_goal
-/navigo/ps/tpg/vis/centerline_points
-/navigo/ps/tpg/vis/esdf_cloud
-/navigo/ps/tpg/vis/esdf_slice
-/navigo/ps/tpg/vis/pcd_overlay
-/navigo/ps/tpg/vis/three_dim_search_path
-/navigo/ps/tpg/vis/three_dim_topo_edges
-/navigo/ps/tpg/vis/three_dim_topo_nodes
-/navigo/ps/tpg/vis/virtual_walls
-/navigo/wf/cmn/intf/update_tracking_goal
-/navigo/wf/cmn/vis/original_reference_path
-/odom/current_pose
-/odom/current_pose/history
-/odom/gazebo_odom
-/odom/localization_odom
-/odom/mc_odom
-/odom/mujoco_odom
-/odom/slam_odom
+/odom/ground_truth
+/odom/ground_truth/history
+/optimal_trajectory
 /parameter_events
+/patrol/optimized_path
+/patrol/original_path
+/perception/detection2d
 /perception/detection3d
-/perception_points
-/pers/state
+/perception/image_raw/compressed
+/perception/image_vis/compressed
+/perception/target3d
+/plan
+/planned_path
+/planned_trajectories
+/planner_debug_info
+/planner_server/transition_event
+/polygon_stop
+/predicted_goal
+/predicted_goal_path
 /predicted_paths
-/pub_slam_state
-/rear_camera/image_compressed
-/rear_lidar
-/rear_lidar/imu
-/rkbot/robotstate
+/predicted_points
+/received_global_plan
 /rosout
-/rtk_pvh
+/safe_drive_corridor
 /set_desired_angular_vel_z
 /set_desired_linear_vel_x
 /set_desired_linear_vel_y
 /set_lookahead_distance
-/set_speed_limit
-/srv/event
+/smoothed_uwb_distance
+/smoothed_uwb_heading
+/speed_limit
+/start_end_sampling_points
+/start_end_visualization
 /start_navigation
 /tf
-/tf_manager/odom_type
 /tf_static
-/uni_best_nav
-/uni_heading
-/uni_rtk_pvh
-/uss_driver/uss_left/range
-/uss_driver/uss_right/range
-/uwb
+/topo_graph
+/track_setting
+/trajectories
+/transformed_global_plan
+/update_goal
+/uwb_id
 /uwb_point
+/velocity_optimizer/transition_event
+/waypoint_follower/transition_event
 
 
 
 
 
 
----------------------------------------------------------------------------------------------------
 
 
 
-robot@orin-nx:~$ ros2 topic echo --once /front_lidar
-header:
-  stamp:
-    sec: 1770264098
-    nanosec: 399994850
-  frame_id: rslidar_head
 
-robot@orin-nx:~$ ros2 topic echo --once /rear_lidar
-header:
-  stamp:
-    sec: 1770264119
-    nanosec: 699990273
-  frame_id: rslidar_tail
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 一、传感器到机器人基座的变换
+### 1. 激光雷达到基座变换 (lidar_2_base_T)
+文件 : obstacle_detection_main.yaml
+
+```
+lidar_2_base_T: [1.0, 0.0, 0.0, 0.
+13011, 0.0, 1.0, 0.0, -0.02329, 0.0, 0.
+0, 1.0, 0.17598, 0.0, 0.0, 0.0, 1.0]
+```
+解析为4x4矩阵 :
+| 1.0 | 0.0 | 0.0 | 0.13011 |
+| 0.0 | 1.0 | 0.0 | -0.02329 |
+| 0.0 | 0.0 | 1.0 | 0.17598 |
+| 0.0 | 0.0 | 0.0 | 1.0 |
+
+平移 : x=0.13011m, y=-0.02329m, z=0.17598m (无旋转)
+
+### 2. 激光雷达到相机变换 (lidar_2_camera_T)
+文件 : obstacle_detection_main.yaml
+
+```
+lidar_2_camera_T: [-0.
+01736639820441734, -0.9996151327611832, 
+0.021633182110999342, 0.
+009626161176106877, 
+                   0.6240381245371103, 
+                   -0.
+                   027741351283858465, 
+                   -0.7809012975742525, 
+                   -0.
+                   24921531586188758, 
+                   0.7812008879523955, 
+                   -6.
+                   15124997028628e-05, 
+                   0.6242797200603274, 
+                   0.
+                   002735235931485452, 
+                   0.0, 0.0, 0.0, 1.0]
+```
+## 📌 二、相机外参配置
+### 1. 主相机外参
+文件 : camera.yaml
+
+```
+extrinsic_parameters:
+  quaternion: 
+    w: 0.9998
+    x: 0.0175
+    y: 0.0004
+    z: 0.0175
+  translation_vector: 
+    - [0.3, 0., 0.]
+```
+平移 : x=0.3m, y=0.0m, z=0.0m
+
+### 2. IMX415相机外参
+文件 : camera_imx415.yaml
+
+```
+extrinsic_parameters:
+  quaternion: 
+    w: 0.9998
+    x: 0.0175
+    y: 0.0004
+    z: 0.0175
+  translation_vector: 
+    - [0.3, 0., 0.]
+```
+平移 : x=0.3m, y=0.0m, z=0.0m
+
+### 3. USB相机外参
+文件 : camera_usb.yaml
+
+```
+extrinsic_parameters:
+  quaternion: 
+    w: 0.9998
+    x: 0.0175
+    y: 0.0004
+    z: 0.0175
+  translation_vector: 
+    - [0.1, 0.2, 0.3]
+```
+平移 : x=0.1m, y=0.2m, z=0.3m
+
+## 📌 三、IMU到相机变换 (双目相机标定)
+文件 : calibration.json
+
+### 相机0 (IMU到Cam0):
+```
+T_imu_cam[0]:
+  px: 0.0, py: 0.0, pz: 0.0
+  qx: 0.0, qy: 0.0, qz: 0.0, qw: 1.0
+```
+平移 : 无偏移， 旋转 : 无旋转 (单位变换)
+
+### 相机1 (IMU到Cam1):
+```
+T_imu_cam[1]:
+  px: 0.05998438844310077
+  py: -0.000004506878429698638
+  pz: 0.0000827523383949291
+  qx: -0.0008662957426883636
+  qy: -0.0012769160889250385
+  qz: 0.000833792799055806
+  qw: 0.9999984619020953
+```
+平移 : x≈60mm (基线距离)
+
+## 📌 四、坐标系定义
+文件 : config.yaml (pub_tf)
+
+```
+map_frame: "map"
+odom_frame: "odom"
+base_frame: "base_link"
+```
+文件 : collision_monitor_params.yaml
+
+```
+base_frame_id: "base_footprint"
+odom_frame_id: "odom"
+```
+## 📌 五、机器人轮廓
+文件 : nav2_params.yaml
+
+```
+# 局部代价地图轮廓
+footprint: "[[0.35,0.20],[0.35,-0.20],
+[-0.35,-0.20],[-0.35,0.20]]"
+
+# 全局代价地图轮廓
+footprint: "[[0.30,0.15],[0.30,-0.15],
+[-0.30,-0.15],[-0.30,0.15]]"
+```
+## 📌 六、碰撞监控多边形
+文件 : collision_monitor_params.yaml
+
+```
+PolygonStop:
+  points: [ 0.5, 0.375, 0.5, -0.375, 0.
+  0, -0.375, 0.0, 0.375 ]
+
+PolygonSlow:
+  points: [ 0.7, 0.575, 0.7, -0.575, -0.
+  7, -0.575, -0.7, 0.575 ]
+```
+## 📌 七、IMU俯仰角配置
+文件 : camera.yaml
+
+```
+imu_pitch_angle: 42
+```
+## 📊 总结表格
+变换名称 源坐标系 目标坐标系 平移 备注 lidar_2_base_T lidar base_link (0.130, -0.023, 0.176) 无旋转 lidar_2_camera_T lidar camera 复杂旋转+平移 4x4矩阵 camera extrinsic camera base_link (0.3, 0, 0) 四元数旋转 T_imu_cam[0] IMU cam0 (0, 0, 0) 单位变换 T_imu_cam[1] IMU cam1 (0.06, 0, 0) 基线距离
+
+任务完成
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

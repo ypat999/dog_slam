@@ -74,7 +74,8 @@ sudo apt-get update && sudo apt-get install -y \
     ros-humble-nav2-lifecycle-manager \
     ros-humble-nav2-map-server \
     ros-humble-nav2-waypoint-follower \
-    ros-humble-rosbridge-server
+    ros-humble-rosbridge-server \
+    ros-humble-spatio-temporal-voxel-layer libopenvdb-dev
 
 # 点云转激光扫描
 sudo apt install ros-humble-pointcloud-to-laserscan

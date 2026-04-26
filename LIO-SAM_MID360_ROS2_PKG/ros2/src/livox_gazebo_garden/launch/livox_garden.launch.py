@@ -47,17 +47,17 @@ def generate_launch_description():
     with open(urdf_path, 'r') as f:
         robot_desc = f.read()
     
-    robot_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        parameters=[{
-            'robot_description': robot_desc,
-            'use_sim_time': True,
-            'publish_frequency': 10.0,
-        }],
-        output='screen',
-    )
+    # robot_state_publisher = Node(
+    #     package='robot_state_publisher',
+    #     executable='robot_state_publisher',
+    #     name='robot_state_publisher',
+    #     parameters=[{
+    #         'robot_description': robot_desc,
+    #         'use_sim_time': True,
+    #         'publish_frequency': 10.0,
+    #     }],
+    #     output='screen',
+    # )
 
     spawn_entity = Node(
         package='ros_gz_sim',
@@ -118,7 +118,7 @@ def generate_launch_description():
     return LaunchDescription([
         *env_vars,
         gazebo_process,
-        robot_state_publisher,
+        # robot_state_publisher,
         TimerAction(period=15.0, actions=[spawn_entity]),
         static_transform_livox_frame_to_mid360_robot_livox_frame_lidar,
         TimerAction(period=20.0, actions=[

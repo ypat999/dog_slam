@@ -111,45 +111,6 @@ config_by_machine = {
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
     },
-    'jqr001': {
-        # jqr001主机配置 - 全局配置
-        'DEFAULT_NAMESPACE': '',
-        'DEFAULT_USE_SIM_TIME': True,
-        'ONLINE_LIDAR': False,
-        
-        # jqr001主机配置 - LIO-SAM
-        'LIO_SAM_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
-        'DEFAULT_BAG_PATH': '/home/ywj/projects/dataset/robot/livox_record_tilt_test2/',
-        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ywj/projects/dataset/reliability_override.yaml',
-        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ywj/projects/LOAM/',
-        
-        # jqr001主机配置 - Nav2
-        'NAV2_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
-        'NAV2_DEFAULT_MAP_FILE': '/home/ywj/projects/map_grid/map.yaml',
-        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
-        'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml',
-        
-        # jqr001主机配置 - FAST-LIO
-        'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
-        'FAST_LIO_MAP_FILE_PATH': '/home/ywj/projects/pcd/test.pcd',  # 添加的地图文件路径
-        
-        # jqr001主机配置 - Livox MID360
-        'LIVOX_MID360_CONFIG': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
-        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
-        
-        # jqr001主机配置 - Super-LIO
-        'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/projects/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
-        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
-        'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -7.0,  # 雷达x轴偏移量
-        'SUPER_LIO_LIDAR_Z': 0.0,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
-        
-        #SC-PGO
-        'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
-    },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - 全局配置
         'DEFAULT_NAMESPACE': '',
@@ -171,7 +132,7 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 1,  # DESKTOP-4LS1SSN主机lidar_type为5
+        'FAST_LIO_LIDAR_TYPE': 5,  # DESKTOP-4LS1SSN主机lidar_type为5
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/pcd/test.pcd',  # 添加的地图文件路径
         
         # DESKTOP-4LS1SSN主机配置 - Livox MID360
@@ -180,11 +141,11 @@ config_by_machine = {
         
         # DESKTOP-4LS1SSN主机配置 - Super-LIO
         'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
-        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP': False,  # 离线开发可能需要保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -7.0,  # 雷达x轴偏移量
-        'SUPER_LIO_LIDAR_Z': 0.0,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
@@ -210,7 +171,7 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
-        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
+        'FAST_LIO_LIDAR_TYPE': 5,  # 其他主机lidar_type为5
         'FAST_LIO_MAP_FILE_PATH': '/home/ywj/pcd/test.pcd',  # 添加的地图文件路径
         
         # DESKTOP-ypat主机配置 - Livox MID360
@@ -219,16 +180,21 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - Super-LIO
         'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
-        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP': False,  # 离线开发可能需要保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -7.0,  # 雷达x轴偏移量
-        'SUPER_LIO_LIDAR_Z': 0.0,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
     },
     'ywj-B250-D3A': {
+        # ywj-B250-D3A主机配置 - 全局配置
+        'DEFAULT_NAMESPACE': '',
+        'DEFAULT_USE_SIM_TIME': True,
+        'ONLINE_LIDAR': False,
+
         # ywj-B250-D3A主机配置 - LIO-SAM
         'ONLINE_LIDAR': False,
         'LIO_SAM_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
@@ -258,9 +224,9 @@ config_by_machine = {
         'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
         'SUPER_LIO_SAVE_MAP': False,  # 台式机离线开发，不保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -7.0,  # 雷达x轴偏移量
-        'SUPER_LIO_LIDAR_Z': 0.0,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
@@ -298,9 +264,9 @@ default_config = {
     'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
     'SUPER_LIO_SAVE_MAP': True,  # 默认保存地图
     'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
-    'SUPER_LIO_LIDAR_X': -7.0,  # 雷达x轴偏移量
-    'SUPER_LIO_LIDAR_Z': 0.0,  # 雷达z轴偏移量
-    'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
+    'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+    'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
+    'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
     
     #SC-PGO
     'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
@@ -364,7 +330,7 @@ LIVOX_FRAME = 'livox_frame'
 
 # ========== 话题名称配置 ==========
 ODOM_TOPIC = '/odometry/global'
-SCAN_TOPIC = '/scan'
+# SCAN_TOPIC = '/scan'
 CMD_VEL_TOPIC = '/cmd_vel'
 LIDAR_TOPIC = '/livox/lidar'
 IMU_TOPIC = '/livox/imu'

@@ -339,7 +339,7 @@ local_costmap:
       # footprint: ""  # 新增参数 - 使用robot_radius代替
       # footprint_padding: 0.01  # 新增参数
       # lethal_cost_threshold: 100  # 新增参数
-      map_topic: "/map"  # 新增参数
+      map_topic: "map"  # 新增参数
       # observation_sources: "scan"  # 新增参数
       # origin_x: 0.0  # 新增参数
       # origin_y: 0.0  # 新增参数

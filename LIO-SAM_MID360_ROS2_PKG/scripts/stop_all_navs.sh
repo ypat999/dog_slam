@@ -7,6 +7,9 @@ pkill -9 -f rosbridge
 pkill -9 -f publisher
 pkill -9 -f rclcpp
 pkill -9 -f '8083'
+pkill -9 -f nav2
+pkill -9 -f gazebo
+pkill -9 -f gz
 
 
 ps -ef | awk '/rosbridge/ {print $2}' | xargs -r kill -9

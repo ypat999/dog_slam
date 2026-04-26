@@ -29,7 +29,7 @@ controller_server:
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
     # 插件配置
-    controller_plugins: ["FollowPath", "FollowPathVP"]  # 添加VP控制器
+    controller_plugins: ["FollowPath"]  # 添加VP控制器
     
     # 其他缺失参数
     goal_checker_plugins: ["goal_checker"]  # 新增参数
@@ -363,7 +363,8 @@ planner_server:
   ros__parameters:
     use_sim_time: true
     expected_planner_frequency: 0.2
-    planner_plugins: ["GridBased", "LatticeBased"]  # 添加Lattice规划器
+    # planner_plugins: ["GridBased", "LatticeBased"]  # 添加Lattice规划器
+    planner_plugins: ["GridBased"]
     bond_disable_heartbeat_timeout: false
 
     # Smac Hybrid A* 规划器 - 原配置保留
@@ -408,57 +409,57 @@ planner_server:
         w_data: 0.2
         w_smooth: 0.3
 
-    # Smac Lattice 规划器 - 状态格子规划器
-    LatticeBased:
-      plugin: "nav2_smac_planner/SmacPlannerLattice"
+    # # Smac Lattice 规划器 - 状态格子规划器
+    # LatticeBased:
+    #   plugin: "nav2_smac_planner/SmacPlannerLattice"
       
-      # 基本参数
-      tolerance: 0.5
-      allow_unknown: true
-      max_iterations: 100000
-      max_on_approach_iterations: 10000
-      max_planning_time: 5.0
+    #   # 基本参数
+    #   tolerance: 0.5
+    #   allow_unknown: true
+    #   max_iterations: 100000
+    #   max_on_approach_iterations: 10000
+    #   max_planning_time: 5.0
       
-      # Lattice 特定参数
-      lattice_filepath: ""  # 留空使用默认lattice
-      minimum_turning_radius: 0.2  # 最小转弯半径
-      reverse_penalty: 2.0  # 倒车惩罚
-      change_penalty: 0.5  # 方向改变惩罚
-      non_straight_penalty: 1.2  # 非直线惩罚
-      cost_penalty: 2.0  # 代价惩罚
-      retrospective_penalty: 0.015
+    #   # Lattice 特定参数
+    #   lattice_filepath: ""  # 留空使用默认lattice
+    #   minimum_turning_radius: 0.2  # 最小转弯半径
+    #   reverse_penalty: 2.0  # 倒车惩罚
+    #   change_penalty: 0.5  # 方向改变惩罚
+    #   non_straight_penalty: 1.2  # 非直线惩罚
+    #   cost_penalty: 2.0  # 代价惩罚
+    #   retrospective_penalty: 0.015
       
-      # 轨迹生成参数
-      analytic_expansion_ratio: 3.5
-      analytic_expansion_max_length: 3.0
-      lattice_metadata_filepath: ""
+    #   # 轨迹生成参数
+    #   analytic_expansion_ratio: 3.5
+    #   analytic_expansion_max_length: 3.0
+    #   lattice_metadata_filepath: ""
       
-      # 搜索参数
-      angle_quantization_bins: 72
-      cache_obstacle_heuristic: true
-      cache_analytic_expansion: false
+    #   # 搜索参数
+    #   angle_quantization_bins: 72
+    #   cache_obstacle_heuristic: true
+    #   cache_analytic_expansion: false
       
-      # 地图处理
-      downsample_costmap: true
-      downsampling_factor: 2
+    #   # 地图处理
+    #   downsample_costmap: true
+    #   downsampling_factor: 2
       
-      # 路径平滑
-      smooth_path: true
-      smoother:
-        do_refinement: true
-        max_iterations: 1000
-        tolerance: 1.0e-10
-        w_data: 0.2
-        w_smooth: 0.3
+    #   # 路径平滑
+    #   smooth_path: true
+    #   smoother:
+    #     do_refinement: true
+    #     max_iterations: 1000
+    #     tolerance: 1.0e-10
+    #     w_data: 0.2
+    #     w_smooth: 0.3
       
-      # 运动模型
-      motion_model_for_search: "REEDS_SHEPP"  # 运动模型：REEDS_SHEPP, DUBIN, ACKERMANN
-      allow_reverse_expansion: true  # 允许倒车扩展
+    #   # 运动模型
+    #   motion_model_for_search: "REEDS_SHEPP"  # 运动模型：REEDS_SHEPP, DUBIN, ACKERMANN
+    #   allow_reverse_expansion: true  # 允许倒车扩展
       
-      # 车辆参数（如果是Ackermann模型）
-      # AckermannConstraints:
-      #   min_turning_r: 0.3
-      #   wheelbase: 0.4
+    #   # 车辆参数（如果是Ackermann模型）
+    #   # AckermannConstraints:
+    #   #   min_turning_r: 0.3
+    #   #   wheelbase: 0.4
 
     qos_overrides:
       /tf:
@@ -514,33 +515,37 @@ local_costmap:
       # filters: []  # 新增参数 - 无过滤器
       
       # 插件配置 - 新增STVL插件读取点云
-      plugins: ["stvl_layer", "obstacle_layer_local", "traversability_layer", "inflation_layer_local"]
-      
+      # plugins: ["stvl_layer", "obstacle_layer_local", "traversability_layer", "inflation_layer_local"]
+      plugins: ["stvl_layer", "inflation_layer_local"]
+
       # STVL (Spatio-Temporal Voxel Layer) - 3D点云障碍物层
       stvl_layer:
         plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
         enabled: true
-        voxel_decay: 15.0  # 体素衰减时间（秒）
-        decay_model: 0  # 衰减模型：0=线性，1=指数
-        voxel_size: 0.05  # 体素大小（米）
+        # 体素衰减时间（秒）
+        voxel_decay: 15.0  
+        # 衰减模型：0=线性，1=指数  
+        decay_model: 0  
+        # 体素大小（米）
+        voxel_size: 0.05  
         track_unknown_space: true
         observation_persistence: 0.0
         max_obstacle_height: 2.0
-        min_obstacle_height: -0.5
+        min_obstacle_height: 0.1
         publish_voxel_map: true
         observation_sources: pointcloud
         pointcloud:
-          topic: /cloud_registered  # 点云话题
+          topic: lio/body/cloud  # 点云话题
           max_obstacle_height: 2.0
-          min_obstacle_height: -0.5
-          obstacle_max_range: 10.0
+          min_obstacle_height: 0.1
+          obstacle_max_range: 15.0
           obstacle_min_range: 0.3
-          raytrace_max_range: 12.0
+          raytrace_max_range: 15.0
           raytrace_min_range: 0.0
           clearing: true
           marking: true
           data_type: "PointCloud2"
-          sensor_frame: "mid360_link"  # 点云传感器坐标系
+          sensor_frame: "base_footprint"  # 点云传感器坐标系
           observation_persistence: 0.0
           inf_is_valid: false
           filter: "voxel"  # 点云滤波器
@@ -576,15 +581,15 @@ local_costmap:
       obstacle_layer_local:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: pointcloud  # 改为点云数据源
-        combination_method: 1  # 取最大值组合方法
-        footprint_clearing_enabled: true  # 启用footprint清理
+        observation_sources: pointcloud
+        combination_method: 1
+        footprint_clearing_enabled: true
         max_obstacle_height: 2.0
-        min_obstacle_height: -0.5
-        pointcloud:  # 点云配置
-          topic: /cloud_registered  # 点云话题
+        min_obstacle_height: 0.1
+        pointcloud:
+          topic: lio/body/cloud
           max_obstacle_height: 2.0
-          min_obstacle_height: -0.5
+          min_obstacle_height: 0.1
           clearing: true
           marking: true
           data_type: "PointCloud2"
@@ -592,10 +597,6 @@ local_costmap:
           raytrace_min_range: 0.0
           obstacle_max_range: 10.0
           obstacle_min_range: 0.3
-          sensor_frame: "mid360_link"
-          observation_persistence: 0.0
-          inf_is_valid: false
-          expected_update_rate: 10.0
         # scan:  # 原激光雷达配置 - 已被点云替代，保留作为参考
         #   topic: /scan
         #   max_obstacle_height: 100.0
@@ -609,11 +610,11 @@ local_costmap:
           #   obstacle_min_range: 0.0
       
       # 三维通过性分析层 - 基于点云梯度检测台阶/坡度
-      traversability_layer:
+      traversability_layer: 
         plugin: "traversability_layer::TraversabilityLayer"
         enabled: true
         pointcloud_topic: "/lio/body/cloud"
-        sensor_frame: "body"
+        sensor_frame: "base_footprint"
         max_obstacle_height: 2.0
         min_obstacle_height: -0.5
         max_slope_traversable: 45.0
@@ -628,7 +629,7 @@ local_costmap:
         publish_slope_map: true
       
       # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
-      inflation_layer_local:
+      inflation_layer_local: 
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 0.4     # 大幅增加局部膨胀半径，避免贴边行走
@@ -702,32 +703,32 @@ global_costmap:
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         enabled: true  # 新增参数
-        map_topic: "/map"  # 新增参数
+        map_topic: "map"  # 新增参数
         # subscribe_to_updates: false  # 新增参数
         map_subscribe_transient_local: true
         # transform_tolerance: 0.3  # 新增参数
         footprint_clearing_enabled: true  # 新增参数
       
       # 障碍物层参数 - 改为读取点云数据
-      obstacle_layer:
+      obstacle_layer: 
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: true
-        observation_sources: pointcloud  # 改为点云数据源
-        pointcloud:  # 点云配置
-          topic: /cloud_registered  # 点云话题
+        observation_sources: pointcloud
+        combination_method: 1
+        footprint_clearing_enabled: true
+        max_obstacle_height: 2.0
+        min_obstacle_height: 0.1
+        pointcloud:
+          topic: lio/body/cloud
           max_obstacle_height: 2.0
-          min_obstacle_height: -0.5
+          min_obstacle_height: 0.0
           clearing: true
           marking: true
           data_type: "PointCloud2"
-          raytrace_max_range: 15.0
+          raytrace_max_range: 12.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 12.0
+          obstacle_max_range: 10.0
           obstacle_min_range: 0.3
-          sensor_frame: "mid360_link"
-          observation_persistence: 0.0
-          inf_is_valid: false
-          expected_update_rate: 5.0
         # scan:  # 原激光雷达配置 - 已被点云替代，保留作为参考
         #   topic: /scan
         #   max_obstacle_height: 1.8
@@ -826,7 +827,7 @@ amcl:
     global_frame_id: map
     odom_frame_id: odom
     base_frame_id: base_footprint
-    scan_topic: /scan
+    scan_topic: scan
     
     # 初始位姿配置 - 两个模型共用
     set_initial_pose: true
@@ -914,9 +915,9 @@ bt_navigator:
     use_sim_time: true
     global_frame: map
     robot_base_frame: base_footprint
-    bt_loop_duration: 100
-    default_server_timeout: 20
-    wait_for_service_timeout: 10
+    bt_loop_duration: 500
+    default_server_timeout: 2000
+    wait_for_service_timeout: 1000
     
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false
@@ -929,7 +930,7 @@ bt_navigator:
     # transform_tolerance: 0.1
     
     # 行为树配置 - 使用ROS2标准行为树文件
-    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
     
     # 未使用的行为树文件（系统存在但当前配置未使用）:
     # - /opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_and_round_robin_recovery.xml (系统无此文件)
@@ -1081,7 +1082,7 @@ behavior_server:
     # costmap_topic: "/local_costmap/costmap"  # 新增参数
     footprint_topic: "/local_costmap/published_footprint"  # 新增参数
     cycle_frequency: 20.0  # 新增参数
-    # global_frame: "odom"  # 新增参数
+    global_frame: "odom"  # 新增参数
     robot_base_frame: "base_footprint"  # 新增参数
     # transform_tolerance: 0.1  # 新增参数
     simulate_ahead_time: 0.0  # 新增参数
@@ -1252,9 +1253,9 @@ slam_toolbox_node:
 
     # 激光与里程计话题
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
-    scan_topic: /scan
+    scan_topic: scan
     # 里程计话题
-    odom_topic: /lio/odom
+    odom_topic: lio/odom
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换

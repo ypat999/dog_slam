@@ -117,6 +117,7 @@ def generate_launch_description():
     ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
     ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
     ns_scan_topic = PythonExpression(["'/scan' if '", ns, "' == '' else str('/", ns, "/scan')"])
+    ns_pointcloud_topic = PythonExpression(["'/lio/body/cloud' if '", ns, "' == '' else str('/", ns, "/lio/body/cloud')"])
     ns_map_topic = PythonExpression(["'/map' if '", ns, "' == '' else str('/", ns, "/map')"])
     
     # 定义启动参数
@@ -551,7 +552,9 @@ def generate_launch_description():
             'map_frame': ns_map_frame,
             'odom_frame': ns_odom_frame,
             'base_frame': ns_base_frame,
-            'scan_topic': ns_scan_topic
+            'scan_topic': ns_scan_topic,
+            'pointcloud_topic': ns_pointcloud_topic,
+            'map_topic': ns_map_topic,
         }.items()
     )
 

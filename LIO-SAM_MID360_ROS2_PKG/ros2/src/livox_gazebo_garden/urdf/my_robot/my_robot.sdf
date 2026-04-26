@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <sdf version='1.9'>
   <model name='car'>
-    <link name='base_footprint'>
+    <link name='base_footprint_gazebo'>
       <pose>0 0 0 0 0 0</pose>
       <inertial>
         <pose>0 0 0.04 0 0 0</pose>
@@ -40,7 +40,7 @@
     </link>
 
     <link name='livox_frame'>
-      <pose>0.07 0 0.1 0 0 0</pose>
+      <pose>0.07 0 0.1 0 0.5236 0</pose>
       <inertial>
         <mass>0.4</mass>
         <pose>0 0 0 0 0 0</pose>
@@ -154,7 +154,7 @@
     </link>
 
     <joint name='livox_frame_joint' type='fixed'>
-      <parent>base_footprint</parent>
+      <parent>base_footprint_gazebo</parent>
       <child>livox_frame</child>
     </joint>
 
@@ -220,7 +220,7 @@
     </link>
 
     <joint name='rear_left_wheel_joint' type='revolute'>
-      <parent>base_footprint</parent>
+      <parent>base_footprint_gazebo</parent>
       <child>rear_left_wheel</child>
       <pose relative_to='rear_left_wheel'>0 0 0 0 0 0</pose>
       <axis>
@@ -293,7 +293,7 @@
     </link>
 
     <joint name='rear_right_wheel_joint' type='revolute'>
-      <parent>base_footprint</parent>
+      <parent>base_footprint_gazebo</parent>
       <child>rear_right_wheel</child>
       <pose relative_to='rear_right_wheel'>0 0 0 0 0 0</pose>
       <axis>
@@ -337,7 +337,7 @@
 
     <!-- 左前转向关节 (绕Z轴转向) -->
     <joint name='front_left_steer_joint' type='revolute'>
-      <parent>base_footprint</parent>
+      <parent>base_footprint_gazebo</parent>
       <child>front_left_steer_link</child>
       <pose relative_to='front_left_steer_link'>0 0 0 0 0 0</pose>
       <axis>
@@ -460,7 +460,7 @@
 
     <!-- 右前转向关节 (绕Z轴转向) -->
     <joint name='front_right_steer_joint' type='revolute'>
-      <parent>base_footprint</parent>
+      <parent>base_footprint_gazebo</parent>
       <child>front_right_steer_link</child>
       <pose relative_to='front_right_steer_link'>0 0 0 0 0 0</pose>
       <axis>
@@ -562,7 +562,7 @@
       <odom_topic>/odom</odom_topic>
       <tf_topic>/tf</tf_topic>
       <frame_id>odom</frame_id>
-      <child_frame_id>base_footprint</child_frame_id>
+      <child_frame_id>base_footprint_gazebo</child_frame_id>
     </plugin>
 
     <!-- ==================== 前轮差速驱动插件 ==================== -->

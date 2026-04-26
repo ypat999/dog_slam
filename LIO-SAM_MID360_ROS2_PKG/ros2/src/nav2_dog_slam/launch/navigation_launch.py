@@ -43,6 +43,7 @@ def generate_launch_description():
     odom_frame = LaunchConfiguration('odom_frame')
     base_frame = LaunchConfiguration('base_frame')
     scan_topic = LaunchConfiguration('scan_topic')
+    pointcloud_topic = LaunchConfiguration('pointcloud_topic')
 
     map_topic = PythonExpression(["'/", map_frame,"'"])
 
@@ -63,7 +64,7 @@ def generate_launch_description():
     param_substitutions_local = {
         'use_sim_time': use_sim_time,
         'autostart': autostart,
-        'global_frame': odom_frame,
+        'global_frame': map_frame,
         'robot_base_frame': base_frame,
         'global_frame_id': map_frame,
         'odom_frame_id': odom_frame,
@@ -71,7 +72,8 @@ def generate_launch_description():
         'map_frame': map_frame,
         'odom_frame': odom_frame,
         'base_frame': base_frame,
-        'topic': scan_topic,
+        # 'topic': scan_topic,
+        'topic': pointcloud_topic,
         'map_topic': map_topic
     }
 
@@ -86,7 +88,8 @@ def generate_launch_description():
         'map_frame': map_frame,
         'odom_frame': odom_frame,
         'base_frame': base_frame,
-        'topic': scan_topic,
+        # 'topic': scan_topic,
+        'topic': pointcloud_topic,
         'map_topic': map_topic
     }
 

@@ -78,6 +78,7 @@ void TraversabilityLayer::onInitialize()
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   rclcpp::QoS cloud_qos(rclcpp::KeepLast(static_cast<size_t>(cloud_buffer_size_)));
+  cloud_qos.best_effort();
   cloud_sub_ = node->create_subscription<sensor_msgs::msg::PointCloud2>(
     pointcloud_topic_, cloud_qos,
     std::bind(&TraversabilityLayer::pointCloudCallback, this, std::placeholders::_1));
@@ -593,6 +594,7 @@ void TraversabilityLayer::activate()
   }
 
   rclcpp::QoS cloud_qos(rclcpp::KeepLast(static_cast<size_t>(cloud_buffer_size_)));
+  cloud_qos.best_effort();
   cloud_sub_ = node->create_subscription<sensor_msgs::msg::PointCloud2>(
     pointcloud_topic_, cloud_qos,
     std::bind(&TraversabilityLayer::pointCloudCallback, this, std::placeholders::_1));

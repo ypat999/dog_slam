@@ -230,11 +230,54 @@ config_by_machine = {
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
+    },
+    'orin-nx': {
+        # orin-nx主机配置 - 全局配置
+        'DEFAULT_NAMESPACE': 'rkbot',
+        'DEFAULT_USE_SIM_TIME': False,
+        'ONLINE_LIDAR': True,
+        
+        # orin-nx主机配置 - LIO-SAM
+        'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',
+        'DEFAULT_BAG_PATH': '/home/ztl/slam_data/livox_record_tilt_test_crop/',
+        'DEFAULT_RELIABILITY_OVERRIDE': '/home/ztl/slam_data/reliability_override.yaml',
+        'LIO_SAM_DEFAULT_LOAM_SAVE_DIR': '/home/ztl/slam_data/loam/',
+        
+        # orin-nx主机配置 - Nav2
+        'NAV2_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
+        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+        'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
+        'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg.yaml',
+        
+        # orin-nx主机配置 - FAST-LIO
+        'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
+        'FAST_LIO_LIDAR_TYPE': 1,  # 其他主机lidar_type为1
+        'FAST_LIO_MAP_FILE_PATH': '/home/ztl/slam_data/pcd/test.pcd',  # 添加的地图文件路径
+        
+        # orin-nx主机配置 - Livox MID360
+        'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_tilt.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+        
+        # orin-nx主机配置 - Super-LIO
+        'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
+        'SUPER_LIO_SAVE_MAP': True,  # 在线机器人需要保存地图
+        'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
+        'SUPER_LIO_LIDAR_X': -0.3,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_Z': -0.2,  # 雷达z轴偏移量
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -7.0,  # 雷达倾斜角度
+
+        #SC-PGO
+        'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
     }
 }
 
 # 默认配置（当主机名不在配置字典中时使用）
 default_config = {
+    'DEFAULT_NAMESPACE': '',
+    'DEFAULT_USE_SIM_TIME': True,
+    'ONLINE_LIDAR': False,
+
     # LIO-SAM 默认配置
     'ONLINE_LIDAR': False,
     'LIO_SAM_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/LIO-SAM_MID360_ROS2_DOG/',

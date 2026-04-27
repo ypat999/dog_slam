@@ -233,7 +233,7 @@ config_by_machine = {
     },
     'orin-nx': {
         # orin-nx主机配置 - 全局配置
-        'DEFAULT_NAMESPACE': 'rkbot',
+        'DEFAULT_NAMESPACE': '',
         'DEFAULT_USE_SIM_TIME': False,
         'ONLINE_LIDAR': True,
         

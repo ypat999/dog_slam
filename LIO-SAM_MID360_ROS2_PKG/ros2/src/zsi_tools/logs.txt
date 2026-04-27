@@ -323,6 +323,15 @@ imu_pitch_angle: 42
 
 
 
+ros_frame_id: rslidar_head    # 前激光雷达
+ros_frame_id: rslidar_tail    # 后激光雷达
+
+
+
+extrinsic_rear_to_front:
+  translation: [0.0, 0.0, -0.7323]  # [x, y, z] 米
+  rotation_matrix: [1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0]
+
 
 
 

@@ -50,20 +50,20 @@ sudo make install
 ### ROS2 依赖包
 
 ```bash
-# SLAM相关依赖
-sudo apt install -y ros-humble-perception-pcl ros-humble-pcl-msgs \
-    ros-humble-vision-opencv ros-humble-xacro ros-humble-vision-msgs
-
 # GTSAM (LIO-SAM依赖)
 sudo add-apt-repository ppa:borglab/gtsam-release-4.1
 sudo apt install -y libgtsam-dev libgtsam-unstable-dev
+
+# SLAM相关依赖
+sudo apt install -y ros-humble-perception-pcl ros-humble-pcl-msgs \
+    ros-humble-vision-opencv ros-humble-xacro ros-humble-vision-msgs
 
 # Super-LIO依赖
 sudo apt install libgoogle-glog-dev libtbb-dev
 
 # Nav2导航系统
-sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
-sudo apt install ros-humble-rosbridge-server 
+sudo apt install -y ros-humble-navigation2 ros-humble-nav2-bringup
+sudo apt install -y ros-humble-rosbridge-server 
 sudo apt-get update && sudo apt-get install -y \
     ros-humble-dwb-critics \
     ros-humble-nav2-dwb-controller \
@@ -77,24 +77,27 @@ sudo apt-get update && sudo apt-get install -y \
     ros-humble-rosbridge-server
 
 # 点云转激光扫描
-sudo apt install ros-humble-pointcloud-to-laserscan
+sudo apt install -y ros-humble-pointcloud-to-laserscan
 
 # OctoMap建图
-sudo apt install ros-humble-octomap ros-humble-octomap-msgs
-sudo apt install ros-humble-octomap-server
+sudo apt install -y ros-humble-octomap ros-humble-octomap-msgs
+sudo apt install -y ros-humble-octomap-server
+
+# rqt
+sudo apt install -y ros-humble-rqt  
+
+# slam_toolbox
+sudo apt install -y ros-humble-slam-toolbox
+
 ```
 
 
-## rqt
-sudo apt install ros-humble-rqt  
 
-## slam_toolbox
-apt install ros-humble-slam-toolbox
 
 
 # gazebo
 sudo apt update
-sudo apt install lsb-release curl gnupg
+sudo apt install -y lsb-release curl gnupg
 
 # 添加 GZ Sim GPG key
 curl -sSL https://packages.osrfoundation.org/gazebo.gpg | sudo tee /etc/apt/trusted.gpg.d/gazebo.gpg > /dev/null
@@ -104,10 +107,10 @@ echo "deb http://packages.osrfoundation.org/gz-harmonic/ubuntu `lsb_release -cs`
   sudo tee /etc/apt/sources.list.d/gz-harmonic.list > /dev/null
 
 sudo apt update
-sudo apt install mesa-vulkan-drivers vulkan-tools -y
+sudo apt install -y mesa-vulkan-drivers vulkan-tools
 
 
-sudo apt install \
+sudo apt install -y \
   ros-humble-gazebo-*          \
   <!-- sudo apt install ros-humble-ros-gz
   sudo apt install gz-harmonic -->
@@ -150,7 +153,7 @@ rm -rf build/ install/ log/
 
 ```bash
 # 进入项目根目录
-cd /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG
+cd
 
 # 启动统一SLAM导航系统
 ros2 launch nav2_dog_slam lio_nav2_unified.launch.py

@@ -8,7 +8,8 @@ Type=simple
 User=ztl
 Group=ztl
 WorkingDirectory=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/
-Environment="ROS_DOMAIN_ID=27"
+Environment="ROS_DOMAIN_ID=24"
+Environment="RMW_IMPLEMENTATION=rmw_zenoh_cpp"
 ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/run_auto_buildmap.sh super_lio
 ExecStop=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/stop_all_navs.sh
 Restart=always

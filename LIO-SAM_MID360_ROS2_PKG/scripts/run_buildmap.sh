@@ -34,7 +34,7 @@ fi
 
 # 设置建图模式
 export MANUAL_BUILD_MAP=True
-export ROS_DOMAIN_ID=24
+# export ROS_DOMAIN_ID=24
 export ROS_LOCALHOST_ONLY=0
 # echo "显示输出：$DISPLAY"
 export PYTHONPATH="$PYTHONPATH:/home/ztl/.local/lib/python3.10/site-packages"

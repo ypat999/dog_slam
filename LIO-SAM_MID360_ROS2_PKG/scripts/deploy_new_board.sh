@@ -172,6 +172,17 @@ echo "安装ROS2导航相关包..."
 apt-get install -y \
     ros-humble-navigation2 \
     ros-humble-nav2-bringup \
+    ros-humble-nav2-amcl \
+    ros-humble-nav2-planner \
+    ros-humble-nav2-controller \
+    ros-humble-nav2-dwb-controller \
+    ros-humble-dwb-critics \
+    ros-humble-nav2-bt-navigator \
+    ros-humble-nav2-lifecycle-manager \
+    ros-humble-nav2-map-server \
+    ros-humble-nav2-waypoint-follower \
+    ros-humble-spatio-temporal-voxel-layer \
+    libopenvdb-dev \
     ros-humble-rosbridge-server \
     ros-humble-octomap \
     ros-humble-octomap-msgs \
@@ -189,6 +200,12 @@ apt-get install -y \
     ros-humble-vision-opencv \
     ros-humble-xacro \
     ros-humble-vision-msgs
+
+# 安装Super-LIO依赖
+echo "安装Super-LIO依赖..."
+apt-get install -y \
+    libgoogle-glog-dev \
+    libtbb-dev
 
 # 安装GTSAM
 add-apt-repository -y ppa:borglab/gtsam-release-4.1
@@ -291,12 +308,6 @@ if [ ! -f "$SCRIPT_DIR/lio_nav2_unified.service" ]; then
     exit 1
 fi
 
-# 检查现有的service文件是否存在
-if [ ! -f "$SCRIPT_DIR/lio_sam_nav2.service" ]; then
-    echo "错误：找不到导航服务文件 lio_nav2_unified.service"
-    exit 1
-fi
-
 if [ ! -f "$SCRIPT_DIR/lio_sam_buildmap.service" ]; then
     echo "错误：找不到手动建图服务文件 lio_sam_buildmap.service"
     exit 1
@@ -310,12 +321,10 @@ fi
 # 复制现有的service文件到系统目录
 cp "$SCRIPT_DIR/lio_nav2_unified.service" /etc/systemd/system/
 cp "$SCRIPT_DIR/lio_sam_buildmap.service" /etc/systemd/system/
-cp "$SCRIPT_DIR/lio_sam_buildmap.service" /etc/systemd/system/
 cp "$SCRIPT_DIR/auto_buildmap.service" /etc/systemd/system/
 
 # 设置服务文件权限
 chmod 644 /etc/systemd/system/lio_nav2_unified.service
-chmod 644 /etc/systemd/system/lio_sam_buildmap.service
 chmod 644 /etc/systemd/system/lio_sam_buildmap.service
 chmod 644 /etc/systemd/system/auto_buildmap.service
 
@@ -361,6 +370,7 @@ cat > "$ENV_SCRIPT" << 'EOF'
 
 export ROS_DOMAIN_ID=27
 export ROS_LOCALHOST_ONLY=0
+export SLAM_ALGORITHM=super_lio
 export MANUAL_BUILD_MAP=False
 export AUTO_BUILD_MAP=False
 
@@ -376,6 +386,7 @@ fi
 export PYTHONPATH="$PYTHONPATH:$HOME/.local/lib/python3.10/site-packages"
 
 echo "LIO-SAM MID360 ROS2 环境已加载"
+echo "SLAM算法: SLAM_ALGORITHM=$SLAM_ALGORITHM"
 echo "建图模式配置:"
 echo "  MANUAL_BUILD_MAP=$MANUAL_BUILD_MAP (手动建图)"
 echo "  AUTO_BUILD_MAP=$AUTO_BUILD_MAP (自动探索建图)"
@@ -457,8 +468,8 @@ echo ""
 echo "重要信息："
 echo "1. 导航系统服务已安装并启用：lio_nav2_unified.service"
 echo "2. 建图服务已安装（默认禁用）："
-echo "   - 手动建图服务: lio_buildmap.service"
-echo "   - 自动探索建图服务: lio_auto_buildmap.service"
+echo "   - 手动建图服务: lio_sam_buildmap.service"
+echo "   - 自动探索建图服务: auto_buildmap.service"
 echo "3. 环境配置已添加到 ~/.bashrc"
 echo "4. 重启后导航服务将自动启动"
 echo ""
@@ -470,10 +481,10 @@ echo "- 查看状态: sudo systemctl status lio_nav2_unified"
 echo "- 查看日志: sudo journalctl -u lio_nav2_unified -f"
 echo ""
 echo "建图服务："
-echo "- 启动手动建图: sudo systemctl start lio_buildmap"
-echo "- 启动自动探索建图: sudo systemctl start lio_auto_buildmap"
-echo "- 停止建图: sudo systemctl stop lio_buildmap lio_auto_buildmap"
-echo "- 查看日志: sudo journalctl -u lio_buildmap -f"
+echo "- 启动手动建图: sudo systemctl start lio_sam_buildmap"
+echo "- 启动自动探索建图: sudo systemctl start auto_buildmap"
+echo "- 停止建图: sudo systemctl stop lio_sam_buildmap auto_buildmap"
+echo "- 查看日志: sudo journalctl -u lio_sam_buildmap -f"
 echo ""
 echo "手动启动方式："
 echo "1. 打开新终端"
@@ -482,6 +493,7 @@ echo "3. 执行以下命令之一："
 echo "   - 导航模式: ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
 echo "   - 手动建图: MANUAL_BUILD_MAP=True ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
 echo "   - 自动建图: AUTO_BUILD_MAP=True ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
+echo "   - 选择算法: SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py"
 echo ""
 echo "下一步操作："
 echo "1. 重启系统以应用所有更改"

@@ -37,9 +37,9 @@ fi
 
 # Install the service
 echo "Installing systemd service..."
-cp "$SCRIPT_DIR/lio_sam_buildmap.service" /etc/systemd/system/
-cp "$SCRIPT_DIR/lio_sam_nav2.service" /etc/systemd/system/
-cp "$SCRIPT_DIR/auto_buildmap.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/lio_sam_buildmap.zg.service" /etc/systemd/system/lio_sam_buildmap.service
+cp "$SCRIPT_DIR/lio_sam_nav2.zg.service" /etc/systemd/system/lio_sam_nav2.service
+cp "$SCRIPT_DIR/auto_buildmap.zg.service" /etc/systemd/system/auto_buildmap.service
 
 
 # Reload systemd and enable service

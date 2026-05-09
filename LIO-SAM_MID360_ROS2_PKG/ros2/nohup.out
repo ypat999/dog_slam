@@ -1,0 +1,50 @@
+[1.687s] WARNING:colcon.colcon_core.package_selection:Some selected packages are already built in one or more underlay workspaces:
+	'livox_ros_driver2' is in: /home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/install/livox_ros_driver2
+If a package in a merged underlay workspace is overridden and it installs headers, then all packages in the overlay must sort their include directories by workspace order. Failure to do so may result in build failures or undefined behavior at run time.
+If the overridden package is used by another package in any underlay, then the overriding package in the overlay must be API and ABI compatible or undefined behavior at run time may occur.
+
+If you understand the risks and want to override a package anyways, add the following to the command line:
+	--allow-overriding livox_ros_driver2
+
+This may be promoted to an error in a future release of colcon-override-check.
+Starting >>> livox_ros_driver2
+Starting >>> autorccar_interfaces
+Starting >>> basic
+Starting >>> ndt_omp_ros2
+Starting >>> explore_lite
+Starting >>> global_config
+Starting >>> nav2_dog_slam
+Starting >>> point_lio
+Finished <<< nav2_dog_slam [1.78s]
+Starting >>> sc_pgo_ros2
+Finished <<< ndt_omp_ros2 [3.41s]
+Starting >>> lidar_localization_ros2
+Finished <<< point_lio [3.79s]
+Finished <<< global_config [7.25s]
+Finished <<< livox_ros_driver2 [10.1s]
+Starting >>> fast_lio
+Starting >>> fast_lio_robosense
+Finished <<< autorccar_interfaces [10.9s]
+Finished <<< explore_lite [10.9s]
+Starting >>> lio_sam
+Finished <<< lidar_localization_ros2 [7.64s]
+Finished <<< fast_lio [3.27s]
+Finished <<< lio_sam [3.57s]
+--- stderr: basic
+gmake[2]: *** wait: 没有子进程。 停止。
+gmake[2]: *** 正在等待未完成的任务....
+gmake[2]: *** wait: 没有子进程。 停止。
+gmake[1]: *** [CMakeFiles/Makefile2:136：CMakeFiles/basic.dir/all] 错误 2
+gmake: *** [Makefile:146: all] 挂断
+SIGHUP
+CMake Error: Generator: execution of make failed. Make command was: /usr/bin/gmake -f Makefile -j8 -l8 && 
+---
+Failed   <<< basic [14.7s, exited with code 1]
+Aborted  <<< sc_pgo_ros2 [12.9s]
+Aborted  <<< fast_lio_robosense [4.65s]
+
+Summary: 10 packages finished [16.6s]
+  1 package failed: basic
+  2 packages aborted: fast_lio_robosense sc_pgo_ros2
+  3 packages had stderr output: basic fast_lio_robosense sc_pgo_ros2
+  1 package not processed

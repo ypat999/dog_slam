@@ -217,7 +217,7 @@ def generate_launch_description():
         ],
         parameters=[{
             'transform_tolerance': 0.1,
-            'min_height': -0.1,
+            'min_height': -0.2,
             'max_height': 1.0,
             'angle_min': -3.1,
             'angle_max': 3.1,

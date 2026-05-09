@@ -77,4 +77,11 @@
     # 仅做点云去畸变和降采样模式，不计算LIO
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
+    # 注意: 修改后的逻辑会进行LIO计算和校正，但不发布odom和TF
     lio.lio_only_undistort: true
+
+    # ================= downsample_only 模式 =================
+    # 仅做降采样和滤波，不计算LIO也不使用IMU
+    # 优先级最高，启用后会跳过所有LIO和IMU相关计算
+    # 默认: false
+    lio.downsample_only: false

@@ -5,10 +5,12 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /TF1
         - /TF1/Frames1
+        - /TF1/Frames1/rkbot/base_footprint1/Orientation1
+        - /TF1/Frames1/rkbot/imu1/Orientation1
         - /TF1/Tree1
         - /PointCloud2_front1/Topic1
+        - /LaserScan1
         - /LaserScan1/Topic1
         - /Map2/Topic1
         - /Map3/Topic1
@@ -64,29 +66,25 @@ Visualization Manager:
         rkbot/base_footprint:
           Value: true
         rkbot/base_link:
-          Value: false
+          Value: true
         rkbot/imu:
           Value: true
         rkbot/map:
-          Value: false
+          Value: true
         rkbot/odom:
-          Value: false
+          Value: true
         rkbot/world:
           Value: true
         rslidar_head:
-          Value: false
+          Value: true
         rslidar_tail:
-          Value: false
+          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        map:
-          odom:
-            base_link:
-              {}
         rkbot/map:
           rkbot/odom:
             rkbot/world:
@@ -140,18 +138,18 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /trajectories
       Value: true
-    - Alpha: 1
+    - Alpha: 0.10000000149011612
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 3.273442506790161
-        Min Value: -0.4320615231990814
+        Max Value: 3.054131507873535
+        Min Value: -1.0743639469146729
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: AxisColor
-      Decay Time: 0
+      Decay Time: 1000
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -174,19 +172,19 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Alpha: 1
+    - Alpha: 0.10000000149011612
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 3.2159056663513184
-        Min Value: -0.7876876592636108
+        Max Value: 3.0374419689178467
+        Min Value: -0.20276060700416565
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 38; 162; 105
       Color Transformer: AxisColor
-      Decay Time: 0
-      Enabled: true
+      Decay Time: 1000
+      Enabled: false
       Invert Rainbow: false
       Max Color: 38; 162; 105
       Max Intensity: 214
@@ -207,7 +205,7 @@ Visualization Manager:
         Value: /rear_lidar/cloud_world
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Class: rviz_default_plugins/MarkerArray
       Enabled: false
       Name: MarkerArray
@@ -275,6 +273,40 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: LaserScan
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Points
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rkbot/scan_rear
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
       Color Scheme: map
@@ -445,6 +477,74 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /lio/robo/odom
       Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/LaserScan
+      Color: 255; 255; 255
+      Color Transformer: ""
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: LaserScan
+      Position Transformer: ""
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /scan
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 184
+      Min Color: 0; 0; 0
+      Min Intensity: 2
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /rear_lidar
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -491,25 +591,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 28.186298370361328
+      Distance: 21.018400192260742
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.7180613279342651
-        Y: -7.259884357452393
-        Z: 1.0325146913528442
+        X: 0.14487199485301971
+        Y: 0.022374510765075684
+        Z: -1.4278429746627808
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.13479767739772797
+      Pitch: 1.5047963857650757
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.824697494506836
+      Yaw: 4.2169389724731445
     Saved: ~
 Window Geometry:
   Displays:

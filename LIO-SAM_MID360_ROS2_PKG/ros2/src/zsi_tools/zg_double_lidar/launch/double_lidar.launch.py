@@ -132,7 +132,7 @@ def generate_launch_description():
         name='front_pointcloud_to_laserscan',
         remappings=[
             ('cloud_in', '/front_lidar/body/cloud'),
-            ('scan', '/rkbot/scan_front'),
+            ('scan', '/rkbot/scan'),
         ],
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
@@ -178,7 +178,7 @@ def generate_launch_description():
         ],
         prefix=['taskset -c 5'],
     )
-    ld.add_action(rear_pointcloud_to_laserscan)
+    # ld.add_action(rear_pointcloud_to_laserscan)
 
     scan_merger = Node(
         package='zg_double_lidar',
@@ -188,7 +188,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         prefix=['taskset -c 4,5'],
     )
-    ld.add_action(scan_merger)
+    # ld.add_action(scan_merger)
 
     static_transform_map_to_odom = Node(
         package='tf2_ros',

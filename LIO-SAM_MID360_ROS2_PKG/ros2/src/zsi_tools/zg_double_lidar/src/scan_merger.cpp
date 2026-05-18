@@ -94,6 +94,7 @@ private:
         if (front_scan && rear_scan)
         {
             mergeTwoScans(*merged_scan, *front_scan, *rear_scan);
+            merged_scan->header.stamp = front_scan->header.stamp;
         }
         else if (front_scan)
         {
@@ -104,7 +105,8 @@ private:
             *merged_scan = *rear_scan;
         }
 
-        merged_scan->header.stamp = this->now();
+        // merged_scan->header.stamp = this->now();
+        
         merged_scan_pub_->publish(*merged_scan);
     }
 

@@ -180,7 +180,7 @@ def generate_launch_description():
         ],
         prefix=['taskset -c 5'],
     )
-    # ld.add_action(rear_pointcloud_to_laserscan)
+    ld.add_action(rear_pointcloud_to_laserscan)
 
     scan_merger = Node(
         package='zg_double_lidar',
@@ -190,7 +190,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         prefix=['taskset -c 4,5'],
     )
-    # ld.add_action(scan_merger)
+    ld.add_action(scan_merger)
 
     static_transform_map_to_odom = Node(
         package='tf2_ros',
@@ -283,6 +283,6 @@ def generate_launch_description():
         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_world_frame, ns_base_frame],
         output='screen'
     )
-    # ld.add_action(static_transform_world_to_base_footprint)
+    ld.add_action(static_transform_world_to_base_footprint)
 
     return ld

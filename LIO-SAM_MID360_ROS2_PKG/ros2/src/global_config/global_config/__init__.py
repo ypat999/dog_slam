@@ -5,7 +5,7 @@ import platform
 
 # 获取当前主机名
 current_machine = platform.node()
-if ('RK3588' in current_machine) and ('zenoh' in os.environ.get('RMW_IMPLEMENTATION')):
+if ('RK3588' in current_machine) and ('zenoh' in os.environ.get('RMW_IMPLEMENTATION', '')):
     current_machine = 'RK3588ZG'
     
 # ========== LIO-SAM 相关配置 ==========

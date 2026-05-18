@@ -14,6 +14,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_dir = get_package_share_directory('livox_gazebo_garden')
 
+    # 将你的模型文件夹、世界文件夹都加入资源路径
+# export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/home/ywj/.gazebo/models:/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_gazebo_garden/worlds:/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_gazebo_garden/models
+
     env_vars = [
         SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', ''),
         SetEnvironmentVariable('GAZEBO_MODEL_PATH',

@@ -10,10 +10,13 @@ Group=ztl
 WorkingDirectory=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/
 Environment="ROS_DOMAIN_ID=24"
 Environment="RMW_IMPLEMENTATION=rmw_zenoh_cpp"
-ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/run_navigation.sh super_lio
+ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/run_navigation.sh no_lio
 ExecStop=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/stop_all_navs.sh
 Restart=always
 RestartSec=10
+TimeoutStopSec=10
+KillMode=control-group
+SendSIGKILL=yes
 StandardOutput=journal
 StandardError=journal
 

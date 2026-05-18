@@ -7,7 +7,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition
-from launch_ros.actions import Node
+from launch_ros.actions import Node, PushRosNamespace
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
@@ -42,7 +42,9 @@ def generate_launch_description():
         default_value='rkbot',  #DEFAULT_NAMESPACE,
         description='Namespace for multi-robot support'
     )
-    ns = LaunchConfiguration('ns')
+    ld.add_action(declare_ns_arg)
+    ns = LaunchConfiguration('ns', default=DEFAULT_NAMESPACE)
+    ld.add_action(PushRosNamespace(ns))
 
     ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
     ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
@@ -54,7 +56,7 @@ def generate_launch_description():
     # ns_imu_rear_frame = PythonExpression(["'imu_rear' if '", ns, "' == '' else str('", ns, "/imu_rear')"])
     ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
 
-    ld.add_action(declare_ns_arg)
+    
 
     declare_rviz_arg = DeclareLaunchArgument(
         'rviz',
@@ -69,7 +71,7 @@ def generate_launch_description():
         default_value=str(DEFAULT_USE_SIM_TIME),
         description='Use simulation clock'
     )
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     ld.add_action(declare_use_sim_time_arg)
 
     front_lidar_node = Node(
@@ -87,12 +89,12 @@ def generate_launch_description():
         prefix=['taskset -c 6'],
         arguments=['--ros-args', '--log-level', 'info'],
         remappings=[
-            ('/lio/odom', '/front_lidar/odom'),
-            ('/lio/imu/odom', '/front_lidar/imu/odom'),
-            ('/lio/robo/odom', '/front_lidar/robo/odom'),
-            ('/lio/path', '/front_lidar/path'),
-            ('/lio/cloud_world', '/front_lidar/cloud_world'),
-            ('/lio/body/cloud', '/front_lidar/body/cloud'),
+            ('lio/odom', 'front_lidar/odom'),
+            ('lio/imu/odom', 'front_lidar/imu/odom'),
+            ('lio/robo/odom', 'front_lidar/robo/odom'),
+            ('lio/path', 'front_lidar/path'),
+            ('lio/cloud_world', 'front_lidar/cloud_world'),
+            ('lio/body/cloud', 'front_lidar/body/cloud'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
         ]
@@ -114,12 +116,12 @@ def generate_launch_description():
         prefix=['taskset -c 7'],
         arguments=['--ros-args', '--log-level', 'info'],
         remappings=[
-            ('/lio/odom', '/rear_lidar/odom'),
-            ('/lio/imu/odom', '/rear_lidar/imu/odom'),
-            ('/lio/robo/odom', '/rear_lidar/robo/odom'),
-            ('/lio/path', '/rear_lidar/path'),
-            ('/lio/cloud_world', '/rear_lidar/cloud_world'),
-            ('/lio/body/cloud', '/rear_lidar/body/cloud'),
+            ('lio/odom', 'rear_lidar/odom'),
+            ('lio/imu/odom', 'rear_lidar/imu/odom'),
+            ('lio/robo/odom', 'rear_lidar/robo/odom'),
+            ('lio/path', 'rear_lidar/path'),
+            ('lio/cloud_world', 'rear_lidar/cloud_world'),
+            ('lio/body/cloud', 'rear_lidar/body/cloud'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
         ]
@@ -131,8 +133,8 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='front_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', '/front_lidar/body/cloud'),
-            ('scan', '/rkbot/scan'),
+            ('cloud_in', 'front_lidar/body/cloud'),
+            ('scan', 'scan_front'),
         ],
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
@@ -158,8 +160,8 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='rear_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', '/rear_lidar/body/cloud'),
-            ('scan', '/rkbot/scan_rear'),
+            ('cloud_in', 'rear_lidar/body/cloud'),
+            ('scan', 'scan_rear'),
         ],
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},

@@ -78,4 +78,3 @@
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: false
-

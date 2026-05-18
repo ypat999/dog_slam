@@ -68,51 +68,7 @@ except Exception as e:
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# 定义不同LIO算法的话题映射配置
-LIO_TOPIC_CONFIGS = {
-    'fast_lio': {
-        'pointcloud_topic': 'cloud_registered_body',
-        'odom_topic': 'Odometry',
-        'octomap_topic': 'cloud_registered',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-    'lio_sam': {
-        'pointcloud_topic': 'lio_sam/mapping/cloud_registered_raw',
-        'odom_topic': 'lio_sam/mapping/odometry',
-        'octomap_topic': 'lio_sam/mapping/cloud_registered',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-    'point_lio': {
-        'pointcloud_topic': 'cloud_registered_body',
-        'odom_topic': 'Odometry',
-        'octomap_topic': 'cloud_registeredy',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-    'super_lio': {
-        'pointcloud_topic': 'lio/body/cloud',
-        'odom_topic': 'lio/odom',
-        'octomap_topic': 'lio/cloud_world',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-    'super_lio_gazebo': {
-        'pointcloud_topic': 'livox/lidar',
-        'odom_topic': 'lio/odom',
-        'octomap_topic': 'livox/lidar',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-    'no_lio': {
-        'pointcloud_topic': 'front_lidar/cloud_world',
-        'odom_topic': 'front_lidar/odom',
-        'octomap_topic': 'front_lidar/cloud_world',
-        'target_frame': 'base_footprint',
-        'map_frame': 'map'
-    },
-}
+
 
 
 def generate_launch_description():
@@ -176,97 +132,8 @@ def generate_launch_description():
                 convert_types=True),
             allow_substs=True)
     
-    # 根据SLAM_ALGORITHM参数选择启动不同的SLAM算法
-    # 获取当前选择的LIO算法的话题配置
-    lio_config = LIO_TOPIC_CONFIGS.get(SLAM_ALGORITHM, LIO_TOPIC_CONFIGS['fast_lio'])
+
     
-    # FAST-LIO
-    fast_lio_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('fast_lio'), 'launch', 'mapping.launch.py')]),
-        launch_arguments={
-            'use_sim_time': use_sim_time
-        }.items(),
-        condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'fast_lio'"]))
-    )
-    
-    # Point-LIO
-    try:
-        point_lio_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('point_lio'), 'launch', 'mapping_mid360.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'point_lio'"]))
-        )
-    except Exception as e:
-        print(f"Point-LIO package not found: {e}")
-        # 创建一个空的动作作为占位符
-        from launch.actions import LogInfo
-        point_lio_launch = LogInfo(msg="Point-LIO package not found, skipping...")
-    
-    
-    # LIO-SAM
-    try:
-        lio_sam_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('lio_sam'), 'launch', 'lio_sam.launch.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'lio_sam'"]))
-        )
-    except Exception as e:
-        print(f"LIO-SAM package not found: {e}")
-        # 创建一个空的动作作为占位符
-        from launch.actions import LogInfo
-        lio_sam_launch = LogInfo(msg="LIO-SAM package not found, skipping...")
-
-    # Super-LIO
-    try:
-        super_lio_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('super_lio'), 'launch', 'Livox_mid360.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'ns': ns
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio'"]))
-        )
-    except Exception as e:
-        print(f"Super-LIO package not found: {e}")
-        from launch.actions import LogInfo
-        super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
-
-    # Super-LIO
-    try:
-        super_lio_gazebo_launch = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(
-                get_package_share_directory('super_lio'), 'launch', 'gazebo_mid360.py')]),
-            launch_arguments={
-                'use_sim_time': use_sim_time,
-                'ns': ns
-            }.items(),
-            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio_gazebo'"]))
-        )
-    except Exception as e:
-        print(f"Super-LIO package not found: {e}")
-        # 创建一个空的动作作为占位符
-        from launch.actions import LogInfo
-        super_lio_gazebo_launch = LogInfo(msg="Super-LIO package not found, skipping...")
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -282,42 +149,7 @@ def generate_launch_description():
     # 1. 基础节点（所有模式都需要）
     # 注意：dynamic_base_footprint发布功能已迁移到各LIO算法的C++部分，此处不再需要
     
-    # PointCloud to LaserScan 节点
-    if str(SLAM_ALGORITHM).endswith('gazebo'):
-        min_height = 0.2
-    else:
-        min_height = -0.3
 
-    pointcloud_to_laserscan_node = Node(
-        package='pointcloud_to_laserscan',
-        executable='pointcloud_to_laserscan_node',
-        name='pointcloud_to_laserscan',
-        remappings=[
-            ('cloud_in', lio_config['pointcloud_topic']),
-            ('scan', 'scan'),
-            ('/tf', '/tf'),
-            ('/tf_static', '/tf_static')
-        ],
-        parameters=[{
-            'transform_tolerance': 0.1,
-            'min_height': min_height,
-            'max_height': 1.0,
-            'angle_min': -3.14,
-            'angle_max': 3.14,
-            'angle_increment': 0.00869347338,
-            'scan_time': 0.1,
-            'range_min': 0.3,
-            'range_max': 100.0,
-            'use_inf': False,
-            'inf_epsilon': 1000.0,
-            'use_sim_time': use_sim_time,
-            'target_frame': ns_base_frame,
-            'concurrency_level': 1,
-        }],
-        output='screen',
-        prefix=['taskset -c 5'],
-        condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' != 'no_lio'"]))
-    )
     
     # rosbridge_websocket节点
     rosbridge_websocket = Node(
@@ -371,7 +203,7 @@ def generate_launch_description():
         prefix=['taskset -c 5,6'],
         remappings=[
             ('/scan', 'scan'), 
-            ('/odom', lio_config['odom_topic']),
+            ('/odom', 'lio/odom'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
             ('/initialpose', '/initialpose')
@@ -399,7 +231,7 @@ def generate_launch_description():
         }],
         prefix=['taskset -c 4,5'],
         remappings=[
-            ('cloud_in', lio_config['octomap_topic']),
+            ('cloud_in', 'lio/body/cloud'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static')
         ]
@@ -569,9 +401,9 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time}
         ],
         remappings=[
-            ("/aft_mapped_to_init", lio_config['odom_topic']),
-            ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
-            ("/cloud_for_scancontext", lio_config['pointcloud_topic']),
+            ("/aft_mapped_to_init", "lio/odom"),
+            ("/velodyne_cloud_registered_local", "lio/body/cloud"),
+            ("/cloud_for_scancontext", "lio/body/cloud"),
             ("/tf", "/tf"),
             ("/tf_static", "/tf_static"),
         ],
@@ -592,7 +424,6 @@ def generate_launch_description():
     # ============================================
     
     # 1. 基础节点（所有模式都需要）
-    unified_nodes.append(pointcloud_to_laserscan_node)
     
     # 2. Web相关节点（所有模式都需要）
     web_actions.append(web_script_process)
@@ -715,11 +546,6 @@ def generate_launch_description():
         declare_localization_cmd,
         declare_nav2_params_file_cmd,
         # 2. 启动主要组件（根据SLAM_ALGORITHM参数选择）
-        fast_lio_launch,
-        point_lio_launch,
-        lio_sam_launch,
-        super_lio_launch,
-        super_lio_gazebo_launch,
         # 3. 添加统一的节点配置
         *unified_nodes
     ]

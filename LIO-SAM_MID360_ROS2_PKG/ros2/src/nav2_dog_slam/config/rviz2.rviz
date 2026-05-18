@@ -7,14 +7,14 @@ Panels:
         - /Global Options1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /MarkerArray1
         - /PointCloud21/Topic1
         - /LaserScan1/Topic1
         - /Map2/Topic1
+        - /Map3
         - /Map3/Topic1
         - /Map4/Topic1
         - /Pose1/Topic1
-      Splitter Ratio: 0.42352941632270813
+      Splitter Ratio: 0.5176470875740051
     Tree Height: 814
   - Class: rviz_common/Selection
     Name: Selection
@@ -55,6 +55,18 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        base_footprint:
+          Value: true
+        base_link:
+          Value: true
+        imu:
+          Value: true
+        livox_frame:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
         rkbot/base_footprint:
           Value: true
         rkbot/base_link:
@@ -69,21 +81,22 @@ Visualization Manager:
           Value: true
         rkbot/world:
           Value: true
+        world:
+          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        rkbot/map:
-          rkbot/odom:
-            rkbot/world:
-              rkbot/base_footprint:
-                {}
-              rkbot/imu:
-                rkbot/livox_frame:
-                  rkbot/base_link:
-                    {}
+        map:
+          odom:
+            world:
+              imu:
+                livox_frame:
+                  base_link:
+                    base_footprint:
+                      {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -112,7 +125,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/plan
+        Value: /plan
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
@@ -129,8 +142,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.854966402053833
-        Min Value: -0.7664923667907715
+        Max Value: 3.338198661804199
+        Min Value: -0.25353801250457764
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -155,8 +168,8 @@ Visualization Manager:
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /rkbot/lio/cloud_world
+        Reliability Policy: Best Effort
+        Value: /lio/body/cloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
@@ -257,7 +270,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /rkbot/scan
+        Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -273,13 +286,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/map
+        Value: /map
       Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/map_updates
+        Value: /map_updates
       Use Timestamp: false
       Value: true
     - Alpha: 1
@@ -315,7 +328,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/amcl_pose
+        Value: /amcl_pose
       Value: true
     - Alpha: 0.699999988079071
       Class: rviz_default_plugins/Map
@@ -329,13 +342,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/local_costmap/costmap
+        Value: /local_costmap/costmap
       Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/local_costmap/costmap_updates
+        Value: /local_costmap/costmap_updates
       Use Timestamp: false
       Value: true
     - Alpha: 0.30000001192092896
@@ -350,13 +363,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/global_costmap/costmap
+        Value: /global_costmap/costmap
       Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/global_costmap/costmap_updates
+        Value: /global_costmap/costmap_updates
       Use Timestamp: false
       Value: true
     - Alpha: 1
@@ -370,7 +383,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/local_costmap/published_footprint
+        Value: /local_costmap/published_footprint
       Value: true
     - Alpha: 1
       Axes Length: 1
@@ -434,7 +447,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: rkbot/map
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -477,25 +490,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 44.1534423828125
+      Distance: 18.252227783203125
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.93785572052002
-        Y: 9.190544128417969
-        Z: 0.5671961903572083
+        X: 22.043806076049805
+        Y: 12.11601448059082
+        Z: 0.33622828125953674
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4297964572906494
+      Pitch: 1.3197964429855347
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.5033254623413086
+      Yaw: 1.5833346843719482
     Saved: ~
 Window Geometry:
   Displays:

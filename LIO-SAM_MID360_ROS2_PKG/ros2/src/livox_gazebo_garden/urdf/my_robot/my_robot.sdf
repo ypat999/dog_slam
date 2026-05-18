@@ -158,6 +158,246 @@
       <child>livox_frame</child>
     </joint>
 
+    <!-- ==================== 前雷达 (rslidar_head) ==================== -->
+    <link name='rslidar_head'>
+      <pose>0.07 0 0.1 0 0.5236 0</pose>
+      <inertial>
+        <mass>0.4</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.0004</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0004</iyy>
+          <iyz>0</iyz>
+          <izz>0.0004</izz>
+        </inertia>
+      </inertial>
+      <gravity>true</gravity>
+
+      <visual name='rslidar_head_visual'>
+        <geometry>
+          <mesh>
+            <uri>package://livox_gazebo_garden/meshes/mid-360-scaled.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name='rslidar_head_collision'>
+        <geometry>
+          <box>
+            <size>0.088 0.088 0.04</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <sensor name='front_lidar' type='gpu_lidar'>
+        <topic>front_lidar</topic>
+        <update_rate>10</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.1415926</min_angle>
+              <max_angle>3.1415926</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>60</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.126012</min_angle>
+              <max_angle>0.963771</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>100.0</max>
+            <resolution>0.005</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.002</stddev>
+          </noise>
+        </ray>
+      </sensor>
+
+      <sensor name='front_lidar_imu' type='imu'>
+        <topic>front_lidar/imu</topic>
+        <update_rate>200</update_rate>
+        <always_on>true</always_on>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </link>
+
+    <joint name='rslidar_head_joint' type='fixed'>
+      <parent>base_footprint_gazebo</parent>
+      <child>rslidar_head</child>
+    </joint>
+
+    <!-- ==================== 后雷达 (rslidar_tail) ==================== -->
+    <link name='rslidar_tail'>
+      <pose>-0.6623 0 0.1 0 0.5236 3.1415926</pose>
+      <inertial>
+        <mass>0.4</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.0004</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0004</iyy>
+          <iyz>0</iyz>
+          <izz>0.0004</izz>
+        </inertia>
+      </inertial>
+      <gravity>true</gravity>
+
+      <visual name='rslidar_tail_visual'>
+        <geometry>
+          <mesh>
+            <uri>package://livox_gazebo_garden/meshes/mid-360-scaled.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name='rslidar_tail_collision'>
+        <geometry>
+          <box>
+            <size>0.088 0.088 0.04</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <sensor name='rear_lidar' type='gpu_lidar'>
+        <topic>rear_lidar</topic>
+        <update_rate>10</update_rate>
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.1415926</min_angle>
+              <max_angle>3.1415926</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>60</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.126012</min_angle>
+              <max_angle>0.963771</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.1</min>
+            <max>100.0</max>
+            <resolution>0.005</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.002</stddev>
+          </noise>
+        </ray>
+      </sensor>
+
+      <sensor name='rear_lidar_imu' type='imu'>
+        <topic>rear_lidar/imu</topic>
+        <update_rate>200</update_rate>
+        <always_on>true</always_on>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type='gaussian'>
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </link>
+
+    <joint name='rslidar_tail_joint' type='fixed'>
+      <parent>base_footprint_gazebo</parent>
+      <child>rslidar_tail</child>
+    </joint>
+
     <!-- ==================== 后轮驱动系统 ==================== -->
     <!-- 左后轮 -->
     <link name='rear_left_wheel'>

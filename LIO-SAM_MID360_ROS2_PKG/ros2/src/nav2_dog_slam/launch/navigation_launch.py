@@ -48,11 +48,11 @@ def generate_launch_description():
     map_topic = PythonExpression(["'/", map_frame,"'"])
 
     lifecycle_nodes = ['controller_server',
-                       # 'smoother_server',  # 未使用，已注释
+                       'smoother_server',  # 未使用，已注释
                        'planner_server',
                        'behavior_server',
                        'bt_navigator',
-                       # 'waypoint_follower',  # 未使用，已注释
+                       'waypoint_follower',  # 未使用，已注释
                        'velocity_smoother']
 
     remappings = [('/tf', '/tf'),
@@ -72,8 +72,8 @@ def generate_launch_description():
         'map_frame': map_frame,
         'odom_frame': odom_frame,
         'base_frame': base_frame,
-        # 'topic': scan_topic,
-        'topic': pointcloud_topic,
+        'topic': scan_topic,
+        # 'topic': pointcloud_topic,
         'map_topic': map_topic
     }
 
@@ -88,8 +88,8 @@ def generate_launch_description():
         'map_frame': map_frame,
         'odom_frame': odom_frame,
         'base_frame': base_frame,
-        # 'topic': scan_topic,
-        'topic': pointcloud_topic,
+        'topic': scan_topic,
+        # 'topic': pointcloud_topic,
         'map_topic': map_topic
     }
 
@@ -173,17 +173,17 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-            # Node(
-            #     package='nav2_smoother',
-            #     executable='smoother_server',
-            #     name='smoother_server',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[configured_params_global],
-            #     arguments=['--ros-args', '--log-level', log_level],
-            #     prefix=['taskset -c 0,1,2,3'],
-            #     remappings=remappings),
+            Node(
+                package='nav2_smoother',
+                executable='smoother_server',
+                name='smoother_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params_global],
+                arguments=['--ros-args', '--log-level', log_level],
+                prefix=['taskset -c 0,1,2,3'],
+                remappings=remappings),
             Node(
                 package='nav2_planner',
                 executable='planner_server',
@@ -217,17 +217,17 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings),
-            # Node(
-            #     package='nav2_waypoint_follower',
-            #     executable='waypoint_follower',
-            #     name='waypoint_follower',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[configured_params_global],
-            #     arguments=['--ros-args', '--log-level', log_level],
-            #     prefix=['taskset -c 0,1,2,3'],
-            #     remappings=remappings),
+            Node(
+                package='nav2_waypoint_follower',
+                executable='waypoint_follower',
+                name='waypoint_follower',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params_global],
+                arguments=['--ros-args', '--log-level', log_level],
+                prefix=['taskset -c 0,1,2,3'],
+                remappings=remappings),
             Node(
                 package='nav2_velocity_smoother',
                 executable='velocity_smoother',
@@ -264,13 +264,13 @@ def generate_launch_description():
                 parameters=[configured_params_local],
                 # prefix=['taskset -c 5'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-            # ComposableNode(
-            #     package='nav2_smoother',
-            #     plugin='nav2_smoother::SmootherServer',
-            #     name='smoother_server',
-            #     parameters=[configured_params_global],
-            #     # prefix=['taskset -c 1,2,3,4'],
-            #     remappings=remappings),
+            ComposableNode(
+                package='nav2_smoother',
+                plugin='nav2_smoother::SmootherServer',
+                name='smoother_server',
+                parameters=[configured_params_global],
+                # prefix=['taskset -c 1,2,3,4'],
+                remappings=remappings),
             ComposableNode(
                 package='nav2_planner',
                 plugin='nav2_planner::PlannerServer',
@@ -292,13 +292,13 @@ def generate_launch_description():
                 parameters=[configured_params_global],
                 # prefix=['taskset -c 1,2,3,4'],
                 remappings=remappings),
-            # ComposableNode(
-            #     package='nav2_waypoint_follower',
-            #     plugin='nav2_waypoint_follower::WaypointFollower',
-            #     name='waypoint_follower',
-            #     parameters=[configured_params_global],
-            #     # prefix=['taskset -c 1,2,3,4'],
-            #     remappings=remappings),
+            ComposableNode(
+                package='nav2_waypoint_follower',
+                plugin='nav2_waypoint_follower::WaypointFollower',
+                name='waypoint_follower',
+                parameters=[configured_params_global],
+                # prefix=['taskset -c 1,2,3,4'],
+                remappings=remappings),
             ComposableNode(
                 package='nav2_velocity_smoother',
                 plugin='nav2_velocity_smoother::VelocitySmoother',

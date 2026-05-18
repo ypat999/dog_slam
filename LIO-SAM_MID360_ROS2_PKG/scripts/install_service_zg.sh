@@ -43,8 +43,10 @@ cp "$SCRIPT_DIR/auto_buildmap.zg.service" /etc/systemd/system/auto_buildmap.serv
 cp "$SCRIPT_DIR/zg_pointcloud.service" /etc/systemd/system/zg_pointcloud.service
 
 
+
 # Reload systemd and enable service
 systemctl daemon-reload
+
 # systemctl enable lio_sam_nav2.service
 # systemctl enable zg_pointcloud.service
 

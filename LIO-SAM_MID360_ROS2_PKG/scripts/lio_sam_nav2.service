@@ -13,6 +13,9 @@ ExecStart=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/run_navigation.sh s
 ExecStop=/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/scripts/stop_all_navs.sh
 Restart=always
 RestartSec=10
+TimeoutStopSec=10
+KillMode=control-group
+SendSIGKILL=yes
 StandardOutput=journal
 StandardError=journal
 

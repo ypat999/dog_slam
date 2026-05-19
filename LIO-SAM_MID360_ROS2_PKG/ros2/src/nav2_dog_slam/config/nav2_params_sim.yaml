@@ -24,7 +24,7 @@ controller_server:
     min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
 
-    odom_topic: "/lio/robo/odom"  # 新增参数
+    odom_topic: /odometry  # 新增参数
     # publish_zero_velocity: true  # 新增参数
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
@@ -535,7 +535,7 @@ local_costmap:
         publish_voxel_map: true
         observation_sources: pointcloud
         pointcloud:
-          topic: lio/body/cloud  # 点云话题
+          topic: /livox/lidar  # 点云话题
           max_obstacle_height: 2.0
           min_obstacle_height: 0.1
           obstacle_max_range: 15.0
@@ -587,7 +587,7 @@ local_costmap:
         max_obstacle_height: 2.0
         min_obstacle_height: 0.1
         pointcloud:
-          topic: lio/body/cloud
+          topic: /livox/lidar
           max_obstacle_height: 2.0
           min_obstacle_height: 0.1
           clearing: true
@@ -613,7 +613,7 @@ local_costmap:
       traversability_layer: 
         plugin: "traversability_layer::TraversabilityLayer"
         enabled: true
-        pointcloud_topic: "/lio/body/cloud"
+        pointcloud_topic: /livox/lidar
         sensor_frame: "base_footprint"
         max_obstacle_height: 2.0
         min_obstacle_height: -0.5
@@ -719,7 +719,7 @@ global_costmap:
         max_obstacle_height: 2.0
         min_obstacle_height: 0.1
         pointcloud:
-          topic: lio/body/cloud
+          topic: /livox/lidar
           max_obstacle_height: 2.0
           min_obstacle_height: 0.0
           clearing: true
@@ -1255,7 +1255,7 @@ slam_toolbox_node:
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
     scan_topic: scan
     # 里程计话题
-    odom_topic: lio/odom
+    odom_topic: /odometry
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换

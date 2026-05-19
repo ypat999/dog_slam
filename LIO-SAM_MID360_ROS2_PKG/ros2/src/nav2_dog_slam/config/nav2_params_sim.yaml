@@ -627,6 +627,7 @@ local_costmap:
         clearing_duration: 10.0
         cloud_buffer_size: 5
         publish_slope_map: true
+        clear_each_frame: false
       
       # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
       inflation_layer_local: 

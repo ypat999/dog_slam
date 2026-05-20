@@ -19,6 +19,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(PCL REQUIRED COMPONENTS common)
 find_package(pcl_conversions REQUIRED)
+find_package(OpenMP REQUIRED)
 
 include_directories(
   include
@@ -36,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
   ${PCL_LIBRARIES}
+  OpenMP::OpenMP_CXX
 )
 
 ament_target_dependencies(${PROJECT_NAME}

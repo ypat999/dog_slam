@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <functional>
+#include <omp.h>
 
 PLUGINLIB_EXPORT_CLASS(traversability_layer::TraversabilityLayer, nav2_costmap_2d::Layer)
 
@@ -43,6 +44,7 @@ void TraversabilityLayer::onInitialize()
   declareParameter("publish_slope_map", rclcpp::ParameterValue(false));
   declareParameter("enable_raycast_clear", rclcpp::ParameterValue(false));
   declareParameter("cell_resolution", rclcpp::ParameterValue(0.0));
+  declareParameter("num_threads", rclcpp::ParameterValue(0));
 
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".pointcloud_topic", pointcloud_topic_);
@@ -61,6 +63,15 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".publish_slope_map", publish_slope_map_);
   node->get_parameter(name_ + ".enable_raycast_clear", enable_raycast_clear_);
   node->get_parameter(name_ + ".cell_resolution", cell_resolution_);
+  node->get_parameter(name_ + ".num_threads", num_threads_);
+
+  if (num_threads_ > 0) {
+    omp_set_num_threads(num_threads_);
+  } else if (num_threads_ == -1) {
+    omp_set_num_threads(1);
+  }
+
+  last_perf_log_ = node->now();
 
   max_slope_traversable_ = max_slope_traversable_ * M_PI / 180.0;
   slope_cost_start_ = slope_cost_start_ * M_PI / 180.0;
@@ -74,11 +85,11 @@ void TraversabilityLayer::onInitialize()
     node->get_logger(),
     "TraversabilityLayer: step_height_threshold=%.3f, max_slope_traversable=%.1f deg, "
     "slope_cost_start=%.1f deg, pointcloud_topic=%s, "
-    "enable_raycast_clear=%s, cell_resolution=%.3f",
+    "enable_raycast_clear=%s, cell_resolution=%.3f, num_threads=%d",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
     slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
     enable_raycast_clear_ ? "true" : "false",
-    cell_resolution_);
+    cell_resolution_, num_threads_);
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -123,7 +134,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*msg, *cloud);
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] Received cloud: %zu points, frame_id=%s",
     cloud->size(), msg->header.frame_id.c_str());
@@ -140,7 +151,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     source_frame = sensor_frame_;
   }
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] TF lookup: target=%s, source=%s",
     target_frame.c_str(), source_frame.c_str());
@@ -150,7 +161,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     transform = tf_buffer_->lookupTransform(
       target_frame, source_frame, msg->header.stamp,
       rclcpp::Duration::from_seconds(0.5));
-    RCLCPP_INFO_THROTTLE(
+    RCLCPP_DEBUG_THROTTLE(
       rclcpp::get_logger("traversability_layer"), *clock, 2000,
       "[TraversabilityLayer] TF success: translation=[%.3f, %.3f, %.3f]",
       transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z);
@@ -206,7 +217,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     transformed_cloud.push_back({x_global, y_global, z_global});
   }
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] After transform: %zu points kept, %d filtered (z_range=[%.2f, %.2f])",
     transformed_cloud.size(), filtered_count, min_obstacle_height_, max_obstacle_height_);
@@ -236,9 +247,10 @@ void TraversabilityLayer::computeSlope(double origin_x, double origin_y)
   float sensor_gx = static_cast<float>((sensor_global_x_ - origin_x) / cell_resolution_);
   float sensor_gy = static_cast<float>((sensor_global_y_ - origin_y) / cell_resolution_);
 
-  for (unsigned int cy = 0; cy < grid_size_y_; cy++) {
-    for (unsigned int cx = 0; cx < grid_size_x_; cx++) {
-      size_t idx = gridIndex(cx, cy);
+#pragma omp parallel for collapse(2) reduction(+:cells_with_slope) reduction(max:max_slope_mag) reduction(max:max_height_diff)
+  for (int cy = 0; cy < static_cast<int>(grid_size_y_); cy++) {
+    for (int cx = 0; cx < static_cast<int>(grid_size_x_); cx++) {
+      size_t idx = gridIndex(static_cast<unsigned int>(cx), static_cast<unsigned int>(cy));
       auto & cell = grid_map_[idx];
 
       if (!cell.has_data) {
@@ -318,7 +330,7 @@ void TraversabilityLayer::computeSlope(double origin_x, double origin_y)
     }
   }
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] computeSlope: %d cells with slope, max_slope_mag=%.3f (angle=%.1f deg), max_height_diff=%.3f",
     cells_with_slope, max_slope_mag, std::atan(max_slope_mag) * 180.0 / M_PI, max_height_diff);
@@ -405,6 +417,7 @@ void TraversabilityLayer::updateCosts(
 
   std::lock_guard<std::mutex> lock(mutex_);
   static auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  rclcpp::Time frame_start = clock->now();
 
   double ox = master_grid.getOriginX();
   double oy = master_grid.getOriginY();
@@ -443,9 +456,10 @@ void TraversabilityLayer::updateCosts(
 
   double inv_cell_res = 1.0 / cell_resolution_;
 
-  for (const auto & tp : accumulated_cloud_)
+#pragma omp parallel for
+  for (int pi = 0; pi < static_cast<int>(accumulated_cloud_.size()); pi++)
   {
-    const auto & pt = tp.pt;
+    const auto & pt = accumulated_cloud_[static_cast<size_t>(pi)].pt;
     int cx = static_cast<int>(std::floor((pt.x - ox) * inv_cell_res));
     int cy = static_cast<int>(std::floor((pt.y - oy) * inv_cell_res));
 
@@ -460,19 +474,22 @@ void TraversabilityLayer::updateCosts(
 
     float z = static_cast<float>(pt.z);
 
-    if (!cell.has_data)
+#pragma omp critical(grid_update)
     {
-      cell.min_z = z;
-      cell.max_z = z;
-      cell.representative_z = z;
-      cell.point_count = 1;
-      cell.has_data = true;
-    }
-    else
-    {
-      if (z < cell.min_z) cell.min_z = z;
-      if (z > cell.max_z) cell.max_z = z;
-      cell.point_count++;
+      if (!cell.has_data)
+      {
+        cell.min_z = z;
+        cell.max_z = z;
+        cell.representative_z = z;
+        cell.point_count = 1;
+        cell.has_data = true;
+      }
+      else
+      {
+        if (z < cell.min_z) cell.min_z = z;
+        if (z > cell.max_z) cell.max_z = z;
+        cell.point_count++;
+      }
     }
   }
 
@@ -513,6 +530,7 @@ void TraversabilityLayer::updateCosts(
   int lethal_cells = 0;
   double inv_costmap_res = 1.0 / costmap_res;
 
+#pragma omp parallel for collapse(2) reduction(+:cells_with_cost) reduction(+:lethal_cells)
   for (unsigned int cy = 0; cy < grid_size_y_; cy++) {
     for (unsigned int cx = 0; cx < grid_size_x_; cx++) {
       size_t idx = gridIndex(cx, cy);
@@ -550,20 +568,42 @@ void TraversabilityLayer::updateCosts(
 
           unsigned int master_idx = master_grid.getIndex(
             static_cast<unsigned int>(mx), static_cast<unsigned int>(my));
-          unsigned char old_cost = master_array[master_idx];
-
-          if (old_cost == nav2_costmap_2d::NO_INFORMATION || cost > old_cost) {
-            master_array[master_idx] = cost;
+#pragma omp critical(cost_write)
+          {
+            unsigned char old_cost = master_array[master_idx];
+            if (old_cost == nav2_costmap_2d::NO_INFORMATION || cost > old_cost) {
+              master_array[master_idx] = cost;
+            }
           }
         }
       }
     }
   }
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] updateCosts: %d cells with cost, %d lethal (range=[%d,%d,%d,%d])",
     cells_with_cost, lethal_cells, min_i, min_j, max_i, max_j);
+
+  rclcpp::Time frame_end = clock->now();
+  double frame_ms = (frame_end - frame_start).seconds() * 1000.0;
+  perf_total_time_ += frame_ms;
+  perf_frame_count_++;
+
+  double elapsed = (frame_end - last_perf_log_).seconds();
+  if (elapsed >= 10.0) {
+    double avg_ms = perf_total_time_ / static_cast<double>(perf_frame_count_);
+    RCLCPP_INFO(
+      rclcpp::get_logger("traversability_layer"),
+      "[TraversabilityLayer] Perf: %d frames in %.1fs, avg=%.2fms, last=%.2fms, "
+      "cells_with_cost=%d, lethal=%d, cloud_points=%zu",
+      perf_frame_count_, elapsed, avg_ms, frame_ms,
+      cells_with_cost, lethal_cells,
+      accumulated_cloud_.size());
+    perf_frame_count_ = 0;
+    perf_total_time_ = 0.0;
+    last_perf_log_ = frame_end;
+  }
 
   if (publish_slope_map_ && slope_pub_) {
     auto node = node_.lock();
@@ -594,7 +634,7 @@ void TraversabilityLayer::updateCosts(
       slope_msg.header.stamp = node->now();
       slope_pub_->publish(slope_msg);
 
-      RCLCPP_INFO_THROTTLE(
+      RCLCPP_DEBUG_THROTTLE(
         rclcpp::get_logger("traversability_layer"), *clock, 2000,
         "[TraversabilityLayer] Published slope_map: %zu points, frame=%s",
         slope_cloud->size(), slope_cloud->header.frame_id.c_str());

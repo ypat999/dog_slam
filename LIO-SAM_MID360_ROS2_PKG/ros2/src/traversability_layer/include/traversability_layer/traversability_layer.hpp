@@ -94,6 +94,11 @@ private:
   bool publish_slope_map_;
   bool enable_raycast_clear_;
   double cell_resolution_;
+  int num_threads_;
+
+  rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
+  int perf_frame_count_ = 0;
+  double perf_total_time_ = 0.0;
 
   std::vector<CellData> grid_map_;
   unsigned int grid_size_x_ = 0;

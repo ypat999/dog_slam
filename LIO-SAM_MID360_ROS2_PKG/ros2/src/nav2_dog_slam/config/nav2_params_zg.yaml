@@ -460,7 +460,10 @@ local_costmap:
         enable_raycast_clear: false   # 是否启用射线追踪清除
 
         # 网格分辨率
-        cell_resolution: 0.2          # 可通行性分析网格分辨率(m)
+        cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
+
+        # 并行计算
+        num_threads: 0                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
 
       # 障碍物层参数
       obstacle_layer_local:

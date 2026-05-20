@@ -24,7 +24,7 @@ controller_server:
     min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
 
-    odom_topic: "lio/robo/odom"  # 新增参数
+    odom_topic: "/rkbot/lio/robo/odom"  # 新增参数
     # publish_zero_velocity: true  # 新增参数
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
@@ -340,7 +340,7 @@ local_costmap:
       # footprint: ""  # 新增参数 - 使用robot_radius代替
       # footprint_padding: 0.01  # 新增参数
       # lethal_cost_threshold: 100  # 新增参数
-      map_topic: "map"  # 新增参数
+      map_topic: "/rkbot/map"  # 新增参数
       observation_sources: "scan"  # 新增参数
       origin_x: -5.0  # 新增参数
       origin_y: -5.0  # 新增参数
@@ -437,8 +437,8 @@ local_costmap:
         slope_cost_scale: 3.0         # 坡度 cost 指数增长系数
 
         # 高度差参数
-        step_height_threshold: 0.9    # 台阶高度阈值(m)，超过此值进入坡度检测
-        height_cost_start: 0.05        # 产生 cost 的最小高度(m)，低于此值 cost=0
+        step_height_threshold: 0.4    # 台阶高度阈值(m)，超过此值进入坡度检测
+        height_cost_start: 0.12        # 产生 cost 的最小高度(m)，低于此值 cost=0
 
         # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
         # 但保留声明避免未知参数警告）
@@ -448,8 +448,7 @@ local_costmap:
         lethal_cost_threshold: 254.0
 
         # 点云持久化
-        observation_persistence: 0.0  # 点云保留时间(s)，0 表示不持久化
-        clearing_duration: 1.0        # 清除缓存点云的时间间隔(s)
+        observation_persistence: 1.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点
 
         # 点云缓冲
         cloud_buffer_size: 5          # 点云缓冲队列长度
@@ -459,10 +458,9 @@ local_costmap:
 
         # 射线清除
         enable_raycast_clear: false   # 是否启用射线追踪清除
-        clear_each_frame: true        # 每帧是否清除网格数据
 
         # 网格分辨率
-        cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
+        cell_resolution: 0.2          # 可通行性分析网格分辨率(m)
 
       # 障碍物层参数
       obstacle_layer_local:

@@ -89,12 +89,10 @@ private:
   double height_cost_scale_;
   double lethal_cost_threshold_;
   double observation_persistence_;
-  double clearing_duration_;
   int cloud_buffer_size_;
   bool enabled_;
   bool publish_slope_map_;
   bool enable_raycast_clear_;
-  bool clear_each_frame_;
   double cell_resolution_;
 
   std::vector<CellData> grid_map_;

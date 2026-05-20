@@ -39,11 +39,9 @@ void TraversabilityLayer::onInitialize()
   declareParameter("height_cost_scale", rclcpp::ParameterValue(10.0));
   declareParameter("lethal_cost_threshold", rclcpp::ParameterValue(254.0));
   declareParameter("observation_persistence", rclcpp::ParameterValue(5.0));
-  declareParameter("clearing_duration", rclcpp::ParameterValue(10.0));
   declareParameter("cloud_buffer_size", rclcpp::ParameterValue(5));
   declareParameter("publish_slope_map", rclcpp::ParameterValue(false));
   declareParameter("enable_raycast_clear", rclcpp::ParameterValue(false));
-  declareParameter("clear_each_frame", rclcpp::ParameterValue(false));
   declareParameter("cell_resolution", rclcpp::ParameterValue(0.0));
 
   node->get_parameter(name_ + ".enabled", enabled_);
@@ -59,11 +57,9 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".height_cost_scale", height_cost_scale_);
   node->get_parameter(name_ + ".lethal_cost_threshold", lethal_cost_threshold_);
   node->get_parameter(name_ + ".observation_persistence", observation_persistence_);
-  node->get_parameter(name_ + ".clearing_duration", clearing_duration_);
   node->get_parameter(name_ + ".cloud_buffer_size", cloud_buffer_size_);
   node->get_parameter(name_ + ".publish_slope_map", publish_slope_map_);
   node->get_parameter(name_ + ".enable_raycast_clear", enable_raycast_clear_);
-  node->get_parameter(name_ + ".clear_each_frame", clear_each_frame_);
   node->get_parameter(name_ + ".cell_resolution", cell_resolution_);
 
   max_slope_traversable_ = max_slope_traversable_ * M_PI / 180.0;
@@ -78,11 +74,10 @@ void TraversabilityLayer::onInitialize()
     node->get_logger(),
     "TraversabilityLayer: step_height_threshold=%.3f, max_slope_traversable=%.1f deg, "
     "slope_cost_start=%.1f deg, pointcloud_topic=%s, "
-    "enable_raycast_clear=%s, clear_each_frame=%s, cell_resolution=%.3f",
+    "enable_raycast_clear=%s, cell_resolution=%.3f",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
     slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
     enable_raycast_clear_ ? "true" : "false",
-    clear_each_frame_ ? "true" : "false",
     cell_resolution_);
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
@@ -219,8 +214,9 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   if (observation_persistence_ <= 0.0) {
     accumulated_cloud_.clear();
   }
+  rclcpp::Time arrival_time = clock->now();
   for (const auto & pt : transformed_cloud) {
-    accumulated_cloud_.push_back({pt, msg->header.stamp});
+    accumulated_cloud_.push_back({pt, arrival_time});
   }
   const size_t max_points = 200000;
   if (accumulated_cloud_.size() > max_points) {
@@ -480,11 +476,23 @@ void TraversabilityLayer::updateCosts(
     }
   }
 
-  float global_min_z = std::numeric_limits<float>::max();
+  std::vector<float> min_z_values;
+  min_z_values.reserve(grid_size_x_ * grid_size_y_);
   for (const auto & cell : grid_map_) {
-    if (cell.has_data && cell.min_z < global_min_z) {
-      global_min_z = cell.min_z;
+    if (cell.has_data) {
+      min_z_values.push_back(cell.min_z);
     }
+  }
+
+  float global_min_z = 0.0f;
+  if (!min_z_values.empty()) {
+    std::sort(min_z_values.begin(), min_z_values.end());
+    size_t n_samples = std::min(static_cast<size_t>(10), min_z_values.size());
+    float sum = 0.0f;
+    for (size_t i = 0; i < n_samples; i++) {
+      sum += min_z_values[i];
+    }
+    global_min_z = sum / static_cast<float>(n_samples);
   }
 
   for (auto & cell : grid_map_)

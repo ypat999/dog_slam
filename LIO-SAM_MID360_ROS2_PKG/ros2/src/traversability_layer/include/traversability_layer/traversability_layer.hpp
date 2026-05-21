@@ -89,13 +89,16 @@ private:
   double height_cost_scale_;
   double lethal_cost_threshold_;
   double observation_persistence_;
-  double clearing_duration_;
   int cloud_buffer_size_;
   bool enabled_;
   bool publish_slope_map_;
   bool enable_raycast_clear_;
-  bool clear_each_frame_;
   double cell_resolution_;
+  int num_threads_;
+
+  rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
+  int perf_frame_count_ = 0;
+  double perf_total_time_ = 0.0;
 
   std::vector<CellData> grid_map_;
   unsigned int grid_size_x_ = 0;

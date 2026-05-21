@@ -29,7 +29,7 @@ from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
     bringup_dir = get_package_share_directory('nav2_bringup')
 
-    namespace = 'rkbot'
+    namespace = 'rkbot_test'
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
     params_file = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg.yaml'
@@ -109,7 +109,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params_local],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 5,6'],
+                prefix=['taskset -c 4,5,6,7'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
             Node(
                 package='nav2_lifecycle_manager',

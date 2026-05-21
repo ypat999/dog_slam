@@ -428,21 +428,21 @@ local_costmap:
         # sensor_frame: ""
 
         # 高度过滤（相对于机器人坐标系的高度）
-        max_obstacle_height: 1.5    # 最大考虑高度(m)，高于此忽略
+        max_obstacle_height: 2.0    # 最大考虑高度(m)，高于此忽略
         min_obstacle_height: -1.5   # 最小考虑高度(m)，低于此忽略
 
         # 坡度参数（角度制）
-        max_slope_traversable: 45.0   # 最大可通行坡度(°)，超过则直接 lethal
-        slope_cost_start: 10.0        # 开始产生坡度 cost 的坡度角(°)
-        slope_cost_scale: 3.0         # 坡度 cost 指数增长系数
+        max_slope_traversable: 80.0   # 最大可通行坡度(°)，超过则直接 lethal
+        slope_cost_start: 70.0        # 开始产生坡度 cost 的坡度角(°)
+        slope_cost_scale: 0.1         # 坡度 cost 指数增长系数
 
         # 高度差参数
-        step_height_threshold: 0.4    # 台阶高度阈值(m)，超过此值进入坡度检测
-        height_cost_start: 0.12        # 产生 cost 的最小高度(m)，低于此值 cost=0
+        step_height_threshold: 0.5   # 台阶高度阈值(m)，超过此值进入坡度检测
+        height_cost_start: 0.1        # 产生 cost 的最小高度(m)，低于此值 cost=0
 
         # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
         # 但保留声明避免未知参数警告）
-        height_cost_scale: 5.0
+        height_cost_scale: 2.0
 
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
@@ -463,7 +463,7 @@ local_costmap:
         cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
 
         # 并行计算
-        num_threads: 0                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
+        num_threads: 4                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
 
       # 障碍物层参数
       obstacle_layer_local:

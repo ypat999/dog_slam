@@ -311,6 +311,7 @@ void TraversabilityLayer::computeSlope(double origin_x, double origin_y)
       if (found_ref && ref_dist > 1e-6f) {
         float dz = std::abs(cell.representative_z - ref_z);
 
+        cell.height_diff = dz;
         cell.slope_magnitude = dz / ref_dist;
 
         if (cell.slope_magnitude > max_slope_mag) {
@@ -484,7 +485,6 @@ void TraversabilityLayer::updateCosts(
   {
     if (cell.has_data) {
       cell.representative_z = cell.max_z;
-      cell.height_diff = cell.representative_z;
     }
   }
 

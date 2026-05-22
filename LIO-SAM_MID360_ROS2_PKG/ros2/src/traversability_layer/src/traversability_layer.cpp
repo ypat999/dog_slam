@@ -311,11 +311,8 @@ void TraversabilityLayer::computeSlope(double origin_x, double origin_y)
       if (found_ref && ref_dist > 1e-6f) {
         float dz = std::abs(cell.representative_z - ref_z);
 
-        if (dz > static_cast<float>(step_height_threshold_)) {
-          cell.slope_magnitude = 100.0f;
-        } else {
-          cell.slope_magnitude = dz / ref_dist;
-        }
+        cell.height_diff = dz;
+        cell.slope_magnitude = dz / ref_dist;
 
         if (cell.slope_magnitude > max_slope_mag) {
           max_slope_mag = cell.slope_magnitude;
@@ -348,40 +345,31 @@ unsigned char TraversabilityLayer::computeCost(const CellData & cell) const
     return 0;
   }
 
-  if (height_above_ground <= static_cast<float>(step_height_threshold_)) {
-    float range = static_cast<float>(step_height_threshold_) - static_cast<float>(height_cost_start_);
-    if (range <= 1e-6f) {
-      return static_cast<unsigned char>(std::min(253.0f, (height_above_ground / static_cast<float>(step_height_threshold_)) * 253.0f));
+  float range = static_cast<float>(step_height_threshold_) - static_cast<float>(height_cost_start_);
+  float norm_height = height_above_ground - static_cast<float>(height_cost_start_);
+
+  if (range > 1e-6f) {
+    float ratio = norm_height / range;
+    if (ratio > 1.0f) {
+      ratio = 1.0f;
     }
-    float ratio = (height_above_ground - static_cast<float>(height_cost_start_)) / range;
     float cost_f = 1.0f + ratio * 252.0f;
-    return static_cast<unsigned char>(std::min(253.0f, cost_f));
-  }
+    unsigned char height_cost = static_cast<unsigned char>(std::min(253.0f, cost_f));
 
-  float excess = height_above_ground - static_cast<float>(step_height_threshold_);
-  float fallback_ratio = 1.0f - std::exp(-static_cast<float>(height_cost_scale_) * excess);
-  unsigned char height_cost = static_cast<unsigned char>(
-    std::min(static_cast<float>(nav2_costmap_2d::LETHAL_OBSTACLE),
-             fallback_ratio * static_cast<float>(lethal_cost_threshold_)));
-
-  unsigned char slope_cost = 0;
-  float slope_angle = std::atan(cell.slope_magnitude);
-
-  if (slope_angle > max_slope_traversable_) {
-    slope_cost = nav2_costmap_2d::LETHAL_OBSTACLE;
-  } else if (slope_angle > slope_cost_start_) {
-    float excess_angle = slope_angle - static_cast<float>(slope_cost_start_);
-    float max_excess = static_cast<float>(max_slope_traversable_) - static_cast<float>(slope_cost_start_);
-    if (max_excess > 1e-6f) {
-      float ratio = excess_angle / max_excess;
-      float cost_f = (1.0f - std::exp(-static_cast<float>(slope_cost_scale_) * ratio)) *
-                     static_cast<float>(lethal_cost_threshold_);
-      slope_cost = static_cast<unsigned char>(
-        std::min(static_cast<float>(nav2_costmap_2d::LETHAL_OBSTACLE), cost_f));
+    if (height_above_ground <= static_cast<float>(step_height_threshold_)) {
+      return height_cost;
     }
+
+    float slope_angle = std::atan(cell.slope_magnitude);
+
+    if (slope_angle > max_slope_traversable_) {
+      return nav2_costmap_2d::LETHAL_OBSTACLE;
+    }
+
+    return height_cost;
   }
 
-  return std::max(height_cost, slope_cost);
+  return static_cast<unsigned char>(std::min(253.0f, (height_above_ground / static_cast<float>(step_height_threshold_)) * 253.0f));
 }
 
 void TraversabilityLayer::updateBounds(
@@ -493,33 +481,10 @@ void TraversabilityLayer::updateCosts(
     }
   }
 
-  std::vector<float> min_z_values;
-  min_z_values.reserve(grid_size_x_ * grid_size_y_);
-  for (const auto & cell : grid_map_) {
-    if (cell.has_data) {
-      min_z_values.push_back(cell.min_z);
-    }
-  }
-
-  float global_min_z = 0.0f;
-  if (!min_z_values.empty()) {
-    std::sort(min_z_values.begin(), min_z_values.end());
-    size_t n_samples = std::min(static_cast<size_t>(10), min_z_values.size());
-    float sum = 0.0f;
-    for (size_t i = 0; i < n_samples; i++) {
-      sum += min_z_values[i];
-    }
-    global_min_z = sum / static_cast<float>(n_samples);
-  }
-
   for (auto & cell : grid_map_)
   {
     if (cell.has_data) {
       cell.representative_z = cell.max_z;
-      cell.height_diff = cell.representative_z - global_min_z;
-      if (cell.height_diff < 0.0f) {
-        cell.height_diff = 0.0f;
-      }
     }
   }
 

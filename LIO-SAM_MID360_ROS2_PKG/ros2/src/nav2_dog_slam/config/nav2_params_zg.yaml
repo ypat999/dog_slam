@@ -333,8 +333,8 @@ local_costmap:
       footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       rolling_window: true
-      width: 10
-      height: 10
+      width: 12
+      height: 12
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -342,8 +342,8 @@ local_costmap:
       # lethal_cost_threshold: 100  # 新增参数
       map_topic: "/rkbot/map"  # 新增参数
       observation_sources: "scan"  # 新增参数
-      origin_x: -5.0  # 新增参数
-      origin_y: -5.0  # 新增参数
+      origin_x: -6.0  # 新增参数
+      origin_y: -6.0  # 新增参数
       track_unknown_space: true  # 新增参数
       # trinary_costmap: true  # 新增参数
       # unknown_cost_value: 255  # 新增参数
@@ -354,6 +354,94 @@ local_costmap:
       
       # 插件配置
       plugins: ["traversability_layer_local", "obstacle_layer_local", "inflation_layer_local"] # "voxel_layer", "stvl_layer",
+      
+      # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
+      traversability_layer_local:
+        plugin: "traversability_layer::TraversabilityLayer"
+        enabled: true
+        # 点云话题
+        pointcloud_topic: /rkbot/front_lidar/body/cloud
+        # 传感器坐标系（为空则使用点云自带的 frame_id）
+        # sensor_frame: ""
+        # 高度过滤（相对于机器人坐标系的高度）
+        max_obstacle_height: 1.0    # 最大考虑高度(m)，高于此忽略
+        min_obstacle_height: -1.5   # 最小考虑高度(m)，低于此忽略
+        # 坡度参数（角度制）
+        max_slope_traversable: 80.0   # 最大可通行坡度(°)，超过则直接 lethal
+        slope_cost_start: 70.0        # 开始产生坡度 cost 的坡度角(°)
+        slope_cost_scale: 0.1         # 坡度 cost 指数增长系数
+        # 高度差参数
+        step_height_threshold: 0.4   # 台阶高度阈值(m)，超过此值进入坡度检测
+        height_cost_start: 0.1        # 产生 cost 的最小高度(m)，低于此值 cost=0
+        # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
+        # 但保留声明避免未知参数警告）
+        height_cost_scale: 2.0
+        # 致命 cost 阈值
+        lethal_cost_threshold: 254.0
+        # 点云持久化
+        observation_persistence: 1.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点
+        # 点云缓冲
+        cloud_buffer_size: 5          # 点云缓冲队列长度
+        # 调试输出
+        publish_slope_map: true       # 是否发布坡度可视化点云
+        # 射线清除
+        enable_raycast_clear: false   # 是否启用射线追踪清除(未实现)
+        # 网格分辨率
+        cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
+        # 并行计算
+        num_threads: 4                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
+
+      # 障碍物层参数
+      obstacle_layer_local:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: true
+        observation_sources: scan_front scan_rear
+        combination_method: 1  # 取最大值组合方法
+        footprint_clearing_enabled: true  # 启用footprint清理
+        max_obstacle_height: 100.0
+        min_obstacle_height: -100.0
+        scan_front:
+          topic: /rkbot/scan_front
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
+          clearing: true
+          marking: false
+          data_type: "LaserScan"
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 0.0
+          obstacle_min_range: 0.0
+          # expected_update_rate: 0.0  # 新增参数
+          # inf_is_valid: false  # 新增参数
+          # observation_persistence: 0.0  # 新增参数
+          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
+        scan_rear:
+          topic: /rkbot/scan_rear
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 10.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 10.0
+          obstacle_min_range: 0.0
+          # expected_update_rate: 0.0  # 新增参数
+          # inf_is_valid: false  # 新增参数
+          # observation_persistence: 0.0  # 新增参数
+          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
+      
+      # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
+      inflation_layer_local:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        enabled: true
+        inflation_radius: 1.0
+        cost_scaling_factor: 20.0
+        # inflate_unknown: false      # 新增参数
+        # inflate_around_unknown: false  # 新增参数
+      
+      # 始终发送完整代价地图
+      always_send_full_costmap: true
       
 
       # # STVL (Spatio-Temporal Voxel Layer) - 3D点云障碍物层
@@ -415,93 +503,7 @@ local_costmap:
       #     raytrace_min_range: 0.3
       #     obstacle_max_range: 2.5
       #     obstacle_min_range: 0.3
-      
-      # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
-      traversability_layer_local:
-        plugin: "traversability_layer::TraversabilityLayer"
-        enabled: true
 
-        # 点云话题
-        pointcloud_topic: /rkbot/front_lidar/body/cloud
-
-        # 传感器坐标系（为空则使用点云自带的 frame_id）
-        # sensor_frame: ""
-
-        # 高度过滤（相对于机器人坐标系的高度）
-        max_obstacle_height: 1.5    # 最大考虑高度(m)，高于此忽略
-        min_obstacle_height: -1.5   # 最小考虑高度(m)，低于此忽略
-
-        # 坡度参数（角度制）
-        max_slope_traversable: 45.0   # 最大可通行坡度(°)，超过则直接 lethal
-        slope_cost_start: 10.0        # 开始产生坡度 cost 的坡度角(°)
-        slope_cost_scale: 3.0         # 坡度 cost 指数增长系数
-
-        # 高度差参数
-        step_height_threshold: 0.4    # 台阶高度阈值(m)，超过此值进入坡度检测
-        height_cost_start: 0.12        # 产生 cost 的最小高度(m)，低于此值 cost=0
-
-        # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
-        # 但保留声明避免未知参数警告）
-        height_cost_scale: 5.0
-
-        # 致命 cost 阈值
-        lethal_cost_threshold: 254.0
-
-        # 点云持久化
-        observation_persistence: 1.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点
-
-        # 点云缓冲
-        cloud_buffer_size: 5          # 点云缓冲队列长度
-
-        # 调试输出
-        publish_slope_map: true       # 是否发布坡度可视化点云
-
-        # 射线清除
-        enable_raycast_clear: false   # 是否启用射线追踪清除
-
-        # 网格分辨率
-        cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
-
-        # 并行计算
-        num_threads: 0                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
-
-      # 障碍物层参数
-      obstacle_layer_local:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
-        observation_sources: scan
-        combination_method: 1  # 取最大值组合方法
-        footprint_clearing_enabled: true  # 启用footprint清理
-        max_obstacle_height: 100.0
-        min_obstacle_height: -100.0
-        scan:
-          topic: /rkbot/scan_rear
-          max_obstacle_height: 100.0
-          min_obstacle_height: -100.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 7.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 7.0
-          obstacle_min_range: 0.0
-          # expected_update_rate: 0.0  # 新增参数
-          # inf_is_valid: false  # 新增参数
-          # observation_persistence: 0.0  # 新增参数
-          # sensor_frame: ""  # 新增参数 - 空表示使用数据帧
-      
-      # 膨胀层参数 - 大幅增加膨胀半径和成本缩放，增强避障能力
-      inflation_layer_local:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        enabled: true
-        inflation_radius: 1.0
-        cost_scaling_factor: 20.0
-        # inflate_unknown: false      # 新增参数
-        # inflate_around_unknown: false  # 新增参数
-      
-      # 始终发送完整代价地图
-      always_send_full_costmap: true
-      
       # qos_overrides:
       #   /tf:
       #     subscription:

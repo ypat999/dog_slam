@@ -1378,26 +1378,47 @@
         tfTopic.subscribe(function(tfMsg) {
           if (tfMsg.transforms) {
             for (let transform of tfMsg.transforms) {
-              if (transform.header.frame_id === 'rkbot/map' && transform.child_frame_id === 'rkbot/odom') {
-                mapToOdomTransform = {
-                  translation: {
-                    x: transform.transform.translation.x,
-                    y: transform.transform.translation.y,
-                    z: transform.transform.translation.z
-                  },
-                  rotation: {
-                    x: transform.transform.rotation.x,
-                    y: transform.transform.rotation.y,
-                    z: transform.transform.rotation.z,
-                    w: transform.transform.rotation.w
-                  },
-                  timestamp: Date.now()
-                };
-                lastMapToOdomUpdate = Date.now();
-                console.log('更新map->odom变换:', 
-                  'x=', mapToOdomTransform.translation.x.toFixed(3),
-                  'y=', mapToOdomTransform.translation.y.toFixed(3),
-                  'yaw=', (quaternionToYaw(mapToOdomTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+              if (transform.header.frame_id === 'rkbot/map') {
+                if (transform.child_frame_id === 'rkbot/odom') {
+                  mapToOdomTransform = {
+                    translation: {
+                      x: transform.transform.translation.x,
+                      y: transform.transform.translation.y,
+                      z: transform.transform.translation.z
+                    },
+                    rotation: {
+                      x: transform.transform.rotation.x,
+                      y: transform.transform.rotation.y,
+                      z: transform.transform.rotation.z,
+                      w: transform.transform.rotation.w
+                    },
+                    timestamp: Date.now()
+                  };
+                  lastMapToOdomUpdate = Date.now();
+                  console.log('更新map->odom变换:', 
+                    'x=', mapToOdomTransform.translation.x.toFixed(3),
+                    'y=', mapToOdomTransform.translation.y.toFixed(3),
+                    'yaw=', (quaternionToYaw(mapToOdomTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+                } else if (transform.child_frame_id === 'rkbot/world') {
+                  window.mapToWorldTransform = {
+                    translation: {
+                      x: transform.transform.translation.x,
+                      y: transform.transform.translation.y,
+                      z: transform.transform.translation.z
+                    },
+                    rotation: {
+                      x: transform.transform.rotation.x,
+                      y: transform.transform.rotation.y,
+                      z: transform.transform.rotation.z,
+                      w: transform.transform.rotation.w
+                    },
+                    timestamp: Date.now()
+                  };
+                  console.log('更新map->world变换:', 
+                    'x=', window.mapToWorldTransform.translation.x.toFixed(3),
+                    'y=', window.mapToWorldTransform.translation.y.toFixed(3),
+                    'yaw=', (quaternionToYaw(window.mapToWorldTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+                }
               }
             }
           }
@@ -1424,7 +1445,28 @@
         
         return { x: mapX, y: mapY, theta: mapTheta };
       }
-      
+
+      function applyMapToWorldTransform(worldX, worldY, worldTheta) {
+        const tf = window.mapToWorldTransform;
+        if (!tf) {
+          console.warn('map->world变换未初始化（可能rkbot/world == rkbot/map），直接使用world坐标作为map坐标');
+          return { x: worldX, y: worldY, theta: worldTheta };
+        }
+
+        const tx = tf.translation.x;
+        const ty = tf.translation.y;
+        const tfYaw = quaternionToYaw(tf.rotation);
+
+        const cosYaw = Math.cos(tfYaw);
+        const sinYaw = Math.sin(tfYaw);
+
+        const mapX = tx + worldX * cosYaw - worldY * sinYaw;
+        const mapY = ty + worldX * sinYaw + worldY * cosYaw;
+        const mapTheta = worldTheta + tfYaw;
+
+        return { x: mapX, y: mapY, theta: mapTheta };
+      }
+
       // 订阅里程计（带主备切换）：优先SUPER_LIO_ODOM_TOPIC，超时后尝试SUPER_LIO_FRONT_ODOM_TOPIC
       let lioOdomReceived = false;
       let lioFrontOdomTopic = null;
@@ -1457,22 +1499,47 @@
       
       function onLioFrontOdomReceived(odomMsg) {
         if (positionSource !== 'super_lio') return;
-        
+
         if (!lioOdomReceived) {
           lioOdomReceived = true;
           console.log('主话题无数据，已切换到', SUPER_LIO_FRONT_ODOM_TOPIC, '接收里程计数据');
+
+          // 自适应检测帧约定：frame_id含有"world"时为z前向帧，否则为标准z天向帧
+          const frameId = (odomMsg.header && odomMsg.header.frame_id) || '';
+          window.frontOdomZForward = /world/i.test(frameId);
+          console.log('前雷达帧检测 frame_id:', frameId, '→ z前向:', window.frontOdomZForward);
         }
-        
-        const odomX = odomMsg.pose.pose.position.x;
-        const odomY = odomMsg.pose.pose.position.y;
-        const odomTheta = quaternionToYaw(odomMsg.pose.pose.orientation);
-        
-        const mapPosition = applyMapToOdomTransform(odomX, odomY, odomTheta);
-        
+
+        const rawX = odomMsg.pose.pose.position.x;
+        const rawY = odomMsg.pose.pose.position.y;
+        const rawZ = odomMsg.pose.pose.position.z;
+        const ox = odomMsg.pose.pose.orientation.x;
+        const oy = odomMsg.pose.pose.orientation.y;
+        const oz = odomMsg.pose.pose.orientation.z;
+        const ow = odomMsg.pose.pose.orientation.w;
+
+        let mapX, mapY, mapTheta;
+
+        if (window.frontOdomZForward) {
+          // z前向帧：z=前向, y=侧向, x=高度 → map帧：x=前向, y=侧向
+          mapX = rawZ;
+          mapY = rawY;
+          // heading = 绕x轴(高度轴)的roll角，取反修正方向
+          const roll = Math.atan2(2 * (ow * ox + oy * oz), 1 - 2 * (ox * ox + oy * oy));
+          mapTheta = -roll;
+        } else {
+          // 标准z天向帧：x=前向, y=侧向, z=高度
+          mapX = rawX;
+          mapY = rawY;
+          mapTheta = quaternionToYaw(odomMsg.pose.pose.orientation);
+        }
+
+        const mapPosition = applyMapToWorldTransform(mapX, mapY, mapTheta);
+
         robotPosition.x = mapPosition.x;
         robotPosition.y = mapPosition.y;
         robotPosition.theta = mapPosition.theta;
-        
+
         drawMap();
       }
       

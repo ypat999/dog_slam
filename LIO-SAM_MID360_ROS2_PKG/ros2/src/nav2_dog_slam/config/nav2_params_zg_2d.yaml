@@ -70,8 +70,8 @@ controller_server:
       vx_std: 0.5  # 降低线速度采样标准差，减少速度波动
       wz_std: 0.3  # 提高角速度采样标准差，增加转向探索性
       
-      # vx_max: 2.0
-      vx_max: 1.5
+      vx_max: 2.0
+      # vx_max: 1.5
       # vx_max: 0.6
       vy_max: 0.2
       vy_std: 0.1  # 降低横移速度采样标准差

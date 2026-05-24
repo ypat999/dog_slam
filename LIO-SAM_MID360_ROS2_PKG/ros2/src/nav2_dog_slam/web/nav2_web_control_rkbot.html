@@ -1630,11 +1630,11 @@
       // 订阅路径规划话题
       var planTopic = new ROSLIB.Topic({
         ros: ros,
-        name: '/plan',
+        name: '/rkbot/plan',
         messageType: 'nav_msgs/Path'
       });
       
-      console.log('正在订阅路径规划话题: /plan');
+      console.log('正在订阅路径规划话题: /rkbot/plan');
       
       planTopic.subscribe(function(planMsg) {
         try {
@@ -1651,11 +1651,11 @@
       // 订阅机器人足迹话题
       var footprintTopic = new ROSLIB.Topic({
         ros: ros,
-        name: '/global_costmap/published_footprint',
+        name: '/rkbot/global_costmap/published_footprint',
         messageType: 'geometry_msgs/PolygonStamped'
       });
       
-      console.log('正在订阅机器人足迹话题: /global_costmap/published_footprint');
+      console.log('正在订阅机器人足迹话题: /rkbot/global_costmap/published_footprint');
       
       footprintTopic.subscribe(function(footprintMsg) {
         try {

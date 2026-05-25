@@ -234,7 +234,7 @@ velocity_smoother:
     
     # 其他参数
     deadband_velocity: [0.05, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
-    velocity_timeout: 0.1
+    velocity_timeout: 1.0
     
     # qos_overrides:
     #   /tf:

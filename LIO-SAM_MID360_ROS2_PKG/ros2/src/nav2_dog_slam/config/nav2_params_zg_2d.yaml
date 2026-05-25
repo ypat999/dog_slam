@@ -1063,23 +1063,27 @@ slam_toolbox_node:
     # # 分辨率 - 地图分辨率
     resolution: 0.05
     
-    # # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
-    # occupancy_threshold: 0.65
+    # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
+    # 稀疏点云场景降低阈值，使障碍物更容易被标记（黑色区域）
+    occupancy_threshold: 0.2
     
     # # 地图名称
     map_name: "map"
     
     # 最小时间间隔 - 扫描处理间隔，降低频率以减少计算负载，提高长距离稳定性
-    minimum_time_interval: 0.2
+    # 稀疏扫描时提高处理频率，积累更多证据以标记障碍物
+    minimum_time_interval: 0.1
     
     # 最小移动距离 - 触发地图更新的最小距离，增加距离阈值以减少频繁更新
-    minimum_travel_distance: 0.2
+    # 稀疏扫描时降低距离阈值，更灵敏地触发地图更新
+    minimum_travel_distance: 0.1
     
     # 最小移动角度 - 触发地图更新的最小角度，增加角度阈值以减少频繁更新
-    minimum_travel_heading: 0.08
+    # 稀疏扫描时降低角度阈值，旋转时也及时更新地图
+    minimum_travel_heading: 0.04
     
     # 扫描缓冲区大小 - 增加缓冲区大小以支持更长的匹配距离，提高长距离稳定性
-    scan_buffer_size: 200
+    scan_buffer_size: 2000
     
     # 扫描队列大小 - 控制扫描数据的处理队列
     scan_queue_size: 10

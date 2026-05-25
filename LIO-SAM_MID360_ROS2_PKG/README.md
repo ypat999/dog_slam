@@ -134,40 +134,46 @@ sudo apt install -y ros-humble-slam-toolbox
 
 
 
-# gazebo
+# Gazebo Garden 仿真环境
+```bash
 sudo apt update
 sudo apt install -y lsb-release curl gnupg
 
 # 添加 GZ Sim GPG key
 curl -sSL https://packages.osrfoundation.org/gazebo.gpg | sudo tee /etc/apt/trusted.gpg.d/gazebo.gpg > /dev/null
 
-# 添加 Harmonic 软件源（Ubuntu 22.04 用 jammy）
-echo "deb http://packages.osrfoundation.org/gz-harmonic/ubuntu `lsb_release -cs` main" | \
-  sudo tee /etc/apt/sources.list.d/gz-harmonic.list > /dev/null
+# 添加 Garden 软件源（Ubuntu 22.04 用 jammy）
+echo "deb http://packages.osrfoundation.org/gz-garden/ubuntu `lsb_release -cs` main" | \
+  sudo tee /etc/apt/sources.list.d/gz-garden.list > /dev/null
 
 sudo apt update
 sudo apt install -y mesa-vulkan-drivers vulkan-tools
 
+# 安装 GZ Garden
+sudo apt install -y gz-garden
 
+# 安装 ROS2 与 Gazebo Garden 桥接及相关控制包
 sudo apt install -y \
-  ros-humble-gazebo-*          \
-  <!-- sudo apt install ros-humble-ros-gz
-  sudo apt install gz-harmonic -->
+  ros-humble-ros-gz \
+  ros-humble-ros2-control* \
+  ros-humble-robot-state-publisher \
+  ros-humble-joint-state-publisher \
+  ros-humble-xacro
 
-  ros-humble-ros2-control* \    
-  ros-humble-robot-state-publisher \ 
-  ros-humble-joint-state-publisher \ 
-  ros-humble-xacro  
+# Python 依赖（launch 文件运行需要）
+pip install PyYAML lark packaging
+```
 
 #############################################
 # 若Gazebo缺少基础模型，可手动克隆官方模型库
 #############################################
+```bash
 cd ~/.gazebo/
 git clone https://github.com/osrf/gazebo_models.git models
 
-
 sudo chmod 777 ~/.gazebo/models
 sudo chmod 777 ~/.gazebo/models/*
+```
 
 ## 构建项目
 

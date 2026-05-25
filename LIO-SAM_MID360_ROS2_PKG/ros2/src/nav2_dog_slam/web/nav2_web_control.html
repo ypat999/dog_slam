@@ -60,6 +60,7 @@
       padding: 0;
       margin: 0;
       content: "";
+      pointer-events: none;
     }
     
     #robot-marker {
@@ -90,6 +91,10 @@
       display: none;
       z-index: 6;
       border: 2px solid #ffffff;
+      pointer-events: none;
+    }
+    #goal-arrow, #initial-pose-arrow {
+      pointer-events: none;
     }
     #status {
       margin: 10px;
@@ -110,6 +115,88 @@
       margin: 5px;
     }
     button:hover {
+      background: #2a5fb0;
+    }
+    
+    /* 侧边栏折叠按钮 */
+    #toggle-sidebar-btn {
+      width: 20px;
+      min-width: 20px;
+      background: #3a3a3a;
+      border: 1px solid #555;
+      border-left: none;
+      border-right: none;
+      color: #aaa;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      margin-right: 10px;
+      border-radius: 0;
+      font-size: 14px;
+      user-select: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    #toggle-sidebar-btn:hover {
+      background: #555;
+      color: #fff;
+    }
+    #toggle-sidebar-btn.collapsed {
+      margin-right: 0;
+      margin-left: 0;
+      border-left: 1px solid #555;
+      border-right: 1px solid #555;
+    }
+    
+    /* 侧边栏折叠状态 */
+    #control-panel.collapsed {
+      width: 0;
+      padding: 0;
+      margin-right: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    body.sidebar-collapsed #map-container {
+      border-radius: 4px;
+    }
+    
+    /* 地图缩放按钮 */
+    #map-zoom-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      pointer-events: none;
+    }
+    #map-zoom-controls button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      margin: 0;
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 40px;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(58, 123, 213, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    #map-zoom-controls button:hover {
+      background: #3a7bd5;
+    }
+    #map-zoom-controls button:active {
       background: #2a5fb0;
     }
   </style>
@@ -200,15 +287,44 @@
       </div>
     </div>
   </div>
+  <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="收起/展开侧边栏">◀</button>
   <div id="map-container">
     <canvas id="map-canvas"></canvas>
     <canvas id="laser-canvas"></canvas>
     <div id="robot-marker" class="marker"></div>
     <div id="goal-marker" class="marker"></div>
     <div id="initial-pose-marker" class="marker"></div>
+    <div id="map-zoom-controls">
+      <button onclick="zoomIn()" title="放大">+</button>
+      <button onclick="zoomOut()" title="缩小">−</button>
+    </div>
   </div>
 
   <script type="text/javascript">
+    // === 侧边栏折叠逻辑 ===
+    let sidebarCollapsed = false;
+
+    function toggleSidebar() {
+      sidebarCollapsed = !sidebarCollapsed;
+      const panel = document.getElementById('control-panel');
+      const btn = document.getElementById('toggle-sidebar-btn');
+      if (sidebarCollapsed) {
+        panel.classList.add('collapsed');
+        btn.classList.add('collapsed');
+        btn.innerHTML = '▶';
+        btn.title = '展开侧边栏';
+        document.body.classList.add('sidebar-collapsed');
+      } else {
+        panel.classList.remove('collapsed');
+        btn.classList.remove('collapsed');
+        btn.innerHTML = '◀';
+        btn.title = '收起侧边栏';
+        document.body.classList.remove('sidebar-collapsed');
+      }
+      // 触发resize以重新适配地图Canvas
+      window.dispatchEvent(new Event('resize'));
+    }
+
     // === 配置部分 ===
     let ROSBRIDGE_SERVER_IP = localStorage.getItem('ros_hostname') || location.hostname; // 优先使用本地存储的主机名
     const ROSBRIDGE_SERVER_PORT = 9090;
@@ -474,6 +590,7 @@
       tempMarkerElement.style.transform = 'translate(-50%, -50%)';
       tempMarkerElement.style.zIndex = '20';
       tempMarkerElement.style.border = '2px solid #ffffff';
+      tempMarkerElement.style.pointerEvents = 'none';
       tempMarkerElement.style.left = x + 'px';
       tempMarkerElement.style.top = y + 'px';
       
@@ -504,6 +621,30 @@
       
       offsetX = 0; // 原点设在左边界
       offsetY = canvas.height; // 原点设在下边界
+      drawMap();
+    }
+    
+    // 放大（以画布中心为锚点）
+    function zoomIn() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const worldX = (centerX - offsetX) / scale;
+      const worldY = (centerY - offsetY) / scale;
+      scale = Math.min(scale * 1.3, 30);
+      offsetX = centerX - worldX * scale;
+      offsetY = centerY - worldY * scale;
+      drawMap();
+    }
+    
+    // 缩小（以画布中心为锚点）
+    function zoomOut() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const worldX = (centerX - offsetX) / scale;
+      const worldY = (centerY - offsetY) / scale;
+      scale = Math.max(scale * 0.7, 0.1);
+      offsetX = centerX - worldX * scale;
+      offsetY = centerY - worldY * scale;
       drawMap();
     }
     

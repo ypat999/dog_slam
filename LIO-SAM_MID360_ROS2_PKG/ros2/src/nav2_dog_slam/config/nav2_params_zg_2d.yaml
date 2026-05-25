@@ -1072,11 +1072,11 @@ slam_toolbox_node:
     
     # 最小时间间隔 - 扫描处理间隔，降低频率以减少计算负载，提高长距离稳定性
     # 稀疏扫描时提高处理频率，积累更多证据以标记障碍物
-    minimum_time_interval: 0.1
+    minimum_time_interval: 0.05
     
     # 最小移动距离 - 触发地图更新的最小距离，增加距离阈值以减少频繁更新
     # 稀疏扫描时降低距离阈值，更灵敏地触发地图更新
-    minimum_travel_distance: 0.1
+    minimum_travel_distance: 0.05
     
     # 最小移动角度 - 触发地图更新的最小角度，增加角度阈值以减少频繁更新
     # 稀疏扫描时降低角度阈值，旋转时也及时更新地图
@@ -1086,10 +1086,10 @@ slam_toolbox_node:
     scan_buffer_size: 2000
     
     # 扫描队列大小 - 控制扫描数据的处理队列
-    scan_queue_size: 10
+    scan_queue_size: 100
     
     # 扫描缓冲区最大扫描距离 - 增加匹配距离范围，提高重定位能力
-    scan_buffer_maximum_scan_distance: 20.0
+    scan_buffer_maximum_scan_distance: 50.0
     
     # # 最小通过距离 - 在单元格被标记为占用或未占用之前必须通过的光束数量
     # min_pass_through: 0.0

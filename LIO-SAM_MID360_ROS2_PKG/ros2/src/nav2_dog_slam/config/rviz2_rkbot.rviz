@@ -5,11 +5,7 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /TF1
         - /TF1/Frames1
-        - /TF1/Frames1/rkbot/world1
-        - /TF1/Frames1/rkbot/map1
-        - /TF1/Frames1/rkbot/odom1
         - /TF1/Tree1
         - /LaserScan1/Topic1
         - /Map1/Topic1
@@ -597,25 +593,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 22.113983154296875
+      Distance: 15.224241256713867
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -5.193756103515625
-        Y: -0.05356273055076599
-        Z: 0.5496886968612671
+        X: 0.06615421921014786
+        Y: -2.2748193740844727
+        Z: 0.2700960338115692
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5047963857650757
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.5120623111724854
+      Yaw: 3.1652512550354004
     Saved: ~
 Window Geometry:
   Displays:

@@ -4,7 +4,7 @@
     lio.map.if_filter: false
     lio.map.save_map_dir: "/home/robot/slam_data/pcd"
     lio.map.map_name: "front_lidar_map.pcd"
-    lio.map.ds_size: 0.2
+    lio.map.ds_size: 0.25
     lio.map.save_interval: 500
     # 点云切片保存前缀，用于多雷达同时建图时区分不同雷达的切片
     # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
@@ -20,7 +20,7 @@
     lio.sensor.maxrange: 100.0
     lio.sensor.filter_rate: 1
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.2
+    lio.sensor.voxel_fliter_size: 0.25
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81
@@ -37,7 +37,7 @@
     lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
     lio.hash_map.hash_capacity: 20000000
-    lio.hash_map.vox_resolution: 0.2
+    lio.hash_map.vox_resolution: 0.25
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
@@ -69,7 +69,7 @@
 
     lio.dynamic_removal.enable: false
     lio.dynamic_removal.method: 0
-    lio.dynamic_removal.grid_size: 0.2
+    lio.dynamic_removal.grid_size: 0.25
     lio.dynamic_removal.min_neighbors: 2
     lio.dynamic_removal.frame_window: 1
     lio.dynamic_removal.raycast_min_hits: 2

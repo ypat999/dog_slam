@@ -263,11 +263,11 @@ planner_server:
     LatticeBased:
       plugin: "nav2_smac_planner/SmacPlannerLattice"
       tolerance: 0.3
-      allow_unknown: true
+      allow_unknown: false
       max_iterations: 1000000
       max_on_approach_iterations: 10000
       max_planning_time: 10.0
-      lattice_filepath: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
+      lattice_filepath: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
       minimum_turning_radius: 0.2
       reverse_penalty: 2.0
       change_penalty: 0.3
@@ -292,7 +292,7 @@ planner_server:
     GridBased:
       plugin: "nav2_smac_planner/SmacPlanner2D"
       tolerance: 0.3
-      allow_unknown: true
+      allow_unknown: false
       max_iterations: 1000000
       max_on_approach_iterations: 1000
       use_final_approach_orientation: false
@@ -1098,7 +1098,7 @@ slam_toolbox_node:
     
     # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
     # 稀疏点云场景降低阈值，使障碍物更容易被标记（黑色区域）
-    occupancy_threshold: 0.02
+    occupancy_threshold: 0.1
     
     # # 地图名称
     map_name: "map"

@@ -10,7 +10,7 @@ if ('RK3588' in current_machine) and ('zenoh' in os.environ.get('RMW_IMPLEMENTAT
     
 # ========== LIO-SAM 相关配置 ==========
 # 雷达倾斜配置开关
-USE_TILT_CONFIG = True  # True: 使用倾斜配置文件, False: 使用默认配置文件
+USE_TILT_CONFIG = False  # True: 使用倾斜配置文件, False: 使用默认配置文件
 
 # 建图模式开关 - 支持从环境变量读取，如果未设置则使用默认值
 MANUAL_BUILD_MAP = os.environ.get('MANUAL_BUILD_MAP', 'False').lower() == 'true'  # True: 建图模式（打开octomap server，不运行nav2和web）, False: 导航模式
@@ -89,7 +89,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
-        'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_2d.yaml',
+        'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_2d_livox.yaml',
         
         # RK3588主机配置 - FAST-LIO
         'FAST_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/FAST_LIO_ROS2_edit/',
@@ -97,8 +97,8 @@ config_by_machine = {
         'FAST_LIO_MAP_FILE_PATH': '/home/ztl/slam_data/pcd/test.pcd',  # 添加的地图文件路径
         
         # RK3588主机配置 - Livox MID360
-        'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_tilt.json',
-        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config.json',
+        'LIVOX_MID360_CONFIG': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_zg.json',
+        'LIVOX_MID360_CONFIG_NO_TILT': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2/config/MID360_config_zg.json',
         
         # RK3588主机配置 - Super-LIO
         'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',

@@ -55,17 +55,17 @@ echo "加载工作空间环境..."
 source $WORKSPACE_DIR/install/setup.bash
 
 
-REMOTE_IP="192.168.168.100"
-REMOTE_USER="robot"
-REMOTE_PASS="1"
+# REMOTE_IP="192.168.168.100"
+# REMOTE_USER="robot"
+# REMOTE_PASS="1"
 
-echo "正在启动远程 zg_pointcloud 服务..."
-sshpass -p "$REMOTE_PASS" ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_IP" "echo '$REMOTE_PASS' | sudo -S systemctl start zg_pointcloud"
-if [ $? -eq 0 ]; then
-    echo "远程 zg_pointcloud 服务已启动"
-else
-    echo "警告: 远程 zg_pointcloud 服务启动失败"
-fi
+# echo "正在启动远程 zg_pointcloud 服务..."
+# sshpass -p "$REMOTE_PASS" ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_IP" "echo '$REMOTE_PASS' | sudo -S systemctl start zg_pointcloud"
+# if [ $? -eq 0 ]; then
+#     echo "远程 zg_pointcloud 服务已启动"
+# else
+#     echo "警告: 远程 zg_pointcloud 服务启动失败"
+# fi
 
 echo "启动建图模式..."
 echo "SLAM算法: $SLAM_ALGORITHM"

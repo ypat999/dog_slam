@@ -23,6 +23,8 @@ pkill -9 -f '8083'
 pkill -9 -f nav2
 pkill -9 -f gazebo
 pkill -9 -f gz
+pkill -9 -f pointcloud
+pkill -9 -f slam_toolbox
 
 
 ps -ef | awk '/rosbridge/ {print $2}' | xargs -r kill -9

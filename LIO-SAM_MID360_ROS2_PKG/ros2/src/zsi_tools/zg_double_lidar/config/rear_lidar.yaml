@@ -20,7 +20,7 @@
     lio.sensor.maxrange: 100.0
     lio.sensor.filter_rate: 1
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.25
+    lio.sensor.voxel_fliter_size: 0.1
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81

@@ -130,8 +130,8 @@ controller_server:
         cost_power: 3
         collision_cost: 254.0
         consider_footprint: true
-        critical_cost: 254.0
-        inflation_layer_name: "inflation_layer_local"
+        critical_cost: 250.0
+        # inflation_layer_name: "inflation_layer_local"
         near_goal_distance: 1.5
         
       PathFollowCritic:

@@ -133,7 +133,7 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='front_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', 'front_lidar/cloud_world'),
+            ('cloud_in', 'front_lidar/body/cloud'),
             ('scan', 'scan_front'),
         ],
         parameters=[
@@ -147,7 +147,7 @@ def generate_launch_description():
             {'angle_increment': 0.00872},
             {'scan_time': 0.1},
             {'range_min': 0.1},
-            {'range_max': 50.0},
+            {'range_max': 100.0},
             {'use_inf': True},
             {'inf_epsilon': 1.0},
         ],
@@ -174,7 +174,7 @@ def generate_launch_description():
             {'angle_increment': 0.00872},
             {'scan_time': 0.1},
             {'range_min': 0.1},
-            {'range_max': 50.0},
+            {'range_max': 100.0},
             {'use_inf': True},
             {'inf_epsilon': 1.0},
         ],

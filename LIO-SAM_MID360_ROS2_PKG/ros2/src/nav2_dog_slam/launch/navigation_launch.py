@@ -171,7 +171,7 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params_local],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 4,5,6,7'],
+                prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
             Node(
                 package='nav2_smoother',

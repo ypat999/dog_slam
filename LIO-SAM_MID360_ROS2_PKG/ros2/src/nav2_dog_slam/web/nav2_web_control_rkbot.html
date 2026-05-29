@@ -724,13 +724,13 @@
     
     // 左移地图（无视边界）
     function panLeft() {
-      offsetX += getPanStep();
+      offsetX -= getPanStep();
       drawMap();
     }
     
     // 右移地图（无视边界）
     function panRight() {
-      offsetX -= getPanStep();
+      offsetX += getPanStep();
       drawMap();
     }
     

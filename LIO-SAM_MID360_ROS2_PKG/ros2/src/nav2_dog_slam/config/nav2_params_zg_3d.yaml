@@ -17,14 +17,14 @@ controller_server:
     # bond_disable_heartbeat_timeout: false  # 新增参数
     use_sim_time: false
 
-    controller_frequency: 10.0  # 保持10Hz控制器频率
+    controller_frequency: 40.0  # 保持10Hz控制器频率
     failure_tolerance: 3.0
 
     min_x_velocity_threshold: 0.1  #<- 【走慢】阈值0.05太低，低于此值的线速度被忽略，但实际上0.05~0.1m/s的微小速度指令被下发到底盘却无法执行，造成"走不动"的感觉。建议改为0.1
     min_y_velocity_threshold: 0.1
     min_theta_velocity_threshold: 0.1  # 提高最小角速度阈值，避免低速无法转动
 
-    odom_topic: "/rkbot/front_lidar/odom"  # 新增参数
+    odom_topic: "/rkbot/front_lidar/robo/odom"  # 新增参数
     # publish_zero_velocity: true  # 新增参数
     # speed_limit_topic: "/speed_limit"  # 新增参数
     
@@ -46,8 +46,8 @@ controller_server:
     # 目标检查器参数 - 优化终点减速和停止精度
     goal_checker:
       plugin: "nav2_controller::StoppedGoalChecker"
-      xy_goal_tolerance: 0.3  # 进一步减小位置容差，提高停止精度
-      yaw_goal_tolerance: 0.15  # 进一步减小角度容差，避免过度修正
+      xy_goal_tolerance: 0.5  # 进一步减小位置容差，提高停止精度
+      yaw_goal_tolerance: 0.3  # 进一步减小角度容差，避免过度修正
       trans_stopped_velocity: 1.5
       rot_stopped_velocity: 1.5
       stateful: true
@@ -56,19 +56,19 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
 
-      time_steps: 34
+      time_steps: 32
       # time_steps: 30
-      model_dt: 0.1
-      batch_size: 500  # 大幅减少批量大小，从1500减到800，提高计算速度
-      transform_tolerance: 0.5  # 减少变换容差，提高实时性
+      model_dt: 0.025
+      batch_size: 300  # 大幅减少批量大小，从1500减到800，提高计算速度
+      transform_tolerance: 0.1  # 减少变换容差，提高实时性
       
       # 全向移动速度限制 - 适应机器人结构特性
       ax_max: 1.0
       ax_min: -1.0
       az_max: 1.0
       az_min: -1.0
-      vx_std: 0.5  # 降低线速度采样标准差，减少速度波动
-      wz_std: 0.2  # 提高角速度采样标准差，增加转向探索性  #<- 【左右扭】角速度采样标准差相对线速度偏大(0.3/0.5=60%)，MPPI采样出更多大角速度轨迹，使机器人倾向转向而非直行。建议降至0.2
+      vx_std: 1.0  # 降低线速度采样标准差，减少速度波动
+      wz_std: 0.3  # 提高角速度采样标准差，增加转向探索性  #<- 【左右扭】角速度采样标准差相对线速度偏大(0.3/0.5=60%)，MPPI采样出更多大角速度轨迹，使机器人倾向转向而非直行。建议降至0.2
       
       vx_max: 2.0
       # vx_max: 1.5
@@ -78,22 +78,22 @@ controller_server:
       vx_min: -1.0
       # wz_max: 2.0
       # wz_max: 1.2
-      wz_max: 0.8
+      wz_max: 1.2
       
       
       
       # 温度参数
       temperature: 0.1
-      motion_model: "DiffDrive" 
-      # motion_model: "Omni"  # 全向移动模型
+      # motion_model: "DiffDrive" 
+      motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
 
       visualize: false
       publish_optimal_trajectory: false
       # TrajectoryVisualizer参数
-      TrajectoryVisualizer:
-        time_step: 5  # 新增参数
-        trajectory_step: 20  # 新增参数
+      # TrajectoryVisualizer:
+      #   time_step: 5  # 新增参数
+      #   trajectory_step: 20  # 新增参数
       
       # # 缺失的MPPI参数
       enforce_path_inversion: false  # 强制变向
@@ -101,23 +101,23 @@ controller_server:
       # inversion_yaw_tolerance: 0.2
       # gamma: 0.015  # 新增参数
       # iteration_count: 1  # 新增参数
-      max_robot_pose_search_dist: 0.5  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
+      max_robot_pose_search_dist: 2.0  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
       # prune_distance: 1.0  # 新增参数
       # regenerate_noises: true  # 新增参数
       # retry_attempt_limit: 1  # 新增参数
       
       # 评价器参数 - 优化权重以提高停止精度
-      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "GoalCritic", "PreferForwardCritic", "GoalAngleCritic", "VelocityDeadbandCritic", "ObstaclesCritic", "PathAngleCritic", "PathAlignCritic"] #  "TwirlingCritic",  
+      critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "GoalCritic", "PreferForwardCritic", "GoalAngleCritic", "VelocityDeadbandCritic", "ObstaclesCritic", "TwirlingCritic",  "PathAngleCritic", "PathAlignCritic"] 
 
       ConstraintCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 30.0  # 保持安全性权重
+        cost_weight: 1.0  # 保持安全性权重
       
       CostCritic:
         enabled: false
-        cost_weight: 20.0  # 大幅增加避障成本权重，强制避障
-        cost_power: 3      # 大幅增加成本幂次，使靠近障碍物时成本急剧增加
+        cost_weight: 5.0  # 大幅增加避障成本权重，强制避障
+        cost_power: 1      # 大幅增加成本幂次，使靠近障碍物时成本急剧增加
         collision_cost: 254.0  # 碰撞成本设为最大值
         consider_footprint: true  # 考虑机器人轮廓
         critical_cost: 254.0  # 临界成本设为最大值
@@ -136,7 +136,7 @@ controller_server:
         collision_margin_distance: 0.5
         inflation_layer_name: "inflation_layer_local"
         inflation_radius: 0.25
-        near_goal_distance: 1.5
+        near_goal_distance: 1.0
         
       PathFollowCritic:
         enabled: true
@@ -149,19 +149,20 @@ controller_server:
       PathAlignCritic:
         enabled: true
         cost_weight: 5.0  #<- 【左右扭】横向对齐惩罚权重偏高，配合cost_power=4导致过度修正。建议降至5.0
-        cost_power: 2  #<- 【左右扭】4次幂！微小横向偏差被急剧放大(如偏离0.1m惩罚被放大10000倍)，是扭动的主要原因之一。建议改为2
-        forward_point_distance: 1.0
+        cost_power: 1  #<- 【左右扭】4次幂！微小横向偏差被急剧放大(如偏离0.1m惩罚被放大10000倍)，是扭动的主要原因之一。建议改为2
+        forward_point_distance: 0.5
         threshold_to_consider: 1.0
+        use_path_orientations: true
 
       PathAngleCritic:
         enabled: true
-        cost_weight: 40.0  # 大幅降低权重，减少方向修正的过度反应  #<- 【左右扭】权重40太高，稍微偏一点就大力修正，修正过头又反向修正，形成左右扭动(oscillation)。建议降至15.0
+        cost_weight: 20.0  # 大幅降低权重，减少方向修正的过度反应  #<- 【左右扭】权重40太高，稍微偏一点就大力修正，修正过头又反向修正，形成左右扭动(oscillation)。建议降至15.0
         cost_power: 4
         forward_preference: true
-        offset_from_furthest: 4  # 进一步减少前瞻距离，提高实时响应
+        offset_from_furthest: 2  # 进一步减少前瞻距离，提高实时响应
         threshold_to_consider: 1.0  # Distance (m) between robot and goal to stop considering path angles and allow goal critics to take over.
         max_angle_to_furthest: 1.0  # 大幅减少最大角度阈值，避免过度修正  #<- 【左右扭】0.5(约28.6°)太小，稍微偏离路径方向就产生很大角速度修正，是扭动的主要原因之一。建议改为1.0
-        # mode: 0
+        mode: 0
         
       PreferForwardCritic:
         enabled: true
@@ -169,9 +170,9 @@ controller_server:
         cost_weight: 30.0  #<- 【走慢】前进偏好权重20偏低，相比PathAngleCritic(40)和VelocityDeadbandCritic(40)无法有效压制转向倾向，导致机器人倾向转向而非直行。建议升至30.0
         threshold_to_consider: 1.0
       
-      # TwirlingCritic:
-      #   enabled: false
-      #   cost_weight: 20.0     # 强惩绕圈行为
+      TwirlingCritic:
+        enabled: true
+        cost_weight: 20.0     # 强惩绕圈行为
 
       VelocityDeadbandCritic: 
         enabled: true
@@ -187,9 +188,9 @@ controller_server:
 
       GoalAngleCritic:
         enabled: true
-        cost_weight: 35.0  #<- 【左右扭】角度对齐权重35偏高，在接近目标时产生过强的转向力，导致扭动。建议降至15.0
-        cost_power: 3 
-        threshold_to_consider: 0.5 #Minimal distance (m) between robot and goal above which angle goal cost considered.  #<- 【左右扭】距目标0.5m就开始对齐角度，还没到达目标位置就开始转向，产生扭动。建议改为0.3
+        cost_weight: 50.0  #<- 【左右扭】角度对齐权重35偏高，在接近目标时产生过强的转向力，导致扭动。建议降至15.0
+        cost_power: 3
+        threshold_to_consider: 1.0 #Minimal distance (m) between robot and goal above which angle goal cost considered.  #<- 【左右扭】距目标0.5m就开始对齐角度，还没到达目标位置就开始转向，产生扭动。建议改为0.3
         
         
     # qos_overrides:
@@ -216,7 +217,7 @@ velocity_smoother:
     # bond_disable_heartbeat_timeout: false  # 新增参数
     
     use_sim_time: false
-    smoothing_frequency: 10.0
+    smoothing_frequency: 40.0
     scale_velocities: false
     feedback: "OPEN_LOOP" 
 
@@ -354,8 +355,8 @@ local_costmap:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
       use_sim_time: false
-      update_frequency: 10.0
-      publish_frequency: 10.0
+      update_frequency: 5.0
+      publish_frequency: 5.0
       global_frame: odom
       robot_base_frame: base_footprint
       transform_tolerance: 0.5
@@ -385,48 +386,48 @@ local_costmap:
       # filters: []  # 新增参数 - 无过滤器
       
       # 插件配置
-      plugins: ["stvl_layer", "obstacle_layer_local", "inflation_layer_local"] # "voxel_layer", "traversability_layer_local",
+      plugins: ["traversability_layer_local","obstacle_layer_local", "inflation_layer_local"] # "voxel_layer", "stvl_layer", 
       
       # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
-      # traversability_layer_local:
-      #   plugin: "traversability_layer::TraversabilityLayer"
-      #   enabled: false
-      #   # 点云话题
-      #   pointcloud_topic: /rkbot/front_lidar/cloud_world
-      #   # 传感器坐标系（为空则使用点云自带的 frame_id）
-      #   # sensor_frame: ""
-      #   # 高度过滤（相对于机器人坐标系的高度）
-      #   max_obstacle_height: 1.0    # 最大考虑高度(m)，高于此忽略
-      #   min_obstacle_height: -0.2   # 最小考虑高度(m)，低于此忽略
-      #   # 坡度参数（角度制）
-      #   max_slope_traversable: 80.0   # 最大可通行坡度(°)，超过则直接 lethal
-      #   slope_cost_start: 70.0        # 开始产生坡度 cost 的坡度角(°)
-      #   slope_cost_scale: 0.1         # 坡度 cost 指数增长系数
-      #   # 高度差参数
-      #   step_height_threshold: 0.4   # 台阶高度阈值(m)，超过此值进入坡度检测
-      #   height_cost_start: 0.3        # 产生 cost 的最小高度(m)，低于此值 cost=0
-      #   # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
-      #   # 但保留声明避免未知参数警告）
-      #   height_cost_scale: 0.1
-      #   # 致命 cost 阈值
-      #   lethal_cost_threshold: 254.0
-      #   # 点云持久化
-      #   observation_persistence: 1.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点
-      #   # 点云缓冲
-      #   cloud_buffer_size: 50          # 点云缓冲队列长度
-      #   # 调试输出
-      #   publish_slope_map: false       # 是否发布坡度可视化点云
-      #   # 射线清除
-      #   enable_raycast_clear: false   # 是否启用射线追踪清除(未实现)
-      #   # 网格分辨率
-      #   cell_resolution: 0.2          # 可通行性分析网格分辨率(m)
-      #   # 并行计算
-      #   num_threads: 4                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
+      traversability_layer_local:
+        plugin: "traversability_layer::TraversabilityLayer"
+        enabled: true
+        # 点云话题
+        pointcloud_topic: /rkbot/front_lidar/cloud_world
+        # 传感器坐标系（为空则使用点云自带的 frame_id）
+        # sensor_frame: ""
+        # 高度过滤（相对于机器人坐标系的高度）
+        max_obstacle_height: 1.0    # 最大考虑高度(m)，高于此忽略
+        min_obstacle_height: -1.0   # 最小考虑高度(m)，低于此忽略
+        # 坡度参数（角度制）
+        max_slope_traversable: 80.0   # 最大可通行坡度(°)，超过则直接 lethal
+        slope_cost_start: 70.0        # 开始产生坡度 cost 的坡度角(°)
+        slope_cost_scale: 0.1         # 坡度 cost 指数增长系数
+        # 高度差参数
+        step_height_threshold: 0.5   # 台阶高度阈值(m)，超过此值进入坡度检测
+        height_cost_start: 0.4        # 产生 cost 的最小高度(m)，低于此值 cost=0
+        # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
+        # 但保留声明避免未知参数警告）
+        height_cost_scale: 0.1
+        # 致命 cost 阈值
+        lethal_cost_threshold: 254.0
+        # 点云持久化
+        observation_persistence: 0.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点
+        # 点云缓冲
+        cloud_buffer_size: 5          # 点云缓冲队列长度
+        # 调试输出
+        publish_slope_map: true       # 是否发布坡度可视化点云
+        # 射线清除
+        enable_raycast_clear: false   # 是否启用射线追踪清除(未实现)
+        # 网格分辨率
+        cell_resolution: 0.1          # 可通行性分析网格分辨率(m)
+        # 并行计算
+        num_threads: 4                # OpenMP 线程数，0=系统默认，-1=单线程(禁用OpenMP)
 
       # 障碍物层参数
       obstacle_layer_local:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
+        enabled: false
         observation_sources: scan_rear scan_front 
         combination_method: 1  # 取最大值组合方法
         footprint_clearing_enabled: true  # 启用footprint清理
@@ -458,8 +459,8 @@ local_costmap:
           data_type: "LaserScan"
           raytrace_max_range: 10.0
           raytrace_min_range: 0.1
-          obstacle_max_range: 10.0
-          obstacle_min_range: 0.1
+          obstacle_max_range: 0.0
+          obstacle_min_range: 0.0
           # expected_update_rate: 0.0  # 新增参数
           # inf_is_valid: false  # 新增参数
           # observation_persistence: 0.0  # 新增参数
@@ -469,7 +470,7 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.0
+        inflation_radius: 0.5
         cost_scaling_factor: 10.0
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
@@ -479,39 +480,39 @@ local_costmap:
       
 
       # STVL (Spatio-Temporal Voxel Layer) - 3D点云障碍物层
-      stvl_layer:
-        plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
-        enabled: true
-        # 体素衰减时间（秒）
-        voxel_decay: 5.0  
-        # 衰减模型：0=线性，1=指数  
-        decay_model: 0  
-        # 体素大小（米）
-        voxel_size: 0.05  
-        track_unknown_space: true
-        observation_persistence: 0.0
-        max_obstacle_height: 1.0
-        min_obstacle_height: -0.2
-        publish_voxel_map: true
-        observation_sources: pointcloud
-        pointcloud:
-          topic: /rkbot/front_lidar/cloud_world  # 点云话题
-          max_obstacle_height: 1.0
-          min_obstacle_height: -0.2
-          obstacle_max_range: 10.0
-          obstacle_min_range: 0.1
-          raytrace_max_range: 10.0
-          raytrace_min_range: 0.1
-          clearing: true
-          marking: true
-          data_type: "PointCloud2"
-          sensor_frame: "rslidar_head"  # 点云传感器坐标系
-          observation_persistence: 0.0
-          inf_is_valid: true
-          filter: "voxel"  # 点云滤波器
-          voxel_min_points: 2  # 体素最小点数
-          clear_after_reading: false
-          max_update_rate: 10.0
+      # stvl_layer:
+      #   plugin: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer"
+      #   enabled: true
+      #   # 体素衰减时间（秒）
+      #   voxel_decay: 5.0  
+      #   # 衰减模型：0=线性，1=指数  
+      #   decay_model: 0  
+      #   # 体素大小（米）
+      #   voxel_size: 0.05  
+      #   track_unknown_space: true
+      #   observation_persistence: 0.0
+      #   max_obstacle_height: 1.0
+      #   min_obstacle_height: -0.2
+      #   publish_voxel_map: true
+      #   observation_sources: pointcloud
+      #   pointcloud:
+      #     topic: /rkbot/front_lidar/cloud_world  # 点云话题
+      #     max_obstacle_height: 1.0
+      #     min_obstacle_height: -0.2
+      #     obstacle_max_range: 10.0
+      #     obstacle_min_range: 0.1
+      #     raytrace_max_range: 10.0
+      #     raytrace_min_range: 0.1
+      #     clearing: true
+      #     marking: true
+      #     data_type: "PointCloud2"
+      #     sensor_frame: "rslidar_head"  # 点云传感器坐标系
+      #     observation_persistence: 0.0
+      #     inf_is_valid: true
+      #     filter: "voxel"  # 点云滤波器
+      #     voxel_min_points: 2  # 体素最小点数
+      #     clear_after_reading: false
+      #     max_update_rate: 10.0
 
 
       # # 体素层参数
@@ -629,7 +630,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 1.0
+        inflation_radius: 0.5
         cost_scaling_factor: 10.0
         # inflate_unknown: false  # 新增参数
         # inflate_around_unknown: false  # 新增参数
@@ -687,15 +688,15 @@ amcl:
     map_topic: "map"                       # 新增参数
     
     # 里程计运动模型噪声参数 - 室内环境优化
-    alpha1: 0.03            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
-    alpha2: 0.03           # 进一步降低平移-旋转噪声，室内直线运动更稳定
-    alpha3: 0.03            # 降低平移-平移噪声，室内环境减少位置漂移
-    alpha4: 0.03           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
-    alpha5: 0.07           # 降低额外噪声参数，室内环境更可预测
+    alpha1: 0.001            # 进一步降低旋转-旋转噪声，室内旋转需要更高精度
+    alpha2: 0.001           # 进一步降低平移-旋转噪声，室内直线运动更稳定
+    alpha3: 0.001            # 降低平移-平移噪声，室内环境减少位置漂移
+    alpha4: 0.001           # 进一步降低旋转-平移噪声，提高室内整体定位稳定性
+    alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    # robot_model_type: "nav2_amcl::OmniMotionModel"
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
     update_min_d: 0.1
@@ -811,7 +812,7 @@ bt_navigator:
     # goal_blackboard_id: "goal"
     # goals_blackboard_id: "goals"
     # path_blackboard_id: "path"
-    transform_tolerance: 0.5
+    transform_tolerance: 0.1
     
     # 行为树配置 - 使用ROS2标准行为树文件
     default_nav_to_pose_bt_xml: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
@@ -914,7 +915,7 @@ smoother_server:
     costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     footprint_topic: "local_costmap/published_footprint"  # 新增参数
     robot_base_frame: "base_footprint"  # 新增参数
-    transform_tolerance: 0.5  # 新增参数
+    transform_tolerance: 0.1  # 新增参数
     smoother_plugins: ["simple_smoother"]  # 新增参数
     
     # 路径平滑器参数 - 增强平滑效果
@@ -958,7 +959,7 @@ behavior_server:
     cycle_frequency: 10.0  # 新增参数
     global_frame: "odom"  # 新增参数
     robot_base_frame: "base_footprint"  # 新增参数
-    transform_tolerance: 0.5  # 新增参数
+    transform_tolerance: 0.1  # 新增参数
     simulate_ahead_time: 0.0  # 新增参数
     # max_rotational_vel: 1.0  # 新增参数
     # min_rotational_vel: 0.1  # 新增参数
@@ -1032,12 +1033,12 @@ waypoint_follower:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
     use_sim_time: false
-    loop_rate: 10
+    loop_rate: 40
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: true
+      enabled: false
       waypoint_pause_duration: 200
       
     # qos_overrides:
@@ -1178,10 +1179,10 @@ slam_toolbox_node:
     # paused_processing: false
     
     # 位置协方差缩放 - 控制位置估计的不确定性，值越小表示对位置估计越自信
-    position_covariance_scale: 0.3
+    position_covariance_scale: 0.1
     
     # 偏航角协方差缩放 - 控制角度估计的不确定性，值越小表示对角度估计越自信
-    yaw_covariance_scale: 0.3
+    yaw_covariance_scale: 0.1
     
     # 分辨率 - 地图分辨率
     resolution: 0.05

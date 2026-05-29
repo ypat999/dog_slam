@@ -332,8 +332,8 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   const std::vector<Point3D> & transformed_pts,
   const Point3D & sensor_pos, double ox, double oy)
 {
-  voxel_size_x_ = ground_size_x_;
-  voxel_size_y_ = ground_size_y_;
+  unsigned int new_size_x = ground_size_x_;
+  unsigned int new_size_y = ground_size_y_;
 
   double z_min_world = std::numeric_limits<double>::max();
   double z_max_world = std::numeric_limits<double>::lowest();
@@ -350,7 +350,10 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   double z_lo = std::min(z_min_world, cur_sensor_z + voxel_z_min_) - voxel_z_resolution_;
   double z_hi = std::max(z_max_world, cur_sensor_z + voxel_z_max_) + voxel_z_resolution_;
 
-  if (!voxel_grid_valid_) {
+  if (!voxel_grid_valid_ ||
+      new_size_x != voxel_size_x_ || new_size_y != voxel_size_y_) {
+    voxel_size_x_ = new_size_x;
+    voxel_size_y_ = new_size_y;
     voxel_z_origin_ = z_lo;
     voxel_ox_ = ox;
     voxel_oy_ = oy;
@@ -653,9 +656,10 @@ void TraversabilityLayer::extractGround(double ox, double oy)
     }
   }
 
+  static auto extract_ground_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   RCLCPP_INFO_THROTTLE(
     rclcpp::get_logger("traversability_layer"),
-    *std::make_shared<rclcpp::Clock>(RCL_ROS_TIME), 2000,
+    *extract_ground_clock, 2000,
     "[TraversabilityLayer] extractGround: scanned=%d, ground_found=%d, "
     "vox_offset=(%d,%d), voxel_ox=%.3f, voxel_oy=%.3f, ox=%.3f, oy=%.3f",
     total_scanned, ground_found, vox_offset_x, vox_offset_y,

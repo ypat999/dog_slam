@@ -550,8 +550,9 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 
   int ground_found = 0;
   int total_scanned = 0;
+  int obs_ratio_nonzero = 0;
 
-#pragma omp parallel for collapse(2) schedule(static) reduction(+:ground_found) reduction(+:total_scanned)
+#pragma omp parallel for collapse(2) schedule(static) reduction(+:ground_found) reduction(+:total_scanned) reduction(+:obs_ratio_nonzero)
   for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
     for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
       int vix = cx + vox_offset_x;
@@ -651,6 +652,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
         if (total_layers > 0) {
           ground_map_[gidx].obstacle_ratio =
             static_cast<float>(obs_layers) / static_cast<float>(total_layers);
+          if (ground_map_[gidx].obstacle_ratio > 0.0f) obs_ratio_nonzero++;
         }
       }
     }
@@ -661,8 +663,9 @@ void TraversabilityLayer::extractGround(double ox, double oy)
     rclcpp::get_logger("traversability_layer"),
     *extract_ground_clock, 2000,
     "[TraversabilityLayer] extractGround: scanned=%d, ground_found=%d, "
-    "vox_offset=(%d,%d), voxel_ox=%.3f, voxel_oy=%.3f, ox=%.3f, oy=%.3f",
-    total_scanned, ground_found, vox_offset_x, vox_offset_y,
+    "obs_ratio_nonzero=%d, vox_offset=(%d,%d), voxel_ox=%.3f, voxel_oy=%.3f, ox=%.3f, oy=%.3f",
+    total_scanned, ground_found, obs_ratio_nonzero,
+    vox_offset_x, vox_offset_y,
     voxel_ox_, voxel_oy_, ox, oy);
 }
 
@@ -1040,8 +1043,10 @@ void TraversabilityLayer::updateCosts(
 
   RCLCPP_INFO_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
-    "[TraversabilityLayer] updateCosts: %d cells with cost, %d lethal",
-    cells_with_cost, lethal_cells);
+    "[TraversabilityLayer] updateCosts: %d cells with cost, %d lethal, "
+    "voxel_grid_valid=%d, ground_size=%dx%d, voxel_size=%dx%dx%d",
+    cells_with_cost, lethal_cells, voxel_grid_valid_,
+    ground_size_x_, ground_size_y_, voxel_size_x_, voxel_size_y_, voxel_size_z_);
 
   rclcpp::Time frame_end = clock->now();
   double frame_ms = (frame_end - frame_start).seconds() * 1000.0;

@@ -545,7 +545,10 @@ void TraversabilityLayer::extractGround(double ox, double oy)
   int vox_offset_x = static_cast<int>(std::round((voxel_ox_ - ox) * inv_cell_res));
   int vox_offset_y = static_cast<int>(std::round((voxel_oy_ - oy) * inv_cell_res));
 
-#pragma omp parallel for collapse(2) schedule(static)
+  int ground_found = 0;
+  int total_scanned = 0;
+
+#pragma omp parallel for collapse(2) schedule(static) reduction(+:ground_found) reduction(+:total_scanned)
   for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
     for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
       int vix = cx + vox_offset_x;
@@ -556,6 +559,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
       {
         continue;
       }
+      total_scanned++;
 
       unsigned int uix = static_cast<unsigned int>(vix);
       unsigned int uiy = static_cast<unsigned int>(viy);
@@ -620,6 +624,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
                                   static_cast<unsigned int>(cy));
         ground_map_[gidx].ground_z = ground_z_val;
         ground_map_[gidx].has_ground = true;
+        ground_found++;
 
         double obs_z_start = ground_z_val + voxel_z_resolution_;
         double obs_z_end = ground_z_val + static_cast<double>(robot_height_);
@@ -647,6 +652,14 @@ void TraversabilityLayer::extractGround(double ox, double oy)
       }
     }
   }
+
+  RCLCPP_INFO_THROTTLE(
+    rclcpp::get_logger("traversability_layer"),
+    *std::make_shared<rclcpp::Clock>(RCL_ROS_TIME), 2000,
+    "[TraversabilityLayer] extractGround: scanned=%d, ground_found=%d, "
+    "vox_offset=(%d,%d), voxel_ox=%.3f, voxel_oy=%.3f, ox=%.3f, oy=%.3f",
+    total_scanned, ground_found, vox_offset_x, vox_offset_y,
+    voxel_ox_, voxel_oy_, ox, oy);
 }
 
 void TraversabilityLayer::interpolateGround()
@@ -1021,7 +1034,7 @@ void TraversabilityLayer::updateCosts(
     }
   }
 
-  RCLCPP_DEBUG_THROTTLE(
+  RCLCPP_INFO_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] updateCosts: %d cells with cost, %d lethal",
     cells_with_cost, lethal_cells);

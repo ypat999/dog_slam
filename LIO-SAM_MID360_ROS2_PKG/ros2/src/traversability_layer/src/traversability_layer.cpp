@@ -925,10 +925,17 @@ void TraversabilityLayer::updateCosts(
   double inv_costmap_res = 1.0 / costmap_res;
   size_t master_size = static_cast<size_t>(costmap_sx) * static_cast<size_t>(costmap_sy);
 
+  if (layer_costmap_sx_ != costmap_sx || layer_costmap_sy_ != costmap_sy) {
+    layer_costmap_sx_ = costmap_sx;
+    layer_costmap_sy_ = costmap_sy;
+    layer_costmap_.resize(master_size);
+  }
+  layer_costmap_.assign(master_size, nav2_costmap_2d::NO_INFORMATION);
+
   int n_threads = omp_get_max_threads();
   std::vector<std::vector<unsigned char>> local_costmaps(n_threads);
   for (int t = 0; t < n_threads; t++) {
-    local_costmaps[t].assign(master_size, 0);
+    local_costmaps[t].assign(master_size, nav2_costmap_2d::NO_INFORMATION);
   }
 
 #pragma omp parallel for collapse(2) reduction(+:cells_with_cost) reduction(+:lethal_cells)
@@ -983,12 +990,17 @@ void TraversabilityLayer::updateCosts(
   for (int t = 0; t < n_threads; t++) {
     const auto & local_cm = local_costmaps[t];
     for (size_t i = 0; i < master_size; i++) {
-      if (local_cm[i] > 0) {
-        unsigned char old_cost = master_array[i];
-        if (old_cost == nav2_costmap_2d::NO_INFORMATION || local_cm[i] > old_cost) {
-          master_array[i] = local_cm[i];
+      if (local_cm[i] != nav2_costmap_2d::NO_INFORMATION) {
+        if (layer_costmap_[i] == nav2_costmap_2d::NO_INFORMATION || local_cm[i] > layer_costmap_[i]) {
+          layer_costmap_[i] = local_cm[i];
         }
       }
+    }
+  }
+
+  for (size_t i = 0; i < master_size; i++) {
+    if (layer_costmap_[i] != nav2_costmap_2d::NO_INFORMATION) {
+      master_array[i] = layer_costmap_[i];
     }
   }
 
@@ -1065,6 +1077,11 @@ void TraversabilityLayer::resetMaps()
   voxel_grid_valid_ = false;
   frame_counter_ = 0;
   cloud_updated_ = false;
+}
+
+void TraversabilityLayer::resetLayerCostmap()
+{
+  layer_costmap_.assign(layer_costmap_sx_ * layer_costmap_sy_, nav2_costmap_2d::NO_INFORMATION);
 }
 
 void TraversabilityLayer::activate()

@@ -86,6 +86,7 @@ private:
   void computeGroundSlope();
   unsigned char computeCost(const GroundCell & cell) const;
   void resetMaps();
+  void resetLayerCostmap();
 
   inline size_t voxelIndex(unsigned int ix, unsigned int iy, unsigned int iz) const
   {
@@ -159,6 +160,10 @@ private:
 
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+
+  std::vector<unsigned char> layer_costmap_;
+  unsigned int layer_costmap_sx_ = 0;
+  unsigned int layer_costmap_sy_ = 0;
 };
 
 }  // namespace traversability_layer

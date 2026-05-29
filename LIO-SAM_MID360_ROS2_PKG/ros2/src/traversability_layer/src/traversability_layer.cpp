@@ -964,16 +964,7 @@ void TraversabilityLayer::updateCosts(
 
   int cells_with_cost = 0;
   int lethal_cells = 0;
-  double inv_costmap_res = 1.0 / costmap_res;
-  size_t layer_size = static_cast<size_t>(getSizeInCellsX()) * static_cast<size_t>(getSizeInCellsY());
 
-  int n_threads = omp_get_max_threads();
-  std::vector<std::vector<unsigned char>> local_costmaps(n_threads);
-  for (int t = 0; t < n_threads; t++) {
-    local_costmaps[t].assign(layer_size, nav2_costmap_2d::NO_INFORMATION);
-  }
-
-#pragma omp parallel for collapse(2) reduction(+:cells_with_cost) reduction(+:lethal_cells)
   for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
     for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
       size_t idx = groundIndex(static_cast<unsigned int>(cx),
@@ -998,43 +989,21 @@ void TraversabilityLayer::updateCosts(
       double cell_wx = cx * cell_resolution_ + ox;
       double cell_wy = cy * cell_resolution_ + oy;
 
-      int mx_start = static_cast<int>(std::floor((cell_wx - ox) * inv_costmap_res));
-      int my_start = static_cast<int>(std::floor((cell_wy - oy) * inv_costmap_res));
-      int mx_end = static_cast<int>(std::floor((cell_wx + cell_resolution_ - ox - 1e-6) * inv_costmap_res));
-      int my_end = static_cast<int>(std::floor((cell_wy + cell_resolution_ - oy - 1e-6) * inv_costmap_res));
-
-      mx_end = std::min(mx_end, static_cast<int>(getSizeInCellsX()) - 1);
-      my_end = std::min(my_end, static_cast<int>(getSizeInCellsY()) - 1);
-
-      int tid = omp_get_thread_num();
-      auto & local_cm = local_costmaps[tid];
-
-      for (int my = my_start; my <= my_end; my++) {
-        for (int mx = mx_start; mx <= mx_end; mx++) {
-          if (mx < 0 || my < 0) continue;
-
-          unsigned int layer_idx = getIndex(
-            static_cast<unsigned int>(mx), static_cast<unsigned int>(my));
-          if (cost > local_cm[layer_idx]) {
-            local_cm[layer_idx] = cost;
-          }
-        }
+      unsigned int mx, my;
+      if (!worldToMap(cell_wx, cell_wy, mx, my)) {
+        continue;
       }
-    }
-  }
 
-  for (int t = 0; t < n_threads; t++) {
-    const auto & local_cm = local_costmaps[t];
-    for (size_t i = 0; i < layer_size; i++) {
-      if (local_cm[i] != nav2_costmap_2d::NO_INFORMATION) {
-        if (costmap_[i] == nav2_costmap_2d::NO_INFORMATION || local_cm[i] > costmap_[i]) {
-          costmap_[i] = local_cm[i];
-        }
+      unsigned char old_cost = getCost(mx, my);
+      if (old_cost == nav2_costmap_2d::NO_INFORMATION || cost > old_cost) {
+        setCost(mx, my, cost);
       }
     }
   }
 
   updateWithMax(master_grid, min_i, min_j, max_i, max_j);
+
+  current_ = true;
 
   RCLCPP_INFO_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,

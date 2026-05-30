@@ -30,6 +30,7 @@ void TraversabilityLayer::onInitialize()
   declareParameter("enabled", rclcpp::ParameterValue(true));
   declareParameter("pointcloud_topic", rclcpp::ParameterValue(std::string("/lio/body/cloud")));
   declareParameter("sensor_frame", rclcpp::ParameterValue(std::string("")));
+  declareParameter("base_frame", rclcpp::ParameterValue(std::string("base_footprint")));
   declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
   declareParameter("min_obstacle_height", rclcpp::ParameterValue(-0.5));
   declareParameter("max_slope_traversable", rclcpp::ParameterValue(45.0));
@@ -58,6 +59,7 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".pointcloud_topic", pointcloud_topic_);
   node->get_parameter(name_ + ".sensor_frame", sensor_frame_);
+  node->get_parameter(name_ + ".base_frame", base_frame_);
   node->get_parameter(name_ + ".max_obstacle_height", max_obstacle_height_);
   node->get_parameter(name_ + ".min_obstacle_height", min_obstacle_height_);
   node->get_parameter(name_ + ".max_slope_traversable", max_slope_traversable_);
@@ -102,11 +104,12 @@ void TraversabilityLayer::onInitialize()
   RCLCPP_INFO(
     node->get_logger(),
     "TraversabilityLayer(v3d): step_height=%.3f, max_slope=%.1fdeg, slope_start=%.1fdeg, "
-    "topic=%s, cell_res=%.3f, voxel_z_res=%.3f, z_range=[%.1f,%.1f], "
+    "topic=%s, sensor_frame=%s, base_frame=%s, cell_res=%.3f, voxel_z_res=%.3f, z_range=[%.1f,%.1f], "
     "ground_hit_thr=%d, free_space_thr=%d, free_space_win=%d, "
     "interp_radius=%d, min_interp=%d, robot_height=%.2f, obstacle_ratio_thr=%.2f, num_threads=%d",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
     slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
+    sensor_frame_.c_str(), base_frame_.c_str(),
     cell_resolution_, voxel_z_resolution_, voxel_z_min_, voxel_z_max_,
     ground_hit_threshold_, free_space_threshold_, free_space_window_,
     interp_search_radius_, min_interp_neighbors_,
@@ -153,6 +156,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
 {
   std::lock_guard<std::mutex> lock(mutex_);
   static auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  cloud_received_++;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*msg, *cloud);
@@ -177,8 +181,8 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   geometry_msgs::msg::TransformStamped transform;
   try {
     transform = tf_buffer_->lookupTransform(
-      target_frame, source_frame, msg->header.stamp,
-      rclcpp::Duration::from_seconds(0.5));
+      target_frame, source_frame, tf2::TimePointZero,
+      tf2::durationFromSec(0.1));
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN_THROTTLE(
       rclcpp::get_logger("traversability_layer"), *clock, 2000,
@@ -194,6 +198,22 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   sensor_global_x_ = tx;
   sensor_global_y_ = ty;
   sensor_global_z_ = tz;
+
+  double base_z = tz;
+  if (!base_frame_.empty()) {
+    try {
+      auto base_tf = tf_buffer_->lookupTransform(
+        target_frame, base_frame_, tf2::TimePointZero,
+        tf2::durationFromSec(0.1));
+      base_z = base_tf.transform.translation.z;
+    } catch (tf2::TransformException & ex) {
+      RCLCPP_WARN_THROTTLE(
+        rclcpp::get_logger("traversability_layer"), *clock, 2000,
+        "[TraversabilityLayer] Base TF failed: %s (target=%s, base=%s), using sensor z",
+        ex.what(), target_frame.c_str(), base_frame_.c_str());
+    }
+  }
+  base_global_z_ = base_z;
 
   double qx = transform.transform.rotation.x;
   double qy = transform.transform.rotation.y;
@@ -225,8 +245,8 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     double y_global = r10 * pt.x + r11 * pt.y + r12 * pt.z + ty;
     double z_global = r20 * pt.x + r21 * pt.y + r22 * pt.z + tz;
 
-    double z_robot_relative = z_global - tz;
-    if (z_robot_relative > max_obstacle_height_ || z_robot_relative < min_obstacle_height_) {
+    double z_base_relative = z_global - base_global_z_;
+    if (z_base_relative > max_obstacle_height_ || z_base_relative < min_obstacle_height_) {
       filtered_count++;
       continue;
     }
@@ -244,7 +264,14 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   double oy = master_grid->getOriginY();
 
   incrementalUpdateVoxelGrid(transformed_cloud, sensor_pos, ox, oy);
+  cloud_processed_++;
   cloud_updated_ = true;
+
+  RCLCPP_INFO_THROTTLE(
+    rclcpp::get_logger("traversability_layer"), *clock, 2000,
+    "[TraversabilityLayer] Cloud: received=%u processed=%u frame_counter=%u pts=%zu",
+    cloud_received_, cloud_processed_, static_cast<unsigned int>(frame_counter_),
+    transformed_cloud.size());
 }
 
 void TraversabilityLayer::shiftVoxelGrid(int shift_x, int shift_y)
@@ -337,13 +364,13 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   unsigned int new_size_x = ground_size_x_;
   unsigned int new_size_y = ground_size_y_;
 
-  if (observation_persistence_ <= 0.0 && voxel_grid_valid_) {
-    voxel_grid_.assign(voxel_grid_.size(), VoxelData{});
+  if (observation_persistence_ <= 0.0) {
+    voxel_grid_valid_ = false;
   }
 
   double z_min_world = std::numeric_limits<double>::max();
   double z_max_world = std::numeric_limits<double>::lowest();
-  double cur_sensor_z = sensor_global_z_;
+  double cur_base_z = base_global_z_;
 
 #pragma omp parallel for reduction(min:z_min_world) reduction(max:z_max_world)
   for (int i = 0; i < static_cast<int>(transformed_pts.size()); i++) {
@@ -353,8 +380,8 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   if (sensor_pos.z < z_min_world) z_min_world = sensor_pos.z;
   if (sensor_pos.z > z_max_world) z_max_world = sensor_pos.z;
 
-  double z_lo = std::min(z_min_world, cur_sensor_z + voxel_z_min_) - voxel_z_resolution_;
-  double z_hi = std::max(z_max_world, cur_sensor_z + voxel_z_max_) + voxel_z_resolution_;
+  double z_lo = std::min(z_min_world, cur_base_z + voxel_z_min_) - voxel_z_resolution_;
+  double z_hi = std::max(z_max_world, cur_base_z + voxel_z_max_) + voxel_z_resolution_;
 
   if (!voxel_grid_valid_ ||
       new_size_x != voxel_size_x_ || new_size_y != voxel_size_y_) {
@@ -547,7 +574,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 
   double inv_cell_res = 1.0 / cell_resolution_;
   double inv_vz_res = 1.0 / voxel_z_resolution_;
-  double sensor_z = sensor_global_z_;
+  double base_z = base_global_z_;
   int win = free_space_window_;
 
   int vox_offset_x = static_cast<int>(std::round((voxel_ox_ - ox) * inv_cell_res));
@@ -586,7 +613,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 
         double voxel_world_z = voxel_z_origin_ + (iz + 0.5) * voxel_z_resolution_;
 
-        if (voxel_world_z > sensor_z) {
+        if (voxel_world_z > base_z) {
           break;
         }
 
@@ -618,7 +645,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
           }
 
           double voxel_world_z = voxel_z_origin_ + (iz + 0.5) * voxel_z_resolution_;
-          if (voxel_world_z > sensor_z) {
+          if (voxel_world_z > base_z) {
             break;
           }
 
@@ -1106,16 +1133,17 @@ void TraversabilityLayer::updateCosts(
 void TraversabilityLayer::reset()
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  resetMaps();
-}
-
-void TraversabilityLayer::resetMaps()
-{
   ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
   voxel_grid_.clear();
   voxel_grid_valid_ = false;
   frame_counter_ = 0;
   cloud_updated_ = false;
+  nav2_costmap_2d::Costmap2D::resetMaps();
+}
+
+void TraversabilityLayer::resetMaps()
+{
+  nav2_costmap_2d::Costmap2D::resetMaps();
 }
 
 void TraversabilityLayer::activate()

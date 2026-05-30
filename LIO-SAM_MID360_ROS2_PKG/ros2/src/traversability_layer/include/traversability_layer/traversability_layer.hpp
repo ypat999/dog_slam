@@ -104,6 +104,7 @@ private:
 
   std::string pointcloud_topic_;
   std::string sensor_frame_;
+  std::string base_frame_;
   double max_obstacle_height_;
   double min_obstacle_height_;
   double max_slope_traversable_;
@@ -145,6 +146,8 @@ private:
   bool voxel_grid_valid_ = false;
   uint16_t frame_counter_ = 0;
   uint16_t decay_interval_frames_ = 10;
+  uint32_t cloud_received_ = 0;
+  uint32_t cloud_processed_ = 0;
 
   std::vector<GroundCell> ground_map_;
   unsigned int ground_size_x_ = 0;
@@ -153,6 +156,7 @@ private:
   double sensor_global_x_ = 0.0;
   double sensor_global_y_ = 0.0;
   double sensor_global_z_ = 0.0;
+  double base_global_z_ = 0.0;
   bool cloud_updated_ = false;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr slope_pub_;

@@ -62,10 +62,6 @@ Visualization Manager:
         All Enabled: false
         base_link:
           Value: true
-        imu:
-          Value: true
-        livox_frame:
-          Value: true
         map:
           Value: true
         odom:
@@ -88,8 +84,6 @@ Visualization Manager:
           Value: true
         rslidar_tail:
           Value: true
-        world:
-          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
@@ -103,10 +97,9 @@ Visualization Manager:
                 {}
               rkbot/imu:
                 rkbot/livox_frame:
-                  {}
-                rslidar_head:
                   rkbot/base_link:
                     {}
+                rslidar_head:
                   rslidar_tail:
                     {}
       Update Interval: 0
@@ -162,11 +155,11 @@ Visualization Manager:
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: Intensity
-      Decay Time: 1000
-      Enabled: false
+      Decay Time: 0
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 181
+      Max Intensity: 146
       Min Color: 0; 0; 0
       Min Intensity: 2
       Name: PointCloud2_front
@@ -184,7 +177,7 @@ Visualization Manager:
         Value: /rkbot/front_lidar/cloud_world
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -506,8 +499,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: -0.5141023993492126
-        Min Value: -0.5141026377677917
+        Max Value: -0.49461984634399414
+        Min Value: -0.49462026357650757
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -604,25 +597,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 29.69199562072754
+      Distance: 13.515430450439453
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 18.828550338745117
-        Y: 25.415918350219727
-        Z: -2.7970879077911377
+        X: 30.813474655151367
+        Y: 33.41444778442383
+        Z: -1.5286364555358887
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 0.8147963881492615
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.767142295837402
+      Yaw: 4.671677589416504
     Saved: ~
 Window Geometry:
   Displays:
@@ -638,5 +631,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1850
-  X: 1772
-  Y: 447
+  X: 1778
+  Y: 474

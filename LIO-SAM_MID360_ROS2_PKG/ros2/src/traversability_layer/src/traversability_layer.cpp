@@ -679,7 +679,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
         ground_found++;
 
         double obs_z_start = ground_top_z + voxel_z_resolution_;
-        double obs_z_end = ground_top_z + static_cast<double>(robot_height_);
+        double obs_z_end = ground_top_z + max_obstacle_height_;
         unsigned int iz_start = static_cast<unsigned int>(
           std::floor((obs_z_start - voxel_z_origin_) * inv_vz_res));
         unsigned int iz_end = static_cast<unsigned int>(
@@ -690,7 +690,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
         int obs_layers = 0;
         int total_layers = 0;
         float max_obs_z = ground_top_z;
-        float min_obs_z = ground_top_z + static_cast<float>(robot_height_);
+        float min_obs_z = ground_top_z + static_cast<float>(max_obstacle_height_);
         for (unsigned int oiz = iz_start; oiz < iz_end; oiz++) {
           size_t oidx = voxelIndex(uix, uiy, oiz);
           total_layers++;
@@ -1045,6 +1045,10 @@ void TraversabilityLayer::updateCosts(
   unsigned char * master_array = master_grid.getCharMap();
   unsigned int master_span = master_grid.getSizeInCellsX();
   double inv_costmap_res = 1.0 / costmap_res;
+  double inv_cell_res = 1.0 / cell_resolution_;
+
+  int vox_offset_x = static_cast<int>(std::round((voxel_ox_ - ox) * inv_cell_res));
+  int vox_offset_y = static_cast<int>(std::round((voxel_oy_ - oy) * inv_cell_res));
 
   for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
     for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
@@ -1069,8 +1073,8 @@ void TraversabilityLayer::updateCosts(
       }
       cells_with_cost++;
 
-      double cell_wx = cx * cell_resolution_ + ox;
-      double cell_wy = cy * cell_resolution_ + oy;
+      double cell_wx = voxel_ox_ + (cx + vox_offset_x) * cell_resolution_;
+      double cell_wy = voxel_oy_ + (cy + vox_offset_y) * cell_resolution_;
 
       int mx_start = static_cast<int>(std::floor((cell_wx - master_grid.getOriginX()) * inv_costmap_res));
       int my_start = static_cast<int>(std::floor((cell_wy - master_grid.getOriginY()) * inv_costmap_res));

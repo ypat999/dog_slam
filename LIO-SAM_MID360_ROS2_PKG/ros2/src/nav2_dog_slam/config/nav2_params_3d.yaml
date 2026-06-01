@@ -360,7 +360,7 @@ local_costmap:
         slope_cost_start: 45.0        # 开始产生坡度 cost 的坡度角(°)，需大于atan(cell_res/voxel_z_res)避免量化噪声
         slope_cost_scale: 3.0         # 坡度 cost 指数增长系数
         # 高度差参数
-        step_height_threshold: 0.3   # 台阶高度阈值(m)，超过此值且obstacle_ratio也超阈值才lethal
+        step_height_threshold: 0.5   # 台阶高度阈值(m)，超过此值且obstacle_ratio也超阈值才lethal。3级台阶15cm=45cm<0.5，安全
         height_cost_start: 0.15      # 产生 cost 的最小高度(m)，需大于voxel_z_resolution避免量化噪声
         # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
         # 但保留声明避免未知参数警告）
@@ -368,7 +368,7 @@ local_costmap:
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
         # 障碍物密度参数
-        obstacle_ratio_threshold: 0.3  # 障碍物占比阈值，超过此值且高度差也超阈值才lethal
+        obstacle_ratio_threshold: 0.6  # 障碍物占比阈值，超过此值且高度差也超阈值才lethal。台阶~0.4-0.5，墙壁~0.8+
         obstacle_hit_threshold: 2      # 障碍物体素最小hit次数，低于此不算障碍物(过滤噪声)
         # 点云持久化
         observation_persistence: 0.0  # 点云保留时间(s)。0=仅用最新帧；>0=累积并按时修剪过期点

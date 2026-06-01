@@ -653,8 +653,10 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 
       if (ground_iz >= 0) {
         int ground_top_iz = ground_iz;
+        unsigned int max_ground_voxels = static_cast<unsigned int>(std::ceil(0.5 / voxel_z_resolution_));
         for (unsigned int tiz = static_cast<unsigned int>(ground_iz) + 1;
-             tiz < voxel_size_z_; tiz++) {
+             tiz < voxel_size_z_ && (tiz - static_cast<unsigned int>(ground_iz) <= max_ground_voxels);
+             tiz++) {
           size_t tidx = voxelIndex(uix, uiy, tiz);
           if (voxel_grid_[tidx].hit_count >= static_cast<uint16_t>(ground_hit_threshold_)) {
             ground_top_iz = static_cast<int>(tiz);

@@ -71,7 +71,7 @@ def generate_launch_description():
         'map_frame': map_frame,
         'odom_frame': odom_frame,
         'base_frame': base_frame,
-        'topic': scan_topic,
+        # 'topic': scan_topic,
         # 'topic': pointcloud_topic,
         'map_topic': map_topic
     }

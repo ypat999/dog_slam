@@ -125,14 +125,11 @@ private:
   int num_threads_;
 
   double voxel_z_resolution_;
-  double voxel_z_min_;
-  double voxel_z_max_;
   int ground_hit_threshold_;
   int free_space_threshold_;
   int free_space_window_;
   int interp_search_radius_;
   int min_interp_neighbors_;
-  double robot_height_;
   double obstacle_ratio_threshold_;
   int obstacle_hit_threshold_;
 

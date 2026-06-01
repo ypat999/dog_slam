@@ -46,14 +46,11 @@ void TraversabilityLayer::onInitialize()
   declareParameter("cell_resolution", rclcpp::ParameterValue(0.0));
   declareParameter("num_threads", rclcpp::ParameterValue(0));
   declareParameter("voxel_z_resolution", rclcpp::ParameterValue(0.1));
-  declareParameter("voxel_z_min", rclcpp::ParameterValue(-1.0));
-  declareParameter("voxel_z_max", rclcpp::ParameterValue(3.0));
   declareParameter("ground_hit_threshold", rclcpp::ParameterValue(1));
   declareParameter("free_space_threshold", rclcpp::ParameterValue(1));
   declareParameter("free_space_window", rclcpp::ParameterValue(3));
   declareParameter("interp_search_radius", rclcpp::ParameterValue(3));
   declareParameter("min_interp_neighbors", rclcpp::ParameterValue(2));
-  declareParameter("robot_height", rclcpp::ParameterValue(0.5));
   declareParameter("obstacle_ratio_threshold", rclcpp::ParameterValue(0.5));
   declareParameter("obstacle_hit_threshold", rclcpp::ParameterValue(2));
 
@@ -76,14 +73,11 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".cell_resolution", cell_resolution_);
   node->get_parameter(name_ + ".num_threads", num_threads_);
   node->get_parameter(name_ + ".voxel_z_resolution", voxel_z_resolution_);
-  node->get_parameter(name_ + ".voxel_z_min", voxel_z_min_);
-  node->get_parameter(name_ + ".voxel_z_max", voxel_z_max_);
   node->get_parameter(name_ + ".ground_hit_threshold", ground_hit_threshold_);
   node->get_parameter(name_ + ".free_space_threshold", free_space_threshold_);
   node->get_parameter(name_ + ".free_space_window", free_space_window_);
   node->get_parameter(name_ + ".interp_search_radius", interp_search_radius_);
   node->get_parameter(name_ + ".min_interp_neighbors", min_interp_neighbors_);
-  node->get_parameter(name_ + ".robot_height", robot_height_);
   node->get_parameter(name_ + ".obstacle_ratio_threshold", obstacle_ratio_threshold_);
   node->get_parameter(name_ + ".obstacle_hit_threshold", obstacle_hit_threshold_);
 
@@ -108,14 +102,14 @@ void TraversabilityLayer::onInitialize()
     "TraversabilityLayer(v3d): step_height=%.3f, max_slope=%.1fdeg, slope_start=%.1fdeg, "
     "topic=%s, sensor_frame=%s, base_frame=%s, cell_res=%.3f, voxel_z_res=%.3f, z_range=[%.1f,%.1f], "
     "ground_hit_thr=%d, free_space_thr=%d, free_space_win=%d, "
-    "interp_radius=%d, min_interp=%d, robot_height=%.2f, obstacle_ratio_thr=%.2f, obstacle_hit_thr=%d, num_threads=%d",
+    "interp_radius=%d, min_interp=%d, obstacle_ratio_thr=%.2f, obstacle_hit_thr=%d, num_threads=%d",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
     slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
     sensor_frame_.c_str(), base_frame_.c_str(),
-    cell_resolution_, voxel_z_resolution_, voxel_z_min_, voxel_z_max_,
+    cell_resolution_, voxel_z_resolution_, min_obstacle_height_, max_obstacle_height_,
     ground_hit_threshold_, free_space_threshold_, free_space_window_,
     interp_search_radius_, min_interp_neighbors_,
-    robot_height_, obstacle_ratio_threshold_, obstacle_hit_threshold_, num_threads_);
+    obstacle_ratio_threshold_, obstacle_hit_threshold_, num_threads_);
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -382,8 +376,8 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   if (sensor_pos.z < z_min_world) z_min_world = sensor_pos.z;
   if (sensor_pos.z > z_max_world) z_max_world = sensor_pos.z;
 
-  double z_lo = std::min(z_min_world, cur_base_z + voxel_z_min_) - voxel_z_resolution_;
-  double z_hi = std::max(z_max_world, cur_base_z + voxel_z_max_) + voxel_z_resolution_;
+  double z_lo = std::min(z_min_world, cur_base_z + min_obstacle_height_) - voxel_z_resolution_;
+  double z_hi = std::max(z_max_world, cur_base_z + max_obstacle_height_) + voxel_z_resolution_;
 
   if (!voxel_grid_valid_ ||
       new_size_x != voxel_size_x_ || new_size_y != voxel_size_y_) {

@@ -122,7 +122,8 @@ def generate_launch_description():
     # 当 ns 非空时，frame 加前缀；为空时保持原值
     ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
     ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
-    ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_base_footprint_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
     ns_scan_topic = PythonExpression(["'/scan' if '", ns, "' == '' else str('/", ns, "/scan')"])
     ns_pointcloud_topic = PythonExpression(["'/lio/body/cloud' if '", ns, "' == '' else str('/", ns, "/lio/body/cloud')"])
     ns_map_topic = PythonExpression(["'/map' if '", ns, "' == '' else str('/", ns, "/map')"])
@@ -286,7 +287,7 @@ def generate_launch_description():
     if str(SLAM_ALGORITHM).endswith('gazebo'):
         min_height = 0.2
     else:
-        min_height = -0.3
+        min_height = -0.5
 
     pointcloud_to_laserscan_node = Node(
         package='pointcloud_to_laserscan',
@@ -299,19 +300,19 @@ def generate_launch_description():
             ('/tf_static', '/tf_static')
         ],
         parameters=[{
-            'transform_tolerance': 0.1,
+            'transform_tolerance': 0.2,
             'min_height': min_height,
-            'max_height': 0.5,
-            'angle_min': -3.14,
-            'angle_max': 3.14,
+            'max_height': 1.0,
+            'angle_min': -3.1,
+            'angle_max': 3.1,
             'angle_increment': 0.00869347338,
             'scan_time': 0.1,
             'range_min': 0.3,
             'range_max': 100.0,
-            'use_inf': False,
-            'inf_epsilon': 1000.0,
+            'use_inf': True,
+            'inf_epsilon': 1.0,
             'use_sim_time': use_sim_time,
-            'target_frame': ns_base_frame,
+            'target_frame': ns_base_link_frame,
             'concurrency_level': 1,
         }],
         output='screen',
@@ -361,7 +362,7 @@ def generate_launch_description():
                 'use_sim_time': use_sim_time,
                 'odom_frame': ns_odom_frame,
                 'map_frame': ns_map_frame,
-                'base_frame': ns_base_frame,
+                'base_frame': ns_base_footprint_frame,
                 'map_topic': ns_map_topic,
             }
         ],
@@ -430,7 +431,7 @@ def generate_launch_description():
             {
                 'global_frame_id': ns_map_frame,
                 'odom_frame_id': ns_odom_frame,
-                'base_frame_id': ns_base_frame,
+                'base_frame_id': ns_base_footprint_frame,
                 'map_topic': ns_map_topic,
             }
         ],
@@ -539,7 +540,7 @@ def generate_launch_description():
             'log_level': 'info',
             'map_frame': ns_map_frame,
             'odom_frame': ns_odom_frame,
-            'base_frame': ns_base_frame,
+            'base_frame': ns_base_footprint_frame,
             'scan_topic': ns_scan_topic,
             'pointcloud_topic': ns_pointcloud_topic,
             'map_topic': ns_map_topic,

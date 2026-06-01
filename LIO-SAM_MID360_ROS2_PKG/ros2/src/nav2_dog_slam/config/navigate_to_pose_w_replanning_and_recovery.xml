@@ -16,9 +16,9 @@
           <RecoveryNode number_of_retries="1" name="ComputePathToPose">
             <!-- Current planner: LatticeBased (narrow corridors, footprint-aware) -->
             <!-- Alternative planners (uncomment one, comment out the above):-->
-            <!-- <ComputePathToPose goal="{goal}" path="{path}" planner_id="LatticeBased"/> -->
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="LatticeBased"/>
             <!-- <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/> -->
-            <ComputePathToPose goal="{goal}" path="{path}" planner_id="HybridBased"/>
+            <!-- <ComputePathToPose goal="{goal}" path="{path}" planner_id="HybridBased"/> -->
             
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
           </RecoveryNode>

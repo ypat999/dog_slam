@@ -171,8 +171,8 @@ def generate_launch_description():
                 parameters=[configured_params_local],
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 5,6'],
-                # remappings=remappings + [('cmd_vel', '/cmd_vel_nav')]),
-                remappings=remappings + [('cmd_vel', '/cmd_vel')]),
+                remappings=remappings + [('cmd_vel', '/cmd_vel_nav')]),
+                # remappings=remappings + [('cmd_vel', '/cmd_vel')]),
             Node(
                 package='nav2_smoother',
                 executable='smoother_server',

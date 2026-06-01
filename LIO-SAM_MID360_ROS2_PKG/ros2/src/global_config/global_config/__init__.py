@@ -107,7 +107,7 @@ config_by_machine = {
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
         'SUPER_LIO_LIDAR_X': -0.0,  # 雷达x轴偏移量
         'SUPER_LIO_LIDAR_Z': -0.0,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -7.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -11.0,  # 雷达倾斜角度
 
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',

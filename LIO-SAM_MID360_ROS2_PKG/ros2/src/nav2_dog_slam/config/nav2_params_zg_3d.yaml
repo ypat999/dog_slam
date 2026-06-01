@@ -407,8 +407,11 @@ local_costmap:
         slope_cost_start: 40.0        # 开始产生坡度 cost 的坡度角(°)
         slope_cost_scale: 1.0         # 坡度 cost 缩放系数
         # 高度差参数
-        step_height_threshold: 0.3   # 台阶高度阈值(m)，超过此值 lethal
+        
         obstacle_ratio_threshold: 0.5
+        obstacle_hit_threshold: 1
+        
+        step_height_threshold: 0.4   # 台阶高度阈值(m)，超过此值 lethal
         height_cost_start: 0.2        # 产生 cost 的最小高度(m)
         # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
         # 但保留声明避免未知参数警告）

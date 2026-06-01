@@ -687,6 +687,9 @@ void TraversabilityLayer::extractGround(double ox, double oy)
         float min_obs_z = ground_top_z + static_cast<float>(max_obstacle_height_);
         for (unsigned int oiz = iz_start; oiz < iz_end; oiz++) {
           size_t oidx = voxelIndex(uix, uiy, oiz);
+          if (voxel_grid_[oidx].hit_count == 0 && voxel_grid_[oidx].pass_count == 0) {
+            continue;
+          }
           total_layers++;
           if (voxel_grid_[oidx].hit_count >= static_cast<uint8_t>(obstacle_hit_threshold_)) {
             obs_layers++;
@@ -1142,14 +1145,14 @@ void TraversabilityLayer::updateCosts(
           size_t idx = groundIndex(cx, cy);
           const auto & cell = ground_map_[idx];
 
-          if (!cell.has_ground) {
+          if (!cell.has_ground || cell.is_interpolated) {
             continue;
           }
 
           pcl::PointXYZI pt;
-          pt.x = static_cast<float>(cx * cell_resolution_ + ox);
-          pt.y = static_cast<float>(cy * cell_resolution_ + oy);
-          pt.z = cell.ground_z;
+          pt.x = static_cast<float>(voxel_ox_ + (cx + vox_offset_x) * cell_resolution_);
+          pt.y = static_cast<float>(voxel_oy_ + (cy + vox_offset_y) * cell_resolution_);
+          pt.z = cell.obstacle_ratio > 0.0f ? cell.min_obstacle_z : cell.ground_z;
           unsigned char cost = computeCost(cell);
           pt.intensity = static_cast<float>(cost) / 254.0f;
           slope_cloud->push_back(pt);

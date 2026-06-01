@@ -297,3 +297,8 @@ ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/zg_double
 
 
 sudo systemctl start zg_pointcloud.service 
+
+
+sudo systemctl stop lio_sam_nav2.service  && sudo systemctl restart rmw_control.service
+
+sudo systemctl start lio_sam_nav2.service && sudo journalctl -u lio_sam_nav2 -f

@@ -15,7 +15,7 @@ controller_server:
     
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: true
+    use_sim_time: false
 
     controller_frequency: 40.0  # 保持10Hz控制器频率
     failure_tolerance: 3.0
@@ -216,7 +216,7 @@ velocity_smoother:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
     
-    use_sim_time: true
+    use_sim_time: false
     smoothing_frequency: 40.0
     scale_velocities: false
     feedback: "OPEN_LOOP" 
@@ -257,7 +257,7 @@ velocity_smoother:
 # =============================================================================
 planner_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     expected_planner_frequency: 0.2
     planner_plugins: ["LatticeBased", "GridBased", "HybridBased"]
 
@@ -268,8 +268,8 @@ planner_server:
       max_iterations: 1000000
       max_on_approach_iterations: 10000
       max_planning_time: 10.0
-      lattice_filepath: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
-      # lattice_filepath: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
+      # lattice_filepath: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
+      lattice_filepath: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
       minimum_turning_radius: 0.2
       reverse_penalty: 2.0
       change_penalty: 0.3
@@ -355,7 +355,7 @@ local_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: true
+      use_sim_time: false
       update_frequency: 5.0
       publish_frequency: 5.0
       global_frame: odom
@@ -400,15 +400,16 @@ local_costmap:
         # 机器人基准坐标系（高度截取和地面检测的参考高度）
         base_frame: base_footprint
         # 高度过滤（相对于 base_frame 的高度）
-        max_obstacle_height: 1.0    # 最大考虑高度(m)，高于此忽略
+        max_obstacle_height: 5.0    # 最大考虑高度(m)，高于此忽略
         min_obstacle_height: -1.0   # 最小考虑高度(m)，低于此忽略
         # 坡度参数（角度制）
         max_slope_traversable: 60.0   # 最大可通行坡度(°)，超过则直接 lethal
-        slope_cost_start: 45.0        # 开始产生坡度 cost 的坡度角(°)
-        slope_cost_scale: 3.0         # 坡度 cost 缩放系数
+        slope_cost_start: 40.0        # 开始产生坡度 cost 的坡度角(°)
+        slope_cost_scale: 1.0         # 坡度 cost 缩放系数
         # 高度差参数
-        step_height_threshold: 0.5   # 台阶高度阈值(m)，超过此值 lethal
-        height_cost_start: 0.3        # 产生 cost 的最小高度(m)
+        step_height_threshold: 0.3   # 台阶高度阈值(m)，超过此值 lethal
+        obstacle_ratio_threshold: 0.5
+        height_cost_start: 0.2        # 产生 cost 的最小高度(m)
         # 高度差 cost 缩放（仅在旧版 computeCost 中使用，当前版本由三段逻辑取代
         # 但保留声明避免未知参数警告）
         height_cost_scale: 0.1
@@ -430,7 +431,7 @@ local_costmap:
       # 障碍物层参数
       obstacle_layer_local:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: false
+        enabled: true
         observation_sources: scan_rear scan_front 
         # observation_sources: scan_rear
         combination_method: 1  # 取最大值组合方法
@@ -463,7 +464,7 @@ local_costmap:
           marking: false
           data_type: "LaserScan"
           raytrace_max_range: 10.0
-          raytrace_min_range: 0.1
+          raytrace_min_range: 0.0
           obstacle_max_range: 0.0
           obstacle_min_range: 0.0
           # expected_update_rate: 0.0  # 新增参数
@@ -566,7 +567,7 @@ global_costmap:
     ros__parameters:
       # 缺失的顶层参数
       # bond_disable_heartbeat_timeout: false  # 新增参数
-      use_sim_time: true
+      use_sim_time: false
       update_frequency: 0.5
       publish_frequency: 0.5
       global_frame: map
@@ -660,7 +661,7 @@ global_costmap:
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     autostart: true
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
@@ -668,7 +669,7 @@ lifecycle_manager:
 # # 单独的定位生命周期管理器配置
 # lifecycle_manager_localization:
 #   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
 #     autostart: true
 #     node_names: ['map_server', 'amcl']
 #     bond_timeout_ms: 10000
@@ -678,7 +679,7 @@ lifecycle_manager:
 # =============================================================================
 amcl:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     # 基础参数 - 两个模型共用
     min_particles: 200
@@ -802,7 +803,7 @@ amcl:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     global_frame: map
     robot_base_frame: base_footprint
     bt_loop_duration: 100
@@ -820,7 +821,7 @@ bt_navigator:
     transform_tolerance: 0.1
     
     # 行为树配置 - 使用ROS2标准行为树文件
-    default_nav_to_pose_bt_xml: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
     
     # 未使用的行为树文件（系统存在但当前配置未使用）:
     # - /opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_w_replanning_and_round_robin_recovery.xml (系统无此文件)
@@ -906,8 +907,8 @@ bt_navigator:
 map_server:
   ros__parameters:
     frame_id: map
-    use_sim_time: true
-    yaml_filename: /home/ywj/slam_data/grid_map/map.yaml
+    use_sim_time: false
+    yaml_filename: /home/ztl/slam_data/grid_map/map.yaml
 
 # =============================================================================
 # Smoother Server Configuration
@@ -916,7 +917,7 @@ smoother_server:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: true
+    use_sim_time: false
     costmap_topic: "local_costmap/costmap_raw"  # 新增参数
     footprint_topic: "local_costmap/published_footprint"  # 新增参数
     robot_base_frame: "base_footprint"  # 新增参数
@@ -953,7 +954,7 @@ smoother_server:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     # log_level: "debug"  # 启用debug级别日志输出
     
     # 缺失参数 - 根据系统输出添加
@@ -1037,7 +1038,7 @@ waypoint_follower:
   ros__parameters:
     # 缺失的顶层参数
     # bond_disable_heartbeat_timeout: false  # 新增参数
-    use_sim_time: true
+    use_sim_time: false
     loop_rate: 40
     stop_on_failure: false
     waypoint_task_executor_plugin: "wait_at_waypoint"
@@ -1095,7 +1096,7 @@ waypoint_follower:
 slam_toolbox_node:
   ros__parameters:
     # 基本设置
-    use_sim_time: true
+    use_sim_time: false
 
     # 模式 - "mapping" 或 "localization" 模式，用于 Ceres 问题创建的性能优化
     #     工作原理与使用场景

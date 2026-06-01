@@ -269,7 +269,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   cloud_processed_++;
   cloud_updated_ = true;
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] Cloud: received=%u processed=%u frame_counter=%u pts=%zu",
     cloud_received_, cloud_processed_, static_cast<unsigned int>(frame_counter_),
@@ -714,7 +714,7 @@ void TraversabilityLayer::extractGround(double ox, double oy)
   }
 
   static auto extract_ground_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"),
     *extract_ground_clock, 2000,
     "[TraversabilityLayer] extractGround: scanned=%d, ground_found=%d, "
@@ -1101,7 +1101,7 @@ void TraversabilityLayer::updateCosts(
 
   current_ = true;
 
-  RCLCPP_INFO_THROTTLE(
+  RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] updateCosts: cells_cost=%d lethal=%d "
     "ground_ok=%d ground_empty=%d "
@@ -1124,7 +1124,7 @@ void TraversabilityLayer::updateCosts(
   double elapsed = (frame_end - last_perf_log_).seconds();
   if (elapsed >= 10.0) {
     double avg_ms = perf_total_time_ / static_cast<double>(perf_frame_count_);
-    RCLCPP_INFO(
+    RCLCPP_DEBUG(
       rclcpp::get_logger("traversability_layer"),
       "[TraversabilityLayer] Perf: %d frames in %.1fs, avg=%.2fms, last=%.2fms, "
       "cells_with_cost=%d, lethal=%d, voxel_grid=%.1fMB, frame=%u",

@@ -609,10 +609,6 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 
         double voxel_world_z = voxel_z_origin_ + (iz + 0.5) * voxel_z_resolution_;
 
-        if (voxel_world_z > base_z) {
-          break;
-        }
-
         bool has_free_above = false;
         for (int w = 1; w <= win; w++) {
           unsigned int wiz = iz + static_cast<unsigned int>(w);
@@ -641,9 +637,6 @@ void TraversabilityLayer::extractGround(double ox, double oy)
           }
 
           double voxel_world_z = voxel_z_origin_ + (iz + 0.5) * voxel_z_resolution_;
-          if (voxel_world_z > base_z) {
-            break;
-          }
 
           ground_iz = static_cast<int>(iz);
           ground_z_val = static_cast<float>(voxel_world_z);

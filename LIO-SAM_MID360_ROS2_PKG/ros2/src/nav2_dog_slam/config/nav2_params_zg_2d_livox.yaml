@@ -57,7 +57,7 @@ controller_server:
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
 
-      time_steps: 32
+      time_steps: 28
       # time_steps: 30
       model_dt: 0.1
       batch_size: 1000
@@ -72,9 +72,9 @@ controller_server:
 
       vx_max: 2.0
       vx_min: -0.2
-      vx_std: 0.7
-      vy_max: 0.3
-      vy_std: 0.3  # 降低横移速度采样标准差
+      vx_std: 0.8
+      vy_max: 0.2
+      vy_std: 0.2  # 降低横移速度采样标准差
       wz_std: 0.6
       wz_max: 0.6
       
@@ -84,8 +84,8 @@ controller_server:
       
       # 温度参数
       temperature: 0.3
-      motion_model: "DiffDrive" 
-      # motion_model: "Omni"  # 全向移动模型
+      # motion_model: "DiffDrive" 
+      motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
 
       visualize: false
@@ -733,8 +733,8 @@ amcl:
     alpha5: 0.03           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    # robot_model_type: "nav2_amcl::OmniMotionModel"
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
     update_min_d: 0.05

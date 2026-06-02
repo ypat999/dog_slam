@@ -1,0 +1,9 @@
+
+message_cache_size:
+  seg_image_msg_name: 10
+  seg_vis_msg_name: 1
+  polygon_msg_name: 1
+  lidar_msg_name: 1
+  lidar_2d_msg_name: 1
+  leg_odom_msg: 20
+  image_msg_name: 5

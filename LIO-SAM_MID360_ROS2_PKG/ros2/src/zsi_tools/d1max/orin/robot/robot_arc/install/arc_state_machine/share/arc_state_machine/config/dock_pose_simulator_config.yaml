@@ -1,0 +1,58 @@
+# Dock Pose Simulator Configuration
+# 用于模拟SLAM和Perception模块的dock pose数据
+
+# 默认Dock位置配置（map坐标系）
+default_dock_pose:
+  x: 0.00          # X位置（米）
+  y: 0.00          # Y位置（米）
+  yaw: 0.00        # 朝向角度（弧度）
+
+# 噪声配置
+noise:
+  # SLAM模块噪声（激光雷达精度）
+  slam:
+    x_stddev: 0.00       # X方向标准差（米）
+    y_stddev: 0.00       # Y方向标准差（米）
+    yaw_stddev: 0.00     # 偏航角标准差（弧度）
+
+  # Perception模块噪声（视觉感知精度）
+  perception:
+    x_stddev: 0.00      # X方向标准差（米）
+    y_stddev: 0.00      # Y方向标准差（米）
+    yaw_stddev: 0.00    # 偏航角标准差（弧度）
+
+# 发布频率配置
+frequencies:
+  dock_pose_publish_rate: 50.0    # dock_pose话题发布频率（Hz）
+  state_publish_rate: 10.0        # 模块状态发布频率（Hz）
+  display_update_rate: 5.0        # UI显示更新频率（Hz）
+
+# ROS话题配置
+topics:
+  # 输入话题
+  odom_input: "/odom/current_pose"
+
+  # 输出话题 - 模块状态
+  slam_state_output: "/arc/slam_state"
+  perception_state_output: "/arc/perception_state"
+
+  # 输出话题 - Dock Pose
+  slam_dock_pose_output: "/arc/slam_dock_pose"
+  perception_dock_pose_output: "/arc/perception_dock_pose"
+
+# TF坐标系配置
+tf:
+  source_frame: "map"           # 源坐标系（dock真值所在坐标系）
+  target_frame: "base_link"     # 目标坐标系（发布dock pose的坐标系）
+  timeout: 1.0                  # TF查找超时时间（秒）
+
+# 初始状态配置
+initial_states:
+  slam: "RUNNING"               # SLAM模块初始状态: PASSIVE/STANDBY/RUNNING
+  perception: "RUNNING"         # Perception模块初始状态: PASSIVE/STANDBY/RUNNING
+
+# UI配置
+ui:
+  enable_colors: true           # 启用彩色输出
+  enable_emojis: true           # 启用表情符号
+  clear_screen: true            # 刷新时清屏

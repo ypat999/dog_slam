@@ -1,0 +1,29 @@
+# IMU Driver Node Configuration
+
+imu_driver:
+  ros__parameters:
+    # Topic name for publishing IMU data
+    topic_name: "/imu_driver/imu_central"
+    
+    # Publishing frequency in Hz
+    publish_frequency: 200.0
+    
+    # Frame ID for the IMU sensor
+    frame_id: "imu_link"
+    
+    # IMU device paths (SPI devices)
+    imu0_device: "/dev/spidev0.0"
+    imu1_device: "/dev/spidev0.1"
+    flash_device: "/dev/spidev0.2"
+    
+    # SPI bus speed in Hz
+    spi_speed_hz: 5000000
+
+    # SPI mode (0-3)
+    spi_mode: 3
+
+    # Flash memory SPI speed in Hz
+    flash_speed_hz: 100000
+
+    # IMU Sensor Fetch Frequency in Hz
+    fetch_frequency: 400.0

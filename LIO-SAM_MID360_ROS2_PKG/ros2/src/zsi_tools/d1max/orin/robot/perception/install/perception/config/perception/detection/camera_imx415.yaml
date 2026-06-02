@@ -1,0 +1,25 @@
+camera:
+  intrinsic_matrix:
+    - [808.88985, 0., 942.58611]
+    - [0., 796.39067145, 482.98616]
+    - [0., 0., 1.0]
+
+  distortion_coefficients:
+    - [-0.127315, 0.024885919, -0.00632399568, -0.0081869629]
+  
+
+  extrinsic_parameters:
+    quaternion: 
+      w: 0.9998
+      x: 0.0175
+      y: 0.0004
+      z: 0.0175
+    
+    # 平移向量
+    translation_vector: 
+      - [0.3, 0., 0.]
+  
+  depth_scale: 1.2
+  
+imu_pitch_angle: 42
+

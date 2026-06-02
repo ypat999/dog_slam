@@ -1,0 +1,12 @@
+# UWB Driver Node Configuration
+
+uwb_driver:
+  ros__parameters:
+    # Topic name for publishing UWB data
+    topic_name: "/uwb"
+
+    # UWB device path
+    dev: "/dev/ttyTHS1"
+
+    # UWB device baud rate
+    baud: 115200

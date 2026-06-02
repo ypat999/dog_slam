@@ -1,0 +1,9 @@
+name: robot-forward
+version: 0.2.7
+last_commit_id: cd18280c69e55d553e3f930f3eb55b6e01d260e7
+last_commit_author: robot
+last_commit_time: 2026-01-29 14:28:23 +08:00
+last_commit_info: |
+  update loc pub style
+release_info: |
+  1. 更改定位信息发布逻辑

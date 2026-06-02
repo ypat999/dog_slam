@@ -1,0 +1,84 @@
+# ZG Quadruped Robot Geometry Configuration
+# ==============================================================================
+# This file contains all geometric and kinematic parameters for the ZG robot.
+# Modifying these values allows for easy adaptation to different robot variants
+# without changing any C++ code.
+# ==============================================================================
+/**:
+  ros__parameters:
+    robot_geometry:
+      # ===========================================================================
+      # Robot Identification
+      # ===========================================================================
+      robot_name: "zg"
+      robot_type: "quadruped"
+
+      # ===========================================================================
+      # Geometric Parameters
+      # ===========================================================================
+      geometry:
+        # Footprint: Polygon vertices in base_link frame (meters)
+        # Format: [[x1,y1],[x2,y2],...] in counter-clockwise order
+        # Current footprint: 0.90m (length) x 0.36m (width) rectangle + inflation 
+        footprint: "[[0.45,0.18],[0.45,-0.18],[-0.45,-0.18],[-0.45,0.18]]"
+
+        # Bounding box dimensions (meters)
+        width: 0.36          # Y-axis extent (side to side)
+        length: 0.90         # X-axis extent (front to back)
+        height: 0.54         # Z-axis extent (for 3D planning/visualization)
+
+        # Radius approximations (meters)
+        # Inscribed radius: Largest circle that fits inside footprint
+        # Circumscribed radius: Smallest circle that contains footprint
+        # If set to 0.0, will be automatically calculated from footprint
+        inscribed_radius: 0.18
+        circumscribed_radius: 0.4386
+
+        # Wheel/Leg configuration (meters)
+        wheel_base: 0.5    # Distance between front and rear legs
+        track_width: 0.36   # Distance between left and right legs
+        rear_suspension: 0.2 
+
+      # ===========================================================================
+      # Kinematic Constraints
+      # ===========================================================================
+      kinematics:
+        # Velocity limits (m/s for linear, rad/s for angular)
+        max_velocity:
+          linear_x: 2.0      # Maximum forward velocity
+          linear_y: 0.5      # Maximum lateral velocity (for omnidirectional motion)
+          angular_z: 2.0     # Maximum rotation velocity
+
+        min_velocity:
+          linear_x: -2.0     # Maximum backward velocity
+          linear_y: -0.5     # Minimum lateral velocity
+          angular_z: -2.0    # Minimum rotation velocity
+
+        # Acceleration limits (m/s² for linear, rad/s² for angular)
+        max_acceleration:
+          linear: 2.0        # Maximum forward/backward acceleration
+          lateral: 0.5       # Maximum lateral acceleration
+          angular: 2.0       # Maximum angular acceleration
+
+        # Turning characteristics
+        min_turning_radius: 1.0    # Minimum radius for turning in place (meters)
+        max_curvature: 1.0         # Maximum path curvature (1/meters)
+
+      # ===========================================================================
+      # Safety Parameters
+      # ===========================================================================
+      safety:
+        # Collision checking radius (meters)
+        # Typically slightly larger than circumscribed_radius for safety margin
+        collision_radius: 0.55
+
+        # Distance thresholds (meters)
+        safe_distance: 0.9        # Preferred clearance from obstacles
+        critical_distance: 0.5    # Emergency stop distance
+
+        # Directional safety margins (added to footprint, meters)
+        margins:
+          front: 0.10    # Extra clearance in front (for forward motion)
+          rear: 0.10     # Extra clearance behind (for backward motion)
+          left: 0.05     # Extra clearance on left side
+          right: 0.05    # Extra clearance on right side

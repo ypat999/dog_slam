@@ -1,0 +1,46 @@
+# CenterNet Detection Configuration
+
+# Model path
+onnx_model_path: "detection/model/detection/centernet_charger.onnx"
+precision: "fp16"
+key: DnnTensorRT
+
+# Input parameters
+input_width: 640
+input_height: 320
+num_classes: 2
+
+# Detection thresholds
+score_threshold: 0.3
+nms_threshold: 0.5
+max_objects: 100
+num_keypoints: 4
+min_keypoint_score: 0.1  # Minimum score for keypoint refinement (after sigmoid)
+
+# Image preprocessing (ImageNet normalization)
+mean: [0., 0., 0.]
+std: [1, 1, 1]
+
+# Crop parameters (optional, -1 means use full image)
+crop_x: 0
+crop_y: 60
+crop_width: 1920
+crop_height: 960
+
+# Keypoint search parameters
+keypoint_search_radius: 20     # Search radius in feature map for keypoint refinement
+keypoint_margin: 0.1          # Margin ratio (relative to bbox size) allowing keypoints outside bbox (0.1 = 10% of bbox size)
+max_hp_offset: 2.0            # Maximum hp_offset value (pixels) to clip abnormal values
+
+# Output layer names (CenterNet outputs)
+hm_name: "hm"           # Heatmap for object centers (1 channel for single class)
+wh_name: "wh"           # Width and height regression (2 channels)
+hps_name: "hps"         # Keypoints coordinates (8 channels: 4 keypoints × 2)
+reg_name: "reg"         # Center point offset refinement (2 channels)
+hm_hp_name: "hm_hp"     # Keypoint heatmap (4 channels)
+hp_offset_name: "hp_offset"  # Keypoint offset refinement (2 channels)
+hp_vis_name: "hp_vis"   # Keypoint visibility/attributes (4 channels)
+num_attributes: 4       # Number of attributes per detection
+debug_logs: false  # Enable verbose debugging output
+enable_visualization: false  # Enable result & heatmap visualization
+store_debug_buffers: false  # 保存调试用的输入/输出缓存

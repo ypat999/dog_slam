@@ -1,0 +1,99 @@
+/**:
+  ros__parameters:
+    robot_roamerx:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Roamerx
+      startswith: [ 'robot_roamerx' ]
+      remove_prefix: [ 'robot_roamerx' ]
+    robot_hal:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Hal
+      startswith: [ 'robot_hal: /node_state' ]
+      remove_prefix: [ 'robot_hal: /' ]
+    robot_hal_mcu:
+      type: 'diagnostic_aggregator/AnalyzerGroup'
+      path: Mcu
+      analyzers:
+        uart2can:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: Uart2Can
+          startswith: [ 'robot_hal: /zsi_actuator_driver/can0',
+                    'robot_hal: /zsi_actuator_driver/can1',
+                    'robot_hal: /zsi_actuator_driver/can2',
+                    'robot_hal: /zsi_actuator_driver/can3' ]
+          remove_prefix: [ 'robot_hal: /zsi_actuator_driver/' ]
+        power_control:
+          type: diagnostic_aggregator/GenericAnalyzer
+          path: PowerControl
+          startswith: [ 'robot_hal: /power_control_driver' ]
+          remove_prefix: [ 'robot_hal: /' ]
+    robot_battery:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Battery
+      startswith: [ 'robot_hal: /battery' ]
+      remove_prefix: [ 'robot_hal: /' ]
+    robot_hal_sensor:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Sensor
+      startswith: [ 'robot_hal: /zsi_imu_driver', 'robot_hal: /ltr_light_sensor_driver', 'robot_hal: /lux']
+      remove_prefix: [ 'robot_hal: /zsi_imu_driver', 'robot_hal: /ltr_light_sensor_driver', 'robot_hal: /']
+    robot_hal_actuator:
+      type: 'diagnostic_aggregator/AnalyzerGroup'
+      path: Actuator
+      analyzers:
+        back_left:
+          type: diagnostic_aggregator/GenericAnalyzer  
+          path: BackLeftLeg
+          startswith: [ 'robot_hal: /zsi_actuator_driver/back_left_leg/bl1_hip_roll',
+              'robot_hal: /zsi_actuator_driver/back_left_leg/bl2_hip_pitch',
+              'robot_hal: /zsi_actuator_driver/back_left_leg/bl3_knee_pitch',
+              'robot_hal: /zsi_actuator_driver/back_left_leg/bl4_foot' ]
+          remove_prefix: [ 'robot_hal: /zsi_actuator_driver/back_left_leg' ]
+        back_right:
+          type: diagnostic_aggregator/GenericAnalyzer  
+          path: BackRightLeg
+          startswith: [ 'robot_hal: /zsi_actuator_driver/back_right_leg/br1_hip_roll',
+              'robot_hal: /zsi_actuator_driver/back_right_leg/br2_hip_pitch',
+              'robot_hal: /zsi_actuator_driver/back_right_leg/br3_knee_pitch',
+              'robot_hal: /zsi_actuator_driver/back_right_leg/br4_foot' ]
+          remove_prefix: [ 'robot_hal: /zsi_actuator_driver/back_right_leg' ]
+        front_left:
+          type: diagnostic_aggregator/GenericAnalyzer  
+          path: FrontLeftLeg
+          startswith: [ 'robot_hal: /zsi_actuator_driver/front_left_leg/fl1_hip_roll',
+              'robot_hal: /zsi_actuator_driver/front_left_leg/fl2_hip_pitch',
+              'robot_hal: /zsi_actuator_driver/front_left_leg/fl3_knee_pitch',
+              'robot_hal: /zsi_actuator_driver/front_left_leg/fl4_foot' ]
+          remove_prefix: [ 'robot_hal: /zsi_actuator_driver/front_left_leg' ]
+        front_right:
+          type: diagnostic_aggregator/GenericAnalyzer  
+          path: FrontRightLeg
+          startswith: [ 'robot_hal: /zsi_actuator_driver/front_right_leg/fr1_hip_roll',
+              'robot_hal: /zsi_actuator_driver/front_right_leg/fr2_hip_pitch',
+              'robot_hal: /zsi_actuator_driver/front_right_leg/fr3_knee_pitch',
+              'robot_hal: /zsi_actuator_driver/front_right_leg/fr4_foot' ]
+          remove_prefix: [ 'robot_hal: /zsi_actuator_driver/front_right_leg' ]
+    robot_monitor:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: RobotState
+      startswith: [ 'robot_monitor' ]
+      remove_prefix: [ 'robot_monitor' ]
+    robot_manager:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: RobotState
+      startswith: [ 'robot_manager' ]
+      remove_prefix: [ 'robot_manager' ]
+    robot_remote:
+      type: diagnostic_aggregator/GenericAnalyzer
+      path: Remote
+      startswith: [ 'robot_remote' ]
+      remove_prefix: [ 'robot_remote' ]
+    # robot_computer:
+    #   type: diagnostic_aggregator/GenericAnalyzer
+    #   path: Computer
+    #   startswith: [ 'robot_computer' ]
+    #   remove_prefix: [ 'robot_computer' ]
+
+
+
+

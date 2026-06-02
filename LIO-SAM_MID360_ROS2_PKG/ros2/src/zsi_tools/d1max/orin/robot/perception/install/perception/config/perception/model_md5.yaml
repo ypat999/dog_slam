@@ -1,0 +1,19 @@
+
+# TensorRT 模型文件 MD5
+tensorrt:
+  model/detection/yolo11n_bhwc.onnx: 8b443da6007bc6501fabb5ec969178f4
+  model/detection/yolo11n_bhwc_250918.onnx: 39ae0a650caeb432a8fed494cce60510
+  model/detection/reid.onnx: e4137a165ff688ec62cb4ada63bb02a3
+  model/detection/reid_siamese.onnx: e7c46ce5cfe2a5e5ba920cd419f62c48
+  model/detection/centernet_charger.onnx: 69957346485bb7500721dcaa3a15c367
+  model/sam_track/efficienttam_ti_512x512_memory_attention.onnx: 63e5a6b4c7fd57f613e4b08f073fe591
+  model/sam_track/efficienttam_ti_512x512_memory_encoder.onnx: 2a6046032b6424aacdce80d6ff00470c
+  model/sam_track/efficienttam_ti_512x512.onnx: 192ece16447d8f0a437dbd9900ff17b7
+  model/sam_track/efficienttam_ti_512x512_preprocess.onnx: ba9147a921ae1846daff807c693e1085
+
+# RKNN 模型文件 MD5
+rknn:
+  model/detection/yolo11n_bchw.rknn: 39a3df4c41b9a1f2124233b72e8ea41b
+  model/detection/yolo11n_bchw_250918.rknn: dabb0e4f79f9a085acb5d2a7f9c14c3a
+  model/detection/reid.rknn: 6ad33b68e4ab55963ff0c8c47f700506
+  model/detection/reid_siamese.rknn: b98c579a4d1e86f30434f1828558122d

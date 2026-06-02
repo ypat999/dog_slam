@@ -1,0 +1,26 @@
+
+onnx_model_path: "detection/model/detection/yolo11n_bhwc_250918.onnx"
+precision: "fp16"
+key: detection
+
+rknn_model_path: "detection/model/detection/yolo11n_bchw_250918.rknn"
+preprocess:
+  crop_x_start: 0
+  crop_y_start: 0
+  crop_width: 1920
+  crop_height: 1080
+  crop_flag: True
+
+  resize_width: 800
+  resize_height: 448
+  resize_flag: True
+
+  float_flag: True
+
+  normalize_flag: False
+  transpose_flag: False
+postprocess:
+  score_thresh: 0.25
+
+model_yaml_path: model_md5.yaml
+

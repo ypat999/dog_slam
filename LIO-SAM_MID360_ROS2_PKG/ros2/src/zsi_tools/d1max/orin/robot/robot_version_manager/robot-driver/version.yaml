@@ -1,0 +1,8 @@
+name: robot-driver
+version: 0.2.0
+last_commit_id: 59f3517ac0e35f788f2eab828555f6cd1bea65d5
+last_commit_author: robot
+last_commit_time: 2026-01-19 10:32:53 +08:00
+last_commit_info: |
+  reback sixent queue
+release_info: "robot-driver\t\t      \t\t     \n[uwb]: 修改老版uwb驱动的topic，防止引起话题和新版算法topic之间的冲突\n\n[livox_driver && rslidar_sdk]: 统一话题名称\n"

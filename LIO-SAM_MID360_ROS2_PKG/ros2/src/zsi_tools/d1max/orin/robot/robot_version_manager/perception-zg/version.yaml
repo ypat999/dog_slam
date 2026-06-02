@@ -1,0 +1,8 @@
+name: perception-zg
+version: 0.5.1-onnx
+last_commit_id: 17a229e619c3f2cfa3a94cd4342cfea686567290
+last_commit_author: robot
+last_commit_time: 2026-01-27 13:03:40 +08:00
+last_commit_info: Update Jszr.toml
+release_info: |
+  1. 修改统一topic name

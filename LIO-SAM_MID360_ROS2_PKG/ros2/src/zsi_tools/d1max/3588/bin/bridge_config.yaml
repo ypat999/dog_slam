@@ -1,0 +1,14 @@
+name: bridge_image_topics
+from_domain: 66
+to_domain: 24
+
+topics:
+  /front_camera/image_compressed:
+    type: sensor_msgs/msg/CompressedImage
+    qos:
+      reliability: best_effort
+
+  /rear_camera/image_compressed:
+    type: sensor_msgs/msg/CompressedImage
+    qos: 
+      reliability: best_effort

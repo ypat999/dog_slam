@@ -1,0 +1,15 @@
+frame_rate: 10
+track_buffer: 40
+track_thresh: 0.4
+high_thresh: 0.5
+match_thresh: 0.85
+
+reid_dnn_cfg: detection/reid_dnn_config.yaml
+reid_similarity_cfg: detection/reid_similarity_config.yaml
+global_reid_frame_rate: 2
+
+sam_track_cfg: detection/sam_track.yaml
+use_sam_track: false
+debug_flag: false
+
+save_track_image: false

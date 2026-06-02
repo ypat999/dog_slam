@@ -1,0 +1,24 @@
+MEB:
+  ros__parameters:
+    predict_time: 3.0  # 预测时域总时间（s）
+    dt: 0.05  # 预测/定时器步长（s）
+    use_constant_cmd: true  # 预测时是否保持输入速度不变
+    cmd_timeout_s: 1.0  # 速度指令超时阈值（s）
+    scan_timeout_s: 5.0  # 雷达数据超时阈值（s）
+    enable_debug: true  # 是否打印调试信息
+
+    footprint_points: [0.35, 0.25, 0.35, -0.25, -0.35, -0.25, -0.35, 0.25]  # footprint 多边形顶点（base_link）
+    footprint_padding: 0.02  # footprint 膨胀距离（m）
+
+    laser_min_range: 0.05  # 激光最小有效距离（m）
+    laser_max_range: 5.0  # 激光最大有效距离（m）
+    collision_check_stride: 2  # 碰撞检测轨迹抽样步长
+    corridor_stride: 8  # 走廊可视化抽样步长
+    enable_outlier_filter: false  # 是否启用离群点滤波
+    outlier_mean_k: 20  # 离群点滤波邻域点数
+    outlier_stddev: 1.0  # 离群点滤波标准差阈值
+
+    brake_time_s: 1.5  # 刹停触发时间阈值（s）
+    max_decel: 1.0  # 最大减速度（m/s²）
+
+    base_frame: "base_link"  # 轨迹参考坐标系

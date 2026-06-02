@@ -1,0 +1,10 @@
+version: 0.0.1-r2
+last_commit_id: 28f6a4d8dc92af06c6eb65946a3c67518e23fb79
+last_commit_time: 2026-03-05 17:59:20 +08:00
+last_commit_info: |
+  fix: params & inactive state laserCallback return
+release_info: |
+  -1. Extract abstract base class MebPolicy from SafetyEvaluator
+  -2. Rename SafetyEvaluator to MebStopPolicy as concrete stop-obstacle policy
+  -3. Add PolicyComponetManager for runtime policy switching
+  -4. MebNode now interacts only with PolicyComponetManager, decoupled from concrete policy

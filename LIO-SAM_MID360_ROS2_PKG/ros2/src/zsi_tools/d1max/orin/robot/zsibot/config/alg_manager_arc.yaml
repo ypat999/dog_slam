@@ -1,0 +1,270 @@
+log_config:
+  log_file: /tmp/zsibot/log/robot_alg_manager.log
+  log_level: INFO
+  log_max_file_size: 52428800
+  log_max_files: 3
+  enable_stdout: true
+modules:
+  arc_navigo_charging_alignment:
+    launch_config:
+      commands: ros2 launch navigo_charging_alignment charging_alignment.launch.py
+      envs:
+        ROS_DOMAIN_ID: '24'
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+      env_file: null
+      setup_script: /opt/robot/robot_arc/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: navigo_charging_alignment
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          action: Pass
+          pattern: component_container_isolated
+      storages:
+      - name: navigo_charging_alignment
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/navigo_charging_alignment_with_setup.log
+          format: Text
+  navigation:
+    launch_config:
+      commands: ros2 launch robot_nav2 navigation_bringup.launch.py platform:=REAL robot_type:=xg
+      envs:
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_DOMAIN_ID: '24'
+        ROS_VERSION: humble
+      env_file: null
+      setup_script: /opt/robot/robot_nav/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: navigation_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          action: Pass
+          pattern: component_container_isolated
+      storages:
+      - name: navigation
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/navigation_with_setup.log
+          format: Text
+  slam:
+    launch_config:
+      commands: /opt/robot/robot_slam/install/robot_slam/lib/robot_slam/robot_slam
+      envs:
+        USE_CUSTOM_MAP_PATH: 'false'
+        SLAM_TYPE: nx_xg
+        ROS_DOMAIN_ID: '24'
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+      env_file: null
+      setup_script: /opt/robot/robot_slam/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: slam_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: slam
+        enabled: true
+        storage_type: File
+        params:
+          format: Text
+          file_path: /tmp/zsibot/log/slam_with_setup.log
+  arc_lvio:
+    launch_config:
+      commands: ros2 launch arc_lvio arc_lvio.launch.py
+      envs:
+        USE_CUSTOM_MAP_PATH: 'false'
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        APRILTAG_YAML_DIR: /opt/robot/robot_arc/install/apriltag_localization/config/apriltag_localization_pc_config.yaml
+        ROS_DOMAIN_ID: '24'
+        CALIBRATION_YAML_DIR: /ota/calibration_results.yaml
+        SLAM_TYPE: nx_single_livox_lidar
+        ROS_VERSION: humble
+      env_file: null
+      setup_script: /opt/robot/robot_arc/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: arc_lvio
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: arc_lvio
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/arc_lvio_with_setup.log
+          format: Text
+  arc_mapping:
+    launch_config:
+      commands: ros2 launch arc_mapping arc_mapping.launch.py
+      envs:
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_DOMAIN_ID: '24'
+        APRILTAG_YAML_DIR: /opt/robot/robot_arc/install/apriltag_localization/config/apriltag_localization_pc_config.yaml
+      env_file: null
+      setup_script: /opt/robot/robot_arc/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: arc_lvio
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: arc_lvio
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/arc_mapping_with_setup.log
+          format: Text
+  arc_state_machine:
+    launch_config:
+      commands: ros2 launch arc_state_machine arc_state_machine.launch.py
+      envs:
+        ROS_DOMAIN_ID: '24'
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_VERSION: humble
+        APRILTAG_YAML_DIR: /opt/robot/robot_arc/install/apriltag_localization/config/apriltag_localization_pc_config.yaml
+      env_file: null
+      setup_script: /opt/robot/robot_arc/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: arc_fsm
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: arc_fsm
+        enabled: true
+        storage_type: File
+        params:
+          format: Text
+          file_path: /tmp/zsibot/log/arc_state_machine_setup.log
+  arc_apriltag_loc:
+    launch_config:
+      commands: ./bin/apriltag_localization_node
+      envs:
+        ROS_DOMAIN_ID: '24'
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_VERSION: humble
+      env_file: null
+      setup_script: null
+      cwd: /opt/robot/robot_arc/install/apriltag_localization
+      default_launch: true
+    processor_config:
+      name: localization_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: localization
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/arc_apriltag_loc_with_setup.log
+          format: Text
+  localization:
+    launch_config:
+      commands: ros2 launch localization localization.launch.py
+      envs:
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_DOMAIN_ID: '24'
+        LOCALIZATION_YAML_DIR: /opt/robot/robot_localization/install/localization/share/localization/config/localization_params_fastlio.yaml
+      env_file: null
+      setup_script: /opt/robot/robot_localization/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: localization_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: localization
+        enabled: true
+        storage_type: File
+        params:
+          format: Text
+          file_path: /tmp/zsibot/log/localization_with_setup.log
+ws_config:
+  app_msg_ws_url: 0.0.0.0:10010
+  app_ros2_ws_url: 0.0.0.0:10011
+  machine_msg_ws_url: 0.0.0.0:10012
+  machine_ros2_ws_url: 0.0.0.0:10013
+  app_allow_multi_connection: false

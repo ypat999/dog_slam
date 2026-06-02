@@ -1,0 +1,1 @@
+./bin/apriltag_localization_node

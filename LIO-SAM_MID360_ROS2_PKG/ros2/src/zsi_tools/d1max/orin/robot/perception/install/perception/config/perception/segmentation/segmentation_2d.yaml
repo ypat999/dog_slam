@@ -1,0 +1,4 @@
+input_image_topic: /image_raw/compressed
+output_segmentation_topic: /perception/segmentation/output
+output_segmentation_vis_topic: /perception/segmentation_vis/compressed
+seg_dnn_cfg_file: perception/segmentation_app.yaml

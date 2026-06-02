@@ -1,0 +1,276 @@
+======================================================================
+  智元机器狗 (ZSI Tools) 服务入口脚本分析
+  路径: /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/bin
+  对应源码目录: /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/robot
+======================================================================
+
+共计 21 个脚本文件，按功能分类如下：
+
+
+一、启动入口类（系统级编排）
+----------------------------------------------------------------------
+
+1. robot_start.sh
+   - 用途: 机器人主启动入口
+   - 功能: 依次调用启动流程：先执行 config_airy.sh 配置激光雷达网络，
+           再执行 robot_wait_time_sync.sh 等待时间同步完成，
+           最后执行 fix_calibration_topic_name.sh 修正标定文件中的话题名称。
+           是机器人的"上电自检+初始化"总入口。
+   - 源码: 调用其他脚本，无独立包
+
+2. robot_alg_start.sh
+   - 用途: 算法管理器启动入口
+   - 功能: 设置 ROS Domain ID 和 RMW 中间件为 Zenoh，创建地图数据目录，
+           启动 robot_alg_manager 进程，参数为 zg-arc（智元-弧架构）。
+   - 源码: /robot/zsibot/config/alg_manager_arc.yaml 定义了各模块启动配置
+
+3. robot_start_app.sh
+   - 用途: 机器人应用层服务启动
+   - 功能: 创建日志目录（保留最近 5 份），先启动 Zenoh 路由器作为通信基础，
+           再启动 robot-launch server 应用服务，持续循环保活。
+   - 源码: 涉及 robot_version_manager 包的版本管理
+
+
+二、硬件驱动类
+----------------------------------------------------------------------
+
+4. start_rslidar_driver.sh
+   - 用途: RoboSense 激光雷达驱动
+   - 功能: 启动 rslidar_sdk 的 ROS2 launch 文件，绑定 CPU core 4,5
+           以提升实时性。负责驱动前/后 RoboSense 激光雷达。
+   - 源码: /robot/robot-driver/install/rslidar_sdk
+
+5. start_imu_driver.sh
+   - 用途: IMU（惯性测量单元）驱动
+   - 功能: 启动 imu_driver.launch.py，驱动板载 IMU 传感器，
+           输出角速度和加速度数据。
+   - 源码: /robot/robot-driver/install/imu_driver
+
+6. start_rtk_driver.sh
+   - 用途: RTK GPS（实时动态差分 GPS）驱动
+   - 功能: 启动 sixents_gps_driver（六分科技 GPS 驱动），加载动态库，
+           提供厘米级高精度 GPS 定位数据。
+   - 源码: /robot/robot-driver/install/sixents_gps_driver
+
+7. start_uss_driver.sh
+   - 用途: USS（超声波传感器）驱动
+   - 功能: 启动 uss_driver 的 zsm_v4.launch.py，驱动板载超声波传感器阵列，
+           用于近距离障碍物检测。
+   - 源码: /robot/robot-driver/install/uss_driver
+
+8. start_uwb_driver.sh
+   - 用途: UWB（超宽带定位）驱动
+   - 功能: 启动 uwb_driver.launch.py，驱动 UWB 模块，
+           用于室内高精度定位或相对定位。
+   - 源码: /robot/robot-driver/install/uwb_driver
+
+   硬件驱动汇总 (/robot/robot-driver/install/):
+   - imu_driver, rslidar_sdk, rslidar_msg, sixents_gps_driver
+   - gps_driver, ntrip_nmea_driver, nlink_parser
+   - uss_driver, uwb_driver, laser_scan, livox_driver
+   - realsense_driver, realsense_ros_wrapper, serial
+
+
+三、感知与算法类
+----------------------------------------------------------------------
+
+9. start_localization.sh
+   - 用途: 定位服务 (FastLIO2)
+   - 功能: 加载 localization 包，使用 FastLIO 算法，
+           配置 YAML 参数文件为 localization_params_fastlio_zg.yaml，
+           启动 localization_zg.launch.py，提供实时位姿估计。
+   - 源码: /robot/robot_localization/install/localization
+   - 算法: 支持多种定位模式 (RTK_IO, LIO_UKF, RTK_IO_LIO, FASTLIO, ODOM)
+   - 依赖: IMU + 激光雷达点云 + 可选 GNSS
+
+10. start_mapping.sh
+    - 用途: 建图（SLAM）服务
+    - 功能: 设置 SLAM 类型为 nx_zg，直接执行 robot_slam 可执行文件，
+            用于构建环境地图。
+    - 源码: /robot/robot_slam/install/robot_slam/lib/robot_slam/robot_slam
+    - 算法: 基于 FastLIO 的实时 SLAM，包含 ikd_tree, icp_omp, apriltag 等库
+
+11. start_nav2.sh
+    - 用途: 导航系统 (Nav2 / NaviGO)
+    - 功能: 启动 ROS2 Nav2 导航栈，设置平台为 REAL（真实机器人），
+            机器人类型为 zg，运行 navigation_bringup.launch.py，
+            实现路径规划与自主导航。
+    - 源码: /robot/robot_nav/install/robot_nav2
+    - NaviGO 模块汇总:
+      - navigo_3d_topo_global_planner   - 3D 拓扑全局规划
+      - navigo_behavior_tree           - 行为树引擎
+      - navigo_behaviors               - 行为库
+      - navigo_bt_navigator            - BT 导航器
+      - navigo_collision_monitor       - 碰撞监测
+      - navigo_costmap_2d              - 代价地图
+      - navigo_local_planner_controller - 局部规划控制器
+      - navigo_map_server              - 地图服务
+      - navigo_path_controller         - 路径控制器
+      - navigo_path_planner            - 路径规划
+      - navigo_pid_controller          - PID 控制
+      - navigo_pure_pursuit_controller - 纯追踪控制器
+      - navigo_spatial_temporal_planner - 时空规划器
+      - navigo_waypoint_follower       - 航点跟随
+      - navigo_velocity_optimizer      - 速度优化
+      - robot_nav2                     - 主导航入口
+
+12. start_perception_seg.sh
+    - 用途: 感知分割服务 (目标检测 + 语义分割)
+    - 功能: 加载 TensorRT 推理库和感知模块，运行 perception_jobs 可执行文件，
+            使用 YAML 配置文件执行感知任务（如语义分割、障碍物检测）。
+    - 源码: /robot/perception/install/perception/bin/perception_jobs
+    - 感知子模块 (/robot/perception/):
+      - detection/        - 目标检测 (YOLO11, CenterNet)
+      - detection_2d/     - 2D 检测
+      - segmentation/     - 语义分割
+      - obstacle_detection/ - 障碍物检测 (激光雷达+相机融合)
+      - stereo_match/     - 双目匹配
+      - stereo_rectify/   - 双目校正
+      - calibration/      - 相机标定
+      - model/            - 推理模型 (PIDNet, YOLO11, SAM-Track)
+    - 模型文件:
+      - yolo11n_bhwc_250918.onnx
+      - pidnet.onnx
+      - reid.onnx / reid_siamese.onnx
+      - centernet_charger.onnx
+
+13. start_robot_meb.sh
+    - 用途: MEB（运动边界预测 + 碰撞检测）服务
+    - 功能: 启动 robot_meb 节点，基于激光雷达进行运动预测和碰撞检测，
+            预测时域 3 秒，步长 0.05 秒，支持离群点滤波和轨迹抽样。
+    - 源码: /robot/robot_meb/install/robot_meb/share/robot_meb/config/meb.yaml
+    - 参数:
+      - predict_time: 3.0s, dt: 0.05s
+      - laser range: 0.05~5.0m
+      - footprint: 0.35x0.25m (base_link)
+      - brake_time: 1.5s, max_decel: 1.0 m/s²
+
+14. start_robot_forward.sh
+    - 用途: 状态转发服务 (ECAL + ROS 桥接)
+    - 功能: 启动 robot_forward 可执行程序，负责将机器人状态数据向前端转发。
+            包含 ecal2ros 桥接模块，用于与外部系统通信。
+    - 源码: /robot/robot-forward/install/robot_forward/lib/robot_forward/robot_forward
+    - 桥接: /robot/robot-forward/install/ecal2ros/
+
+
+四、配置与标定类
+----------------------------------------------------------------------
+
+15. config_airy.sh
+    - 用途: Airy 激光雷达自动配置脚本
+    - 功能: 自动检测通过 USB 连接的雷达网络接口，通过 HTTP API 自动配置
+            前雷达和后雷达的 IP 地址、子网掩码、工作模式（高性能/待机）、
+            回传模式、时间同步源、IMU 参数、滤波器参数等 30+ 项参数。
+            支持检测已有配置是否正确，避免重复配置。是整机部署的关键脚本。
+    - 雷达配置:
+      - 前雷达: 192.168.1.200 (Src) -> 192.168.1.102 (Dst), MSOP:6699, DIFOP:7788
+      - 后雷达: 192.168.2.200 (Src) -> 192.168.2.102 (Dst)
+      - IMU 输出率: 200Hz, GPS 波特率: 115200
+
+16. fix_calibration_topic_name.sh
+    - 用途: 修正标定结果文件中的话题名称
+    - 功能: 使用 sed 将旧版话题名称替换为标准名称，例如：
+            /image_publisher/camera_back/compressed -> /rear_camera/image_compressed
+            /image_publisher/camera_front/compressed -> /front_camera/image_compressed
+            /rslidar_points_head -> /front_lidar
+            /rslidar_points_tail -> /rear_lidar
+            确保不同模块之间的话题命名统一。
+    - 标定文件: /ota/calibration_results.yaml
+
+
+五、时间同步类
+----------------------------------------------------------------------
+
+17. start_linuxptp.sh
+    - 用途: PTP（精确时间协议）同步服务
+    - 功能: 启动 ptp4l 服务，使用 enP8p1s0 网卡进行 PTP 硬件时间同步，
+            加载 ptp4l.conf 配置，实现微秒级网络时间同步。
+
+18. robot_wait_time_sync.sh
+    - 用途: 等待时间同步完成
+    - 功能: 通过 chronyc tracking 检查 Leap status 是否为 Normal，
+            最多等待 25 秒，超时后停止 gpsd 服务并退出。
+            确保系统时间已同步后再启动其他服务。
+
+
+六、Arc 架构扩展 (robot_arc)
+----------------------------------------------------------------------
+
+19. robot_arc 模块 (新增验证)
+    - apriltag_localization: Apriltag 室内定位
+    - arc_lvio: LIO-SAM/VIO 紧耦合激光-视觉里程计
+    - arc_mapping: 建图相关
+    - arc_state_machine: 状态机 (导航/运动控制/对接/故障)
+    - navigo_charging_alignment: 充电对接对齐
+    - 配置支持: ZG, XG, XGW, ZGW, ZGW 等多种机型
+
+20. start_zenoh_router.sh
+    - 用途: Zenoh 通信中间件路由器
+    - 功能: 启动 rmw_zenohd（ROS2 Zenoh 中间件守护进程），
+            提供高性能、低延迟的分布式通信能力，替代传统 ROS2 DDS。
+            （注释中显示还涉及组播路由配置）
+
+21. alg-manager.sh
+    - 用途: 算法管理器守护进程
+    - 功能: 设置 ROS 环境变量（Domain ID=24, RMW=Zenoh），
+            创建地图数据目录，执行 robot_alg_manager zg-arc，
+            管理和调度各算法模块的生命周期。
+    - 配置文件: /robot/zsibot/config/alg_manager_arc.yaml
+
+
+======================================================================
+  架构总结
+======================================================================
+
+整个系统采用"分层启动"架构：
+
+  第一层 [硬件驱动]
+    start_rslidar_driver.sh   - 激光雷达 (rslidar_sdk)
+    start_imu_driver.sh       - IMU (imu_driver)
+    start_rtk_driver.sh       - GPS (sixents_gps_driver)
+    start_uss_driver.sh       - 超声波 (uss_driver)
+    start_uwb_driver.sh       - UWB (uwb_driver)
+
+  第二层 [基础服务]
+    start_linuxptp.sh         - PTP 时间同步 (enP8p1s0)
+    start_zenoh_router.sh     - Zenoh 通信中间件
+
+  第三层 [标定与配置]
+    config_airy.sh            - 雷达网络配置 (30+ 参数)
+    fix_calibration_topic_name.sh - 话题名修正
+
+  第四层 [算法核心]
+    start_localization.sh     - FastLIO2 定位
+    start_mapping.sh          - SLAM 建图
+    start_perception_seg.sh   - 感知 (YOLO/CenterNet/PIDNet)
+    start_robot_meb.sh        - 运动预测+碰撞检测
+    start_robot_forward.sh    - 状态转发 (ecal2ros)
+    robot_arc/                - Arc 架构扩展:
+      - arc_state_machine     - 状态机
+      - apriltag_localization - Apriltag 定位
+      - arc_lvio             - LIO-VIO 紧耦合
+      - navigo_charging_alignment - 充电对接
+
+  第五层 [导航应用]
+    start_nav2.sh             - Nav2/NaviGO 自主导航
+
+  总入口:
+    robot_start.sh  -> 配置雷达 -> 同步时间 -> 修正话题
+    robot_alg_start.sh -> 启动算法管理器 (alg_manager)
+    robot_start_app.sh -> 启动应用层服务 (Zenoh + robot-launch)
+
+======================================================================
+  核对结论
+======================================================================
+
+✅ 之前的分析基本准确，以下为修正和补充：
+
+1. start_localization.sh: 确认使用 FastLIO2 算法，支持多种定位模式
+2. start_mapping.sh: 确认基于 robot_slam 可执行文件
+3. start_perception_seg.sh: 确认包含 detection/segmentation/obstacle_detection 等
+4. start_robot_meb.sh: 确认是运动边界预测 + 碰撞检测，非简单的"运动控制"
+5. robot_arc: 新增发现 Arc 架构包含 arc_state_machine, apriltag_localization, 
+   arc_lvio, navigo_charging_alignment 等重要模块
+6. robot-nav: 确认 NaviGO 是基于 Nav2 的定制导航栈，包含 15+ 个子模块
+7. robot-forward: 确认包含 ecal2ros 桥接模块
+8. 激光雷达: 确认使用 RoboSense (rslidar_sdk) 而非 Livox

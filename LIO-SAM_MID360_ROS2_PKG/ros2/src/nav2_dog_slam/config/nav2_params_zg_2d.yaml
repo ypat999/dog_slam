@@ -262,8 +262,8 @@ planner_server:
       max_iterations: 8000000
       max_on_approach_iterations: 100000
       max_planning_time: 10.0
-      lattice_filepath: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
-      minimum_turning_radius: 0.02
+      lattice_filepath: "/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
+      minimum_turning_radius: 0.1
       reverse_penalty: 1.0
       change_penalty: 0.3
       non_straight_penalty: 9.0

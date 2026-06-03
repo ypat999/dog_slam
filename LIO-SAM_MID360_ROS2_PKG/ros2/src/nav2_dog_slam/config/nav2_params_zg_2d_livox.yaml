@@ -498,7 +498,7 @@ local_costmap:
         plugin: "traversability_layer::TraversabilityLayer"
         enabled: false
         # 点云话题
-        pointcloud_topic: /rkbot/front_lidar/cloud_world
+        pointcloud_topic: /rkbot/lio/cloud_world
         # 传感器坐标系（为空则使用点云自带的 frame_id）
         # sensor_frame: ""
         # 机器人基准坐标系（高度截取和地面检测的参考高度）

@@ -113,9 +113,9 @@ LIO_TOPIC_CONFIGS = {
         'map_frame': 'map'
     },
     'no_lio': {
-        'pointcloud_topic': 'front_lidar/cloud_world',
-        'odom_topic': 'front_lidar/odom',
-        'octomap_topic': 'front_lidar/cloud_world',
+        'pointcloud_topic': 'lio/cloud_world',
+        'odom_topic': 'lio/odom',
+        'octomap_topic': 'lio/cloud_world',
         'target_frame': 'base_footprint',
         'map_frame': 'map'
     },

@@ -62,7 +62,7 @@ def generate_launch_description():
     odom_frame = 'rkbot/odom'
     base_frame = 'rkbot/base_footprint'
     scan_topic = '/rkbot/scan'
-    pointcloud_topic = '/rkbot/front_lidar/cloud_world'
+    pointcloud_topic = '/rkbot/lio/cloud_world'
 
     map_topic = '/rkbot/map'
 

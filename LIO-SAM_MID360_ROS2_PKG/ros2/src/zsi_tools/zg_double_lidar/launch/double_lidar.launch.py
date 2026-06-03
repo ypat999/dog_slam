@@ -90,12 +90,12 @@ def generate_launch_description():
         prefix=['taskset -c 7'],
         arguments=['--ros-args', '--log-level', 'info'],
         remappings=[
-            ('lio/odom', 'front_lidar/odom'),
-            ('lio/imu/odom', 'front_lidar/imu/odom'),
-            ('lio/robo/odom', 'front_lidar/robo/odom'),
-            ('lio/path', 'front_lidar/path'),
-            ('lio/cloud_world', 'front_lidar/cloud_world'),
-            ('lio/body/cloud', 'front_lidar/body/cloud'),
+            # ('lio/odom', 'front_lidar/odom'),
+            # ('lio/imu/odom', 'front_lidar/imu/odom'),
+            # ('lio/robo/odom', 'front_lidar/robo/odom'),
+            # ('lio/path', 'front_lidar/path'),
+            # ('lio/cloud_world', 'front_lidar/cloud_world'),
+            # ('lio/body/cloud', 'front_lidar/body/cloud'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
         ]

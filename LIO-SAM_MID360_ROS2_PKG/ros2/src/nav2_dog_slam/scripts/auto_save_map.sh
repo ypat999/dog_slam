@@ -21,7 +21,7 @@ while true; do
     
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] 第${count}次保存: ${map_name}"
     
-    ros2 run nav2_map_server map_saver_cli -t /map -f "${SAVE_DIR}/${map_name}" --fmt png
+    ros2 run nav2_map_server map_saver_cli -t /rkbot/map -f "${SAVE_DIR}/${map_name}" --fmt png
     
     if [ $? -eq 0 ]; then
         echo "  -> 保存成功"

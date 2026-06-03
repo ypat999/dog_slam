@@ -631,7 +631,7 @@ def generate_launch_description():
 
             # 自动保存地图脚本（每隔2分钟）
             auto_save_map_script = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                get_package_share_directory('nav2_dog_slam'),
                 'scripts', 'auto_save_map.sh'
             )
             auto_save_map_process = ExecuteProcess(
@@ -641,7 +641,7 @@ def generate_launch_description():
             )
             unified_nodes.append(
                 TimerAction(
-                    period=10.0,  # 延迟10秒启动，等待slam_toolbox初始化
+                    period=120.0,  # 延迟10秒启动，等待slam_toolbox初始化
                     actions=[auto_save_map_process]
                 )
             )

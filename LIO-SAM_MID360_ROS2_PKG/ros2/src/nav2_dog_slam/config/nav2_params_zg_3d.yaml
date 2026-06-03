@@ -955,16 +955,16 @@ behavior_server:
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false  # 新增参数
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]  # 修正参数名：plugins -> behavior_plugins
-    costmap_topic: "local_costmap/costmap_raw"  # 新增参数
+    costmap_topic: "local_costmap/costmap"  # 新增参数
     footprint_topic: "local_costmap/published_footprint"  # 新增参数
     cycle_frequency: 10.0  # 新增参数
     global_frame: "odom"  # 新增参数
     robot_base_frame: "base_link"  # 新增参数
     transform_tolerance: 0.5  # 新增参数
     simulate_ahead_time: 0.0  # 新增参数
-    # max_rotational_vel: 1.0  # 新增参数
-    # min_rotational_vel: 0.1  # 新增参数
-    # rotational_acc_lim: 1.0  # 新增参数
+    max_rotational_vel: 0.5  # 新增参数
+    min_rotational_vel: 0.1  # 新增参数
+    rotational_acc_lim: 0.5  # 新增参数
     
     collision_checker:
       costmap_admissible_threshold: 1.0  # 允许在极高代价（接近撞击）的区域执行恢复动作
@@ -973,9 +973,6 @@ behavior_server:
     spin:
       plugin: "nav2_behaviors/Spin"
       spin_dist: 1.57  # 旋转角度（弧度）
-      max_rotational_vel: 1.0  # 移动到顶层参数
-      min_rotational_vel: 0.5  # 移动到顶层参数
-      rotational_acc_lim: 5.0  # 移动到顶层参数
       
     # 后退行为 - 用于脱离障碍物
     backup:
@@ -998,9 +995,6 @@ behavior_server:
       speed_theta_error_scale: 0.3  # 调整角度误差缩放因子
       simulation_duration: 0.0  # 增加模拟持续时间，从1.0增加到2.0
       rotate_to_heading: false
-      # max_rotational_vel: 1.0  # 移动到顶层参数
-      # min_rotational_vel: 0.1  # 移动到顶层参数
-      # rotational_acc_lim: 1.0  # 移动到顶层参数
       # acceleration_limit: 0.5  # 新增参数
       # deceleration_limit: -0.5  # 新增参数
       minimum_speed: 0.15  # 新增参数

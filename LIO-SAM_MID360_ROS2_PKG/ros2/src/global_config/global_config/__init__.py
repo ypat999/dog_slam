@@ -105,8 +105,8 @@ config_by_machine = {
         'SUPER_LIO_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
         'SUPER_LIO_SAVE_MAP': True,  # 在线机器人需要保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ztl/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -0.0,  # 雷达x轴偏移量
-        'SUPER_LIO_LIDAR_Z': -0.0,  # 雷达z轴偏移量
+        'SUPER_LIO_LIDAR_X': -0.35,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_Z': -0.2,  # 雷达z轴偏移量
         'SUPER_LIO_LIDAR_TILT_ANGLE': -11.0,  # 雷达倾斜角度
 
         #SC-PGO

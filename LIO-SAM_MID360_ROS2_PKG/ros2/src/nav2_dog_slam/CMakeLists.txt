@@ -92,6 +92,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install odom corrector script as executable
+install(
+  PROGRAMS src/odom_corrector.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install web interface files
 install(
   DIRECTORY web

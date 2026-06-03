@@ -1,0 +1,12 @@
+calibration_file: stereo_rectify/calibration.json
+rectify_params_save_path: stereo_rectify/rectify_params.yaml
+remap_table_save_path: stereo_rectify/remap_table/
+cam_mode_name: kb4
+max_image_cahce_size: 10
+image_height: 960
+image_width: 1280
+alpha: 0.0
+fisheye_camera_f_scale_factor: 0.45
+fisheye_camera_principal_point_scale: 0.6
+pinhole_camera_f_scale_factor: 1.0
+pinhole_camera_principal_point_scale: 1.0

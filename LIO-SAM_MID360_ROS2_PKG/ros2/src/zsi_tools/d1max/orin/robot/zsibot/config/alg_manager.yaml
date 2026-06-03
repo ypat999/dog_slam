@@ -1,0 +1,109 @@
+log_config:
+  log_file: /tmp/zsibot/log/robot_alg_manager.log
+  log_level: INFO
+  log_max_file_size: 52428800
+  log_max_files: 3
+  enable_stdout: true
+modules:
+  navigation:
+    launch_config:
+      commands: ros2 launch robot_nav2 navigation_bringup.launch.py platform:=REAL robot_type:=xg
+      envs:
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_DOMAIN_ID: '24'
+        ROS_VERSION: humble
+      env_file: null
+      setup_script: /opt/robot/robot_nav/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: navigation_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          action: Pass
+          pattern: component_container_isolated
+      storages:
+      - name: navigation
+        enabled: true
+        storage_type: File
+        params:
+          file_path: /tmp/zsibot/log/navigation_with_setup.log
+          format: Text
+  slam:
+    launch_config:
+      commands: /opt/robot/robot_slam/install/robot_slam/lib/robot_slam/robot_slam
+      envs:
+        USE_CUSTOM_MAP_PATH: 'false'
+        SLAM_TYPE: nx_xg
+        ROS_DOMAIN_ID: '24'
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+      env_file: null
+      setup_script: /opt/robot/robot_slam/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: slam_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: slam
+        enabled: true
+        storage_type: File
+        params:
+          format: Text
+          file_path: /tmp/zsibot/log/slam_with_setup.log
+  localization:
+    launch_config:
+      commands: ros2 launch localization localization.launch.py
+      envs:
+        ROS_VERSION: humble
+        RMW_IMPLEMENTATION: rmw_zenoh_cpp
+        ROS_DOMAIN_ID: '24'
+        LOCALIZATION_YAML_DIR: /opt/robot/robot_localization/install/localization/share/localization/config/localization_params_fastlio.yaml
+      env_file: null
+      setup_script: /opt/robot/robot_localization/install/setup.bash
+      cwd: null
+      default_launch: true
+    processor_config:
+      name: localization_with_setup
+      enabled: true
+      buffer_size: 1000
+      batch_size: 10
+      batch_timeout_ms: 100
+      filters:
+      - name: error_filter
+        enabled: true
+        filter_type: Regex
+        params:
+          pattern: component_container_isolated
+          action: Pass
+      storages:
+      - name: localization
+        enabled: true
+        storage_type: File
+        params:
+          format: Text
+          file_path: /tmp/zsibot/log/localization_with_setup.log
+ws_config:
+  app_msg_ws_url: 0.0.0.0:10010
+  app_ros2_ws_url: 0.0.0.0:10011
+  machine_msg_ws_url: 0.0.0.0:10012
+  machine_ros2_ws_url: 0.0.0.0:10013
+  app_allow_multi_connection: true

@@ -1,0 +1,53 @@
+error_aggregator:
+  ros__parameters:
+    input_topics: [ "/navigo/ea/cmn/intf/nav_error" ]
+    clear_topic: "/navigo/ea/cmn/intf/nav_error_clear"
+    report_topic: "/navigo/ea/cmn/intf/nav_error_report"
+    set_topic: "/navigo/ea/cmn/intf/nav_errors"
+    primary_topic: "/navigo/ea/cmn/intf/nav_error_primary"
+    scope_key: "scope"
+    correlation_key: "correlation_id"
+    clear_enable: true
+    dedupe_code_only: false
+    ttl_sec: 60.0
+    ttl_transient_sec: 3.0
+    max_related: 8
+    publish_period_ms: 50
+    change_only: false
+
+    lifecycle:
+      enable: true
+      monitored_nodes:
+        - "map_server"
+        - "controller_server"
+        - "local_costmap_controller/local_costmap_controller"
+        - "planner_server"
+        - "global_costmap/global_costmap"
+        - "local_costmap/local_costmap"
+        - "behavior_server"
+        - "velocity_optimizer"
+        - "collision_monitor"
+        - "bt_navigator"
+        - "waypoint_follower"
+      in_topic_prefix: "/navigo/lm/cmn/dbg"
+      out_topic_prefix: "/navigo/ea/cmn/intf/nav_lifecycle"
+      poll_period_ms: 1000
+      emit_as_error: true
+      clear_on_active: true
+      qos:
+        reliable: true
+        transient_local: false
+
+    localization:
+      enable: true
+      timeout_threshold_sec: 0.2
+      missing_threshold_sec: 1.0
+      scope: "localization"
+
+    laser_scan:
+      enable: true
+      topic: "/laser_scan"
+      timeout_threshold_sec: 0.2
+      missing_threshold_sec: 1.0
+      scope: "perception/laser_scan"
+

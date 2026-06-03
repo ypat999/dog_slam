@@ -1,0 +1,6 @@
+onnx_model_path: model/stereo_match.onnx
+precision: fp16
+dnn_name: stereo_match
+left_input_name: left
+right_input_name: right
+dnn_config_file: stereo_match_dnn_cfg.yaml

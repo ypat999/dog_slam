@@ -1,0 +1,183 @@
+localization_type: "FASTLIO_LOC"  # 可选值：RTK_IO(RTK定位), LIO_UKF（点云地图定位）, RTK_IO_LIO（Faster-lio里程计）, FASTLIO（Fastlio2定位）, ODOM
+frequency: 0.1  # 频率，单位：秒
+calibration_file_path: "/ota/calibration_results.yaml"  # 标定文件路径，可选，如果不提供则使用默认值 /ota/calibration_results.yaml
+enable_ota_calibration: true  # 是否启用OTA标定覆盖
+
+# 通用参数
+fastlio2_general_options:
+  is_use_imu_: true
+  is_use_odom_: false
+  is_use_gnss_: false
+  send_tf_transforms_: false
+  send_aligned_cloud_: true        # /aligned_points 下采样点云
+  send_body_points_cloud_: false    # /body_points 未下采样机体系点云
+  send_global_map_cloud_: true     # /global_map_points 地图点云
+  enable_path_publish_: true
+  enable_txt_poses_: true  # TXT位姿初始化相关配置
+  txt_poses_file_path_: "/opt/robot/robot_localization/install/localization/share/localization/config/fixed_poses/example_poses.txt"  # TXT位姿文件绝对路径
+  num_max_iterations_: 3            # ESKF最大迭代次数   # NX 3 # 3588 1
+  enable_timing_log_: false         # 是否打印本帧耗时 
+  enable_quality_log_: true         # 是否打印匹配质量（inlier、res_mean等）
+  enable_openmp_: true            # 是否启用OpenMP多线程
+  openmp_thread_count_: 3           # OpenMP线程数量，0表示使用系统默认值
+  enable_global_timeout_: true
+  global_init_timeout_sec_: 300.0
+  static_init_timeout_sec_: 30.0
+  dynamic_init_timeout_sec_: 240.0
+
+# GNSS 初始化参数（与 GnssInitializer 对应的新分组）
+fastlio2_gnss_init_options:
+  enable_gnss_init: true         # 启用GNSS初始化
+  gnss_fresh_time_sec: 1.0       # 数据新鲜度阈值(秒)
+  gnss_std_threshold: 10.0       # 水平精度阈值(米)
+  gnss_max_attempts: 100         # 最大尝试次数
+  gnss_timeout_sec: 60.0         # 超时时间(秒)
+  skip_enabled: true             # 是否启用跳帧
+  skip_interval: 3              # 跳帧间隔（1表示每帧都处理）
+  yaw_traversal_enabled: true    # 启用yaw遍历
+  yaw_step_deg: 15.0             # 遍历步长(度)
+  yaw_min_deg: -180.0            # 最小yaw(度)
+  yaw_max_deg: 180.0             # 最大yaw(度)
+  max_yaw_rounds: 5              # 最大遍历轮次
+  anchor_lat_deg: 39.894310063   # 地图原点(度)
+  anchor_lon_deg: 116.290182563
+  anchor_h_m: 42.6222
+
+# 位姿平滑参数
+fastlio2_pose_smoothing_options:
+  enable_pose_smoothing_: true  # 是否启用位姿平滑
+  smooth_window_size_: 10        # 平滑窗口大小
+  
+# IMU参数
+fastlio2_imu_options:
+  imu_init_time_: 3.0
+  imu_init_queue_length_: 600
+  imu_init_pos_cov_thre_: 0.05
+  imu_init_quat_cov_thre_: 0.5
+  imu_use_filter_num_: 5
+  time_tolerance_ms_: 10.0
+  max_sync_attempts_: 3
+
+# 初始位姿参数
+fastlio2_init_pose_options:
+  is_init_pose_: true
+  init_pos_x_: 0.0      # 0.0
+  init_pos_y_: 0.0      # 0.0
+  init_pos_z_: 0.0      # 0.0
+  init_ori_w_: 0.715      #0.715      # 1.0
+  init_ori_x_: 0.0      # 0.0
+  init_ori_y_: 0.0      # 0.0
+  init_ori_z_: 0.698      #0.698      # 0.0
+
+# 退化检测参数（持续定位阶段）
+fastlio2_degradation_detection_options:
+  min_inlier_ratio: 0.60        # 最小内点比例
+  min_inlier_count: 150         # 最小内点数量
+  max_res_mean: 0.06            # 最大平均残差(m)
+  require_converged: true       # 是否要求收敛 
+  enter_frames: 3               # 连续坏帧进入退化
+  exit_frames: 3                # 连续好帧退出退化
+
+# 精细初始化阶段的质量阈值（初始化阶段）
+fastlio2_fine_init_degradation_options:
+  enable_fine_init_check: true  # 是否启用精细初始化质量判断
+  ok_required_frames: 2         # 连续满足条件的帧数
+  max_failure_frames: 3        # 连续失败帧数达到该值则触发重定位
+  min_inlier_ratio: 0.50        # 精细初始化最小内点比例
+  min_inlier_count: 500         # 精细初始化最小内点数量
+  max_res_mean: 0.05            # 精细初始化最大平均残差(m)
+
+# 定位质量评估阈值参数
+fastlio2_localization_quality_thresholds_options:
+  continuous_fitness_threshold: 0.25    # 持续定位适应度阈值
+  continuous_ratio_threshold: 0.50      # 持续定位内点比例阈值
+  continuous_count_threshold: 150       # 持续定位内点数量阈值 
+  global_fitness_threshold: 0.3         # 全局定位适应度阈值
+  global_ratio_threshold: 0.6           # 全局定位内点比例阈值
+  global_count_threshold: 100           # 全局定位内点数量阈值
+
+# 点云滤波参数
+fastlio2_point_cloud_filter_options:
+  globalmap_voxel_size_: 0.2      # 0.2
+  cloud_voxel_size_: 0.3         # NX 0.2; 3588 0.4
+  globalmap_kdtree_filter_size_1_: 0.18
+  globalmap_kdtree_filter_size_2_: 0.20
+# ICP参数
+fastlio2_icp_options:
+  max_iterations: 100
+  transformation_epsilon: 1e-6
+  first_icp_fitness_threshold: 0.5      # 第一次ICP匹配适应度阈值
+  first_icp_ratio_threshold: 0.35       # 第一次ICP匹配内点比例阈值
+  second_icp_fitness_threshold: 0.2     # 第二次ICP匹配适应度阈值    # 0.3   # 0.25    # 0.2
+  second_icp_ratio_threshold: 0.55       # 第二次ICP匹配内点比例阈值  # 0.4    # 0.45   # 0.5
+
+  # 自动重触发参数
+  enable_init_auto_retrigger: true          # 启用精细初始化阶段自动重触发
+  enable_continuous_auto_retrigger: true    # 启用持续定位阶段自动重触发
+  fine_init_failure_threshold: 50           # 精细初始化连续失败帧数阈值
+  continuous_lost_threshold: 100            # 持续定位丢失连续帧数阈值
+
+# IMU到Base变换矩阵 (4x4, 行优先, 16个元素)
+fastlio2_imu2base_options:    # imu非水平安装时配置   # Airy Lidar head     # Livox Lidar                  
+  imu2base_matrix_: [-0.00166076, -0.99992224, 0.01235975, -0.0036, -0.00510868, 0.01236809, 0.99991046, -0.0023, -0.99998557, 0.00159747, -0.00512883, 0.3706, 0.0, 0.0, 0.0, 1.0]
+  # [-0.00166076, -0.00510868, -0.99998557, -0.3705815, -0.99992224, 0.01236809, 0.00159747, 0.0042051, 0.01235975, 0.99991046, -0.00512883, -0.0042504, 0.0, 0.0, 0.0, 1.0]
+
+# LiDAR到Base变换矩阵 (4x4, 行优先, 16个元素)
+fastlio2_lidar2base_options:
+  enable_extrinsic_transform_: false  # 是否启用外参变换（主要用于发布/body_points）
+  lidar2base_matrix_: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]  # 当前配置,目前从/ota中读取
+
+# LiDAR到IMU变换矩阵 (4x4, 行优先, 16个元素)
+fastlio2_lidar2imu_options:
+  lidar2imu_matrix_: [-0.01235975, -0.99992224, -0.00166076, 0.00425, -0.99991046, 0.01236809, -0.00510868, 0.00418, 0.00512883, 0.00159747, -0.99998557, -0.00446, 0.0, 0.0, 0.0, 1.0]  # 当前配置
+
+# 点云预处理参数
+lidar_preprocess_options:
+  point_sampling_interval: 4  # 点云采样间隔，用于下采样（lidar_preprocess使用）   # NX 1 or 2; 3588 4   Airy 4
+  blind_distance: 0.8         # 最小距离阈值
+  max_distance: 30.0          # 最大距离阈值
+# DBoW 视觉重定位配置
+dbow_reloc_options_:
+  enable_dbow_reloc_: true
+  dbow_confidence_threshold_: 0.15
+  min_matching_inlier_threshold_: 20
+  camera_sync_tolerance_sec_: 0.3  # 图像时间戳同步容差(秒)
+  dbow_frame_skip_: 4              # 每N帧执行1次（1表示每帧都跑）
+  dbow_min_interval_ms_: 240       # 连续两次执行的最小时间间隔（毫秒）
+  dbow_force_run_after_skips_: 6   # 连续跳过多少次后强制执行1次
+  # 路径模式：absolute | relative | dynamic
+  path_mode_: "absolute"
+  fallback_vocabulary_path_: "/ota/map/map_voc.bin"  # 回退路径，当主路径不存在时使用       
+  enable_image_resize_: true   # 是否启用图像resize（默认false，不resize）
+  image_resize_scale_: 0.5     # resize比例（0.5表示减半，1.0表示不resize）
+  enable_image_undistort_: true
+  orb_num_features_: 1000
+  enable_save_dbow_images_: false   # 是否保存DBoW匹配到的关键帧图像和当前帧图像（调试用）
+  dbow_image_save_dir_: "/home/user/Downloads/"   # 图像保存目录（绝对路径）"/home/user/Downloads/"
+  enable_geometric_verification_: false
+  # 全局定位策略配置
+fastlio2_global_localization_strategy_options:
+  CONFIG_POSE: 0              # 配置文件位姿策略的位置
+  TXT_POSE: 1                 # TXT位姿文件策略的位置
+  DBOW: 2                     # DBoW重定位策略的位置
+  SCANCONTEXT: 3              # ScanContext匹配策略的位置
+  # 各策略的尝试次数限制
+  config_pose_attempts: 0     # Config Pose最大尝试次数
+  txt_pose_rounds: 0          # TXT Pose遍历轮数
+  dbow_attempts: 10           # DBoW最大尝试次数  
+  scancontext_attempts: 40    # ScanContext最大尝试次数
+  dynamic_keyframe_max_attempts: 20  # 动态关键帧选择最大尝试次数（ScanContext失败后使用） 
+  gnss_attempts: 0           # GNSS 初始化策略最大尝试次数（策略层），达到上限后不再尝试GNSS
+
+# 动态地图层配置
+fastlio2_dynamic_map_layer_options:
+  enable_dynamic_map_layer: false    # 是否启用动态地图层功能
+  update_distance_threshold: 2.0    # 更新距离阈值(米)
+  update_time_threshold: 2.0        # 更新时间阈值(秒)
+  enable_z_filter: true              # 是否启用Z轴滤波
+  z_min: 0.5                          # 最小高度(米)
+  z_max: 5.0                          # 最大高度(米)
+  max_points: 50000                   # 最大点数
+  voxel_size: 0.2                     # 体素大小(米)，用于体素下采样
+  enable_active_cleanup: true         # 是否启用主动清理
+  policy: "SHORT"                     # 动态地图层策略：SHORT(短期保留), LONG(长期保留), PERSISTENT(持久化保留)

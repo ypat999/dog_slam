@@ -1,0 +1,8 @@
+# log_level: info
+log_level: warn
+perception_config_file: perception_job/perception_manager.yaml
+ros_wapper_config_file: perception_job/ros_wapper.yaml
+context_msg_buf_size_file: perception_job/context_msg_buf_size.yaml
+jod_period: 0.1
+pub_period: 0.1
+pub_state_period: 1.0

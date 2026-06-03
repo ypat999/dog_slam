@@ -39,11 +39,14 @@ struct GroundCell
 {
   float ground_z = 0.0f;
   bool has_ground = false;
+  bool is_interpolated = false;
   float height_diff = 0.0f;
   float slope_x = 0.0f;
   float slope_y = 0.0f;
   float slope_magnitude = 0.0f;
   float obstacle_ratio = 0.0f;
+  float max_obstacle_z = 0.0f;
+  float min_obstacle_z = 0.0f;
 };
 
 struct IncrementalRay
@@ -52,7 +55,7 @@ struct IncrementalRay
   std::vector<size_t> pass_indices;
 };
 
-class TraversabilityLayer : public nav2_costmap_2d::Layer, public nav2_costmap_2d::Costmap2D
+class TraversabilityLayer : public nav2_costmap_2d::CostmapLayer
 {
 public:
   TraversabilityLayer();
@@ -104,6 +107,7 @@ private:
 
   std::string pointcloud_topic_;
   std::string sensor_frame_;
+  std::string base_frame_;
   double max_obstacle_height_;
   double min_obstacle_height_;
   double max_slope_traversable_;
@@ -121,15 +125,13 @@ private:
   int num_threads_;
 
   double voxel_z_resolution_;
-  double voxel_z_min_;
-  double voxel_z_max_;
   int ground_hit_threshold_;
   int free_space_threshold_;
   int free_space_window_;
   int interp_search_radius_;
   int min_interp_neighbors_;
-  double robot_height_;
   double obstacle_ratio_threshold_;
+  int obstacle_hit_threshold_;
 
   rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
   int perf_frame_count_ = 0;
@@ -145,6 +147,8 @@ private:
   bool voxel_grid_valid_ = false;
   uint16_t frame_counter_ = 0;
   uint16_t decay_interval_frames_ = 10;
+  uint32_t cloud_received_ = 0;
+  uint32_t cloud_processed_ = 0;
 
   std::vector<GroundCell> ground_map_;
   unsigned int ground_size_x_ = 0;
@@ -153,6 +157,7 @@ private:
   double sensor_global_x_ = 0.0;
   double sensor_global_y_ = 0.0;
   double sensor_global_z_ = 0.0;
+  double base_global_z_ = 0.0;
   bool cloud_updated_ = false;
 
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr slope_pub_;

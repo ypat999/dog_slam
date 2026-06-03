@@ -1,0 +1,23 @@
+name: robot-localization
+version: 0.5.2-r8
+last_commit_id: bcba6864afced5995bfbd31ef34039259df95a56
+last_commit_author: robot
+last_commit_time: 2026-02-03 11:46:55 +08:00
+last_commit_info: Update Jszr.toml
+release_info: |
+  1. 优化地图加载服务,对比地图路径名称
+  2. 增加视觉词袋从ros服务读取地图路径，增加路径打印，路径日志使用红色
+  3. 切换相同地图时增加定位状态判断
+  4. 修改定位超时时间为240s,定位超时后,状态为Error且不进行继续定位
+  5. 优化视觉词袋地图加载逻辑，缩短加载时间
+  6. 优化视觉词袋voc加载逻辑,缩短加载时间
+  7. 增加动态遍历点云关键帧数量
+  8. 修改视觉词袋地图文件格式为二进制文件
+  9. 根据传感器信号映射关系修改为新topic名称
+  10.增加开启rtk初始化功能，读取建图rtk.txt中anchor信息
+  11.xg增加融合realsense,发布去畸变后的融合点云和位姿
+  12.(r3-debug, only for debug)add log for debug test cannot receive sensor data
+  13.删除r3-debug日志,修复加载rtk的anchor文件
+  14.增加通过环境变量CALIBRATION_FILE_PATH获取标定文件,增加resources路径存放voc文件,修改rtk初始化yaw遍历是步长为30度
+  15.增加rtk退化观测功能(默认不开启),修复定位初始化期间定位里程计置信度发布问题
+  16.修改zg滤波参数,增加realsense订阅开关

@@ -1,0 +1,305 @@
+======================================================================
+  智元机器狗 D1Max 3588 板子程序分析
+  路径: /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/d1max/3588
+  对应源码: /home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/d1max/3588/install
+======================================================================
+
+3588 板子是智元机器狗的**主控制器**，运行瑞芯微 RK3588 芯片，负责
+机器人的底层运动控制、硬件抽象、传感器接入等功能，与 zg-arc 板子
+（运行上层算法）协同工作。
+
+======================================================================
+  bin/ 目录脚本分析
+======================================================================
+
+一、系统启动与初始化
+----------------------------------------------------------------------
+
+1. robot_start.sh
+   - 用途: 3588 板子上电初始化脚本
+   - 功能:
+     * 迁移 device.json 到新路径
+     * 清理残留的升级/OTA 目录
+     * 调优 SoC 温度阈值 (100°C/95°C/120°C)
+     * 设置 CPUFreq 为 performance 模式 (降低延迟)
+     * 等待时间同步完成后继续启动
+
+2. robot_start_app.sh
+   - 用途: 机器人应用层服务启动
+   - 功能: 创建日志目录（保留最近 5 份），启动 Zenoh 路由器，
+           启动 robot-launch server 进程
+
+3. robot_wait_time_sync.sh
+   - 用途: 等待时间同步（与 zg-arc 相同）
+   - 功能: 通过 chronyc 检查 Leap status，最多等待 25 秒
+
+4. start_zenoh_router.sh
+   - 用途: Zenoh 通信中间件路由器
+
+
+二、运动控制与底层驱动
+----------------------------------------------------------------------
+
+5. start_motion_control.sh
+   - 用途: 运动控制器 (MC - Motion Control)
+   - 功能:
+     * 等待 /dev/shm/joint_cmd 设备就绪
+     * 配置 lo 网卡组播路由
+     * 解析设备类型 (ZSM-1 / ZSM-1F)
+     * 执行 mc_ctrl 运动控制程序，绑定 CPU core 7
+   - 设备类型:
+     - ZSM-1:ZGWS (四足机器狗)
+     - ZSM-1F:ZG (改进型)
+   - 共享内存设备: /dev/shm/joint_cmd, /dev/shm/joint_state
+
+6. start_robot_hal.sh
+   - 用途: 硬件抽象层 (HAL - Hardware Abstraction Layer)
+   - 功能: 启动 robot_hal 节点，根据设备类型加载不同配置
+     * ZSM-1 -> zs_m1.launch.py
+     * ZSM-1F -> zs_m1f.launch.py
+   - 负责: 将底层硬件抽象为统一的 ROS2 接口
+
+
+三、相机与视频服务
+----------------------------------------------------------------------
+
+7. start_robot_camera.sh
+   - 用途: 相机服务启动
+   - 功能:
+     * 等待 /dev/video22 和 /dev/video31 设备就绪
+     * 配置 v4l2 视频格式 (1920x1080, NV12)
+     * 配置垂直/水平翻转
+     * 启动 mediamtx RTSP 服务器 (mediamtx.yml)
+     * 启动 robot_camera 节点 (zsm.launch.py)
+   - 视频流:
+     * 前置相机: /dev/video22
+     * 后置相机: /dev/video31
+
+8. start_gst_video_front.sh / start_gst_video_back.sh
+   - 用途: GStreamer 视频流启动脚本 (前后相机)
+
+
+四、遥控与通信
+----------------------------------------------------------------------
+
+9. start_robot_remote.sh
+   - 用途: 遥控接收器服务
+   - 功能: 启动 robot_remote 节点，根据设备类型加载配置
+     * ZSM-1 -> zs_m1.launch.py
+     * ZSM-1F -> zs_m1f.launch.py
+   - 负责: 处理遥控器信号输入
+
+
+五、监控与诊断
+----------------------------------------------------------------------
+
+10. start_robot_manager.sh
+    - 用途: 机器人管理器
+    - 功能: 运行 robot_manager 进程，负责整体状态管理和协调
+
+11. start_robot_monitor.sh
+    - 用途: 机器人监控服务
+    - 功能: 启动 robot_monitor 节点 (zsm.launch.py)
+
+12. start_robot_diagnostic_analyzer.sh
+    - 用途: 诊断分析服务
+    - 功能: 启动 robot_diagnostic_analyzer 节点 (zsm.launch.py)
+
+
+六、标定与维护
+----------------------------------------------------------------------
+
+13. start_pose_calibration.sh
+    - 用途: 整机姿态标定
+    - 功能:
+      * 备份标定文件到 /userdata/bak/calibration/
+      * 执行 pose_calib_test 程序进行标定
+      * 检查 pose_calibrate_param.yaml 是否生成
+
+14. actuator_tool
+    - 用途: 执行器/舵机调试工具
+
+15. pose_calib_test
+    - 用途: 姿态标定测试程序
+
+
+七、网络与通信
+----------------------------------------------------------------------
+
+16. robot_sta.sh
+    - 用途: WiFi STA (Station) 模式管理脚本
+    - 功能:
+      * 扫描可用 WiFi 网络
+      * 连接/断开 WiFi
+      * 保存配置
+      * 启用/禁用自动连接
+      * 支持 5GHz 频段优先选择
+      * 配置文件: /userdata/config/sta.conf
+
+17. robot_wifi_init.sh
+    - 用途: WiFi 初始化脚本
+
+18. robot_wifi_wdg.sh
+    - 用途: WiFi 看门狗脚本 (检测连接状态)
+
+19. robot_ap.sh
+    - 用途: WiFi AP (热点) 模式脚本
+
+20. ip_nat.sh
+    - 用途: IP NAT 网络地址转换脚本
+
+21. start_domain_bridge.sh
+    - 用途: 域桥接服务脚本
+
+
+八、录制与日志
+----------------------------------------------------------------------
+
+22. start_recording_topic.sh
+    - 用途: 录制 ROS2 话题数据
+
+23. start_recording_csv.sh
+    - 用途: 录制 CSV 格式数据
+
+24. recording_csv.py
+    - 用途: CSV 录制 Python 脚本
+
+
+九、升级与调试
+----------------------------------------------------------------------
+
+25. canfd_upgrade
+    - 用途: CAN FD 固件升级工具
+
+26. mcu_upgrade
+    - 用途: MCU 固件升级工具
+
+27. clockpps_upgrade
+    - 用途: 时钟 PPS 升级工具
+
+28. parse_device_json.sh
+    - 用途: 解析设备 JSON 配置文件脚本
+
+29. example_parse_device.sh
+    - 用途: 设备解析示例脚本
+
+30. sd-mount.sh
+    - 用途: SD 卡挂载脚本
+
+
+十、视频服务
+----------------------------------------------------------------------
+
+31. mediamtx
+    - 用途: RTSP 媒体服务器 (Go 语言实现)
+    - 配置文件: mediamtx.yml (28KB)
+    - 功能: 提供低延迟视频流服务
+
+32. bridge_config.yaml
+    - 用途: 桥接配置
+
+
+======================================================================
+  install/ 目录 ROS2 包分析
+======================================================================
+
+| 包名 | 功能 |
+|------|------|
+| robot_hal | 硬件抽象层，封装底层硬件接口 |
+| robot_manager | 机器人管理器，协调各模块 |
+| robot_monitor | 机器人状态监控 |
+| robot_diagnostic_analyzer | 诊断分析 |
+| robot_camera | 相机服务 |
+| robot_remote | 遥控接收器服务 |
+| robot_common_interface | 通用接口 |
+| robot_common_utils | 通用工具库 |
+| zsi_actuator_driver | 执行器/舵机驱动 |
+| zsi_imu_driver | IMU 驱动 (区别于 zg-arc 板的 imu_driver) |
+| imu_publisher | IMU 数据发布 |
+| joint_controller | 关节控制器 |
+| controller_interface | 控制器接口 |
+| battery_controller | 电池控制器 |
+| power_control_driver | 功率控制驱动 |
+| led_controller | LED 灯控制器 |
+| fill_light_controller | 补光灯控制器 |
+| switch_controller | 开关控制器 |
+| hardware_interface | 硬件接口 |
+| robot_roamerx | 漫游器/底盘控制 |
+| robot_remote | 遥控器 |
+| sbus_controller | SBUS 遥控器控制器 |
+
+
+======================================================================
+  系统架构总结
+======================================================================
+
+3588 板子采用"底层控制 + 抽象层"架构：
+
+  底层硬件
+    │
+    ├─ 运动控制 ──> mc_ctrl (CPU core 7)
+    ├─ 执行器 ────> zsi_actuator_driver
+    ├─ 电池 ──────> battery_controller
+    ├─ LED ───────> led_controller
+    ├─ IMU ───────> zsi_imu_driver / imu_publisher
+    ├─ 相机 ──────> robot_camera + mediamtx
+    └─ 遥控 ──────> robot_remote / sbus_controller
+
+  硬件抽象层 (HAL)
+    │
+    └─ robot_hal (zs_m1.launch.py / zs_m1f.launch.py)
+
+  应用层
+    │
+    ├─ robot_manager    - 整体管理
+    ├─ robot_monitor    - 状态监控
+    ├─ robot_diagnostic_analyzer - 诊断分析
+
+  通信层
+    │
+    ├─ Zenoh 中间件
+    └─ 与 zg-arc 板子通信
+
+  网络服务
+    │
+    ├─ WiFi STA/AP 模式
+    ├─ RTSP 视频流 (mediamtx)
+    └─ 域桥接
+
+======================================================================
+  两块板子对比
+======================================================================
+
+| 项目 | 3588 板子 (D1Max) | zg-arc 板子 (bin) |
+|------|------------------|-----------------|
+| 芯片 | 瑞芯微 RK3588 | 未知 |
+| 角色 | 底层控制 | 上层算法 |
+| 系统 | Linux + ROS2 | Linux + ROS2 |
+| 通信 | Zenoh | Zenoh |
+| 主要功能 | 运动控制、HAL、相机、遥控 | 定位、SLAM、感知、导航 |
+| 运动控制 | mc_ctrl | start_robot_meb.sh |
+| 硬件驱动 | robot_hal | robot-driver |
+| 相机服务 | robot_camera | - |
+| 网络 | WiFi/BLE | WiFi |
+
+======================================================================
+  启动流程
+======================================================================
+
+1. robot_start.sh (3588 板子初始化)
+   - 清理环境
+   - 调优 CPU/热管理
+   - 等待时间同步
+
+2. robot_start_app.sh (启动应用服务)
+   - 启动 Zenoh 路由器
+   - 启动 robot-launch server
+
+3. 启动各个服务:
+   - start_motion_control.sh   - 运动控制
+   - start_robot_hal.sh        - 硬件抽象层
+   - start_robot_camera.sh     - 相机 + RTSP
+   - start_robot_remote.sh     - 遥控
+   - start_robot_manager.sh    - 管理器
+   - start_robot_monitor.sh    - 监控
+   - start_robot_diagnostic_analyzer.sh - 诊断

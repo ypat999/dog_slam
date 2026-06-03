@@ -1,0 +1,59 @@
+onnx_model_path: "detection/model/detection/lidar_range_seg.onnx"
+precision: "fp16"
+key: DnnTensorRT
+
+rknn_model_path: "detection/model/detection/lidar_range_seg.rknn"
+preprocess:
+  normalize_flag: False
+  img_means: [0, 0, 0, 0, 0]
+  img_stds: [1, 1, 1, 1, 1]
+
+model_yaml_path: model_md5.yaml
+
+# Range image投影参数
+range_image:
+  proj_H: 32           # Range image高度
+  proj_W: 512         # Range image宽度
+  proj_fov_up: 52.5     # 上方FOV角度（度）
+  proj_fov_down: -7.5 # 下方FOV角度（度）
+
+
+# 可视化配色：采用 BGR 顺序
+# 原始标签ID的颜色映射（用于兼容）
+color_map_original: # bgr
+  0: [0, 0, 0]
+  1: [30, 30, 30]
+  101: [255, 0, 0] 
+  102: [0, 128, 255]
+
+# Learning label ID的颜色映射（用于BEV可视化）
+# 根据 learning_map_inv 映射关系定义颜色
+color_map: # bgr - learning label (0-14)
+  # 根据 learning_map_inv 从 color_map_original 中获取对应颜色
+  0: [0, 0, 0]         # unlabeled (0 -> 0)
+  1: [255, 0, 0]       # knife switch (1 -> 101)  # 修改了 原来是[0, 0, 255]
+  2: [0, 0, 255]     # main transformer (2 -> 102)
+
+# 逆映射：把训练类别 ID 还原成原始标签 ID（推理输出用）。
+learning_map_inv:
+  0: 0
+  1: 101
+  2: 102
+
+# 标签名称映射（learning label ID -> 名称）
+# 根据 learning_map_inv 映射关系定义
+# learning_label -> original_label -> 实际类别名称
+labels:
+  0: "unlabeled" 
+  1: "obstacle"         
+  2: "road"     
+
+# 俯视图（BEV）可视化参数
+bev:
+  x_min: -50.0       # X轴最小值（米）
+  x_max: 50.0        # X轴最大值（米）
+  y_min: -50.0       # Y轴最小值（米）
+  y_max: 50.0        # Y轴最大值（米）
+  resolution: 0.1    # 分辨率（米/像素）
+  z_min: -2.0        # Z轴过滤最小值（米）
+  z_max: 2.0         # Z轴过滤最大值（米）

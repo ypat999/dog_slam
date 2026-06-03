@@ -1,0 +1,40 @@
+localization_type: "RTK_IO"  # 可选值：RTK_IO(RTK定位), LIO_UKF（点云地图定位）, RTK_IO_LIO（Faster-lio里程计）, ODOM, 
+frequency: 0.01  # 频率，单位：秒， RTK_IO选择0.01，其他选择0.1
+
+seconds_interval: 0.02
+is_gnss_raw_data_pub: false
+is_gnss_nmea: false
+is_use_fixed: false
+is_lidar_horizontal: false
+baseline_threshold: 0.4
+
+attitude: {
+ align_time: 0.2,
+ static_accx_std: 0.05,
+ static_accy_std: 0.05,
+ static_accz_std: 0.05,
+ static_gyro_norm: 1.0,
+ gyroz_static_datas_time_min: 2,
+ gyroz_static_datas_time_max: 1200
+}
+
+ins:  
+ kalman: {
+  q_std_gyro: 100.0, #deg/h
+  q_std_acc: 100.0, #mg
+  r_std_yaw: 2.0, #deg
+  r_std_horizon_pos: 0.1, #m
+  r_std_height: 0.3, #m
+  p_std_horizon_attitude: 2.0, #deg
+  p_std_yaw: 2.0, #deg
+  p_std_horizon_velocity: 0.3, #m/s
+  p_std_vertical_velocity: 0.5, #m/s
+  p_std_horizon_pos: 0.1, #m
+  p_std_vertical_pos: 0.3, #m
+  p_std_gyro: 1000.0, #deg/h
+  p_std_acc: 100.0, #mg
+  f_n_size: 15,
+  q_n_size: 6,
+  h_n_size: 3
+  }
+

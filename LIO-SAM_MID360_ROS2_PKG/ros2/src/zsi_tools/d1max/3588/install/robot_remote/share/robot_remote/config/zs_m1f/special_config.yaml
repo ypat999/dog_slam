@@ -1,0 +1,32 @@
+/robot_remote:
+  ros__parameters:
+    # ==========================
+    # 关节列表
+    # ==========================
+    joint_list:
+      original_name:
+        - fl1_hip_roll
+        - fl2_hip_pitch
+        - fl3_knee_pitch
+        - fr1_hip_roll
+        - fr2_hip_pitch
+        - fr3_knee_pitch
+        - bl1_hip_roll
+        - bl2_hip_pitch
+        - bl3_knee_pitch
+        - br1_hip_roll
+        - br2_hip_pitch
+        - br3_knee_pitch
+      mapped_name:
+        - fl1
+        - fl2
+        - fl3
+        - fr1
+        - fr2
+        - fr3
+        - bl1
+        - bl2
+        - bl3
+        - br1
+        - br2
+        - br3

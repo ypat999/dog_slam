@@ -1,0 +1,10 @@
+name: robot-arc
+version: 0.2.9-r7
+last_commit_id: c68c3326593cad805badf626e499996124ac0f41
+last_commit_author: robot
+last_commit_time: 2026-03-16 17:08:58 +08:00
+last_commit_info: |
+  ci: update version to 0.2.9-r7
+release_info: |
+  1. coarse->fine
+  2. standby->calibration

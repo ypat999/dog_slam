@@ -1,0 +1,37 @@
+onnx_model_path: "model/pidnet.onnx"
+horzion_model_path: "model/pidnet_grb.hbm"
+model_input_heights:
+  input: 544
+model_input_widths:
+  input: 960
+
+model_output_heights:
+  output: 544
+model_output_widths:
+  output: 960
+
+model_input_batch_size:
+  input: 1
+
+model_output_batch_size:
+  output: 1
+
+model_input_channels:
+  input: 3
+
+model_output_channels:
+  output: 1
+
+model_input_names:
+  input: "input"
+
+model_output_names:
+  output: "output"
+
+input_image_height:
+  input: 1080
+
+input_image_width:
+  input: 1920
+
+precision: "fp16"

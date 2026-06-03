@@ -1,0 +1,1 @@
+./bin/apriltag_localization_node ./config/apriltag_localization_pc_config_middle_dog.yaml

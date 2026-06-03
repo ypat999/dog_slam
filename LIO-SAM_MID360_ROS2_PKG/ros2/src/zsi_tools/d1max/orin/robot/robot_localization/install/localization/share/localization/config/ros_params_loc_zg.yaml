@@ -1,0 +1,57 @@
+localization:
+  ros__parameters:
+    enable_ota_calibration: true
+    calibration_file_path: "/ota/calibration_results.yaml"
+    sub_lidar_topic: "/front_lidar"            # "/rslidar_points_head" | "/livox/lidar"
+    sub_imu_topic: "/front_lidar/imu"            # "/rslidar_imu_data_head" | "/livox/imu"
+    sub_gps_topic: "/gps/rtk"
+    sub_odom_topic: "/odom/mc_odom"
+    sub_camera_topic: "/front_camera/image_compressed"                  # "/camera/image" | "/image_publisher/camera_front/compressed"
+    sub_rtk_pos_topic: "/uni_best_nav"
+    sub_rtk_head_topic: "/uni_heading"
+    use_pcl_normal: true      # 2.0 faslio/fasterlio use normal(true), 1.0 ukf localization not use normal(false)
+    process_every_n_frames: 1  # 每N帧雷达数据处理1帧, NX 1; 3588 2
+    
+    # 发布topic配置
+    pub_lidar_odom_topic: "/odom/localization_odom"    # LiDAR里程计发布topic   # "/odom/ground_truth" "/odom/current_pose"
+    pub_gnss_eskf_topic: "/odom/localization_odom"     # GNSS ESKF发布topic    # "/odom/ground_truth" "/odom/current_pose"
+    pub_lio_pose_topic: "/lio_pose"
+    pub_aligned_points_topic: "/aligned_points"    # 对齐点云发布topic
+    pub_global_map_points_topic: "/global_map_points"  # 全局地图点云发布topic
+    pub_localization_info_topic: "/localization_info"  # 定位信息发布topic
+    pub_localization_state_topic: "/localization_state"  # 定位状态发布topic
+    pub_localization_path_topic: "/localization_path"  # 定位路径发布topic
+
+    lidar_format: "rslidar"    # livox | rslidar | velodyne
+   
+    # 双雷达融合配置
+    dual_lidar_config:
+      enable_dual_lidar: true                    # 是否启用双雷达融合
+      front_lidar_topic: "/front_lidar"  # 前雷达话题（主雷达）
+      rear_lidar_topic: "/rear_lidar"   # 后雷达话题
+      time_sync_tolerance_sec: 0.05         # 时间同步容忍度（根据sync_mode调整,pps_lag 0.05,pps_only 0.2,original 0.2）
+      max_rear_points: 100000                     # 后雷达最大点数阈值
+      min_rear_points: 100                       # 后雷达最小点数阈值
+      
+      # 外参：后雷达到前雷达的变换
+      extrinsic_rear_to_front:
+        translation: [0.0, 0.0, -0.7323]  # [x, y, z] 米
+        rotation_matrix: [1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, -1.0]  # 3x3旋转矩阵 [r11, r12, r13, r21, r22, r23, r31, r32, r33]
+
+      # 同步模式配置
+      sync_mode: "pps_lag"          # 同步模式：pps_lag | pps_only | original
+      
+      # 自适应时间偏差配置（无PPS同步时使用，即sync_mode: "original"时设为true，其他时设为false）
+      enable_adaptive_time_bias: false    # 是否启用自适应时间偏差补偿
+      bias_update_alpha: 0.1             # 偏差更新学习率 (0.0-1.0)
+      min_reasonable_time_diff: -0.05     # 最小合理时间差(秒)
+      max_reasonable_time_diff: 0.05      # 最大合理时间差(秒)
+      
+      # ==================== 同步模式说明 ====================
+      # pps_lag:   PPS+滞后+双队列模式（推荐）- 有PPS同步信号的高精度场景
+      #            特点：最高同步精度，最低数据丢失率，time_sync_tolerance_sec建议0.05
+      # pps_only:  仅PPS模式 - 有PPS同步但简单场景 
+      #            特点：高同步精度，中等复杂度，time_sync_tolerance_sec建议0.2
+      # original:  原始模式 - 无PPS同步的传统场景
+      #            特点：兼容性最好，中等精度，time_sync_tolerance_sec建议0.2
+      # =====================================================

@@ -285,5 +285,14 @@ def generate_launch_description():
         output='screen'
     )
     ld.add_action(static_transform_base_link_to_base_footprint)
+    
+    #static_transform_world_to_base_footprint = Node(
+    #    package='tf2_ros',
+    #    executable='static_transform_publisher',
+    #    name='static_transform_world_to_base_footprint',
+    #    parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+    #    arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_world_frame, ns_base_frame],
+    #)
+    #ld.add_action(static_transform_world_to_base_footprint)
 
     return ld

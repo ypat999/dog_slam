@@ -57,9 +57,8 @@ def generate_launch_description():
 
     remappings = [('/tf', '/tf'),
                   ('/tf_static', '/tf_static'),
-                  ('/initialpose', '/initialpose'),
-                  ('/goal_pose', '/goal_pose'),
-                  ('/cmd_vel', '/cmd_vel')]
+                  ('initialpose', '/initialpose'),
+                  ('goal_pose', '/goal_pose')]
 
     param_substitutions_local = {
         'use_sim_time': use_sim_time,
@@ -171,8 +170,9 @@ def generate_launch_description():
                 respawn_delay=2.0,
                 parameters=[configured_params_local],
                 arguments=['--ros-args', '--log-level', log_level],
-                prefix=['taskset -c 4,5,6,7'],
-                remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
+                prefix=['taskset -c 5,6'],
+                remappings=remappings + [('cmd_vel', '/cmd_vel_nav')]),
+                # remappings=remappings + [('cmd_vel', '/cmd_vel')]),
             Node(
                 package='nav2_smoother',
                 executable='smoother_server',
@@ -239,7 +239,7 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 0,1,2,3'],
                 remappings=remappings +
-                        [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')]),
+                        [('cmd_vel', '/cmd_vel_nav'), ('cmd_vel_smoothed', '/cmd_vel')]),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',

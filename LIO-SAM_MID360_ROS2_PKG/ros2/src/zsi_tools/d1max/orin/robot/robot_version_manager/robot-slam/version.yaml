@@ -1,0 +1,11 @@
+name: robot-slam
+version: 0.4.6-r3
+last_commit_id: 2f2b112445a9361ff1ab1069b0041089717d59ef
+last_commit_author: robot
+last_commit_time: 2026-02-28 13:28:56 +08:00
+last_commit_info: |
+  update toml
+release_info: |
+  1、优化部分容器的初始化方式，避免多次创建和销毁的开销
+  2、解决gtsam的贝叶斯树崩溃问题
+  3、更新算法clear顺序

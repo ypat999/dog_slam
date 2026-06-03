@@ -6,9 +6,12 @@
 
 - **多SLAM算法支持**: FAST-LIO2, LIO-SAM, Point-LIO, Super-LIO
 - **统一导航系统**: 集成Nav2导航框架，支持自主探索和路径规划
-- **多机器人支持**: 通过 namespace 实现多个导航系统隔离
+- **多机器人支持**: 通过 namespace 实现多个导航系统隔离（TF已支持namespace）
 - **实时建图**: 支持在线建图和离线地图构建
 - **稳定导航**: 优化base_footprint，实现高速稳定导航
+- **可通行区域检测**: 纯三维可通行区域检测Nav2 costmap插件，支持楼梯检测
+- **中狗适配**: 支持中狗（中型机器人）Livox MID360双雷达配置
+- **多Planner配置**: 支持多种全局/局部路径规划器切换
 - **Gazebo Garden仿真**: 支持Gazebo Garden GPU加速仿真，提供多种仿真环境
 
 ## 系统要求
@@ -257,10 +260,37 @@ ros2 launch m-explore explore.launch.py
 
 ### 路径规划与导航
 系统支持Nav2的完整导航栈，包括：
-- 全局路径规划
-- 局部路径规划
+- 全局路径规划：支持Navfn、SMAC等多种规划器
+- 局部路径规划：支持MPPI、DWB、TEB等多种规划器
 - 障碍物避障
 - 动态重规划
+
+### 可通行区域检测（三维）
+
+系统集成了纯三维可通行区域检测插件 `traversability_layer`，基于点云数据进行实时地形分析：
+
+- **地形坡度检测**：分析地面坡度，识别不可通行的陡坡区域
+- **楼梯检测**：识别楼梯结构，支持机器人楼梯攀爬导航
+- **动态跟随**：可通行区域检测随机器人移动实时更新
+- **三维通行性分析**：基于三维点云的障碍物高度、密度分析
+
+作为Nav2 costmap插件，可在导航配置中启用：
+
+```yaml
+local_costmap:
+  plugins:
+    - {name: traversability, type: "traversability_layer::TraversabilityLayer"}
+```
+
+### Planner多配置
+
+系统支持多种全局/局部路径规划器配置，可通过参数切换：
+
+```bash
+# 使用不同Planner组合（在launch文件中配置）
+# 全局规划器: Navfn / SMAC Lattice / A*
+# 局部规划器: MPPI / DWB / TEB
+```
 
 ## 多机器人 Namespace 支持
 
@@ -277,7 +307,7 @@ ros2 launch m-explore explore.launch.py
 | lio/odom | `/lio/odom` | `/rkbot/lio/odom` |
 | cmd_vel | `/cmd_vel` | `/rkbot/cmd_vel` |
 
-**注意**：TF 话题 (`/tf`, `/tf_static`) 保持全局共享，以支持多机器人之间的坐标变换互通。
+**注意**：TF 话题 (`/tf`, `/tf_static`) 现已支持 namespace 隔离，可通过配置切换为全局共享或 namespace 隔离模式。
 
 ### Frame 隔离
 
@@ -293,7 +323,7 @@ Frame ID 会根据 namespace 自动添加前缀：
 ### 注意事项
 
 1. **LIO 算法兼容性**：目前仅 Super-LIO 完成改造支持 namespace。其他 LIO 算法如需多机器人支持，需进行类似改造。
-2. **TF 树共享**：所有机器人的 TF 发布到全局 `/tf`，确保 rviz 等工具可以可视化所有机器人的坐标变换。
+2. **TF 树隔离**：TF 话题现已支持 namespace 隔离，每个机器人的 TF 发布在各自的 namespace 下，避免多机器人 TF 冲突。可通过配置切换为全局共享模式。
 3. **rviz 配置**：使用 namespace 时，rviz 中的 topic 和 frame 需要相应调整。
 
 ## 配置说明
@@ -343,6 +373,11 @@ LIO-SAM_MID360_ROS2_PKG/
 │   ├── Super-LIO/                    # Super-LIO实现
 │   ├── SC_PGO_ROS2/                  # SC-PGO姿态图优化
 │   ├── nav2_dog_slam/                # 统一导航系统
+│   ├── traversability_layer/         # 纯三维可通行区域检测Nav2 costmap插件
+│   ├── lidar_localization_ros2/      # 激光雷达定位
+│   ├── ndt_omp_ros2/                 # NDT OMP匹配定位
+│   ├── zsi_tools/                    # ZSI工具（中狗双雷达、Fast-LIO Airy等）
+│   ├── autorccar_interfaces/         # 自动遥控车接口定义
 │   ├── livox_ros_driver2/            # Livox雷达驱动
 │   ├── livox_gazebo_garden/          # Gazebo Garden仿真环境
 │   ├── global_config/                # 全局配置管理
@@ -353,6 +388,20 @@ LIO-SAM_MID360_ROS2_PKG/
 
 ## 最新更新
 
+- **2026-05-27**: 可通行检测优化随机器人移动；TF加入namespace支持多机器人隔离
+- **2026-05-26**: 适配中狗Livox MID360雷达配置；导航使用本体雷达；多配置2种全局/局部planner
+- **2026-05-25**: Web控制界面修正与调整
+- **2026-05-23**: 可通行区域检测重写为纯三维Nav2 costmap插件（traversability_layer）
+- **2026-05-22**: 中狗本体点云服务自动启停；前后雷达不跳帧优化；修正Web与loop closure
+- **2026-05-21**: 楼梯检测效果初步良好；前后雷达降采样率分配调整
+- **2026-05-20**: 可通行性检测与坡度阈值调整，纯三维通行检测基本可用
+- **2026-05-19**: 可通行性检测层开发（纯三维版本）
+- **2026-05-16**: 增加仿真world环境
+- **2026-05-13**: 中狗本体雷达服务适配，服务防停止卡死
+- **2026-05-10**: 修正若干问题，小狗稳定导航
+- **2026-05-09**: 仿真小车添加前后雷达
+- **2026-05-06**: 添加中狗service、TinyProxy步骤、中狗雷达融合、更新readme
+- **2026-04-27**: 添加orin配置
 - **2026-04-09**: Gazebo7可正常运行，删除旧gazebo版本，添加Gazebo Garden仿真支持
 - **2026-04-08**: 模拟小车已能发出点云，优化MPPI和AMCL参数，建图导航都可在无namespace情况使用
 - **2026-04-07**: 修正namespace问题，目前无namespace可建图
@@ -395,14 +444,17 @@ ros2 node list
 - 建图扭曲校正（IMU/外参/时间同步）
 - 大地图 + 动态地图处理
 - 3D 重定位与导航
+- Loop closure 优化
 
 ### 导航方向
+- 可通行区域检测完善（楼梯检测、坡度分析）
 - 导航直行优化（MPPI/TEB）
 - 超时问题处理
 - 行为树优化
 - 动态速度调整
 
 ### 硬件/算力方向
+- 中狗适配完善（双雷达融合、本体点云服务）
 - RK3588 大小核调度
 - DDS/ROS2 通信优化
 - 内存和 swap 优化
@@ -411,4 +463,5 @@ ros2 node list
 ### 系统稳定性
 - TF 延迟/漂移监控
 - 自动恢复策略
+- 前后雷达同步优化
 - 远程调试 / OTA 合规化

@@ -1,0 +1,289 @@
+arc_state_machine_node:
+  ros__parameters:
+
+    # =============================================================================
+    # TEST CONFIGURATION
+    # =============================================================================
+    test:
+      enable_debug_mode: True
+      enable_state_monitor: True
+      enable_force_transition: True
+      enable_state_check:
+        NAVIGATION: True
+        MOTION_CONTROL: False
+        DOCK: True
+        FATAL: True
+
+    # =============================================================================
+    # RTH HOME POSE CONFIGURATION
+    # =============================================================================
+    rth_home_pose_offset:
+      x: -1.6     # Home position x coordinate (meters)
+      y: 0.0      # Home position y coordinate (meters)
+      yaw: 0.0    # Home position yaw angle (radians)
+
+    # =============================================================================
+    # TRANSITION CONFIGURATION
+    # =============================================================================
+    transition:
+      coarse_start_pose:
+        x: 1.6
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.8
+        y_tol: 0.8
+        z_tol: 1.0
+        yaw_tol: 0.524 # 30 degrees
+        pitch_tol: 1.0
+        roll_tol: 1.0
+      fine_start_pose:
+        x: 2.0
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.1
+        y_tol: 0.1
+        z_tol: 1.0
+        yaw_tol: 0.052 # 3 degrees
+        pitch_tol: 1.0
+        roll_tol: 1.0
+      contact_start_pose:
+        x: -0.04
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.06
+        y_tol: 0.05
+        z_tol: 1.0
+        yaw_tol: 0.087 # 5 degree
+        pitch_tol: 1.0
+        roll_tol: 1.0
+      contact_end_pose:
+        x: 0.0
+        y: 0.0
+        z: 0.05
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.02
+        y_tol: 0.02
+        z_tol: 0.00
+        yaw_tol: 0.0175 # 1 degree
+        pitch_tol: 0.175 # 10 degree
+        roll_tol: 0.175 # 10 degree
+      undock_start_pose:
+        x: 0.0
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.1
+        y_tol: 0.1
+        z_tol: 0.2
+        yaw_tol: 0.087 # 5 degrees
+        pitch_tol: 0.175 # 10 degree
+        roll_tol: 0.175 # 10 degree
+      undock_end_pose:
+        x: 1.0
+        y: 0.0
+        z: 0.0
+        yaw: 0.0
+        pitch: 0.0
+        roll: 0.0
+        x_tol: 0.15
+        y_tol: 0.15
+        z_tol: 1.0
+        yaw_tol: 0.052 # 3 degrees
+        pitch_tol: 1.0
+        roll_tol: 1.0
+
+      # Multi stage control configuration
+      multi_stage_ctrl:
+        DOCK_ALIGN_COARSE:
+          enabled: false
+          rollback_enabled: false
+          rollback_x_threshold: -1.0
+        DOCK_ALIGN_FINE:
+          enabled: false
+          rollback_enabled: false
+          rollback_x_threshold: -1.0
+        DOCK_CONTACT:
+          enabled: false
+          rollback_enabled: false
+          rollback_x_threshold: -1.0
+        UNDOCK_RESET:
+          enabled: true
+          rollback_enabled: false
+          rollback_x_threshold: -1.0
+
+      # State timeout configuration (seconds, negative means no timeout)
+      timeouts:
+        STANDBY: -1.0
+        CALIBRATION: 30.0
+        RTH_INITIAL: 30.0
+        RTH_NAVIGATION: -1.0
+        DOCK_ALIGN_COARSE: 30.0
+        DOCK_ALIGN_FINE: 60.0
+        DOCK_CONTACT: 45.0
+        CHARGING: -1.0
+        CHARGED_EXIT: 30.0
+        UNDOCK_RESET: 30.0
+        SUCCESS: 3.0
+        FAILURE_SAFE: 3.0
+        FAILURE_CONTACT: 3.0
+        PASSIVE: -1.0
+
+      # State transition delay configuration (seconds, 0.0 means immediate transition)
+      # Format: from_state -> to_state: delay_seconds
+      # Based on arc_state_machine.conf transition table (48 transitions total)
+      transition_delays:
+        STANDBY:
+          to_STANDBY: 0.0              # T00_KEEP_THE_SAME
+          to_RTH_INITIAL: 0.0          # T01_TRIGGER_RTH
+          to_PASSIVE: 0.0              # T02_ARC_NOT_READY
+          to_DOCK_ALIGN_COARSE: 0.0    # T03_DIRECT_TO_COARSE
+          to_CALIBRATION: 0.0          # T04_TRIGGER_CALIBRATION
+          to_CHARGED_EXIT: 1.0         # T05_DIRECT_TO_CHARGED_EXIT
+        CALIBRATION:
+          to_CALIBRATION: 0.0          # T00_KEEP_THE_SAME
+          to_SUCCESS: 0.0              # T29_CALIBRATION_SUCCESS
+          to_FAILURE_SAFE: 0.0         # T30_CALIBRATION_FAILURE
+        RTH_INITIAL:
+          to_RTH_INITIAL: 0.0          # T00_KEEP_THE_SAME
+          to_RTH_NAVIGATION: 0.0       # T06_PRECHECKS_OK
+          to_FAILURE_SAFE: 0.0         # T07_PRECHECKS_FAIL
+        RTH_NAVIGATION:
+          to_RTH_NAVIGATION: 0.0       # T00_KEEP_THE_SAME / T09_NAV_BLOCKED
+          to_DOCK_ALIGN_COARSE: 0.5    # T08_REACHED_APPROACH_POSE
+          to_FAILURE_SAFE: 0.0         # T10_TIMEOUT_OR_FATAL
+        DOCK_ALIGN_COARSE:
+          to_DOCK_ALIGN_COARSE: 0.0    # T00_KEEP_THE_SAME
+          to_FAILURE_SAFE: 0.0         # T10_TIMEOUT_OR_FATAL
+          to_DOCK_ALIGN_FINE: 0.0      # T11_COARSE_GOOD
+          to_RTH_INITIAL: 0.0          # T12_COARSE_BAD
+        DOCK_ALIGN_FINE:
+          to_DOCK_ALIGN_FINE: 0.0      # T00_KEEP_THE_SAME
+          to_FAILURE_SAFE: 0.0         # T10_TIMEOUT_OR_FATAL
+          to_DOCK_CONTACT: 0.0         # T13_FINE_GOOD
+          to_DOCK_ALIGN_COARSE: 0.0    # T14_FINE_BAD
+        DOCK_CONTACT:
+          to_DOCK_CONTACT: 0.0         # T00_KEEP_THE_SAME
+          to_FAILURE_SAFE: 0.0         # T10_TIMEOUT_OR_FATAL
+          to_CHARGING: 0.0             # T15_CONTACT_CONFIRMED
+          to_DOCK_ALIGN_FINE: 0.0      # T16_CONTACT_UNSTABLE
+        CHARGING:
+          to_CHARGING: 0.0             # T00_KEEP_THE_SAME
+          to_CHARGED_EXIT: 0.0         # T17_REACHED_TARGET_SOC / T18_PREEMPT_EXIT
+          to_FAILURE_CONTACT: 0.0      # T19_CHARGING_FAULT
+        CHARGED_EXIT:
+          to_CHARGED_EXIT: 0.0         # T00_KEEP_THE_SAME
+          to_FAILURE_CONTACT: 0.0      # T10_TIMEOUT_OR_FATAL
+          to_UNDOCK_RESET: 0.0         # T20_NORMAL_EXIT_DONE / T21_FAILURE_EXIT_DONE
+        UNDOCK_RESET:
+          to_UNDOCK_RESET: 0.0         # T00_KEEP_THE_SAME
+          to_SUCCESS: 0.0              # T22_NORMAL_RESET_DONE
+          to_FAILURE_SAFE: 0.0         # T10_TIMEOUT_OR_FATAL / T23_FAILURE_RESET_DONE
+        SUCCESS:
+          to_SUCCESS: 0.0              # T00_KEEP_THE_SAME
+          to_PASSIVE: 0.0              # T24_SUCCESS_CLEARED
+        FAILURE_SAFE:
+          to_FAILURE_SAFE: 0.0         # T00_KEEP_THE_SAME
+          to_PASSIVE: 0.0              # T25_FAILURE_CLEARED_SAFE
+        FAILURE_CONTACT:
+          to_FAILURE_CONTACT: 0.0      # T00_KEEP_THE_SAME
+          to_PASSIVE: 0.0              # T26_FAILURE_CLEARED_CONTACT
+          to_CHARGED_EXIT: 0.0         # T27_TRY_EXIT
+        PASSIVE:
+          to_PASSIVE: 0.0              # T00_KEEP_THE_SAME
+          to_STANDBY: 0.0              # T28_READY_FOR_ARC
+
+      # Mode change delay configuration (seconds, 0.0 means immediate execution)
+      # Delays before executing mode changes after certain conditions are met
+      mode_change_delays:
+        fine_mc_mode_change: 1.0                 # Delay before changing MC mode in fine alignment
+        undock_mc_mode_change_1: 1.0             # Delay before changing MC mode in exiting charging
+        undock_mc_mode_change_2: 2.0             # Delay before changing MC mode in exiting charging
+
+    # =============================================================================
+    # STATE MANAGER COMPONENT CONFIGURATION
+    # =============================================================================
+    state_manager:
+      # History management
+      state_history_max_size: 100
+      transition_history_max_size: 100
+
+      # Timer-based state monitoring
+      monitoring:
+        enabled: true              # Enable/disable state monitoring
+        interval_ms: 20            # State monitoring interval (milliseconds)
+
+    # =============================================================================
+    # PUBLISHER COMPONENT CONFIGURATION
+    # =============================================================================
+    publisher:
+      # Publishing periods (milliseconds)
+      arc_state_publish_period_ms: 20      # ARC state publishing period (50Hz)
+      dock_pose_publish_period_ms: 20      # Dock pose publishing period (50Hz)
+      mode_command_publish_period_ms: 20   # Module mode cmd publishing period (50Hz)
+      navigation_command_publish_period_ms: 10  # Navigation command publishing period (100Hz)
+
+    # =============================================================================
+    # MODULE MONITOR COMPONENT CONFIGURATION
+    # =============================================================================
+    module_monitor:
+      # Monitor check periods
+      module_timeout_check_period_ms: 100  # Module timeout check period (5Hz)
+
+      # Module timeout thresholds (milliseconds)
+      module_timeouts:
+        SLAM: 1000                         # SLAM module timeout
+        PERCEPTION: 1000                   # Perception module timeout
+        NAVIGATION: 1000                   # Navigation module timeout
+        MOTION_CONTROL: 500                # Motion control module timeout
+        CALIBRATION: 2000                  # Calibration module timeout
+        NAV_COARSE_ALIGNMENT: 1000         # Navigation coarse alignment timeout
+        NAV_FINE_ALIGNMENT: 1000           # Navigation fine alignment timeout
+        NAV_CONTACT_ALIGNMENT: 1000        # Navigation contact alignment timeout
+        DOCK: 2000                         # Dock module timeout
+
+      # Module abnormal state duration thresholds (milliseconds)
+      # Module must remain in PASSIVE/FAILURE state for this duration before
+      # being considered abnormal. Once module recovers, timer is immediately reset.
+      module_abnormal_durations:
+        SLAM: 1000                         # SLAM abnormal duration threshold
+        PERCEPTION: 1000                   # Perception abnormal duration threshold
+        NAVIGATION: 1000                   # Navigation abnormal duration threshold
+        MOTION_CONTROL: 500                # Motion control abnormal duration threshold (critical)
+        CALIBRATION: 2000                  # Calibration abnormal duration threshold
+        NAV_COARSE_ALIGNMENT: 1000         # Coarse alignment abnormal duration threshold
+        NAV_FINE_ALIGNMENT: 1000           # Fine alignment abnormal duration threshold
+        NAV_CONTACT_ALIGNMENT: 1000        # Contact alignment abnormal duration threshold
+        DOCK: 1000                         # Dock abnormal duration threshold
+
+    # =============================================================================
+    # DOCK POSE AGGREGATOR COMPONENT CONFIGURATION
+    # =============================================================================
+    dock_pose_aggregator:
+      # Basic fusion settings
+      dock_pose_timeout_ms: 500               # Dock pose data timeout (milliseconds)
+      dock_pose_fusion_mode: "LATEST_VALID"   # Default fusion strategy
+      # Options: "LATEST_VALID", "SLAM_ONLY", "PERCEPTION_ONLY"
+
+      # State-specific fusion modes (combines valid states and their preferred modes)
+      state_modes:
+        STANDBY: "LATEST_VALID"
+        RTH_NAVIGATION: "LATEST_VALID"
+        DOCK_ALIGN_COARSE: "PERCEPTION_ONLY"
+        DOCK_ALIGN_FINE: "PERCEPTION_ONLY"
+        DOCK_CONTACT: "PERCEPTION_ONLY"
+        CHARGING: "PERCEPTION_ONLY"
+        CHARGED_EXIT: "PERCEPTION_ONLY"
+        UNDOCK_RESET: "PERCEPTION_ONLY"

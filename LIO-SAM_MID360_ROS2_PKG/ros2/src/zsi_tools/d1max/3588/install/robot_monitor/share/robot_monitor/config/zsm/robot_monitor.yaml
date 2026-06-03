@@ -1,0 +1,178 @@
+robot_monitor:
+  ros__parameters:
+    diagnostic_hz: 1.0
+      
+    clock_sanity:
+      drift_warn_ms: 300
+      jump_err_ms: 500
+      check_interval_ms: 1000
+    
+robot_self_test_manager:
+  ros__parameters:
+    result_output_path: "/home/robot/robot_launch_log/self_test_report"
+    self_test_nodes: 
+      - robot_hal
+ 
+    robot_hal:
+      is_key_node: true
+      timeout_ms: 60000
+
+robot_diagnostic_manager:
+  ros__parameters:
+    group_list:
+      # - "/Battery"
+      - "/Sensor"
+      - "/Actuator"
+      - "/RobotState"
+      - "/Mcu/Uart2Can"
+      - "/Mcu/PowerControl"
+    
+    /Battery:
+      error_list:
+        - "Battery/OverTemp"
+        - "Battery/PowerLow"
+        - "Battery/PowerEmpty"
+
+      Battery/OverTemp:
+        pattern: "^/Battery/battery[12]$"
+        match_string: "OverTemp"
+        error_level: "WARN"
+
+      Battery/PowerLow:
+        pattern: "^/Battery/battery[12]$"
+        match_string: "PowerLow"
+        error_level: "WARN"
+
+      Battery/PowerEmpty:
+        pattern: "^/Battery/battery[12]$"
+        match_string: "PowerEmpty"
+        error_level: "FATAL_ERROR"
+
+    /Mcu/PowerControl:
+      error_list: 
+        - "PowerControl/Offline"
+        # - "PowerControl/PowerLow"
+        - "PowerControl/PowerEmpty"
+
+      PowerControl/Offline:
+        pattern: "^/Mcu/PowerControl/power_control_driver$"
+        match_string: "Offline"
+        error_level: "FATAL_ERROR"
+
+      PowerControl/PowerLow:
+        pattern: "^/Mcu/PowerControl/power_control_driver$"
+        match_string: "PowerLow"
+        error_level: "WARN"
+
+      PowerControl/PowerEmpty:
+        pattern: "^/Mcu/PowerControl/power_control_driver$"
+        match_string: "PowerEmpty"
+        error_level: "FATAL_ERROR"
+
+    /RobotState:
+      error_list:
+        - "System/ClockSanityError"
+
+      System/ClockSanityError:
+        pattern: "^/RobotState/clock_sanity$"
+        match_string: "Clock Sanity Check Error"
+        error_level: "WARN"
+
+    /Sensor:
+      error_list:
+        - "IMU/ConnectError"
+        - "IMU/DataNotUpdated"
+        - "IMU/ImuCrcError"
+      
+      IMU/DataNotUpdated:
+        pattern: "^/Sensor/imu_central$"
+        match_string: "DataNotUpdated"
+        error_level: "FATAL_ERROR"
+      
+      IMU/ConnectError:
+        pattern: "^/Sensor/imu_central$"
+        match_string: "ConnectError"
+        error_level: "FATAL_ERROR"
+
+      IMU/ImuCrcError:
+        pattern: "^/Sensor/imu_central$"
+        match_string: "ImuCrcError"
+        error_level: "FATAL_ERROR"
+
+    /Actuator:
+      error_list: 
+        - "Actuator/Disabled"
+        - "Actuator/Offline"
+        - "Actuator/EncoderError"
+        - "Actuator/OverVoltage"
+        - "Actuator/Overheat"
+        - "Actuator/Timeout"
+        - "Actuator/Undervolt"
+        - "Actuator/OverCurrent"
+        - "Actuator/OverSpeed"
+        - "Actuator/OverTempWarn"
+        - "Actuator/OverTempProtect"
+
+      Actuator/Disabled:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "Disabled"
+        error_level: "FATAL_ERROR"
+
+      Actuator/Offline:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "Offline"
+        error_level: "FATAL_ERROR"
+
+      Actuator/EncoderError:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "EncoderError"
+        error_level: "FATAL_ERROR"
+
+      Actuator/OverVoltage:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "OverVoltage"
+        error_level: "FATAL_ERROR"
+
+      Actuator/Overheat:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "Overheat"
+        error_level: "FATAL_ERROR"
+
+      Actuator/Timeout:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "Timeout"
+        error_level: "FATAL_ERROR"
+
+      Actuator/Undervolt:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "Undervolt"
+        error_level: "FATAL_ERROR"
+
+      Actuator/OverCurrent:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "OverCurrent"
+        error_level: "FATAL_ERROR"
+
+      Actuator/OverSpeed:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "OverSpeed"
+        error_level: "FATAL_ERROR"
+
+      Actuator/OverTempWarn:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "OverTempWarn"
+        error_level: "WARN"
+
+      Actuator/OverTempProtect:
+        pattern: "^/Actuator/.*?/.*"
+        match_string: "OverTempProtect"
+        error_level: "FATAL_ERROR"
+
+    /Mcu/Uart2Can:
+      error_list:
+        - "CAN/Broken"
+      
+      CAN/Broken:
+        pattern: "^/Mcu/Uart2Can/.*"
+        match_string: "Broken"
+        error_level: "FATAL_ERROR"

@@ -1,0 +1,54 @@
+# Default Robot Geometry Configuration
+# ==============================================================================
+# This file provides default/fallback parameters for backward compatibility.
+# When no specific robot type is specified, these values are used.
+# ==============================================================================
+
+/**:
+  ros__parameters:
+    robot_geometry:
+      robot_name: "default"
+      robot_type: "quadruped"
+
+      geometry:
+        footprint: "[[0.30,0.15],[0.30,-0.15],[-0.30,-0.15],[-0.30,0.15]]"
+
+        width: 0.30
+        length: 0.60
+        height: 0.45
+
+        inscribed_radius: 0.15
+        circumscribed_radius: 0.335
+
+        wheel_base: 0.2
+        track_width: 0.3
+
+      kinematics:
+        max_velocity:
+          linear_x: 2.0
+          linear_y: 1.0
+          angular_z: 1.5
+
+        min_velocity:
+          linear_x: -1.0
+          linear_y: -1.0
+          angular_z: -1.5
+
+        max_acceleration:
+          linear: 2.0
+          lateral: 1.5
+          angular: 2.0
+
+        min_turning_radius: 2.0
+        max_curvature: 0.5
+
+      safety:
+        collision_radius: 0.45
+        safe_distance: 0.80
+        critical_distance: 0.40
+
+        margins:
+          front: 0.10
+          rear: 0.10
+          left: 0.05
+          right: 0.05

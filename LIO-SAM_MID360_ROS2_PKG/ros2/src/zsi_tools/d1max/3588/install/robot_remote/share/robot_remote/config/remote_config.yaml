@@ -1,0 +1,130 @@
+/robot_remote:
+  ros__parameters:
+    # ==========================
+    # 1. 基础系统配置
+    # ==========================
+    log_level:
+      remote: "debug" # debug, info, warn, error, fatal
+
+    sysconfig:
+      sys_version_path: "/opt/release/version.yaml"
+
+    protocol:
+      version: "1.2.0"
+
+    # ==========================
+    # 2. 网络通信配置
+    # ==========================
+    network:
+      websocket:
+        enabled: true
+        address: "0.0.0.0"
+        port: 8081
+      udp:
+        enabled: true
+        address: "0.0.0.0"
+        port: 8082
+
+    client:
+      heartbeat_timeout_ms: 1000
+
+    # MC (Motion Controller) 下位机通信
+    mc:
+      cmd_topic: "app_cmd"
+      state_topic: "app_state"
+      send_interval_ms: 20
+
+    # ==========================
+    # 3. ROS 话题与服务配置
+    # ==========================
+    # 话题配置 (数据流)
+    topic:
+      # 电池与IMU
+      battery1: "/battery_controller/battery1"
+      battery2: "/battery_controller/battery2"
+      imu: "/imu_shm_publisher/imu_central"
+      
+      # 补光灯控制
+      back_fill_light: "/fill_light_controller/back_light/cmd"
+      back_fill_light_state: "/fill_light_controller/back_light/state"
+      front_fill_light: "/fill_light_controller/front_light/cmd"
+      front_fill_light_state: "/fill_light_controller/front_light/state"
+      fill_light_auto_work: "/fill_light_controller/auto_work"
+      fill_light_auto_work_state: "/fill_light_controller/auto_work_state"
+      lux: "/fill_light_controller/lux"
+
+      # 急停与安全
+      sw_estop_state: "/estop_controller/sw_estop/state"
+      hw_estop_state: "/switch_controller/hw_estop/state"
+      obstacle_avoidance: "/robot_remote/obstacle_avoidance"
+      locked_state: "/robot_remote/locked_state"
+      
+      # 机器人状态与模式
+      knee_mode: "/robot_remote/knee_mode"
+      reverse_head_tail: "/robot_remote/reverse_head_tail"
+      robot_status: "/robot_manager/robot_status"
+      diagnostic_status: "/robot_monitor/diagnostic_status"
+      power_on_status: "/robot_monitor/power_on_status"
+      joint_sensor: "/joint_shm_controller/joint_sensor"
+
+      # 多媒体
+      camera_cmd: "/robot_camera/take_photo"
+      camera_ack: "/robot_camera/take_photo_ack"
+      video_cmd: "/robot_camera/record_mp4"
+      video_ack: "/robot_camera/record_mp4_ack"
+      video_alnormal_event: "/robot_camera/record_mp4_status"
+      tf_status_request: "/tf/tf_req"
+      tf_status_response: "/tf/tf_ack"
+      camera_bps: "/robot_camera/set_bps"
+
+      # 充电桩连接状态
+      charging_pile: "/arc/charging_dock_info"
+
+      # 停障
+      enable_pub_joystick: "/meb/is_enabled"
+      joystick_cmd: "/joystick_info"
+      obstacle_stop: "/meb/should_brake"
+
+    # 服务配置 (功能调用)
+    service:
+      self_test_overall_result: "/robot_monitor/self_test_overall_result"
+
+    # ==========================
+    # 4. 机器人行为与状态配置
+    # ==========================
+    robot_state:
+      send_interval_ms: 1000
+
+    mile_data:
+      path: "/userdata/robot/mile_data.txt"
+      read_interval_ms: 500
+
+    fault:
+      history_max_size: 6
+
+    self_test:
+      max_retries: 5
+      retry_interval_ms: 1000
+
+    # 速度配置表
+    speed:
+      noload:
+        slow:
+          vertical_move: 1.0
+          horizontal_move: 0.5
+          yaw: 1.5
+        medium:
+          vertical_move: 2.0
+          horizontal_move: 0.0
+          yaw: 1.0
+        fast:
+          vertical_move: 3.0
+          horizontal_move: 0.0
+          yaw: 0.5
+        nav:
+          vertical_move: 0.5
+          horizontal_move: 0.5
+          yaw: 0.5
+
+    safety:
+      min_speed_deadband: 0.1

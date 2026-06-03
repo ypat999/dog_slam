@@ -30,7 +30,7 @@ class DynamicBaseFootprint(Node):
         # 订阅TF消息，在callback中处理变换
         self.tf_subscription = self.create_subscription(
             TFMessage,
-            'tf',
+            '/tf',
             self.tf_callback,
             100
         )

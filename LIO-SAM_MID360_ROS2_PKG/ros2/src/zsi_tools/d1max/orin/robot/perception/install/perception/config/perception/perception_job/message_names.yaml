@@ -1,0 +1,7 @@
+seg_image_msg_name: image_seg
+seg_vis_msg_name: image_seg_vis
+polygon_msg_name: polygon_msg
+lidar_msg_name: lidar_points_msg
+lidar_2d_msg_name: lidar_2d_msg
+leg_odom_msg_name: leg_odom_msg
+image_msg_name: image_msg

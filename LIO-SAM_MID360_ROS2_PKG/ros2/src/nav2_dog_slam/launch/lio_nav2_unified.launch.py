@@ -239,6 +239,22 @@ def generate_launch_description():
         print(f"Super-LIO package not found: {e}")
         from launch.actions import LogInfo
         super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
+    
+    # Super-LIO
+    try:
+        super_lio_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([os.path.join(
+                get_package_share_directory('super_lio'), 'launch', 'Livox_mid360_zg.py')]),
+            launch_arguments={
+                'use_sim_time': use_sim_time,
+                'ns': ns
+            }.items(),
+            condition=IfCondition(PythonExpression(["'", SLAM_ALGORITHM, "' == 'super_lio_zg'"]))
+        )
+    except Exception as e:
+        print(f"Super-LIO package not found: {e}")
+        from launch.actions import LogInfo
+        super_lio_launch = LogInfo(msg="Super-LIO package not found, skipping...")
 
     # Super-LIO
     try:

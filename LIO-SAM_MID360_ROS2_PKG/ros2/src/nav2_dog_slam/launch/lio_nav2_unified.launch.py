@@ -628,6 +628,23 @@ def generate_launch_description():
                     actions=[slam_toolbox_node]
                 )
             )
+
+            # 自动保存地图脚本（每隔2分钟）
+            auto_save_map_script = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                'scripts', 'auto_save_map.sh'
+            )
+            auto_save_map_process = ExecuteProcess(
+                cmd=['bash', auto_save_map_script],
+                name='auto_save_map',
+                output='screen'
+            )
+            unified_nodes.append(
+                TimerAction(
+                    period=10.0,  # 延迟10秒启动，等待slam_toolbox初始化
+                    actions=[auto_save_map_process]
+                )
+            )
         
         else:
             # 建图模式：添加octomap server

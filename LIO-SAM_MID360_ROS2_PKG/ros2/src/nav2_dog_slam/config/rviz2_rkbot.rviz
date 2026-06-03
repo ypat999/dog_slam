@@ -5,14 +5,19 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /TF1
         - /TF1/Frames1
+        - /TF1/Frames1/rkbot/imu1
+        - /TF1/Frames1/rkbot/imu1/Relative Position1
+        - /TF1/Frames1/rslidar_tail1
+        - /TF1/Frames1/rslidar_tail1/Relative Position1
         - /TF1/Tree1
         - /PointCloud2_front1/Topic1
         - /LaserScan1/Topic1
         - /Map1/Topic1
-        - /Map2
         - /Map2/Topic1
         - /Map3/Topic1
+        - /LaserScan3
         - /PointCloud21/Topic1
       Splitter Ratio: 0.6558823585510254
     Tree Height: 639
@@ -59,41 +64,47 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: false
+        All Enabled: true
         base_link:
-          Value: false
+          Value: true
         map:
-          Value: false
+          Value: true
         odom:
-          Value: false
+          Value: true
         rkbot/base_footprint:
-          Value: false
+          Value: true
         rkbot/base_link:
           Value: true
         rkbot/imu:
           Value: true
         rkbot/livox_frame:
-          Value: false
+          Value: true
         rkbot/map:
-          Value: false
+          Value: true
         rkbot/odom:
-          Value: false
+          Value: true
         rkbot/world:
+          Value: true
+        rslidar_head:
+          Value: true
+        rslidar_tail:
           Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
         rkbot/map:
           rkbot/odom:
             rkbot/world:
-              rkbot/base_footprint:
-                {}
               rkbot/imu:
                 rkbot/livox_frame:
                   rkbot/base_link:
+                    rkbot/base_footprint:
+                      {}
+                rslidar_head:
+                  rslidar_tail:
                     {}
       Update Interval: 0
       Value: true
@@ -152,9 +163,9 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 165
+      Max Intensity: 153
       Min Color: 0; 0; 0
-      Min Intensity: 5
+      Min Intensity: 2
       Name: PointCloud2_front
       Position Transformer: XYZ
       Selectable: true
@@ -167,7 +178,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /rkbot/lio/cloud_world
+        Value: /rkbot/front_lidar/cloud_world
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
@@ -590,25 +601,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 64.28160858154297
+      Distance: 4.066292762756348
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 116.5483627319336
-        Y: 42.48298263549805
-        Z: 0.12450599670410156
+        X: -0.06461837887763977
+        Y: -0.44508302211761475
+        Z: 0.028775759041309357
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5497963428497314
+      Pitch: 1.1897960901260376
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.910400390625
+      Yaw: 4.6772260665893555
     Saved: ~
 Window Geometry:
   Displays:
@@ -625,4 +636,4 @@ Window Geometry:
     collapsed: false
   Width: 1850
   X: -32
-  Y: -32
+  Y: -31

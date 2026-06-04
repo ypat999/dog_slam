@@ -85,12 +85,12 @@ controller_server:
       # 每个时间步的时长（s），time_steps * model_dt = 预测时域
       model_dt: 0.1
       # 每轮采样的候选轨迹数量
-      batch_size: 500
+      batch_size: 1000
       # TF 变换容差（s）
       transform_tolerance: 0.5
 
       # 最大前向速度（m/s）
-      vx_max: 2.0
+      vx_max: 1.0
       # 最大反向速度（m/s）
       vx_min: -0.4
       # 前向速度采样标准差
@@ -100,7 +100,7 @@ controller_server:
       # 横向速度采样标准差
       vy_std: 0.4
       # 角速度采样标准差
-      wz_std: 0.5
+      wz_std: 2.0
       # 最大角速度（rad/s）
       wz_max: 1.0
       
@@ -129,7 +129,7 @@ controller_server:
         trajectory_step: 20
 
       # 是否强制路径反转（机器人掉头时反向跟踪路径）
-      enforce_path_inversion: true
+      enforce_path_inversion: false
       # 路径反转的 XY 容差（m）
       inversion_xy_tolerance: 0.3
       # 路径反转的朝向容差（rad）
@@ -143,7 +143,7 @@ controller_server:
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
       prune_distance: 2.0
       # 失败后重试次数（软重置）
-      retry_attempt_limit: 3
+      retry_attempt_limit: 1
   
       # 评价器参数 - 优化权重以提高停止精度
       # 启用的评价器列表
@@ -171,7 +171,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重（内部会除以 254 归一化）
-        cost_weight: 5.0
+        cost_weight: 10.0
         # 代价幂次
         cost_power: 1
         # 近碰撞区域惩罚代价（>= near_collision_cost 时触发）
@@ -179,7 +179,7 @@ controller_server:
         # 真实碰撞代价值
         collision_cost: 254.0
         # 是否使用完整 footprint 碰撞检测（false=使用圆心点）
-        consider_footprint: false
+        consider_footprint: true
         # 接近目标时停止避障偏好项的距离（m）
         near_goal_distance: 1.0
         # 膨胀层名称（为空则使用最后一个膨胀层）
@@ -194,7 +194,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 4
+        cost_power: 2
         # 评价器权重
         cost_weight: 10.0
         # 是否使用 SE2 footprint 碰撞检测
@@ -204,7 +204,7 @@ controller_server:
         # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
         repulsion_weight: 10.0
         # 真实碰撞代价值
-        collision_cost: 254.0
+        collision_cost: 250.0
         # 碰撞临界距离（m），类似 footprint 膨胀
         collision_margin_distance: 0.2
         # 近碰撞代价阈值
@@ -227,11 +227,11 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 40.0
+        cost_weight: 20.0
         # 代价幂次
         cost_power: 2
         # 从最远路径点算起的偏移量
-        offset_from_furthest: 2
+        offset_from_furthest: 1
         # 距目标距离小于此值时停止路径跟随，交予目标评价器
         threshold_to_consider: 1.5
 
@@ -271,17 +271,17 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 10.0
+        cost_weight: 15.0
         # 代价幂次
         cost_power: 1
         # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
         # 从最远路径点算起的偏移量
-        offset_from_furthest: 2
+        offset_from_furthest: 1
         # 距目标距离小于此值时停止路径跟随
         threshold_to_consider: 1.5
         # 与最远路径点的最大角度差（rad）
-        max_angle_to_furthest: 0.5
+        max_angle_to_furthest: 0.8
 
       # =====================================================
       # PreferForwardCritic - 前向偏好评价器
@@ -305,11 +305,11 @@ controller_server:
       # =====================================================
       TwirlingCritic:
         # 是否启用
-        enabled: true
+        enabled: false
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 10.0
+        cost_weight: 20.0
 
       # =====================================================
       # VelocityDeadbandCritic - 速度死区评价器
@@ -335,9 +335,9 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 50.0
         # 代价幂次
-        cost_power: 1
+        cost_power: 3
         # 距目标小于此值时开始考虑目标距离代价
         threshold_to_consider: 2.0
 
@@ -350,9 +350,9 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 50.0
         # 代价幂次
-        cost_power: 1
+        cost_power: 3
         # 距目标小于此值时开始考虑目标朝向代价（m）
         threshold_to_consider: 1.0
 
@@ -387,15 +387,15 @@ velocity_smoother:
     
     # 速度限制 - 各轴最大/最小速度（m/s, rad/s），格式 [x, y, theta]
     # 各轴最大速度 [vx, vy, vtheta]
-    max_velocity: [5.0, 1.5, 5.0]
+    max_velocity: [5.0, 1.5, 2.0]
     # 各轴最小速度 [vx, vy, vtheta]。此为有符号值，负值表示反向。旋转速度负方向为右转
     min_velocity: [-1.0, -1.5, -5.0]
     
     # 加速度限制
     # 各轴最大加速度 [ax, ay, atheta]
-    max_accel: [5.0, 2.0, 1.0]
+    max_accel: [1.0, 1.0, 1.0]
     # 各轴最大减速度 [ax, ay, atheta]。此为有符号值，通常应为负数
-    max_decel: [-5.0, -2.0, -2.0]
+    max_decel: [-5.0, -5.0, -5.0]
     
     # 死区与超时
     # 各轴最小速度死区 [vx, vy, vtheta]，低于此值不发送给硬件控制器，防止小命令因堵转扭矩而损坏硬件
@@ -443,7 +443,7 @@ planner_server:
       # 非直线运动的惩罚系数
       non_straight_penalty: 9.0
       # 对高代价区域的惩罚系数，使搜索避开障碍物
-      cost_penalty: 1.5
+      cost_penalty: 3.0
       # 原地旋转的惩罚系数，应足够高以避免非必要原地旋转
       rotation_penalty: 5.0
       # 偏好后期转向的惩罚系数，节省搜索时间（0.0=完全可纳，1.0=最大偏好）
@@ -455,7 +455,7 @@ planner_server:
       # 缓存障碍物距离启发式，加速同一目标的重规划（静态地图时效果显著）
       cache_obstacle_heuristic: true
       # 是否允许使用倒车原语进行搜索
-      allow_reverse_expansion: true
+      allow_reverse_expansion: false
       # 下采样障碍物启发式代价图以加速搜索（略微降低路径质量）
       downsample_obstacle_heuristic: true
       # 使用二次代价而非线性代价，加速搜索但路径更接近障碍物
@@ -795,7 +795,7 @@ local_costmap:
         # 在致命障碍物周围膨胀代价图的半径（m）
         inflation_radius: 0.5
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 20.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: false
         # 是否在未知单元格周围膨胀
@@ -1026,7 +1026,7 @@ global_costmap:
         # 在致命障碍物周围膨胀代价图的半径（m）
         inflation_radius: 10.0
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 8.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: true
         # 是否在未知单元格周围膨胀

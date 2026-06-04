@@ -98,6 +98,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install USS republisher script as executable
+install(
+  PROGRAMS scripts/uss_republisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install web interface files
 install(
   DIRECTORY web

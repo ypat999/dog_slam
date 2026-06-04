@@ -4,7 +4,7 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import Node, PushRosNamespace
@@ -142,7 +142,7 @@ def generate_launch_description():
             {'target_frame': ns_base_footprint_frame},
             {'transform_tolerance': 0.03},
             {'min_height': -0.3},
-            {'max_height': 1.5},
+            {'max_height': 1.0},
             {'angle_min': -3.14159},
             {'angle_max': 3.14159},
             {'angle_increment': 0.00872},
@@ -169,7 +169,7 @@ def generate_launch_description():
             {'target_frame': ns_base_footprint_frame},
             {'transform_tolerance': 0.03},
             {'min_height': -0.3},
-            {'max_height': 1.5},
+            {'max_height': 1.0},
             {'angle_min': -3.14159},
             {'angle_max': 3.14159},
             {'angle_increment': 0.00872},
@@ -192,6 +192,14 @@ def generate_launch_description():
         prefix=['taskset -c 4,5'],
     )
     ld.add_action(scan_merger)
+
+    # USS republisher - 修复Range消息的min_range/max_range并重发到/rkbot命名空间
+    pkg_share = get_package_share_directory('zg_double_lidar')
+    uss_republisher = ExecuteProcess(
+        cmd=['python3', os.path.join(pkg_share, 'scripts', 'uss_republisher.py')],
+        output='screen',
+    )
+    ld.add_action(uss_republisher)
 
     static_transform_map_to_odom = Node(
         package='tf2_ros',
@@ -285,6 +293,26 @@ def generate_launch_description():
         output='screen'
     )
     ld.add_action(static_transform_base_link_to_base_footprint)
+
+    static_transform_base_link_to_uss_left_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_uss_left_link',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.15', '0.10', '0.0', '1.57', '0.0', '0.0', ns_base_link_frame, 'uss_left_link'],
+        output='screen'
+    )
+    ld.add_action(static_transform_base_link_to_uss_left_link)
+
+    static_transform_base_link_to_uss_right_link = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_uss_right_link',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.15', '-0.10', '0.0', '-1.57', '0.0', '0.0', ns_base_link_frame, 'uss_right_link'],
+        output='screen'
+    )
+    ld.add_action(static_transform_base_link_to_uss_right_link)
     
     #static_transform_world_to_base_footprint = Node(
     #    package='tf2_ros',

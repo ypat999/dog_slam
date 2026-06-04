@@ -691,14 +691,6 @@ lifecycle_manager:
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
     bond_timeout_ms: 10000
 
-# # 单独的定位生命周期管理器配置
-# lifecycle_manager_localization:
-#   ros__parameters:
-    use_sim_time: false
-#     autostart: true
-#     node_names: ['map_server', 'amcl']
-#     bond_timeout_ms: 10000
-
 # =============================================================================
 # AMCL Configuration - 模型选择区域
 # =============================================================================

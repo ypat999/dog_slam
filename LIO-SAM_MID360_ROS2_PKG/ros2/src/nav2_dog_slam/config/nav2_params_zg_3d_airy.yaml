@@ -113,31 +113,11 @@ controller_server:
       # 重置优化器的非活跃超时时间（s），Humble only
       reset_period: 0.5
 
-      # 加速度限制
-      # 最大前向加速度（m/s^2）
-      ax_max: 1.0
-      # 最大减速度（m/s^2）
-      ax_min: -1.0
-      # 最大横向加速度（m/s^2，Omni 模型有效）
-      ay_max: 0.5
-      # 最小横向加速度（m/s^2，Omni 模型有效）
-      ay_min: -0.5
-      # 最大角加速度（rad/s^2）
-      az_max: 1.5
-
-      # 滤波器与控制模式
-      # Savitzky-Golay 滤波器阶数（1 或 2），用于平滑控制序列
-      sgf_order: 2
-      # 是否使用开环控制（false=闭环，使用里程计反馈）
-      open_loop: false
-
       # 可视化与调试
       # 是否发布调试轨迹可视化
       visualize: false
       # 是否发布最优轨迹（含位姿、速度、时间戳）
       publish_optimal_trajectory: false
-      # 可视化指定评价器的代价（0=全部代价，1-N=对应评价器）
-      critic_index_to_visualize: 0
       # 是否每轮重新生成噪声（false=复用初始噪声，减少计算抖动）
       regenerate_noises: false
 
@@ -158,10 +138,10 @@ controller_server:
       gamma: 0.015
       # MPPI 迭代次数，建议保持 1 并增大 batch_size
       iteration_count: 1
-      # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 2.0
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
       max_robot_pose_search_dist: 2.0
+      # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
+      prune_distance: 2.0
       # 失败后重试次数（软重置）
       retry_attempt_limit: 3
   
@@ -259,7 +239,7 @@ controller_server:
         # 从最远路径点算起的偏移量
         offset_from_furthest: 2
         # 距目标距离小于此值时停止路径跟随，交予目标评价器
-        threshold_to_consider: 1.0
+        threshold_to_consider: 1.5
 
       # =====================================================
       # PathAlignCritic - 路径对齐评价器
@@ -300,8 +280,8 @@ controller_server:
         cost_weight: 10.0
         # 代价幂次
         cost_power: 1
-        # 模式：0=前进偏好, 1=无方向偏好, 2=考虑可行路径朝向
-        mode: 0
+        # 前向偏好（true=偏好前进，false=无偏好）
+        forward_preference: true
         # 从最远路径点算起的偏移量
         offset_from_furthest: 2
         # 距目标距离小于此值时停止路径跟随
@@ -444,20 +424,8 @@ planner_server:
     use_sim_time: false
     # 期望规划频率（Hz），若当前频率低于此值则显示警告
     expected_planner_frequency: 0.2
-    # 规划请求前代价图完全更新的超时时间（s）
-    costmap_update_timeout: 1.0
-    # 是否允许规划器在穿过位姿规划时，遇到障碍物时输出部分路径。默认情况下规划失败并中止规划请求
-    allow_partial_planning: false
     # 映射的规划器插件名称列表，用于参数和处理请求
     planner_plugins: ["LatticeBased", "GridBased", "HybridBased"]
-
-    # 系统配置
-    # 服务和动作的内省模式，可选 "disabled"、"metadata"、"contents"
-    introspection_mode: "disabled"
-    # 生命周期节点 bond 机制的发布周期（/bond 话题），<=0.0 禁用
-    bond_heartbeat_period: 0.25
-    # 是否允许通过参数化值覆盖 QoS 配置
-    allow_parameter_qos_overrides: true
 
     LatticeBased:
       # 规划器插件类型
@@ -472,8 +440,6 @@ planner_server:
       max_on_approach_iterations: 100000
       # 规划器最大规划时间（s）
       max_planning_time: 10.0
-      # 检查目标取消或规划超时的迭代间隔
-      terminal_checking_interval: 5000
       # 尝试解析展开的频率比例，值越大越频繁尝试直接用曲线到达目标
       analytic_expansion_ratio: 3.5
       # 解析展开的最大长度（m），防止从远处抄近路穿过高代价区域
@@ -535,8 +501,6 @@ planner_server:
       max_on_approach_iterations: 1000
       # 规划器最大规划时间（s）
       max_planning_time: 2.0
-      # 检查目标取消或规划超时的迭代间隔
-      terminal_checking_interval: 5000
       # 代价乘数，越大越倾向于走低代价区域（0.0=忽略代价仅做二值搜索）
       cost_travel_multiplier: 2.0
       # 是否将路径终点朝向设为接近方向（false=使用请求的目标朝向）
@@ -576,8 +540,6 @@ planner_server:
       max_iterations: 8000000
       # 进入容差范围后继续尝试精确匹配的最大迭代次数
       max_on_approach_iterations: 100000
-      # 检查目标取消或规划超时的迭代间隔
-      terminal_checking_interval: 5000
       # 车辆最小转弯半径（m）
       minimum_turning_radius: 0.05
       # 搜索用运动模型：DUBIN（仅前进）或 REEDS_SHEPP（可倒车）
@@ -665,6 +627,8 @@ local_costmap:
       initial_transform_timeout: 60.0
       
       # 地图参数
+      # 地图话题
+      map_topic: "/rkbot/map"
       # 是否使用滚动窗口（代价图跟随机器人移动，保持以机器人为中心的局部视图）
       rolling_window: true
       # 代价图宽度（m）
@@ -1152,8 +1116,6 @@ amcl:
     scan_topic: /rkbot/scan
     # 要订阅的地图话题
     map_topic: "map"
-    # 里程计话题
-    odom_topic: /rkbot/lio/odom
     # TF 变换容差（s）
     transform_tolerance: 0.5
     # 设为 false 可阻止 AMCL 发布 global_frame 与 odom_frame 之间的变换

@@ -171,7 +171,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重（内部会除以 254 归一化）
-        cost_weight: 10.0
+        cost_weight: 15.0
         # 代价幂次
         cost_power: 1
         # 近碰撞区域惩罚代价（>= near_collision_cost 时触发）
@@ -649,7 +649,7 @@ local_costmap:
 
       # 插件配置
       # "voxel_layer", "stvl_layer",  # 映射的插件名称列表，用于参数命名空间和名称
-      plugins: ["traversability_layer_local","obstacle_layer_local", "inflation_layer_local"]
+      plugins: ["traversability_layer_local","obstacle_layer_local", "range_sensor_layer", "inflation_layer_local"]
       
       # =====================================================
       # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
@@ -764,7 +764,7 @@ local_costmap:
           # 无限返回值是否有效
           inf_is_valid: true
           # 仅清除不标记（用于动态物体去除）
-          marking: false
+          marking: true
           # 是否清除障碍物（射线追踪）
           clearing: true
           # 最大障碍物高度（m）
@@ -772,13 +772,24 @@ local_costmap:
           # 最小障碍物高度（m）
           min_obstacle_height: -100.0
           # 0=不标记障碍物
-          obstacle_max_range: 0.0
+          obstacle_max_range: 10.0
           # 障碍物检测最小范围（m）
           obstacle_min_range: 0.0
           # 射线追踪最大范围（m）
           raytrace_max_range: 10.0
           # 射线追踪最小范围（m）
           raytrace_min_range: 0.0
+
+
+      range_sensor_layer:
+        plugin: "nav2_costmap_2d::RangeSensorLayer"
+        enabled: true
+        topics: ["/uss_driver/uss_left/range", "/uss_driver/uss_right/range"]
+        input_sensor_type: "VARIABLE"
+        no_readings_timeout: 0.0
+        clear_threshold: 0.2
+        mark_threshold: 0.8
+        clear_on_max_reading: false
       
       # =====================================================
       # 膨胀层参数

@@ -90,7 +90,7 @@ controller_server:
       transform_tolerance: 0.5
 
       # 最大前向速度（m/s）
-      vx_max: 1.0
+      vx_max: 2.0
       # 最大反向速度（m/s）
       vx_min: -0.3
       # 前向速度采样标准差

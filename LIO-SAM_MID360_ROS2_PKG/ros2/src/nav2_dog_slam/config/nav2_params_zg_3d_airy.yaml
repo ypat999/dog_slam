@@ -129,7 +129,7 @@ controller_server:
         trajectory_step: 20
 
       # 是否强制路径反转（机器人掉头时反向跟踪路径）
-      enforce_path_inversion: false
+      enforce_path_inversion: true
       # 路径反转的 XY 容差（m）
       inversion_xy_tolerance: 0.3
       # 路径反转的朝向容差（rad）
@@ -141,7 +141,7 @@ controller_server:
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
       max_robot_pose_search_dist: 2.0
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 2.0
+      prune_distance: 3.0
       # 失败后重试次数（软重置）
       retry_attempt_limit: 1
   
@@ -194,27 +194,27 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 2
+        cost_power: 1
         # 评价器权重
         cost_weight: 6.0
         # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重
-        critical_weight: 100.0
+        critical_weight: 200.0
         # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
-        repulsion_weight: 5.0
+        repulsion_weight: 12.0
         # 真实碰撞代价值
         collision_cost: 250.0
         # 碰撞临界距离（m），类似 footprint 膨胀
-        collision_margin_distance: 0.3
+        collision_margin_distance: 0.2
         # 近碰撞代价阈值
-        critical_cost: 250.0
+        critical_cost: 200.0
         # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
         near_goal_distance: 1.0
         # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
         inflation_radius: 0.5
         # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 15.0
       
       # =====================================================
       # PathFollowCritic - 路径跟随评价器
@@ -227,9 +227,9 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 30.0
         # 代价幂次
-        cost_power: 2
+        cost_power: 1
         # 从最远路径点算起的偏移量
         offset_from_furthest: 1
         # 距目标距离小于此值时停止路径跟随，交予目标评价器
@@ -273,7 +273,7 @@ controller_server:
         # 评价器权重
         cost_weight: 15.0
         # 代价幂次
-        cost_power: 3
+        cost_power: 2
         # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
         # 从最远路径点算起的偏移量

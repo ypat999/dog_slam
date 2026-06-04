@@ -4,7 +4,7 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import Node, PushRosNamespace
@@ -194,12 +194,10 @@ def generate_launch_description():
     ld.add_action(scan_merger)
 
      # USS republisher - 修复Range消息的min_range/max_range并重发到/rkbot命名空间
-    uss_republisher = Node(
-        package='zg_double_lidar',
-        executable='uss_republisher.py',
-        name='uss_republisher',
+    pkg_share = get_package_share_directory('zg_double_lidar')
+    uss_republisher = ExecuteProcess(
+        cmd=['python3', os.path.join(pkg_share, 'lib', 'zg_double_lidar', 'uss_republisher.py')],
         output='screen',
-        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
     )
     ld.add_action(uss_republisher)
 

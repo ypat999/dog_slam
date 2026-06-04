@@ -40,10 +40,15 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install Python scripts as executables
+install(
+  PROGRAMS scripts/uss_republisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(DIRECTORY
   launch
   config
-  scripts
   DESTINATION share/${PROJECT_NAME}
 )
 

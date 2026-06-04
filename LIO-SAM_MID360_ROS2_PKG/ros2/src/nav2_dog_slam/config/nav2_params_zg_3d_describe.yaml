@@ -65,9 +65,9 @@ controller_server:
       # 目标检查器插件类型
       plugin: "nav2_controller::StoppedGoalChecker"
       # 到达目标的 XY 位置容差（m）
-      xy_goal_tolerance: 0.3
+      xy_goal_tolerance: 0.5
       # 到达目标的朝向容差（rad）
-      yaw_goal_tolerance: 0.2
+      yaw_goal_tolerance: 0.3
       # 判定为停止的线速度阈值（m/s）
       trans_stopped_velocity: 1.5
       # 判定为停止的角速度阈值（rad/s）
@@ -195,7 +195,7 @@ controller_server:
         # 代价幂次
         cost_power: 1
         # 近碰撞区域惩罚代价（>= near_collision_cost 时触发）
-        critical_cost: 300.0
+        critical_cost: 250.0
         # 近碰撞代价阈值
         near_collision_cost: 253
         # 真实碰撞代价值
@@ -203,9 +203,9 @@ controller_server:
         # 是否使用完整 footprint 碰撞检测（false=使用圆心点）
         consider_footprint: false
         # 接近目标时停止避障偏好项的距离（m）
-        near_goal_distance: 0.5
+        near_goal_distance: 1.0
         # 膨胀层名称（为空则使用最后一个膨胀层）
-        inflation_layer_name: ""
+        inflation_layer_name: "inflation_layer_local"
         # 轨迹点采样步长
         trajectory_point_step: 2
 
@@ -218,7 +218,9 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 2
+        cost_power: 4
+        # 评价器权重
+        cost_weight: 10.0
         # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重
@@ -229,6 +231,8 @@ controller_server:
         collision_cost: 254.0
         # 碰撞临界距离（m），类似 footprint 膨胀
         collision_margin_distance: 0.2
+        # 近碰撞代价阈值
+        critical_cost: 250.0
         # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
         near_goal_distance: 1.0
         # 膨胀层名称（为空则使用最后一个膨胀层）
@@ -417,7 +421,7 @@ velocity_smoother:
     
     # 加速度限制
     # 各轴最大加速度 [ax, ay, atheta]
-    max_accel: [5.0, 2.0, 0.5]
+    max_accel: [5.0, 2.0, 1.0]
     # 各轴最大减速度 [ax, ay, atheta]。此为有符号值，通常应为负数
     max_decel: [-5.0, -2.0, -2.0]
     
@@ -991,9 +995,7 @@ global_costmap:
       # 追踪未知空间时未知空间的代价值
       unknown_cost_value: 255
       # 占位栅格地图中被视为致命障碍物的最小代价值
-      lethal_cost_threshold: 200
-      # 代价图转换操作中表示 INSCRIBED_INFLATED_OBSTACLE 的占位栅格值
-      inscribed_obstacle_cost_value: 99
+      lethal_cost_threshold: 250
       # 组合多个代价图层时是否使用最大代价
       use_maximum: false
 
@@ -1001,12 +1003,6 @@ global_costmap:
       # 静态地图话题
       map_topic: "map"
 
-      # 系统配置
-      # 服务和动作的内省模式
-      introspection_mode: "disabled"
-      # 是否允许通过参数化值覆盖 QoS 配置
-      allow_parameter_qos_overrides: true
-    
       # 插件配置
       # 映射的插件名称列表
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -1117,8 +1113,8 @@ lifecycle_manager:
     autostart: true
     # 要管理的生命周期节点名称列表
     node_names: ['planner_server', 'controller_server', 'bt_navigator', 'waypoint_follower', 'velocity_smoother']
-    # 心跳超时时间（s），在此时间内未收到心跳则视为节点崩溃
-    bond_timeout: 10.0
+    # 心跳超时时间（ms），在此时间内未收到心跳则视为节点崩溃
+    bond_timeout_ms: 10000
     # 节点崩溃后允许的最大延迟时间（s），超过此时间则不再尝试重启
     bond_respawn_max_duration: 10.0
     # 是否尝试重新连接并重启崩溃的节点
@@ -1158,10 +1154,14 @@ amcl:
     map_topic: "map"
     # 里程计话题
     odom_topic: /rkbot/lio/odom
+    # TF 变换容差（s）
+    transform_tolerance: 0.5
+    # 设为 false 可阻止 AMCL 发布 global_frame 与 odom_frame 之间的变换
+    tf_broadcast: true
 
     # 粒子滤波器参数
     # 允许的最小粒子数
-    min_particles: 800
+    min_particles: 400
     # 允许的最大粒子数
     max_particles: 4000
     # 粒子滤波器种群误差
@@ -1169,13 +1169,13 @@ amcl:
     # 粒子滤波器种群密度，0.99 对应 99% 分位数
     pf_z: 0.99
     # 重采样前所需的滤波器更新次数
-    resample_interval: 3
+    resample_interval: 1
 
     # 更新阈值 - 执行滤波器更新前需要的最小平移/旋转运动量
     # 执行滤波器更新前所需的最小平移运动量（m）
-    update_min_d: 0.05
+    update_min_d: 0.2
     # 执行滤波器更新前所需的最小旋转运动量（rad）
-    update_min_a: 0.05
+    update_min_a: 0.2
 
     # 恢复参数 - 用于决定何时通过添加随机位姿进行恢复的指数衰减率
     # 慢速平均权重滤波器的指数衰减率，用于决定何时通过添加随机位姿恢复。合理值约为 0.001

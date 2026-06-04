@@ -172,8 +172,8 @@ controller_server:
         enabled: true
         cost_weight: 50.0
         cost_power: 1
-        # deadband_velocities: [0.1, 0.1, 0.1]
-        deadband_velocities: [0.1, 0.1]
+        deadband_velocities: [0.1, 0.1, 0.1]
+        # deadband_velocities: [0.1, 0.1]
         
       GoalCritic:
         enabled: true
@@ -225,7 +225,7 @@ velocity_smoother:
     min_velocity: [-1.0, -1.5, -5.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
     
     # 加速度限制 - 降低加速度避免急转急停
-    max_accel: [5.0, 2.0, 0.5]  # [ax_max, ay_max, atheta_max] - 降低加速度 
+    max_accel: [5.0, 2.0, 1.0]  # [ax_max, ay_max, atheta_max] - 降低加速度 
     max_decel: [-5.0, -2.0, -2.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
     
     # 其他参数
@@ -264,7 +264,7 @@ planner_server:
       max_on_approach_iterations: 100000
       max_planning_time: 10.0
       lattice_filepath: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/lattice_primitives.json"
-      minimum_turning_radius: 0.02
+      minimum_turning_radius: 0.05
       reverse_penalty: 1.0
       change_penalty: 0.3
       non_straight_penalty: 9.0
@@ -613,19 +613,19 @@ global_costmap:
       # 障碍物层参数
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: false
+        enabled: true
         observation_sources: scan
         scan:
           topic: /rkbot/scan
-          max_obstacle_height: 1.8
-          min_obstacle_height: -0.1
+          max_obstacle_height: 1.0
+          min_obstacle_height: -0.5
           clearing: true
           marking: true
           data_type: "LaserScan"
           raytrace_max_range: 10.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 10.0
-          obstacle_min_range: 0.0
+          obstacle_max_range: 4.0
+          obstacle_min_range: 1.0
       
       # 膨胀层参数
       inflation_layer:
@@ -677,7 +677,7 @@ amcl:
     use_sim_time: false
     
     # 基础参数 - 两个模型共用
-    min_particles: 800
+    min_particles: 400
     max_particles: 4000
     pf_err: 0.05      # 修正参数名：kld_err -> pf_err
     pf_z: 0.99        # 修正参数名：kld_z -> pf_z
@@ -700,9 +700,9 @@ amcl:
     # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
-    update_min_d: 0.05
-    update_min_a: 0.05
-    resample_interval: 3
+    update_min_d: 0.2
+    update_min_a: 0.2
+    resample_interval: 1
     # selective_resampling: false  # 删除不存在的参数
     
     # 恢复参数 - 两个模型共用

@@ -205,7 +205,7 @@ def generate_launch_description():
                 parameters=[configured_params_local],
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 0,1,2,3'],
-                remappings=remappings),
+                remappings=remappings + [('cmd_vel', '/cmd_vel')]),
             Node(
                 package='nav2_bt_navigator',
                 executable='bt_navigator',
@@ -216,7 +216,7 @@ def generate_launch_description():
                 parameters=[configured_params_global],
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 0,1,2,3'],
-                remappings=remappings),
+                remappings=remappings + [('cmd_vel', '/cmd_vel')]),
             Node(
                 package='nav2_waypoint_follower',
                 executable='waypoint_follower',

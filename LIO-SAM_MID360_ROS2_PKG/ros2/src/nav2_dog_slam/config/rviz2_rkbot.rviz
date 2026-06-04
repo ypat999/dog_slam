@@ -59,44 +59,13 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        base_link:
-          Value: false
-        map:
-          Value: false
-        odom:
-          Value: false
-        rkbot/base_footprint:
-          Value: false
-        rkbot/base_link:
-          Value: true
-        rkbot/imu:
-          Value: true
-        rkbot/map:
-          Value: false
-        rkbot/odom:
-          Value: false
-        rkbot/world:
-          Value: true
-        rslidar_head:
-          Value: true
-        rslidar_tail:
-          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        rkbot/map:
-          rkbot/odom:
-            rkbot/world:
-              rkbot/imu:
-                rkbot/base_link:
-                  rkbot/base_footprint:
-                    {}
-                  rslidar_head:
-                    rslidar_tail:
-                      {}
+        {}
       Update Interval: 0
       Value: true
     - Alpha: 1

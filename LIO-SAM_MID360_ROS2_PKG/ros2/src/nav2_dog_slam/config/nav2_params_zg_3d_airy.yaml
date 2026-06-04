@@ -100,9 +100,9 @@ controller_server:
       # 横向速度采样标准差
       vy_std: 0.4
       # 角速度采样标准差
-      wz_std: 1.0
+      wz_std: 0.5
       # 最大角速度（rad/s）
-      wz_max: 1.5
+      wz_max: 1.0
       
       # 温度参数
       # 轨迹选择敏锐度，越小越倾向于最低代价轨迹

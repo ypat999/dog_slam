@@ -194,7 +194,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 2
+        cost_power: 4
         # 评价器权重
         cost_weight: 10.0
         # 是否使用 SE2 footprint 碰撞检测

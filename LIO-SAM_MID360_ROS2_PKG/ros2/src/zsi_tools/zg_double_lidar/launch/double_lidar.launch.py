@@ -193,6 +193,16 @@ def generate_launch_description():
     )
     ld.add_action(scan_merger)
 
+     # USS republisher - 修复Range消息的min_range/max_range并重发到/rkbot命名空间
+    uss_republisher = Node(
+        package='zg_double_lidar',
+        executable='uss_republisher.py',
+        name='uss_republisher',
+        output='screen',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+    )
+    ld.add_action(uss_republisher)
+
     static_transform_map_to_odom = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
@@ -291,7 +301,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_link_to_uss_left_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.15', '0.10', '0.0', '0.0', '0.0', '1.57', ns_base_link_frame, 'uss_left_link'],
+        arguments=['0.15', '0.10', '0.0', '1.57', '0.0', '0.0', ns_base_link_frame, 'uss_left_link'],
         output='screen'
     )
     ld.add_action(static_transform_base_link_to_uss_left_link)
@@ -301,11 +311,10 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_link_to_uss_right_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.15', '-0.10', '0.0', '0.0', '0.0', '-1.57', ns_base_link_frame, 'uss_right_link'],
+        arguments=['0.15', '-0.10', '0.0', '-1.57', '0.0', '0.0', ns_base_link_frame, 'uss_right_link'],
         output='screen'
     )
     ld.add_action(static_transform_base_link_to_uss_right_link)
-
     
     #static_transform_world_to_base_footprint = Node(
     #    package='tf2_ros',

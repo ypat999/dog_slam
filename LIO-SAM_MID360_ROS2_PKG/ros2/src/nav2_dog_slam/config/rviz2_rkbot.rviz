@@ -59,13 +59,44 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        base_link:
+          Value: true
+        map:
+          Value: true
+        odom:
+          Value: true
+        rkbot/base_footprint:
+          Value: true
+        rkbot/base_link:
+          Value: true
+        rkbot/imu:
+          Value: true
+        rkbot/map:
+          Value: true
+        rkbot/odom:
+          Value: true
+        rkbot/world:
+          Value: true
+        rslidar_head:
+          Value: true
+        rslidar_tail:
+          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        {}
+        rkbot/map:
+          rkbot/odom:
+            rkbot/world:
+              rkbot/imu:
+                rkbot/base_link:
+                  rkbot/base_footprint:
+                    {}
+                  rslidar_head:
+                    rslidar_tail:
+                      {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -561,25 +592,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 15.893570899963379
+      Distance: 60.51863479614258
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 28.53483009338379
-        Y: 23.809072494506836
-        Z: -0.6717979907989502
+        X: 30.188339233398438
+        Y: 18.119295120239258
+        Z: -3.205157995223999
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4347963333129883
+      Pitch: 1.4647960662841797
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.6636271476745605
+      Yaw: 1.651816964149475
     Saved: ~
 Window Geometry:
   Displays:

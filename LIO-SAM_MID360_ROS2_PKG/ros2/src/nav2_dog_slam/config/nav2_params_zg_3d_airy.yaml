@@ -651,7 +651,19 @@ local_costmap:
       # "voxel_layer", "stvl_layer",  # 映射的插件名称列表，用于参数命名空间和名称
       plugins: ["range_sensor_layer", "traversability_layer_local","obstacle_layer_local", "inflation_layer_local"]
 
-      
+      range_sensor_layer:
+        plugin: "nav2_costmap_2d::RangeSensorLayer"
+        enabled: true
+        topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
+        input_sensor_type: "VARIABLE"
+        no_readings_timeout: 0.0
+        clear_threshold: 0.2
+        mark_threshold: 0.8
+        clear_on_max_reading: false
+        obstacle_range: 2.0
+        raytrace_range: 3.0
+        transform_tolerance: 0.5
+        
       # =====================================================
       # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
       # =====================================================
@@ -781,19 +793,6 @@ local_costmap:
           # 射线追踪最小范围（m）
           raytrace_min_range: 0.0
 
-
-      range_sensor_layer:
-        plugin: "nav2_costmap_2d::RangeSensorLayer"
-        enabled: true
-        topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
-        input_sensor_type: "VARIABLE"
-        no_readings_timeout: 0.0
-        clear_threshold: 0.2
-        mark_threshold: 0.8
-        clear_on_max_reading: false
-        obstacle_range: 2.0
-        raytrace_range: 3.0
-        transform_tolerance: 0.5
       
       # =====================================================
       # 膨胀层参数

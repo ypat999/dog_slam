@@ -35,9 +35,9 @@ controller_server:
 
     # 容错与里程计
     # 被调用控制器插件连续失败（computeVelocityCommands 抛出异常）的最大持续时间（s），-1.0 无限，0 禁用
-    failure_tolerance: 3.0
+    failure_tolerance: 1.0
     # 获取瞬时速度测量的里程计话题
-    odom_topic: "/rkbot/lio/odom"
+    odom_topic: "/rkbot/lio/robo/odom"
 
     # 速度限制话题
     # 要订阅的速度限制话题名称，可由 Speed Filter 发布，也可由外部服务器提供
@@ -58,7 +58,7 @@ controller_server:
       # 判定为有进展所需的最小移动半径（m）
       required_movement_radius: 0.10
       # 无进展超时时间（s）
-      movement_time_allowance: 20.0
+      movement_time_allowance: 10.0
     
     # 目标检查器参数 - 优化终点减速和停止精度
     goal_checker:
@@ -81,28 +81,28 @@ controller_server:
       plugin: "nav2_mppi_controller::MPPIController"
 
       # 轨迹时间步数
-      time_steps: 32
+      time_steps: 56
       # 每个时间步的时长（s），time_steps * model_dt = 预测时域
-      model_dt: 0.1
+      model_dt: 0.05
       # 每轮采样的候选轨迹数量
-      batch_size: 1000
+      batch_size: 500
       # TF 变换容差（s）
       transform_tolerance: 0.5
 
       # 最大前向速度（m/s）
       vx_max: 2.0
       # 最大反向速度（m/s）
-      vx_min: -0.3
+      vx_min: -0.4
       # 前向速度采样标准差
-      vx_std: 1.0
+      vx_std: 2.0
       # 最大横向速度（m/s，Omni 模型）
       vy_max: 0.2
       # 横向速度采样标准差
       vy_std: 0.2
       # 角速度采样标准差
-      wz_std: 1.0
+      wz_std: 2.0
       # 最大角速度（rad/s）
-      wz_max: 1.0
+      wz_max: 1.5
       
       # 温度参数
       # 轨迹选择敏锐度，越小越倾向于最低代价轨迹
@@ -129,7 +129,7 @@ controller_server:
         trajectory_step: 20
 
       # 是否强制路径反转（机器人掉头时反向跟踪路径）
-      enforce_path_inversion: true
+      enforce_path_inversion: false
       # 路径反转的 XY 容差（m）
       inversion_xy_tolerance: 0.3
       # 路径反转的朝向容差（rad）
@@ -139,9 +139,9 @@ controller_server:
       # MPPI 迭代次数，建议保持 1 并增大 batch_size
       iteration_count: 1
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
-      max_robot_pose_search_dist: 2.0
+      max_robot_pose_search_dist: 0.5
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 3.0
+      prune_distance: 1.5
       # 失败后重试次数（软重置）
       retry_attempt_limit: 1
   
@@ -194,7 +194,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 1
+        cost_power: 3
         # 评价器权重
         cost_weight: 6.0
         # 是否使用 SE2 footprint 碰撞检测
@@ -202,7 +202,7 @@ controller_server:
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重
         critical_weight: 200.0
         # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
-        repulsion_weight: 8.0
+        repulsion_weight: 5.0
         # 真实碰撞代价值
         collision_cost: 250.0
         # 碰撞临界距离（m），类似 footprint 膨胀
@@ -212,7 +212,7 @@ controller_server:
         # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
         near_goal_distance: 1.0
         # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
-        inflation_radius: 0.3
+        inflation_radius: 0.35
         # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
         cost_scaling_factor: 5.0
       
@@ -227,7 +227,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 30.0
+        cost_weight: 40.0
         # 代价幂次
         cost_power: 2
         # 从最远路径点算起的偏移量
@@ -267,11 +267,11 @@ controller_server:
       # =====================================================
       PathAngleCritic:
         # 是否启用
-        enabled: true
+        enabled: false
         # 评价器权重
-        cost_weight: 15.0
+        cost_weight: 10.0
         # 代价幂次
-        cost_power: 2
+        cost_power: 3
         # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
         # 从最远路径点算起的偏移量
@@ -288,11 +288,11 @@ controller_server:
       # =====================================================
       PreferForwardCritic:
         # 是否启用
-        enabled: true
+        enabled: false
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 40.0
         # 距目标距离小于此值时停止路径跟随
         threshold_to_consider: 1.5
 
@@ -303,11 +303,11 @@ controller_server:
       # =====================================================
       TwirlingCritic:
         # 是否启用
-        enabled: true
+        enabled: false
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 10.0
+        cost_weight: 20.0
 
       # =====================================================
       # VelocityDeadbandCritic - 速度死区评价器
@@ -335,7 +335,7 @@ controller_server:
         # 评价器权重
         cost_weight: 50.0
         # 代价幂次
-        cost_power: 3
+        cost_power: 1
         # 距目标小于此值时开始考虑目标距离代价
         threshold_to_consider: 2.0
 
@@ -350,9 +350,9 @@ controller_server:
         # 评价器权重
         cost_weight: 50.0
         # 代价幂次
-        cost_power: 3
+        cost_power: 1
         # 距目标小于此值时开始考虑目标朝向代价（m）
-        threshold_to_consider: 0.5
+        threshold_to_consider: 1.0
 
 
 # =============================================================================
@@ -371,7 +371,7 @@ velocity_smoother:
 
     #平滑器核心参数
     # 使用最后收到的速度命令按速度、加速度和死区约束进行平滑的频率（Hz）。若设为局部轨迹规划器频率，应平滑加速度约束；若设得更高，将插值并生成平滑命令
-    smoothing_frequency: 40.0
+    smoothing_frequency: 20.0
     # 是否按比例调整速度其他分量以匹配加速度限制导致的变化，使所有分量沿同一方向调整，但仍强制执行加速度限制
     scale_velocities: false
     # 反馈类型：OPEN_LOOP 使用上次命令速度作为当前速度；CLOSED_LOOP 使用 odom 话题里程计估计当前速度。闭环模式下里程计需高频率、低延迟
@@ -391,7 +391,7 @@ velocity_smoother:
     
     # 加速度限制
     # 各轴最大加速度 [ax, ay, atheta]
-    max_accel: [2.0, 0.5, 0.5]
+    max_accel: [1.0, 0.5, 0.5]
     # 各轴最大减速度 [ax, ay, atheta]。此为有符号值，通常应为负数
     max_decel: [-5.0, -5.0, -5.0]
     
@@ -613,15 +613,15 @@ local_costmap:
       # 是否使用滚动窗口（代价图跟随机器人移动，保持以机器人为中心的局部视图）
       rolling_window: true
       # 代价图宽度（m）
-      width: 12
+      width: 8
       # 代价图高度（m）
-      height: 12
+      height: 8
       # 代价图中每个单元格（像素）的分辨率（m），越小精度越高但计算量更大
       resolution: 0.05
       # 代价图 X 原点相对于宽度的偏移（m）
-      origin_x: -6.0
+      origin_x: -4.0
       # 代价图 Y 原点相对于高度的偏移（m）
-      origin_y: -6.0
+      origin_y: -4.0
 
       # 足迹参数
       # 有序的足迹点集，以字符串形式传入，必须为闭合多边形。可通过 ~/footprint 话题动态调整
@@ -654,7 +654,7 @@ local_costmap:
       # =====================================================
       range_sensor_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
-        enabled: true
+        enabled: false
         topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
         input_sensor_type: "VARIABLE"
         no_readings_timeout: 0.0
@@ -671,7 +671,7 @@ local_costmap:
         # 插件类型
         plugin: "traversability_layer::TraversabilityLayer"
         # 是否启用
-        enabled: false
+        enabled: true
         # 点云话题
         pointcloud_topic: /rkbot/lio/cloud_world
         # 机器人基准坐标系
@@ -777,7 +777,7 @@ local_costmap:
           # 无限返回值是否有效
           inf_is_valid: true
           # 仅清除不标记（用于动态物体去除）
-          marking: true
+          marking: false
           # 是否清除障碍物（射线追踪）
           clearing: true
           # 最大障碍物高度（m）
@@ -785,7 +785,7 @@ local_costmap:
           # 最小障碍物高度（m）
           min_obstacle_height: -100.0
           # 0=不标记障碍物
-          obstacle_max_range: 10.0
+          obstacle_max_range: 0.0
           # 障碍物检测最小范围（m）
           obstacle_min_range: 0.0
           # 射线追踪最大范围（m）
@@ -807,7 +807,7 @@ local_costmap:
         # 是否启用
         enabled: true
         # 在致命障碍物周围膨胀代价图的半径（m）
-        inflation_radius: 0.3
+        inflation_radius: 0.35
         # 膨胀半径上的指数衰减因子
         cost_scaling_factor: 5.0
         # 是否将未知单元格如同致命单元格一样膨胀
@@ -1157,7 +1157,7 @@ amcl:
     # 要考虑的最小扫描距离，-1.0 使用激光雷达报告的最小距离
     laser_min_range: 0.1
     # 要考虑的最大扫描距离，-1.0 使用激光雷达报告的最大距离
-    laser_max_range: 100.0
+    laser_max_range: 200.0
     # 每次扫描中用于更新滤波器的均匀分布光束数量
     max_beams: 360
 
@@ -1191,7 +1191,7 @@ amcl:
     # z_rand 部分的混合权重（随机测量）
     z_rand: 0.40
     # 地图上障碍物膨胀的最大距离（m），用于 likelihood_field 模型
-    laser_likelihood_max_dist: 60.0
+    laser_likelihood_max_dist: 100.0
 
     # Beam 跳过参数 - 在 Likelihood 场模型中跳过大多数粒子不同意的光束
     # 是否在 Likelihood 场模型中执行光束跳过

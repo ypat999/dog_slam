@@ -263,7 +263,7 @@
     <!-- 命名空间配置 -->
     <div style="margin-top: 10px; margin-bottom: 10px;">
       <label for="namespace-input">机器人命名空间：</label>
-      <input type="text" id="namespace-input" value="" placeholder="留空使用默认 /rkbot" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
+      <input type="text" id="namespace-input" value="/rkbot" placeholder="留空表示不设命名空间" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
       <button onclick="updateNamespace()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
     </div>
     <div>
@@ -283,10 +283,10 @@
     </div>
     <div style="margin-top: 10px;">
       <select id="position-source-select" onchange="changePositionSource(this.value)">
-        <option value="amcl">使用AMCL定位</option>
-        <option value="super_lio" selected>使用super_lio里程计</option>
+        <option value="amcl" selected>使用AMCL定位</option>
+        <option value="super_lio">使用super_lio里程计</option>
       </select>
-      <span id="position-source-status">当前：使用super_lio里程计</span>
+      <span id="position-source-status">当前：使用AMCL定位</span>
     </div>
     
     <div style="margin-top: 10px;">
@@ -295,7 +295,7 @@
         显示激光扫描数据
       </label>
       <label style="margin-left: 10px;">
-        <input type="checkbox" id="show-local-costmap" onchange="toggleLocalCostmap(this.checked)">
+        <input type="checkbox" id="show-local-costmap" onchange="toggleLocalCostmap(this.checked)" checked>
         显示local_costmap
       </label>
     </div>
@@ -400,7 +400,7 @@
     const ROSBRIDGE_SERVER_PORT = 9090;
 
     // 机器人命名空间配置（默认 /rkbot，支持空输入表示无命名空间）
-    let ROBOT_NAMESPACE = localStorage.getItem('robot_namespace') || '/rkbot';
+    let ROBOT_NAMESPACE = '/rkbot';
     // ns() 辅助函数：拼接命名空间前缀，命名空间为空时返回原始路径
     function ns(path) { return ROBOT_NAMESPACE ? ROBOT_NAMESPACE + path : path; }
     // nsFrame() 辅助函数：拼接命名空间到 frame_id（不含前导斜杠，如 rkbot/map）
@@ -408,13 +408,13 @@
 
     // 根据命名空间动态计算的话题/服务名称
     let MAP_TOPIC = ns('/map');
-    let ROBOT_FRAME = nsFrame('base_footprint');
+    let ROBOT_FRAME = nsFrame('base_link');
     let SUPER_LIO_ODOM_TOPIC = ns('/lio/odom'); // super_lio发布的里程计话题
     let SUPER_LIO_FRONT_ODOM_TOPIC = ns('/lio/odom'); // super_lio_front发布的里程计话题
     let AMCL_POSE_TOPIC = ns('/amcl_pose'); // AMCL发布的定位话题
-    let CMD_TOPIC = ns('/cmd_vel');
-    let GOAL_TOPIC = ns('/goal_pose');
-    let INITIAL_POSE_TOPIC = ns('/initialpose');
+    let CMD_TOPIC = '/cmd_vel';
+    let GOAL_TOPIC = '/goal_pose';
+    let INITIAL_POSE_TOPIC = '/initialpose';
     let SCAN_TOPIC = ns('/scan'); // 激光扫描话题
     let TF_TOPIC = '/tf'; // TF话题始终在全局命名空间
     let PLAN_TOPIC = ns('/plan');
@@ -423,7 +423,7 @@
     let SPEED_LIMIT_TOPIC = ns('/speed_limit');
     let LOCAL_COSTMAP_TOPIC = ns('/local_costmap/costmap');
   // 位置源选择：'super_lio' 或 'amcl'
-  let positionSource = 'super_lio'; // 默认使用super_lio定位信息
+  let positionSource = 'amcl'; // 默认使用AMCL定位信息
     
   // TF变换相关变量
   let mapToOdomTransform = null; // map->odom的变换
@@ -447,7 +447,7 @@
     let initialPosePosition = null;
     let laserScanData = null; // 激光扫描数据
     let showLaserScan = false; // 是否显示激光扫描数据（默认关闭）
-    let showLocalCostmap = false; // 是否显示 local_costmap
+    let showLocalCostmap = true; // 是否显示 local_costmap（默认开启）
     let lastLocalCostmap = null; // 最新的 local_costmap 数据
     let scale = 1.0; // 缩放比例
     let offsetX = 0; // 偏移量X
@@ -549,9 +549,10 @@
       const newNamespace = namespaceInput.value.trim();
       
       if (newNamespace === '') {
-        ROBOT_NAMESPACE = '/rkbot';
+        // 留空表示不设命名空间
+        ROBOT_NAMESPACE = '';
         localStorage.removeItem('robot_namespace');
-        alert('已重置为默认命名空间：/rkbot\n设置已保存，刷新页面后生效');
+        alert('已设置为不使用命名空间\n设置已保存，刷新页面后生效');
       } else {
         // 确保命名空间以 / 开头（用户输入 rkbot 也转为 /rkbot）
         ROBOT_NAMESPACE = newNamespace.startsWith('/') ? newNamespace : '/' + newNamespace;
@@ -560,9 +561,9 @@
       }
       
       // 更新输入框显示
-      namespaceInput.value = ROBOT_NAMESPACE === '/rkbot' ? '' : ROBOT_NAMESPACE;
+      namespaceInput.value = ROBOT_NAMESPACE;
       
-      console.log('机器人命名空间已更新为：', ROBOT_NAMESPACE);
+      console.log('机器人命名空间已更新为：', ROBOT_NAMESPACE || '(无命名空间)');
     }
 
     // 初始化命名空间输入框
@@ -570,18 +571,20 @@
       const namespaceInput = document.getElementById('namespace-input');
       const savedNamespace = localStorage.getItem('robot_namespace');
       
-      if (savedNamespace) {
+      if (savedNamespace !== null) {
+        // 如果有保存的命名空间（包括空字符串），使用它
         namespaceInput.value = savedNamespace;
         ROBOT_NAMESPACE = savedNamespace;
       } else {
-        namespaceInput.value = '';
+        // 否则使用默认命名空间 /rkbot
+        namespaceInput.value = '/rkbot';
         ROBOT_NAMESPACE = '/rkbot';
       }
       
       // 重新计算所有话题名称
       refreshTopicNames();
       
-      console.log('命名空间初始化完成：', ROBOT_NAMESPACE);
+      console.log('命名空间初始化完成：', ROBOT_NAMESPACE || '(无命名空间)');
     }
     
     // 根据当前命名空间刷新话题名称
@@ -591,9 +594,9 @@
       SUPER_LIO_ODOM_TOPIC = ns('/lio/odom');
       SUPER_LIO_FRONT_ODOM_TOPIC = ns('/lio/odom');
       AMCL_POSE_TOPIC = ns('/amcl_pose');
-      CMD_TOPIC = ns('/cmd_vel');
-      GOAL_TOPIC = ns('/goal_pose');
-      INITIAL_POSE_TOPIC = ns('/initialpose');
+      CMD_TOPIC = '/cmd_vel';
+      GOAL_TOPIC = '/goal_pose';
+      INITIAL_POSE_TOPIC = '/initialpose';
       SCAN_TOPIC = ns('/scan');
       PLAN_TOPIC = ns('/plan');
       FOOTPRINT_TOPIC = ns('/global_costmap/published_footprint');
@@ -1606,7 +1609,7 @@
             lastMapWidth = mapMsg.info.width;
             lastMapHeight = mapMsg.info.height;
             
-            // 初次加载地图时自适应全图，之后保留当前缩放级别
+            // 初次加载地图时自适应全图并居中，之后保留当前缩放级别
             const newOriginX = mapMsg.info.origin.position.x;
             const newOriginY = mapMsg.info.origin.position.y;
             if (!window._initialMapLoaded) {
@@ -1617,8 +1620,17 @@
               const fitScaleY = canvas.height / mapHeightMeters * 0.95;
               scale = Math.min(fitScaleX, fitScaleY);
             }
-            offsetX = (canvas.width / 2) - (robotPosition.x - newOriginX) * scale;
-            offsetY = (canvas.height / 2) + (robotPosition.y - newOriginY) * scale;
+            // 首次加载地图时居中显示地图中心，否则基于机器人位置居中
+            if (window._initialMapLoaded && !window._mapCentered) {
+              window._mapCentered = true;
+              const mapCenterX = newOriginX + (mapMsg.info.width * mapMsg.info.resolution) / 2;
+              const mapCenterY = newOriginY + (mapMsg.info.height * mapMsg.info.resolution) / 2;
+              offsetX = (canvas.width / 2) - (mapCenterX - newOriginX) * scale;
+              offsetY = (canvas.height / 2) + (mapCenterY - newOriginY) * scale;
+            } else {
+              offsetX = (canvas.width / 2) - (robotPosition.x - newOriginX) * scale;
+              offsetY = (canvas.height / 2) + (robotPosition.y - newOriginY) * scale;
+            }
             
             // 防抖：地图尺寸变化后，延迟500ms再重建缓存
             // 避免建图过程中频繁重建缓存导致卡顿

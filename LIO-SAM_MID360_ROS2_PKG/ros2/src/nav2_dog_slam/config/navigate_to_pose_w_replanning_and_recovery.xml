@@ -19,13 +19,12 @@
             <ComputePathToPose goal="{goal}" path="{path}" planner_id="LatticeBased"/>
             <!-- <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/> -->
             <!-- <ComputePathToPose goal="{goal}" path="{path}" planner_id="HybridBased"/> -->
-            
             <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
           </RecoveryNode>
         </RateController>
-        <RecoveryNode number_of_retries="3" name="FollowPath">
-          <FollowPath path="{path}" controller_id="FollowPath"/>
+        <RecoveryNode number_of_retries="2" name="FollowPath">
           <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          <FollowPath path="{path}" controller_id="FollowPath"/>
         </RecoveryNode>
       </PipelineSequence>
       <ReactiveFallback name="RecoveryFallback">
@@ -35,7 +34,7 @@
             <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
             <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
           </Sequence>
-          <BackUp backup_dist="0.50" backup_speed="0.15"/>
+          <BackUp backup_dist="0.30" backup_speed="0.15"/>
           <Wait wait_duration="2"/>
         </RoundRobin>
       </ReactiveFallback>

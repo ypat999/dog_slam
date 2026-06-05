@@ -15,6 +15,7 @@
 ///    - routing.router.peers_failover_brokering → true
 /// ============================================================================
 {
+  id: "d0907122",
   mode: "router",
 
   // ---------- 连接其他 Router（多 router 级联）----------
@@ -143,7 +144,7 @@
         //   配合 keep_alive=4，约 2.5s 发一次心跳
         //   约 8.75s 无心跳即判定链路死亡
         //   SIGKILL 后 router 10s 内释放旧 session
-        lease: 10000,
+        lease: 3000,
         // 每租约周期发 4 次 keep_alive（ITU-T G.8013/Y.1731 建议值）
         keep_alive: 4,
         // 最大批次大小 = 65535 bytes (16bit 上限)

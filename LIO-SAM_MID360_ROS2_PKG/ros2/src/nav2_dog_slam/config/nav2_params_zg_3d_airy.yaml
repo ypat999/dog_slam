@@ -169,13 +169,13 @@ controller_server:
       # =====================================================
       CostCritic:
         # 是否启用
-        enabled: true
+        enabled: false
         # 评价器权重（内部会除以 254 归一化）
         cost_weight: 12.0
         # 代价幂次
         cost_power: 1
         # 近碰撞区域惩罚代价（>= near_collision_cost 时触发）
-        critical_cost: 250.0
+        critical_cost: 253.0
         # 真实碰撞代价值
         collision_cost: 254.0
         # 是否使用完整 footprint 碰撞检测（false=使用圆心点）
@@ -202,7 +202,7 @@ controller_server:
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重
         critical_weight: 200.0
         # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
-        repulsion_weight: 12.0
+        repulsion_weight: 8.0
         # 真实碰撞代价值
         collision_cost: 250.0
         # 碰撞临界距离（m），类似 footprint 膨胀
@@ -212,9 +212,9 @@ controller_server:
         # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
         near_goal_distance: 1.0
         # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
-        inflation_radius: 0.5
+        inflation_radius: 0.3
         # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
-        cost_scaling_factor: 15.0
+        cost_scaling_factor: 5.0
       
       # =====================================================
       # PathFollowCritic - 路径跟随评价器
@@ -264,8 +264,6 @@ controller_server:
       # PathAngleCritic - 路径角度评价器
       # =====================================================
       # 用于在极端未对齐或转向情况下对齐路径的评价器目标函数。
-      # mode: 0=FORWARD_PREFERENCE(前进偏好), 1=NO_DIRECTIONAL_PREFERENCE(无方向偏好),
-      #       2=CONSIDER_FEASIBLE_PATH_ORIENTATIONS(考虑可行路径朝向)
       # =====================================================
       PathAngleCritic:
         # 是否启用
@@ -294,7 +292,7 @@ controller_server:
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 10.0
+        cost_weight: 20.0
         # 距目标距离小于此值时停止路径跟随
         threshold_to_consider: 1.5
 
@@ -305,11 +303,11 @@ controller_server:
       # =====================================================
       TwirlingCritic:
         # 是否启用
-        enabled: false
+        enabled: true
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 10.0
 
       # =====================================================
       # VelocityDeadbandCritic - 速度死区评价器
@@ -809,9 +807,9 @@ local_costmap:
         # 是否启用
         enabled: true
         # 在致命障碍物周围膨胀代价图的半径（m）
-        inflation_radius: 0.6
+        inflation_radius: 0.3
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 15.0
+        cost_scaling_factor: 5.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: false
         # 是否在未知单元格周围膨胀
@@ -1161,7 +1159,7 @@ amcl:
     # 要考虑的最大扫描距离，-1.0 使用激光雷达报告的最大距离
     laser_max_range: 100.0
     # 每次扫描中用于更新滤波器的均匀分布光束数量
-    max_beams: 180
+    max_beams: 360
 
     # =============================================================================
     # BEAM MODEL 参数 - 适用于结构化环境

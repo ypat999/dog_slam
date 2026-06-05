@@ -259,6 +259,13 @@
       <input type="text" id="hostname-input" value="" placeholder="留空使用当前主机" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
       <button onclick="updateHostname()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
     </div>
+    
+    <!-- 命名空间配置 -->
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+      <label for="namespace-input">机器人命名空间：</label>
+      <input type="text" id="namespace-input" value="" placeholder="留空使用默认 /rkbot" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
+      <button onclick="updateNamespace()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
+    </div>
     <div>
       <button onclick="clearGoal()">清除目标</button>
       <button onclick="resetZoom()">重置缩放</button>
@@ -284,8 +291,12 @@
     
     <div style="margin-top: 10px;">
       <label>
-        <input type="checkbox" id="show-laser-scan" checked onchange="toggleLaserScan(this.checked)">
+        <input type="checkbox" id="show-laser-scan" onchange="toggleLaserScan(this.checked)">
         显示激光扫描数据
+      </label>
+      <label style="margin-left: 10px;">
+        <input type="checkbox" id="show-local-costmap" onchange="toggleLocalCostmap(this.checked)">
+        显示local_costmap
       </label>
     </div>
     
@@ -296,6 +307,8 @@
         <button onclick="sendCtrlMode(1)">站立</button>
         <button onclick="sendCtrlMode(2)">半蹲</button>
         <button onclick="sendCtrlMode(0)">趴下</button>
+        <button onclick="sendCtrlMode(61)">退出充电</button>
+        <button onclick="sendCtrlMode(62)">进入充电</button>
       </div>
       <div>
         <button onclick="stopRobotControl()">关闭控制服务</button>
@@ -385,14 +398,30 @@
     // === 配置部分 ===
     let ROSBRIDGE_SERVER_IP = localStorage.getItem('ros_hostname') || location.hostname; // 优先使用本地存储的主机名
     const ROSBRIDGE_SERVER_PORT = 9090;
-    const MAP_TOPIC = "/map";
-    const ROBOT_FRAME = "base_footprint";
-    const SUPER_LIO_ODOM_TOPIC = "/lio/odom"; // super_lio发布的里程计话题
-  const AMCL_POSE_TOPIC = "/amcl_pose"; // AMCL发布的定位话题
-    const CMD_TOPIC = "/cmd_vel";
-    const GOAL_TOPIC = "/goal_pose";
-    const INITIAL_POSE_TOPIC = "/initialpose";
-    const SCAN_TOPIC = "/scan"; // 激光扫描话题
+
+    // 机器人命名空间配置（默认 /rkbot，支持空输入表示无命名空间）
+    let ROBOT_NAMESPACE = localStorage.getItem('robot_namespace') || '/rkbot';
+    // ns() 辅助函数：拼接命名空间前缀，命名空间为空时返回原始路径
+    function ns(path) { return ROBOT_NAMESPACE ? ROBOT_NAMESPACE + path : path; }
+    // nsFrame() 辅助函数：拼接命名空间到 frame_id（不含前导斜杠，如 rkbot/map）
+    function nsFrame(frame) { return ROBOT_NAMESPACE ? ROBOT_NAMESPACE.substring(1) + '/' + frame : frame; }
+
+    // 根据命名空间动态计算的话题/服务名称
+    let MAP_TOPIC = ns('/map');
+    let ROBOT_FRAME = nsFrame('base_footprint');
+    let SUPER_LIO_ODOM_TOPIC = ns('/lio/odom'); // super_lio发布的里程计话题
+    let SUPER_LIO_FRONT_ODOM_TOPIC = ns('/lio/odom'); // super_lio_front发布的里程计话题
+    let AMCL_POSE_TOPIC = ns('/amcl_pose'); // AMCL发布的定位话题
+    let CMD_TOPIC = ns('/cmd_vel');
+    let GOAL_TOPIC = ns('/goal_pose');
+    let INITIAL_POSE_TOPIC = ns('/initialpose');
+    let SCAN_TOPIC = ns('/scan'); // 激光扫描话题
+    let TF_TOPIC = '/tf'; // TF话题始终在全局命名空间
+    let PLAN_TOPIC = ns('/plan');
+    let FOOTPRINT_TOPIC = ns('/global_costmap/published_footprint');
+    let PREEMPT_TELEOP_TOPIC = ns('/preempt_teleop');
+    let SPEED_LIMIT_TOPIC = ns('/speed_limit');
+    let LOCAL_COSTMAP_TOPIC = ns('/local_costmap/costmap');
   // 位置源选择：'super_lio' 或 'amcl'
   let positionSource = 'super_lio'; // 默认使用super_lio定位信息
     
@@ -417,7 +446,9 @@
     let goalPosition = null;
     let initialPosePosition = null;
     let laserScanData = null; // 激光扫描数据
-    let showLaserScan = true; // 是否显示激光扫描数据
+    let showLaserScan = false; // 是否显示激光扫描数据（默认关闭）
+    let showLocalCostmap = false; // 是否显示 local_costmap
+    let lastLocalCostmap = null; // 最新的 local_costmap 数据
     let scale = 1.0; // 缩放比例
     let offsetX = 0; // 偏移量X
     let offsetY = 0; // 偏移量Y
@@ -510,6 +541,65 @@
         // 否则留空（使用默认主机名）
         hostnameInput.value = '';
       }
+    }
+
+    // 更新命名空间
+    function updateNamespace() {
+      const namespaceInput = document.getElementById('namespace-input');
+      const newNamespace = namespaceInput.value.trim();
+      
+      if (newNamespace === '') {
+        ROBOT_NAMESPACE = '/rkbot';
+        localStorage.removeItem('robot_namespace');
+        alert('已重置为默认命名空间：/rkbot\n设置已保存，刷新页面后生效');
+      } else {
+        // 确保命名空间以 / 开头（用户输入 rkbot 也转为 /rkbot）
+        ROBOT_NAMESPACE = newNamespace.startsWith('/') ? newNamespace : '/' + newNamespace;
+        localStorage.setItem('robot_namespace', ROBOT_NAMESPACE);
+        alert('已更新命名空间为：' + ROBOT_NAMESPACE + '\n设置已保存，刷新页面后生效');
+      }
+      
+      // 更新输入框显示
+      namespaceInput.value = ROBOT_NAMESPACE === '/rkbot' ? '' : ROBOT_NAMESPACE;
+      
+      console.log('机器人命名空间已更新为：', ROBOT_NAMESPACE);
+    }
+
+    // 初始化命名空间输入框
+    function initNamespaceInput() {
+      const namespaceInput = document.getElementById('namespace-input');
+      const savedNamespace = localStorage.getItem('robot_namespace');
+      
+      if (savedNamespace) {
+        namespaceInput.value = savedNamespace;
+        ROBOT_NAMESPACE = savedNamespace;
+      } else {
+        namespaceInput.value = '';
+        ROBOT_NAMESPACE = '/rkbot';
+      }
+      
+      // 重新计算所有话题名称
+      refreshTopicNames();
+      
+      console.log('命名空间初始化完成：', ROBOT_NAMESPACE);
+    }
+    
+    // 根据当前命名空间刷新话题名称
+    function refreshTopicNames() {
+      MAP_TOPIC = ns('/map');
+      ROBOT_FRAME = nsFrame('base_footprint');
+      SUPER_LIO_ODOM_TOPIC = ns('/lio/odom');
+      SUPER_LIO_FRONT_ODOM_TOPIC = ns('/lio/odom');
+      AMCL_POSE_TOPIC = ns('/amcl_pose');
+      CMD_TOPIC = ns('/cmd_vel');
+      GOAL_TOPIC = ns('/goal_pose');
+      INITIAL_POSE_TOPIC = ns('/initialpose');
+      SCAN_TOPIC = ns('/scan');
+      PLAN_TOPIC = ns('/plan');
+      FOOTPRINT_TOPIC = ns('/global_costmap/published_footprint');
+      PREEMPT_TELEOP_TOPIC = ns('/preempt_teleop');
+      SPEED_LIMIT_TOPIC = ns('/speed_limit');
+      LOCAL_COSTMAP_TOPIC = ns('/local_costmap/costmap');
     }
     
     // 处理鼠标滚轮缩放
@@ -1164,9 +1254,17 @@
     // 独立的激光扫描渲染循环 - 高频率更新
     function startLaserRenderLoop() {
       function renderLoop() {
-        if (laserRenderPending && lastLaserScanData && currentMap) {
+        if (laserRenderPending) {
           laserRenderPending = false;
-          drawLaserScanOnly();
+          // 清空激光Canvas
+          laserCtx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
+          // 先绘制 costmap，再绘制激光（激光在最上层）
+          if (lastLocalCostmap && currentMap && showLocalCostmap) {
+            drawLocalCostmapOnly();
+          }
+          if (lastLaserScanData && currentMap && showLaserScan) {
+            drawLaserScanOnly();
+          }
         }
         requestAnimationFrame(renderLoop);
       }
@@ -1180,9 +1278,6 @@
       }
       
       const startTime = performance.now();
-      
-      // 清空激光Canvas（不是地图Canvas）
-      laserCtx.clearRect(0, 0, laserCanvas.width, laserCanvas.height);
       
       // 绘制激光点
       const ranges = lastLaserScanData.ranges;
@@ -1214,6 +1309,62 @@
       const duration = performance.now() - startTime;
       if (duration > 8) {
         console.log(`[激光渲染] 耗时: ${duration.toFixed(2)}ms`);
+      }
+    }
+    
+    // 绘制 local_costmap（使用独立Canvas，costmap颜色方案）
+    function drawLocalCostmapOnly() {
+      if (!lastLocalCostmap || !currentMap) {
+        return;
+      }
+      
+      const startTime = performance.now();
+      const cm = lastLocalCostmap;
+      const data = cm.data;
+      const width = cm.info.width;
+      const height = cm.info.height;
+      const resolution = cm.info.resolution;
+      const originX = cm.info.origin.position.x;
+      const originY = cm.info.origin.position.y;
+      const mapOriginX = currentMap.info.origin.position.x;
+      const mapOriginY = currentMap.info.origin.position.y;
+      const cellSize = resolution * scale;
+      
+      if (!data) return;
+      
+      // 按 costmap 颜色方案逐格绘制（半透明填充，激光点叠加在上层）
+      for (let cy = 0; cy < height; cy++) {
+        const worldY = originY + cy * resolution;
+        for (let cx = 0; cx < width; cx++) {
+          const value = data[cy * width + cx];
+          if (value === 0 || value === 255) continue; // free or unknown, skip
+          
+          const worldX = originX + cx * resolution;
+          const canvasX = offsetX + (worldX - mapOriginX) * scale;
+          const canvasY = offsetY - (worldY - mapOriginY) * scale - cellSize; // fillRect从左上角绘制
+          
+          if (canvasX + cellSize < 0 || canvasX >= laserCanvas.width ||
+              canvasY + cellSize < 0 || canvasY >= laserCanvas.height) continue;
+          
+          if (value >= 100) {
+            laserCtx.fillStyle = 'rgba(128, 0, 0, 0.78)';    // lethal: dark red
+          } else if (value >= 75) {
+            laserCtx.fillStyle = 'rgba(255, 0, 0, 0.47)';    // high cost: red
+          } else if (value >= 50) {
+            laserCtx.fillStyle = 'rgba(255, 140, 0, 0.47)';  // medium-high: orange
+          } else if (value >= 25) {
+            laserCtx.fillStyle = 'rgba(255, 255, 0, 0.39)';  // medium: yellow
+          } else {
+            laserCtx.fillStyle = 'rgba(0, 255, 255, 0.31)';  // low cost: cyan
+          }
+          
+          laserCtx.fillRect(canvasX, canvasY, Math.max(cellSize, 1), Math.max(cellSize, 1));
+        }
+      }
+      
+      const duration = performance.now() - startTime;
+      if (duration > 16) {
+        console.log(`[costmap渲染] 耗时: ${duration.toFixed(2)}ms, 尺寸:${width}x${height}`);
       }
     }
     
@@ -1523,13 +1674,6 @@
         }
       }
       
-      // 订阅super_lio里程计主题
-      var superLioOdomTopic = new ROSLIB.Topic({
-        ros: ros,
-        name: SUPER_LIO_ODOM_TOPIC,
-        messageType: 'nav_msgs/Odometry'
-      });
-      
       // 四元数转欧拉角（yaw）的函数
       function quaternionToYaw(orientation) {
         // 使用四元数到欧拉角的转换公式计算yaw
@@ -1553,7 +1697,7 @@
         // 订阅/tf话题来获取map->odom变换
         const tfTopic = new ROSLIB.Topic({
           ros: ros,
-          name: '/tf',
+          name: TF_TOPIC,
           messageType: 'tf2_msgs/TFMessage'
         });
         
@@ -1561,8 +1705,8 @@
           // 遍历所有变换，查找map->odom
           if (tfMsg.transforms) {
             for (let transform of tfMsg.transforms) {
-              if (transform.header.frame_id === 'map' && transform.child_frame_id === 'odom') {
-                // 更新map->odom变换
+              if (transform.header.frame_id === nsFrame('map')) {
+                if (transform.child_frame_id === nsFrame('odom')) {
                 mapToOdomTransform = {
                   translation: {
                     x: transform.transform.translation.x,
@@ -1582,6 +1726,26 @@
                   'x=', mapToOdomTransform.translation.x.toFixed(3),
                   'y=', mapToOdomTransform.translation.y.toFixed(3),
                   'yaw=', (quaternionToYaw(mapToOdomTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+                } else if (transform.child_frame_id === nsFrame('world')) {
+                  window.mapToWorldTransform = {
+                    translation: {
+                      x: transform.transform.translation.x,
+                      y: transform.transform.translation.y,
+                      z: transform.transform.translation.z
+                    },
+                    rotation: {
+                      x: transform.transform.rotation.x,
+                      y: transform.transform.rotation.y,
+                      z: transform.transform.rotation.z,
+                      w: transform.transform.rotation.w
+                    },
+                    timestamp: Date.now()
+                  };
+                  console.log('更新map->world变换:', 
+                    'x=', window.mapToWorldTransform.translation.x.toFixed(3),
+                    'y=', window.mapToWorldTransform.translation.y.toFixed(3),
+                    'yaw=', (quaternionToYaw(window.mapToWorldTransform.rotation) * 180 / Math.PI).toFixed(1), '度');
+                }
               }
             }
           }
@@ -1612,10 +1776,44 @@
         return { x: mapX, y: mapY, theta: mapTheta };
       }
       
-      superLioOdomTopic.subscribe(function(odomMsg) {
-        // 只有当位置源设置为super_lio时才使用这些数据
-        if (positionSource === 'super_lio') {
-          // 获取odom坐标系下的位置和朝向
+      function applyMapToWorldTransform(worldX, worldY, worldTheta) {
+        const tf = window.mapToWorldTransform;
+        if (!tf) {
+          console.warn('map->world变换未初始化（可能world == map），直接使用world坐标作为map坐标');
+          return { x: worldX, y: worldY, theta: worldTheta };
+        }
+
+        const tx = tf.translation.x;
+        const ty = tf.translation.y;
+        const tfYaw = quaternionToYaw(tf.rotation);
+
+        const cosYaw = Math.cos(tfYaw);
+        const sinYaw = Math.sin(tfYaw);
+
+        const mapX = tx + worldX * cosYaw - worldY * sinYaw;
+        const mapY = ty + worldX * sinYaw + worldY * cosYaw;
+        const mapTheta = worldTheta + tfYaw;
+
+        return { x: mapX, y: mapY, theta: mapTheta };
+      }
+
+      // 订阅里程计（带主备切换）：优先SUPER_LIO_ODOM_TOPIC，超时后尝试SUPER_LIO_FRONT_ODOM_TOPIC
+      let lioOdomReceived = false;
+      let lioFrontOdomTopic = null;
+      let fallbackTimer = null;
+      
+      function onLioOdomReceived(odomMsg) {
+        if (positionSource !== 'super_lio') return;
+        
+        if (!lioOdomReceived) {
+          lioOdomReceived = true;
+          console.log('已从', SUPER_LIO_ODOM_TOPIC, '收到里程计数据，取消fallback定时器');
+          if (fallbackTimer) {
+            clearTimeout(fallbackTimer);
+            fallbackTimer = null;
+          }
+        }
+        
           const odomX = odomMsg.pose.pose.position.x;
           const odomY = odomMsg.pose.pose.position.y;
           const odomTheta = quaternionToYaw(odomMsg.pose.pose.orientation);
@@ -1631,7 +1829,82 @@
           // 重绘地图以更新机器人位置
           drawMap();
         }
+      
+      function onLioFrontOdomReceived(odomMsg) {
+        if (positionSource !== 'super_lio') return;
+
+        if (!lioOdomReceived) {
+          lioOdomReceived = true;
+          console.log('主话题无数据，已切换到', SUPER_LIO_FRONT_ODOM_TOPIC, '接收里程计数据');
+
+          // 自适应检测帧约定：frame_id含有"world"时为z前向帧，否则为标准z天向帧
+          const frameId = (odomMsg.header && odomMsg.header.frame_id) || '';
+          window.frontOdomZForward = /world/i.test(frameId);
+          console.log('前雷达帧检测 frame_id:', frameId, '→ z前向:', window.frontOdomZForward);
+        }
+
+        const rawX = odomMsg.pose.pose.position.x;
+        const rawY = odomMsg.pose.pose.position.y;
+        const rawZ = odomMsg.pose.pose.position.z;
+        const ox = odomMsg.pose.pose.orientation.x;
+        const oy = odomMsg.pose.pose.orientation.y;
+        const oz = odomMsg.pose.pose.orientation.z;
+        const ow = odomMsg.pose.pose.orientation.w;
+
+        let mapX, mapY, mapTheta;
+
+        if (window.frontOdomZForward) {
+          // z前向帧：z=前向, y=侧向, x=高度 → map帧：x=前向, y=侧向
+          mapX = rawZ;
+          mapY = rawY;
+          // heading = 绕x轴(高度轴)的roll角，取反修正方向
+          const roll = Math.atan2(2 * (ow * ox + oy * oz), 1 - 2 * (ox * ox + oy * oy));
+          mapTheta = -roll;
+        } else {
+          // 标准z天向帧：x=前向, y=侧向, z=高度
+          mapX = rawX;
+          mapY = rawY;
+          mapTheta = quaternionToYaw(odomMsg.pose.pose.orientation);
+        }
+
+        const mapPosition = applyMapToWorldTransform(mapX, mapY, mapTheta);
+
+        robotPosition.x = mapPosition.x;
+        robotPosition.y = mapPosition.y;
+        robotPosition.theta = mapPosition.theta;
+
+        drawMap();
+      }
+      
+      // 订阅主话题
+      var superLioOdomTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: SUPER_LIO_ODOM_TOPIC,
+        messageType: 'nav_msgs/Odometry'
       });
+      superLioOdomTopic.subscribe(onLioOdomReceived);
+      console.log('正在订阅主里程计话题:', SUPER_LIO_ODOM_TOPIC);
+      
+      // 设置fallback定时器：3秒后主话题无数据则尝试备话题
+      fallbackTimer = setTimeout(function() {
+        if (!lioOdomReceived) {
+          console.warn('主话题', SUPER_LIO_ODOM_TOPIC, '在3秒内未收到数据，尝试备话题', SUPER_LIO_FRONT_ODOM_TOPIC);
+          lioFrontOdomTopic = new ROSLIB.Topic({
+            ros: ros,
+            name: SUPER_LIO_FRONT_ODOM_TOPIC,
+            messageType: 'nav_msgs/Odometry'
+          });
+          lioFrontOdomTopic.subscribe(onLioFrontOdomReceived);
+          
+          // 再设置一个超时，如果备话题也无数据则输出警告
+          setTimeout(function() {
+            if (!lioOdomReceived) {
+              console.error('主话题', SUPER_LIO_ODOM_TOPIC, '和备话题', SUPER_LIO_FRONT_ODOM_TOPIC, '均无数据，里程计定位不可用');
+            }
+          }, 5000);
+        }
+        fallbackTimer = null;
+      }, 3000);
       
       // 订阅AMCL位置主题（仍然保持）
       var amclPoseTopic = new ROSLIB.Topic({
@@ -1690,11 +1963,11 @@
       // 订阅路径规划话题
       var planTopic = new ROSLIB.Topic({
         ros: ros,
-        name: '/plan',
+        name: PLAN_TOPIC,
         messageType: 'nav_msgs/Path'
       });
       
-      console.log('正在订阅路径规划话题: /plan');
+      console.log('正在订阅路径规划话题:', PLAN_TOPIC);
       
       planTopic.subscribe(function(planMsg) {
         try {
@@ -1711,11 +1984,11 @@
       // 订阅机器人足迹话题
       var footprintTopic = new ROSLIB.Topic({
         ros: ros,
-        name: '/global_costmap/published_footprint',
+        name: FOOTPRINT_TOPIC,
         messageType: 'geometry_msgs/PolygonStamped'
       });
       
-      console.log('正在订阅机器人足迹话题: /global_costmap/published_footprint');
+      console.log('正在订阅机器人足迹话题:', FOOTPRINT_TOPIC);
       
       footprintTopic.subscribe(function(footprintMsg) {
         try {
@@ -1731,6 +2004,26 @@
       
       // 启动独立的激光渲染循环
       startLaserRenderLoop();
+
+      // 订阅 local_costmap 话题
+      var localCostmapTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: LOCAL_COSTMAP_TOPIC,
+        messageType: 'nav_msgs/OccupancyGrid'
+      });
+      
+      console.log('正在订阅 local_costmap 话题:', LOCAL_COSTMAP_TOPIC);
+      
+      localCostmapTopic.subscribe(function(costmapMsg) {
+        try {
+          lastLocalCostmap = costmapMsg;
+          if (showLocalCostmap) {
+            laserRenderPending = true;
+          }
+        } catch (error) {
+          console.error('处理 local_costmap 数据时出错:', error);
+        }
+      });
       
       return ros;
     }
@@ -1763,7 +2056,7 @@
             sec: Math.floor(now), 
             nanosec: Math.floor((now % 1) * 1e9)
           },
-          frame_id: "map"
+          frame_id: nsFrame('map')
         },
         pose: {
           pose: {
@@ -2081,7 +2374,13 @@
     // 切换激光扫描显示
     function toggleLaserScan(show) {
       showLaserScan = show;
-      drawMap();
+      laserRenderPending = true;
+    }
+    
+    // 切换 local_costmap 显示
+    function toggleLocalCostmap(show) {
+      showLocalCostmap = show;
+      laserRenderPending = true;
     }
     
     // 发布目标点
@@ -2112,7 +2411,7 @@
             sec: Math.floor(now), 
             nanosec: Math.floor((now % 1) * 1e9) // 修复：确保nanosec是整数类型
           },
-          frame_id: "map"
+          frame_id: nsFrame('map')
         },
         pose: {
           position: { x: x, y: y, z: 0 },
@@ -2175,7 +2474,7 @@
           if (!window.preemptPublisher) {
             window.preemptPublisher = new ROSLIB.Topic({
               ros: window.ros,
-              name: "/preempt_teleop",
+              name: PREEMPT_TELEOP_TOPIC,
               messageType: "std_msgs/Empty"
             });
           }
@@ -2192,7 +2491,7 @@
           if (!window.speedLimitPublisher) {
             window.speedLimitPublisher = new ROSLIB.Topic({
               ros: window.ros,
-              name: "/speed_limit",
+              name: SPEED_LIMIT_TOPIC,
               messageType: "nav2_msgs/SpeedLimit"
             });
           }
@@ -2204,7 +2503,7 @@
                 sec: Math.floor(now), 
                 nanosec: Math.floor((now % 1) * 1e9)
               },
-              frame_id: "base_link"
+              frame_id: nsFrame('base_link')
             },
             speed_limit: 0.0,  // 设置速度限制为0
             percentage: false  // 使用绝对速度值
@@ -2221,7 +2520,7 @@
           if (!window.planPublisher) {
             window.planPublisher = new ROSLIB.Topic({
               ros: window.ros,
-              name: "/plan",
+              name: PLAN_TOPIC,
               messageType: "nav_msgs/Path"
             });
           }
@@ -2233,7 +2532,7 @@
                 sec: Math.floor(now), 
                 nanosec: Math.floor((now % 1) * 1e9)
               },
-              frame_id: "map"
+              frame_id: nsFrame('map')
             },
             poses: [] // 空路径
           });
@@ -2291,8 +2590,8 @@
       
       service.callService(request, function(result) {
         console.log('控制模式设置成功:', result);
-        const modeNames = ['趴下', '站立', '半蹲'];
-        alert(`已设置为${modeNames[modeValue]}模式`);
+        const modeNames = {0: '趴下', 1: '站立', 2: '半蹲', 61: '退出充电', 62: '进入充电'};
+        alert(`已设置为${modeNames[modeValue] || ('模式' + modeValue)}模式`);
       }, function(error) {
         console.error('控制模式设置失败:', error);
         alert('控制模式设置失败，请检查ROS连接');
@@ -2345,23 +2644,23 @@
     
     // 检查话题并自动切换位置源
     function checkAndSwitchPositionSource(ros) {
-      console.log('检查 /amcl_pose 话题是否存在...');
+      console.log('检查', AMCL_POSE_TOPIC, '话题是否存在...');
       
-      // 尝试订阅 /amcl_pose，如果在3秒内收不到消息，则切换到 super_lio
+      // 尝试订阅 AMCL_POSE_TOPIC，如果在3秒内收不到消息，则切换到 super_lio
       let amclReceived = false;
       let checkTimeout = null;
       
-      // 创建 /amcl_pose 订阅
+      // 创建 AMCL_POSE_TOPIC 订阅
       var amclCheckTopic = new ROSLIB.Topic({
         ros: ros,
-        name: '/amcl_pose',
+        name: AMCL_POSE_TOPIC,
         messageType: 'geometry_msgs/PoseWithCovarianceStamped'
       });
       
       amclCheckTopic.subscribe(function(msg) {
         if (!amclReceived) {
           amclReceived = true;
-          console.log('收到 /amcl_pose 消息，使用 AMCL 定位');
+          console.log('收到', AMCL_POSE_TOPIC, '消息，使用 AMCL 定位');
           
           // 取消订阅检测话题
           amclCheckTopic.unsubscribe();
@@ -2371,12 +2670,12 @@
         }
       });
       
-      console.log('等待 /amcl_pose 消息（3秒）...');
+      console.log('等待', AMCL_POSE_TOPIC, '消息（10秒）...');
       
       // 3秒后如果没有收到消息，切换到 super_lio
       checkTimeout = setTimeout(function() {
         if (!amclReceived) {
-          console.log('3秒内未收到 /amcl_pose 消息，自动切换到 super_lio 里程计');
+          console.log('10秒内未收到', AMCL_POSE_TOPIC, '消息，自动切换到 super_lio 里程计');
           amclCheckTopic.unsubscribe();
           
           // 切换到 super_lio
@@ -2387,7 +2686,7 @@
           }
           showMessage('未检测到 AMCL，已自动切换到 super_lio 里程计');
         }
-      }, 3000);
+      }, 10000);
     }
     
     // 更新地图颜色
@@ -2407,6 +2706,9 @@
       
       // 初始化主机名输入框
       initHostnameInput();
+      
+      // 初始化命名空间输入框
+      initNamespaceInput();
       
       initCanvas();
       window.ros = connectROS();

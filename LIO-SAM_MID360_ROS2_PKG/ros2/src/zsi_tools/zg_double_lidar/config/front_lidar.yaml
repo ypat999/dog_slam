@@ -79,3 +79,10 @@
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: false
+    
+    # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
+    # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
+    lio.ros.imu_qos_reliable: true
+    # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
+    # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
+    lio.ros.lidar_qos_reliable: false

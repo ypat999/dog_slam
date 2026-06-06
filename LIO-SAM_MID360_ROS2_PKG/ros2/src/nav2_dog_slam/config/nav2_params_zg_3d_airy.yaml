@@ -35,7 +35,7 @@ controller_server:
 
     # 容错与里程计
     # 被调用控制器插件连续失败（computeVelocityCommands 抛出异常）的最大持续时间（s），-1.0 无限，0 禁用
-    failure_tolerance: 10.0
+    failure_tolerance: 3.0
     # 获取瞬时速度测量的里程计话题
     odom_topic: "/rkbot/lio/odom"
 
@@ -65,9 +65,9 @@ controller_server:
       # 目标检查器插件类型
       plugin: "nav2_controller::StoppedGoalChecker"
       # 到达目标的 XY 位置容差（m）
-      xy_goal_tolerance: 0.5
+      xy_goal_tolerance: 0.3
       # 到达目标的朝向容差（rad）
-      yaw_goal_tolerance: 0.3
+      yaw_goal_tolerance: 0.2
       # 判定为停止的线速度阈值（m/s）
       trans_stopped_velocity: 1.5
       # 判定为停止的角速度阈值（rad/s）
@@ -90,19 +90,19 @@ controller_server:
       transform_tolerance: 0.5
 
       # 最大前向速度（m/s）
-      vx_max: 2.0
+      vx_max: 1.2
       # 最大反向速度（m/s）
-      vx_min: -0.8
+      vx_min: -0.4
       # 前向速度采样标准差
-      vx_std: 2.0
+      vx_std: 1.2
       # 最大横向速度（m/s，Omni 模型）
-      vy_max: 0.2
+      vy_max: 0.4
       # 横向速度采样标准差
-      vy_std: 0.2
+      vy_std: 0.4
       # 角速度采样标准差
-      wz_std: 2.0
+      wz_std: 0.7
       # 最大角速度（rad/s）
-      wz_max: 1.5
+      wz_max: 0.7
       
       # 温度参数
       # 轨迹选择敏锐度，越小越倾向于最低代价轨迹
@@ -227,7 +227,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 40.0
+        cost_weight: 30.0
         # 代价幂次
         cost_power: 2
         # 从最远路径点算起的偏移量
@@ -288,7 +288,7 @@ controller_server:
       # =====================================================
       PreferForwardCritic:
         # 是否启用
-        enabled: false
+        enabled: true
         # 代价幂次
         cost_power: 1
         # 评价器权重
@@ -303,7 +303,7 @@ controller_server:
       # =====================================================
       TwirlingCritic:
         # 是否启用
-        enabled: false
+        enabled: true
         # 代价幂次
         cost_power: 1
         # 评价器权重
@@ -391,7 +391,7 @@ velocity_smoother:
     
     # 加速度限制
     # 各轴最大加速度 [ax, ay, atheta]
-    max_accel: [1.0, 0.5, 0.5]
+    max_accel: [1.0, 0.5, 0.7]
     # 各轴最大减速度 [ax, ay, atheta]。此为有符号值，通常应为负数
     max_decel: [-5.0, -5.0, -5.0]
     
@@ -809,7 +809,7 @@ local_costmap:
         # 在致命障碍物周围膨胀代价图的半径（m）
         inflation_radius: 0.4
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 10.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: false
         # 是否在未知单元格周围膨胀

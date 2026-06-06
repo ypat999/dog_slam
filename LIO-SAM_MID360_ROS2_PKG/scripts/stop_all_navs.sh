@@ -25,6 +25,8 @@ fi
 
 echo "退出本地服务"
 
+ros2 daemon stop 
+
 pkill -f _lio
 pkill -f lio_sam
 pkill -f LIO_SAM
@@ -46,11 +48,11 @@ ps -ef | awk '/rclcpp/ {print $2}' | xargs -r kill
 
 
 
-ros2 daemon stop 
+
 pkill zenoh
 echo "sleep 3"
 sleep 3
-ros2 daemon start
+
 
 echo "强制退出本地服务"
 
@@ -72,3 +74,5 @@ pkill -9 -f slam_toolbox
 ps -ef | awk '/rosbridge/ {print $2}' | xargs -r kill -9
 ps -ef | awk '/publisher/ {print $2}' | xargs -r kill -9
 ps -ef | awk '/rclcpp/ {print $2}' | xargs -r kill -9
+
+ros2 daemon start

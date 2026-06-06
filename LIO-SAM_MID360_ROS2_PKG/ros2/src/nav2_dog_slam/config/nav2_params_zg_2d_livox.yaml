@@ -8,72 +8,104 @@
 # =============================================================================
 
 # =============================================================================
-# Controller Server Configuration - MPPI控制器
+# Controller Server Configuration - MPPI 控制器
+# =============================================================================
+# Controller Server 实现了处理控制器请求的服务器，并托管一个插件实现映射。它接收路径以及
+# 控制器、进度检查器和目标检查器的插件名称，调用相应的插件。它还托管本地代价图（local costmap）。
 # =============================================================================
 controller_server:
   ros__parameters:
-    
     bond_disable_heartbeat_timeout: true  
+    # 是否使用仿真时间
     use_sim_time: false
 
-    controller_frequency: 20.0  
-    failure_tolerance: 3.0
+    # 控制器运行参数
+    # 控制器运行频率（Hz）
+    controller_frequency: 20.0
+    # 目标退出时是否发布零速度命令，用于在目标终止时停止机器人
+    publish_zero_velocity: true
 
+    # 速度阈值 - 控制器服务器过滤里程计速度，低于此阈值的值将设为 0.0
+    # X 方向线速度最小阈值（m/s），低于此的输出置零
     min_x_velocity_threshold: 0.1
+    # Y 方向线速度最小阈值（m/s）
     min_y_velocity_threshold: 0.1
-    min_theta_velocity_threshold: 0.1  
+    # 角速度最小阈值（rad/s）
+    min_theta_velocity_threshold: 0.1
 
-    odom_topic: "/rkbot/lio/odom"  
-    publish_zero_velocity: true  
-    # speed_limit_topic: "/speed_limit" 
-    
+    # 容错与里程计
+    # 被调用控制器插件连续失败（computeVelocityCommands 抛出异常）的最大持续时间（s），-1.0 无限，0 禁用
+    failure_tolerance: 3.0
+    # 获取瞬时速度测量的里程计话题
+    odom_topic: "/rkbot/lio/robo/odom"
+
+    # 速度限制话题
+    # 要订阅的速度限制话题名称，可由 Speed Filter 发布，也可由外部服务器提供
+    speed_limit_topic: "/speed_limit"
+
     # 插件配置
-    # controller_plugins: ["FollowPath", "FollowPathDWB", "FollowPathVP"] 
-    controller_plugins: ["FollowPath"]  
-    # 其他缺失参数
-    goal_checker_plugins: ["goal_checker"] 
-    
-    progress_checker_plugin: "progress_checker"  
-  
+    # 映射的控制器插件名称列表，用于处理请求和参数
+    controller_plugins: ["FollowPath"]
+    # 映射的目标检查器插件名称，用于检查目标是否到达
+    goal_checker_plugins: ["goal_checker"]
+    # 进度检查器插件名（Humble 及更旧版本使用单字符串插件）
+    progress_checker_plugin: "progress_checker"
     
     # 进度检查器参数 - 配合新行为树优化
     progress_checker:
+      # 进度检查器插件类型
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.10  
-      movement_time_allowance: 20.0  
+      # 判定为有进展所需的最小移动半径（m）
+      required_movement_radius: 0.10
+      # 无进展超时时间（s）
+      movement_time_allowance: 20.0
     
     # 目标检查器参数 - 优化终点减速和停止精度
     goal_checker:
+      # 目标检查器插件类型
       plugin: "nav2_controller::StoppedGoalChecker"
-      xy_goal_tolerance: 0.5 
-      yaw_goal_tolerance: 0.3  
+      # 到达目标的 XY 位置容差（m）
+      xy_goal_tolerance: 0.3
+      # 到达目标的朝向容差（rad）
+      yaw_goal_tolerance: 0.2
+      # 判定为停止的线速度阈值（m/s）
       trans_stopped_velocity: 1.5
+      # 判定为停止的角速度阈值（rad/s）
       rot_stopped_velocity: 1.5
+      # 是否启用有状态检查（到达后不再重新评估）
       stateful: true
 
     # MPPI控制器参数 - 全向移动配置（实时性优化）
     FollowPath:
+      # 控制器插件类型
       plugin: "nav2_mppi_controller::MPPIController"
 
+      # 轨迹时间步数
       time_steps: 32
-      model_dt: 0.1
-      batch_size: 500
-      transform_tolerance: 0.5  
+      # 每个时间步的时长（s），time_steps * model_dt = 预测时域
+      model_dt: 0.05
+      # 每轮采样的候选轨迹数量
+      batch_size: 1000
+      # TF 变换容差（s）
+      transform_tolerance: 0.5
 
-      vx_max: 2.0
-      vx_min: -0.4
-      vx_std: 1.0
-      vy_max: 0.4
-      vy_std: 0.4  # 降低横移速度采样标准差
-      wz_std: 1.0
-      wz_max: 1.5
-      
-      
-      
-      
+      # 最大前向速度（m/s）
+      vx_max: 1.2
+      # 最大反向速度（m/s）
+      vx_min: -0.3
+      # 前向速度采样标准差
+      vx_std: 1.2
+      # 最大横向速度（m/s，Omni 模型）
+      vy_max: 0.3
+      # 横向速度采样标准差
+      vy_std: 0.3
+      # 角速度采样标准差
+      wz_std: 0.8
+      # 最大角速度（rad/s）
+      wz_max: 0.8
       
       # 温度参数
-      temperature: 0.2
+      temperature: 0.1
       # motion_model: "DiffDrive" 
       motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
@@ -95,7 +127,7 @@ controller_server:
       max_robot_pose_search_dist: 1.0  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
       # prune_distance: 1.0 
       # regenerate_noises: true  
-      retry_attempt_limit: 3  
+      retry_attempt_limit: 1  
       
       # 评价器参数 - 优化权重以提高停止精度
       critics: ["ConstraintCritic", "CostCritic",  "PathFollowCritic", "GoalCritic", "PreferForwardCritic", "GoalAngleCritic", "VelocityDeadbandCritic", "ObstaclesCritic", "PathAngleCritic", "TwirlingCritic",  "PathAlignCritic"] #  
@@ -106,83 +138,187 @@ controller_server:
         cost_weight: 10.0
       
       CostCritic:
-        enabled: true
-        cost_weight: 25.0
-        cost_power: 2
+        enabled: false
+        # 评价器权重（内部会除以 254 归一化）
+        cost_weight: 12.0
+        # 代价幂次
+        cost_power: 1
+        # 近碰撞区域惩罚代价（>= near_collision_cost 时触发）
+        critical_cost: 253.0
+        # 真实碰撞代价值
         collision_cost: 254.0
+        # 是否使用完整 footprint 碰撞检测（false=使用圆心点）
         consider_footprint: true
-        critical_cost: 254.0
+        # 接近目标时停止避障偏好项的距离（m）
+        near_goal_distance: 1.0
+        # 膨胀层名称（为空则使用最后一个膨胀层）
         inflation_layer_name: "inflation_layer_local"
-        near_goal_distance: 1.0
 
+      # =====================================================
+      # ObstaclesCritic - 障碍物评价器
+      # =====================================================
+      # 激励远离障碍物和临界碰撞，使用圆形机器人点检查或基于障碍物距离的完整 SE2 足迹检查。
+      # =====================================================
       ObstaclesCritic:
+        # 是否启用
         enabled: true
-        cost_weight: 35.0
-        cost_power: 2
-        collision_cost: 254.0
+        # 代价幂次
+        cost_power: 3
+        # 评价器权重
+        cost_weight: 6.0
+        # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
-        critical_cost: 250.0
-        critical_weight: 50.0
+        # 近碰撞区域（collision_margin_distance 内）的惩罚权重
+        critical_weight: 200.0
+        # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
         repulsion_weight: 10.0
-        collision_margin_distance: 0.5
-        inflation_radius: 0.5
-        cost_scaling_factor: 10.0
+        # 真实碰撞代价值
+        collision_cost: 253.0
+        # 碰撞临界距离（m），类似 footprint 膨胀
+        collision_margin_distance: 0.3
+        # 近碰撞代价阈值
+        critical_cost: 100.0
+        # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
         near_goal_distance: 1.0
-        
-      PathFollowCritic:
-        enabled: true
-        cost_weight: 20.0
-        cost_power: 4
-        offset_from_furthest: 2 
-        threshold_to_consider: 1.5  # Distance (m) between robot and goal to stop considering path following and allow goal critics to take over. It is wise to start with this as being the same as your prediction horizon to have a clean hand-off with the goal critic.
+        # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
+        inflation_radius: 0.4
+        # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
+        cost_scaling_factor: 5.0
       
-
-      PathAlignCritic:
+      # =====================================================
+      # PathFollowCritic - 路径跟随评价器
+      # =====================================================
+      # 用于近似跟随路径的评价器目标函数。允许在动态障碍物情况下偏离路径。
+      # PathAlign 用于更精确地将轨迹对齐到路径上。较高的权重和 offset > 1
+      # 会加速样本达到全速并推进跟随点，产生一些捷径行为。
+      # =====================================================
+      PathFollowCritic:
+        # 是否启用
         enabled: true
-        cost_weight: 10.0  
-        cost_power: 1 
-        FollowPath.PathAlignCritic.max_path_occupancy_ratio: 0.07
+        # 评价器权重
+        cost_weight: 30.0
+        # 代价幂次
+        cost_power: 1
+        # 从最远路径点算起的偏移量
+        offset_from_furthest: 1
+        # 距目标距离小于此值时停止路径跟随，交予目标评价器
+        threshold_to_consider: 1.5
+
+      # =====================================================
+      # PathAlignCritic - 路径对齐评价器
+      # =====================================================
+      # 用于对齐路径的评价器目标函数。注意：较高的设置会更精确地跟随路径，
+      # 但也使在动态障碍物存在时难以（或不可能）偏离。这是一个重要的评价器，
+      # 需要与 Obstacle 评价器一起调优和考虑。
+      # =====================================================
+      PathAlignCritic:
+        # 是否启用
+        enabled: true
+        # 评价器权重
+        cost_weight: 5.0
+        # 代价幂次
+        cost_power: 1
+        # 路径占用比例上限
+        max_path_occupancy_ratio: 0.07
+        # 是否使用路径朝向
         use_path_orientations: true
-        FollowPath.PathAlignCritic.trajectory_point_step: 4
+        # 轨迹点采样步长
+        trajectory_point_step: 4
+        # 从最远路径点算起的偏移量
         offset_from_furthest: 2
+        # 距目标距离小于此值时停止路径跟随
         threshold_to_consider: 1.0
 
+      # =====================================================
+      # PathAngleCritic - 路径角度评价器
+      # =====================================================
+      # 用于在极端未对齐或转向情况下对齐路径的评价器目标函数。
+      # =====================================================
       PathAngleCritic:
+        # 是否启用
         enabled: true
-        cost_weight: 10.0
-        cost_power: 1
+        # 评价器权重
+        cost_weight: 5.0
+        # 代价幂次
+        cost_power: 4
+        # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
-        offset_from_furthest: 2
+        # 从最远路径点算起的偏移量
+        offset_from_furthest: 1
+        # 距目标距离小于此值时停止路径跟随
         threshold_to_consider: 1.5
+        # 与最远路径点的最大角度差（rad）
         max_angle_to_furthest: 0.5
-        
-      PreferForwardCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 10.0 
-        threshold_to_consider: 1.5
-      
-      TwirlingCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 10.0     # 强惩绕圈行为
 
-      VelocityDeadbandCritic: 
-        enabled: true
-        cost_weight: 50.0
+      # =====================================================
+      # PreferForwardCritic - 前向偏好评价器
+      # =====================================================
+      # 用于偏好前进运动的评价器目标函数。
+      # =====================================================
+      PreferForwardCritic:
+        # 是否启用
+        enabled: false
+        # 代价幂次
         cost_power: 1
-        # deadband_velocities: [0.1, 0.1, 0.1]
-        deadband_velocities: [0.1, 0.1]
-        
-      GoalCritic:
-        enabled: true
+        # 评价器权重
         cost_weight: 20.0
+        # 距目标距离小于此值时停止路径跟随
+        threshold_to_consider: 1.5
+
+      # =====================================================
+      # TwirlingCritic - 绕圈运动评价器
+      # =====================================================
+      # 用于惩罚摆动/绕圈运动的评价器目标函数。
+      # =====================================================
+      TwirlingCritic:
+        # 是否启用
+        enabled: false
+        # 代价幂次
         cost_power: 1
+        # 评价器权重
+        cost_weight: 20.0
+
+      # =====================================================
+      # VelocityDeadbandCritic - 速度死区评价器
+      # =====================================================
+      # 用于强制执行可行约束的评价器目标函数。
+      # =====================================================
+      VelocityDeadbandCritic:
+        # 是否启用
+        enabled: true
+        # 评价器权重
+        cost_weight: 50.0
+        # 代价幂次
+        cost_power: 3
+        # 速度死区 [vx, vy, wz]，低于此的速度被忽略
+        deadband_velocities: [0.1, 0.1, 0.1]
+      
+      # =====================================================
+      # GoalCritic - 目标评价器
+      # =====================================================
+      # 激励在合理接近目标时在空间上向目标导航。
+      # =====================================================
+      GoalCritic:
+        # 是否启用
+        enabled: true
+        # 评价器权重
+        cost_weight: 50.0
+        # 代价幂次
+        cost_power: 1
+        # 距目标小于此值时开始考虑目标距离代价
         threshold_to_consider: 2.0
 
+      # =====================================================
+      # GoalAngleCritic - 目标角度评价器
+      # =====================================================
+      # 激励在合理接近目标时导航以达到目标位姿的角度。
+      # =====================================================
       GoalAngleCritic:
+        # 是否启用
         enabled: true
-        cost_weight: 20.0
+        # 评价器权重
+        cost_weight: 50.0
+        # 代价幂次
         cost_power: 1
         threshold_to_consider: 1.5
 
@@ -327,19 +463,25 @@ velocity_smoother:
     feedback: "OPEN_LOOP" 
 
     # feedback: "CLOSED_LOOP"  
-    odom_topic: "/rkbot/lio/robo/odom"
+    odom_topic: "/rkbot/lio/odom"
     # odom_duration: 0.1
     
-    # 移动速度限制 - 降低速度避免过于激进
-    max_velocity: [5.0, 1.5, 5.0]  # [vx_max, vy_max, vtheta_max] - 降低最大速度
-    min_velocity: [-1.0, -1.5, -5.0]  # [vx_min, vy_min, vtheta_min] - 降低最小速度
+    # 速度限制 - 各轴最大/最小速度（m/s, rad/s），格式 [x, y, theta]
+    # 各轴最大速度 [vx, vy, vtheta]
+    max_velocity: [5.0, 1.5, 2.0]
+    # 各轴最小速度 [vx, vy, vtheta]。此为有符号值，负值表示反向。旋转速度负方向为右转
+    min_velocity: [-1.0, -1.5, -5.0]
     
-    # 加速度限制 - 降低加速度避免急转急停
-    max_accel: [5.0, 2.0, 0.5]  # [ax_max, ay_max, atheta_max] - 降低加速度 
-    max_decel: [-5.0, -2.0, -2.0]  # [ax_min, ay_min, atheta_min] - 降低减速度
+    # 加速度限制
+    # 各轴最大加速度 [ax, ay, atheta]
+    max_accel: [1.0, 0.5, 0.7]
+    # 各轴最大减速度 [ax, ay, atheta]。此为有符号值，通常应为负数
+    max_decel: [-5.0, -5.0, -5.0]
     
-    # 其他参数
-    deadband_velocity: [0.1, 0.1, 0.1]  # 设置死区速度，避免输出-0.01到+0.01之间的速度  被忽略
+    # 死区与超时
+    # 各轴最小速度死区 [vx, vy, vtheta]，低于此值不发送给硬件控制器，防止小命令因堵转扭矩而损坏硬件
+    deadband_velocity: [0.1, 0.1, 0.1]
+    # 速度超时时间（s），超过此时间无新命令则发送归零 Twist 命令并停止发布
     velocity_timeout: 1.0
     
     # qos_overrides:
@@ -467,12 +609,12 @@ local_costmap:
       transform_tolerance: 0.5
       
       # 地图参数
-      footprint: "[[-0.35, -0.25], [-0.35, 0.25], [0.35, 0.25], [0.35, -0.25]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint: "[[-0.35, -0.3], [-0.35, 0.3], [0.35, 0.3], [0.35, -0.3]]"  # 机器狗矩形footprint（base_link前移10cm）
       footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       rolling_window: true
-      width: 12
-      height: 12
+      width: 8
+      height: 8
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -480,8 +622,8 @@ local_costmap:
       # lethal_cost_threshold: 100  # 新增参数
       map_topic: "map"  # 新增参数
       observation_sources: "scan"  # 新增参数
-      origin_x: -6.0  # 新增参数
-      origin_y: -6.0  # 新增参数
+      origin_x: -4.0  # 新增参数
+      origin_y: -4.0  # 新增参数
       track_unknown_space: true  # 新增参数
       # trinary_costmap: true  # 新增参数
       # unknown_cost_value: 255  # 新增参数
@@ -564,7 +706,7 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.5
+        inflation_radius: 0.4
         cost_scaling_factor: 10.0
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
@@ -602,7 +744,7 @@ global_costmap:
       transform_tolerance: 0.5
       
       # 地图参数
-      footprint: "[[-0.35, -0.25], [-0.35, 0.25], [0.35, 0.25], [0.35, -0.25]]"  # 机器狗矩形footprint（base_link前移10cm）
+      footprint: "[[-0.35, -0.3], [-0.35, 0.3], [0.35, 0.3], [0.35, -0.3]]"  # 机器狗矩形footprint（base_link前移10cm）
       footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       track_unknown_space: false
@@ -662,7 +804,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 10.0
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 5.0
         inflate_unknown: true  # 新增参数
         inflate_around_unknown: true  # 新增参数
       
@@ -722,9 +864,9 @@ amcl:
     # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
-    update_min_d: 0.05
-    update_min_a: 0.05
-    resample_interval: 3
+    update_min_d: 0.2
+    update_min_a: 0.2
+    resample_interval: 1
     # selective_resampling: false  # 删除不存在的参数
     
     # 恢复参数 - 两个模型共用
@@ -753,7 +895,7 @@ amcl:
     laser_min_range: 0.1
     laser_max_range: 100.0
     # laser_beam_step: 4
-    max_beams: 180
+    max_beams: 360
     
     # odom_topic: /lio_sam/mapping/odometry
 

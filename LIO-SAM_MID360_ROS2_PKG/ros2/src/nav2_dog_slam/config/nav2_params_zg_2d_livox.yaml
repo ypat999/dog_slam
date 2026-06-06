@@ -287,11 +287,11 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 50.0
         # 代价幂次
-        cost_power: 1
+        cost_power: 2
         # 速度死区 [vx, vy, wz]，低于此的速度被忽略
-        deadband_velocities: [0.2, 0.1, 0.2]
+        deadband_velocities: [0.1, 0.1, 0.1]
       
       # =====================================================
       # GoalCritic - 目标评价器

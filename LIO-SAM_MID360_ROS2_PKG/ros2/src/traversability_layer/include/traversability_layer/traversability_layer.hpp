@@ -78,13 +78,13 @@ public:
 
 private:
   void pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
-  void incrementalUpdateVoxelGrid(
+  void updateVoxelGrid(
     const std::vector<Point3D> & transformed_pts,
-    const Point3D & sensor_pos, double ox, double oy);
+    const Point3D & sensor_pos);
   void shiftVoxelGrid(int shift_x, int shift_y);
   void expandVoxelGridZ(double new_z_lo, double new_z_hi);
   void decayVoxelGrid();
-  void extractGround(double ox, double oy);
+  void extractGroundInCache();
   void interpolateGround();
   void computeGroundSlope();
   unsigned char computeCost(const GroundCell & cell) const;
@@ -142,8 +142,8 @@ private:
   unsigned int voxel_size_y_ = 0;
   unsigned int voxel_size_z_ = 0;
   double voxel_z_origin_ = 0.0;
-  double voxel_ox_ = 0.0;
-  double voxel_oy_ = 0.0;
+  double voxel_ox_ = 0.0;  // 缓存网格左下角 x 坐标（odom 坐标系）
+  double voxel_oy_ = 0.0;  // 缓存网格左下角 y 坐标（odom 坐标系）
   bool voxel_grid_valid_ = false;
   uint16_t frame_counter_ = 0;
   uint16_t decay_interval_frames_ = 10;
@@ -151,8 +151,14 @@ private:
   uint32_t cloud_processed_ = 0;
 
   std::vector<GroundCell> ground_map_;
-  unsigned int ground_size_x_ = 0;
-  unsigned int ground_size_y_ = 0;
+  unsigned int ground_size_x_ = 0;  // 缓存网格 x 方向大小（costmap 2倍）
+  unsigned int ground_size_y_ = 0;  // 缓存网格 y 方向大小（costmap 2倍）
+
+  unsigned int costmap_size_x_ = 0;  // costmap 原始 x 大小
+  unsigned int costmap_size_y_ = 0;  // costmap 原始 y 大小
+  double costmap_ox_ = 0.0;  // 当前 costmap 原点 x
+  double costmap_oy_ = 0.0;  // 当前 costmap 原点 y
+  double costmap_res_ = 0.0;  // costmap 分辨率
 
   double sensor_global_x_ = 0.0;
   double sensor_global_y_ = 0.0;

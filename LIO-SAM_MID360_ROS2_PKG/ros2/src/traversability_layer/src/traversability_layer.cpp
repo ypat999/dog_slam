@@ -140,11 +140,18 @@ void TraversabilityLayer::matchSize()
             master_grid->getResolution(),
             master_grid->getOriginX(), master_grid->getOriginY());
 
+  costmap_size_x_ = master_grid->getSizeInCellsX();
+  costmap_size_y_ = master_grid->getSizeInCellsY();
+  costmap_ox_ = master_grid->getOriginX();
+  costmap_oy_ = master_grid->getOriginY();
+  costmap_res_ = master_grid->getResolution();
+
   double world_w = master_grid->getSizeInCellsX() * master_grid->getResolution();
   double world_h = master_grid->getSizeInCellsY() * master_grid->getResolution();
 
-  ground_size_x_ = static_cast<unsigned int>(std::ceil(world_w / cell_resolution_));
-  ground_size_y_ = static_cast<unsigned int>(std::ceil(world_h / cell_resolution_));
+  // 创建 2 倍大小的缓存空间
+  ground_size_x_ = static_cast<unsigned int>(std::ceil(2 * world_w / cell_resolution_));
+  ground_size_y_ = static_cast<unsigned int>(std::ceil(2 * world_h / cell_resolution_));
   ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
 }
 
@@ -255,11 +262,15 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     "[TraversabilityLayer] After transform: %zu kept, %d filtered",
     transformed_cloud.size(), filtered_count);
 
-  nav2_costmap_2d::Costmap2D * master_grid = layered_costmap_->getCostmap();
-  double ox = master_grid->getOriginX();
-  double oy = master_grid->getOriginY();
-
-  incrementalUpdateVoxelGrid(transformed_cloud, sensor_pos, ox, oy);
+  // 按 odom 坐标更新 voxel grid，填充并衰减
+  updateVoxelGrid(transformed_cloud, sensor_pos);
+  
+  // 直接在缓存中计算 ground map 和 cost
+  decayVoxelGrid();
+  extractGroundInCache();
+  interpolateGround();
+  computeGroundSlope();
+  
   cloud_processed_++;
   cloud_updated_ = true;
 
@@ -353,9 +364,9 @@ void TraversabilityLayer::expandVoxelGridZ(double new_z_lo, double new_z_hi)
   voxel_size_z_ = new_size_z;
 }
 
-void TraversabilityLayer::incrementalUpdateVoxelGrid(
+void TraversabilityLayer::updateVoxelGrid(
   const std::vector<Point3D> & transformed_pts,
-  const Point3D & sensor_pos, double ox, double oy)
+  const Point3D & sensor_pos)
 {
   unsigned int new_size_x = ground_size_x_;
   unsigned int new_size_y = ground_size_y_;
@@ -379,13 +390,20 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
   double z_lo = std::min(z_min_world, cur_base_z + min_obstacle_height_) - voxel_z_resolution_;
   double z_hi = std::max(z_max_world, cur_base_z + max_obstacle_height_) + voxel_z_resolution_;
 
+  // 计算缓存区域的原点，以当前 costmap 为中心
+  // costmap 的原点是其左下角，我们计算 2 倍大区域的左下角
+  double costmap_width = costmap_size_x_ * costmap_res_;
+  double costmap_height = costmap_size_y_ * costmap_res_;
+  double cache_ox = costmap_ox_ - costmap_width / 2.0;
+  double cache_oy = costmap_oy_ - costmap_height / 2.0;
+
   if (!voxel_grid_valid_ ||
       new_size_x != voxel_size_x_ || new_size_y != voxel_size_y_) {
     voxel_size_x_ = new_size_x;
     voxel_size_y_ = new_size_y;
     voxel_z_origin_ = z_lo;
-    voxel_ox_ = ox;
-    voxel_oy_ = oy;
+    voxel_ox_ = cache_ox;
+    voxel_oy_ = cache_oy;
     voxel_size_z_ = static_cast<unsigned int>(
       std::ceil((z_hi - z_lo) / voxel_z_resolution_));
     if (voxel_size_z_ < 1) voxel_size_z_ = 1;
@@ -396,12 +414,13 @@ void TraversabilityLayer::incrementalUpdateVoxelGrid(
     voxel_grid_.assign(total_voxels, VoxelData{});
     voxel_grid_valid_ = true;
   } else {
-    int shift_x = static_cast<int>(std::round((voxel_ox_ - ox) / cell_resolution_));
-    int shift_y = static_cast<int>(std::round((voxel_oy_ - oy) / cell_resolution_));
+    // 如果缓存位置需要调整，进行移动
+    int shift_x = static_cast<int>(std::round((voxel_ox_ - cache_ox) / cell_resolution_));
+    int shift_y = static_cast<int>(std::round((voxel_oy_ - cache_oy) / cell_resolution_));
     shiftVoxelGrid(shift_x, shift_y);
 
-    voxel_ox_ = ox;
-    voxel_oy_ = oy;
+    voxel_ox_ = cache_ox;
+    voxel_oy_ = cache_oy;
 
     bool z_expand = false;
     if (z_lo < voxel_z_origin_ - voxel_z_resolution_ * 0.5) z_expand = true;
@@ -564,17 +583,13 @@ void TraversabilityLayer::decayVoxelGrid()
   }
 }
 
-void TraversabilityLayer::extractGround(double ox, double oy)
+void TraversabilityLayer::extractGroundInCache()
 {
   ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
 
-  double inv_cell_res = 1.0 / cell_resolution_;
   double inv_vz_res = 1.0 / voxel_z_resolution_;
   double base_z = base_global_z_;
   int win = free_space_window_;
-
-  int vox_offset_x = static_cast<int>(std::round((voxel_ox_ - ox) * inv_cell_res));
-  int vox_offset_y = static_cast<int>(std::round((voxel_oy_ - oy) * inv_cell_res));
 
   int ground_found = 0;
   int total_scanned = 0;
@@ -583,8 +598,8 @@ void TraversabilityLayer::extractGround(double ox, double oy)
 #pragma omp parallel for collapse(2) schedule(static) reduction(+:ground_found) reduction(+:total_scanned) reduction(+:obs_ratio_nonzero)
   for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
     for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
-      int vix = cx + vox_offset_x;
-      int viy = cy + vox_offset_y;
+      int vix = cx;
+      int viy = cy;
 
       if (vix < 0 || vix >= static_cast<int>(voxel_size_x_) ||
           viy < 0 || viy >= static_cast<int>(voxel_size_y_))
@@ -709,11 +724,10 @@ void TraversabilityLayer::extractGround(double ox, double oy)
   RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"),
     *extract_ground_clock, 2000,
-    "[TraversabilityLayer] extractGround: scanned=%d, ground_found=%d, "
-    "obs_ratio_nonzero=%d, vox_offset=(%d,%d), voxel_ox=%.3f, voxel_oy=%.3f, ox=%.3f, oy=%.3f",
+    "[TraversabilityLayer] extractGroundInCache: scanned=%d, ground_found=%d, "
+    "obs_ratio_nonzero=%d, voxel_ox=%.3f, voxel_oy=%.3f",
     total_scanned, ground_found, obs_ratio_nonzero,
-    vox_offset_x, vox_offset_y,
-    voxel_ox_, voxel_oy_, ox, oy);
+    voxel_ox_, voxel_oy_);
 }
 
 void TraversabilityLayer::interpolateGround()
@@ -991,6 +1005,13 @@ void TraversabilityLayer::updateCosts(
   unsigned int costmap_sx = master_grid.getSizeInCellsX();
   unsigned int costmap_sy = master_grid.getSizeInCellsY();
 
+  // 更新当前成本图的尺寸和原点信息
+  costmap_ox_ = ox;
+  costmap_oy_ = oy;
+  costmap_size_x_ = costmap_sx;
+  costmap_size_y_ = costmap_sy;
+  costmap_res_ = costmap_res;
+
   if (getSizeInCellsX() != costmap_sx || getSizeInCellsY() != costmap_sy ||
       std::abs(getResolution() - costmap_res) > 1e-6)
   {
@@ -1002,30 +1023,10 @@ void TraversabilityLayer::updateCosts(
     updateOrigin(ox, oy);
   }
 
-  double world_w = costmap_sx * costmap_res;
-  double world_h = costmap_sy * costmap_res;
-  unsigned int new_gx = static_cast<unsigned int>(std::ceil(world_w / cell_resolution_));
-  unsigned int new_gy = static_cast<unsigned int>(std::ceil(world_h / cell_resolution_));
-
-  if (new_gx != ground_size_x_ || new_gy != ground_size_y_) {
-    ground_size_x_ = new_gx;
-    ground_size_y_ = new_gy;
-    ground_map_.resize(ground_size_x_ * ground_size_y_);
-  }
-
   if (!voxel_grid_valid_) {
-    ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
     resetMap(0, 0, getSizeInCellsX(), getSizeInCellsY());
     return;
   }
-
-  decayVoxelGrid();
-
-  extractGround(ox, oy);
-
-  interpolateGround();
-
-  computeGroundSlope();
 
   resetMap(0, 0, getSizeInCellsX(), getSizeInCellsY());
 
@@ -1039,11 +1040,22 @@ void TraversabilityLayer::updateCosts(
   double inv_costmap_res = 1.0 / costmap_res;
   double inv_cell_res = 1.0 / cell_resolution_;
 
-  int vox_offset_x = static_cast<int>(std::round((voxel_ox_ - ox) * inv_cell_res));
-  int vox_offset_y = static_cast<int>(std::round((voxel_oy_ - oy) * inv_cell_res));
+  // 计算costmap区域在缓存中的起始索引
+  // 缓存的原点是 costmap_ox - (costmap_width / 2), costmap_oy - (costmap_height / 2)
+  // 所以成本图的起始点在缓存中的索引大约是 (costmap_width / 2), (costmap_height / 2)
+  int costmap_start_x_in_cache = static_cast<int>(std::round((ox - voxel_ox_) * inv_cell_res));
+  int costmap_start_y_in_cache = static_cast<int>(std::round((oy - voxel_oy_) * inv_cell_res));
 
-  for (int cy = 0; cy < static_cast<int>(ground_size_y_); cy++) {
-    for (int cx = 0; cx < static_cast<int>(ground_size_x_); cx++) {
+  // 只遍历成本图对应的缓存区域，丢弃范围外的数据
+  int cache_cx_min = std::max(0, costmap_start_x_in_cache);
+  int cache_cy_min = std::max(0, costmap_start_y_in_cache);
+  int cache_cx_max = std::min(static_cast<int>(ground_size_x_) - 1, 
+                             costmap_start_x_in_cache + static_cast<int>(costmap_sx));
+  int cache_cy_max = std::min(static_cast<int>(ground_size_y_) - 1, 
+                             costmap_start_y_in_cache + static_cast<int>(costmap_sy));
+
+  for (int cy = cache_cy_min; cy <= cache_cy_max; cy++) {
+    for (int cx = cache_cx_min; cx <= cache_cx_max; cx++) {
       size_t idx = groundIndex(static_cast<unsigned int>(cx),
                                static_cast<unsigned int>(cy));
       const auto & cell = ground_map_[idx];
@@ -1065,8 +1077,8 @@ void TraversabilityLayer::updateCosts(
       }
       cells_with_cost++;
 
-      double cell_wx = voxel_ox_ + (cx + vox_offset_x) * cell_resolution_;
-      double cell_wy = voxel_oy_ + (cy + vox_offset_y) * cell_resolution_;
+      double cell_wx = voxel_ox_ + cx * cell_resolution_;
+      double cell_wy = voxel_oy_ + cy * cell_resolution_;
 
       int mx_start = static_cast<int>(std::floor((cell_wx - master_grid.getOriginX()) * inv_costmap_res));
       int my_start = static_cast<int>(std::floor((cell_wy - master_grid.getOriginY()) * inv_costmap_res));
@@ -1145,8 +1157,8 @@ void TraversabilityLayer::updateCosts(
           }
 
           pcl::PointXYZI pt;
-          pt.x = static_cast<float>(voxel_ox_ + (cx + vox_offset_x) * cell_resolution_);
-          pt.y = static_cast<float>(voxel_oy_ + (cy + vox_offset_y) * cell_resolution_);
+          pt.x = static_cast<float>(voxel_ox_ + cx * cell_resolution_);
+          pt.y = static_cast<float>(voxel_oy_ + cy * cell_resolution_);
           pt.z = cell.obstacle_ratio > 0.0f ? cell.min_obstacle_z : cell.ground_z;
           unsigned char cost = computeCost(cell);
           pt.intensity = static_cast<float>(cost) / 254.0f;

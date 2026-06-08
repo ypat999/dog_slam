@@ -287,14 +287,14 @@ git submodule update --init --recursive --remote
 ros2 launch zg_double_lidar double_lidar.launch.py
 ros2 launch super_lio Robosense_airy.py
 
-colcon build --symlink-install --parallel-workers 4  --packages-select basic super_lio global_config zg_double_lidar
+
 
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/fast_lio_robosenseAiry/ fast_lio_robosenseAiry
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/global_config/ global_config
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/ Super-LIO
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/zg_double_lidar/ zg_double_lidar
 
-
+colcon build --symlink-install --parallel-workers 4  --packages-select basic super_lio global_config zg_double_lidar
 
 sudo systemctl start zg_pointcloud.service 
 

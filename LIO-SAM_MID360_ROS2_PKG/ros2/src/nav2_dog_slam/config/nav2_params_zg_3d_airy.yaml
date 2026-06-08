@@ -214,7 +214,7 @@ controller_server:
         # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
         inflation_radius: 1.0
         # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 10.0
       
       # =====================================================
       # PathFollowCritic - 路径跟随评价器
@@ -627,7 +627,7 @@ local_costmap:
       # 有序的足迹点集，以字符串形式传入，必须为闭合多边形。可通过 ~/footprint 话题动态调整
       footprint: "[[-0.35, -0.3], [-0.35, 0.3], [0.35, 0.3], [0.35, -0.3]]"
       # 足迹膨胀填充量（m）
-      footprint_padding: 0.05
+      footprint_padding: -0.2
       # 若未提供足迹坐标，则使用此半径（m）。设置此参数时 isPathValid 使用圆形碰撞检查
       robot_radius: 0.35
 
@@ -809,7 +809,7 @@ local_costmap:
         # 在致命障碍物周围膨胀代价图的半径（m）
         inflation_radius: 1.0
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 10.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: false
         # 是否在未知单元格周围膨胀
@@ -1124,15 +1124,15 @@ amcl:
 
     # 里程计运动模型噪声参数 - 里程计旋转/平移估计中的预期过程噪声
     # 里程计旋转估计中由旋转引起的预期过程噪声
-    alpha1: 0.01
+    alpha1: 0.001
     # 里程计旋转估计中由平移引起的预期过程噪声
-    alpha2: 0.01
+    alpha2: 0.001
     # 里程计平移估计中由平移引起的预期过程噪声
-    alpha3: 0.02
+    alpha3: 0.002
     # 里程计平移估计中由旋转引起的预期过程噪声
-    alpha4: 0.02
+    alpha4: 0.002
     # 仅 Omni 模型：平移噪声
-    alpha5: 0.03
+    alpha5: 0.003
 
     # 机器人运动模型类型 - 插件类的完全限定类型
     # 全向运动模型，可选 nav2_amcl::DifferentialMotionModel

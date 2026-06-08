@@ -35,10 +35,11 @@ if ! groups robot | grep -q "audio"; then
     usermod -aG audio robot
 fi
 echo "Installing required packages..."
-apt update
+
 apt install ros-humble-pointcloud-to-laserscan
 
 echo "Creating symbolic links..."
+mkdir /home/robot/rkbot/src/
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/zsi_tools/fast_lio_robosenseAiry/ /home/robot/rkbot/src/fast_lio_robosenseAiry
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/global_config/ /home/robot/rkbot/src/global_config
 ln -sd /home/robot/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/ /home/robot/rkbot/src/Super-LIO

@@ -23,8 +23,8 @@
 
 ### 推荐使用阿里源：
 ```bash
-deb [arch=amd64 signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] https://mirrors.aliyun.com/ros2/ubuntu/ jammy main
-deb [arch=amd64] https://mirrors.aliyun.com/ubuntu/ jammy main
+deb [signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] https://mirrors.aliyun.com/ros2/ubuntu/ jammy main
+deb https://mirrors.aliyun.com/ubuntu/ jammy main
 
 # 添加gpg key
 sudo apt install curl gnupg2 lsb-release
@@ -52,10 +52,14 @@ sudo systemctl enable tinyproxy
 sudo systemctl status tinyproxy
 
 # 在客户端上使用代理
-export http_proxy=http://<本机IP>:7889
-export https_proxy=http://<本机IP>:7889
+export http_proxy=http://192.168.168.151:7889
+export https_proxy=http://192.168.168.151:7889
 
-
+# 配置 apt 代理
+sudo tee /etc/apt/apt.conf.d/proxy.conf << 'EOF'
+Acquire::http::Proxy "http://192.168.168.151:7889";
+Acquire::https::Proxy "http://192.168.168.151:7889";
+EOF
 
 # 链式代理
 # conf添加：Upstream http 10.0.4.185:10811

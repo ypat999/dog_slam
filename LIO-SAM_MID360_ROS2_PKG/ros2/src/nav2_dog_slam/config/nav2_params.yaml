@@ -101,7 +101,7 @@ controller_server:
       # inversion_yaw_tolerance: 0.2
       # gamma: 0.015  # 新增参数
       # iteration_count: 1  # 新增参数
-      max_robot_pose_search_dist: 0.5  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
+      max_robot_pose_search_dist: 2.0  # Max integrated distance ahead of robot pose to search for nearest path point in case of path looping.
       # prune_distance: 1.0  # 新增参数
       # regenerate_noises: true  # 新增参数
       # retry_attempt_limit: 1  # 新增参数

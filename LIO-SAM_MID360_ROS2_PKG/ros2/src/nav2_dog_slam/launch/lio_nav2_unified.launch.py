@@ -356,12 +356,13 @@ def generate_launch_description():
             {'send_action_goals_in_new_thread': True},
             {'fragment_timeout': 600},
             {'max_message_size': 100000000}
-        ]
+        ],
+        prefix=['taskset -c 0,1,2,3'],
     )
     
     # web控制脚本
     web_script_process = ExecuteProcess(
-        cmd=['bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
+        cmd=['taskset', '-c', '0,1,2,3', 'bash', NAV2_DEFAULT_WEB_SCRIPT_PATH],
         output='screen',
         shell=False
     )
@@ -476,7 +477,8 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'autostart': True,
             'node_names': ['amcl']
-        }]
+        }],
+        prefix=['taskset -c 0,1,2,3'],
     )
 
     lifecycle_manager_map_server = Node(
@@ -488,7 +490,8 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             'autostart': True,
             'node_names': ['map_server']
-        }]
+        }],
+        prefix=['taskset -c 0,1,2,3'],
     )
     
     # 4. GPS融合节点
@@ -503,7 +506,8 @@ def generate_launch_description():
             'max_hdop': 2.0,
             'min_accuracy': 0.1,
             'status_threshold': 0
-        }]
+        }],
+        prefix=['taskset -c 0,1,2,3'],
     )
     
     # NavSat Transform节点 - GPS坐标转换

@@ -79,6 +79,19 @@
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: false
+
+    # ======================== 快速Odom模式 ========================
+    # 是否发布IMU预测位姿（低延迟，不经过ESKF更新）
+    lio.fast_odom: false
+
+    # ======================== 退化检测与正则化 ========================
+    lio.degeneracy.detect_en: true
+    lio.degeneracy.threshold: 100.0
+    lio.degeneracy.tikhonov_lambda: 1.0
+
+    # ======================== 自适应观测权重 ========================
+    lio.adaptive_weight.en: true
+    lio.adaptive_weight.sigma: 30.0
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据

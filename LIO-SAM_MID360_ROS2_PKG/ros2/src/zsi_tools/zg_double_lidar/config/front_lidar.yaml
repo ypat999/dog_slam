@@ -79,10 +79,13 @@
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: false
+    s# ======================== 单核模式 ========================
+    # 是否启用单核运行模式。true: 关闭TBB并行，LIO主管线串行执行
+    lio.single_core: true
 
     # ======================== 快速Odom模式 ========================
     # 是否发布IMU预测位姿（低延迟，不经过ESKF更新）
-    lio.fast_odom: false
+    lio.fast_odom: true
 
     # ======================== 退化检测与正则化 ========================
     lio.degeneracy.detect_en: true

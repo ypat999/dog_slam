@@ -11,17 +11,17 @@
 #     fi
 # fi
 
-# REMOTE_IP="192.168.168.100"
-# REMOTE_USER="robot"
-# REMOTE_PASS="1"
+REMOTE_IP="192.168.168.100"
+REMOTE_USER="robot"
+REMOTE_PASS="1"
 
-# echo "正在停止远程 zg_pointcloud 服务..."
-# sshpass -p "$REMOTE_PASS" ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_IP" "echo '$REMOTE_PASS' | sudo -S systemctl stop zg_pointcloud"
-# if [ $? -eq 0 ]; then
-#     echo "远程 zg_pointcloud 服务已停止"
-# else
-#     echo "警告: 远程 zg_pointcloud 服务停止失败"
-# fi
+echo "正在停止远程 zg_pointcloud 服务..."
+sshpass -p "$REMOTE_PASS" ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_IP" "echo '$REMOTE_PASS' | sudo -S systemctl stop zg_pointcloud"
+if [ $? -eq 0 ]; then
+    echo "远程 zg_pointcloud 服务已停止"
+else
+    echo "警告: 远程 zg_pointcloud 服务停止失败"
+fi
 
 echo "退出本地服务"
 

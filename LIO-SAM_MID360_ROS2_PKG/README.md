@@ -54,6 +54,8 @@ export https_proxy=http://<本机IP>:7889
 
 
 
+
+
 # 链式代理
 # conf添加：Upstream http 10.0.4.185:10811
 # 服务端前台启动

@@ -67,25 +67,25 @@ controller_server:
       ax_min: -1.0
       az_max: 1.5
       az_min: -1.5
-      vx_std: 0.25  # 降低线速度采样标准差，减少速度波动
-      wz_std: 0.3  # 提高角速度采样标准差，增加转向探索性
+      vx_std: 0.4  # 降低线速度采样标准差，减少速度波动
+      wz_std: 0.8  # 提高角速度采样标准差，增加转向探索性
       
       vx_max: 2.0
       # vx_max: 1.2
       # vx_max: 0.6
-      vy_max: 0.0
+      vy_max: 0.2
       vy_std: 0.2  # 降低横移速度采样标准差
       vx_min: -0.1
-      wz_max: 1.0
+      wz_max: 0.3
       # wz_max: 1.2
       # wz_max: 1.0
       
       
       
       # 温度参数
-      temperature: 0.2
-      motion_model: "DiffDrive" 
-      # motion_model: "Omni"  # 全向移动模型
+      temperature: 0.1
+      # motion_model: "DiffDrive" 
+      motion_model: "Omni"  # 全向移动模型
       reset_period: 0.5
 
       visualize: false
@@ -336,8 +336,8 @@ local_costmap:
       footprint_padding: 0.05  # footprint膨胀填充
       resolution: 0.05
       rolling_window: true
-      width: 8
-      height: 8
+      width: 12
+      height: 12
       
       # # 其他缺失参数
       # footprint: ""  # 新增参数 - 使用robot_radius代替
@@ -408,7 +408,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
         inflation_radius: 1.0     # 大幅增加局部膨胀半径，避免贴边行走
-        cost_scaling_factor: 5.0  # 大幅增加成本缩放因子，使靠近障碍物的路径代价急剧增加
+        cost_scaling_factor: 10.0  # 大幅增加成本缩放因子，使靠近障碍物的路径代价急剧增加
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数
       
@@ -569,8 +569,8 @@ amcl:
     alpha5: 0.005           # 降低额外噪声参数，室内环境更可预测
     
     # 机器人运动模型类型 - 全向移动
-    # robot_model_type: "nav2_amcl::OmniMotionModel"
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+    # robot_model_type: "nav2_amcl::DifferentialMotionModel"
     
     # 更新阈值 - 两个模型共用
     update_min_d: 1.0

@@ -4,8 +4,8 @@
     lio.map.if_filter: false
     lio.map.save_map_dir: "/home/robot/slam_data/pcd"
     lio.map.map_name: "front_lidar_map.pcd"
-    lio.map.ds_size: 0.25
-    lio.map.save_interval: 500
+    lio.map.ds_size: 0.2
+    lio.map.save_interval: 50
     # 点云切片保存前缀，用于多雷达同时建图时区分不同雷达的切片
     # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
     # 空字符串表示无前缀（默认）
@@ -18,9 +18,11 @@
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
-    lio.sensor.filter_rate: 7
+    lio.sensor.filter_rate: 13
+    # 是否启用filter_rate的对称震荡offset，false则每帧固定取同一子集
+    lio.sensor.enable_filter_offset: false
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.1
+    lio.sensor.voxel_fliter_size: 0.2
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81
@@ -37,7 +39,7 @@
     lio.extrinsic.odom_robo: [0.0, 0.0, -0.36615, 0.0, 1.57, 0.0]
 
     lio.hash_map.hash_capacity: 2000000
-    lio.hash_map.vox_resolution: 0.25
+    lio.hash_map.vox_resolution: 0.2
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
@@ -69,7 +71,7 @@
 
     lio.dynamic_removal.enable: true
     lio.dynamic_removal.method: 0
-    lio.dynamic_removal.grid_size: 0.25
+    lio.dynamic_removal.grid_size: 0.2
     lio.dynamic_removal.min_neighbors: 2
     lio.dynamic_removal.frame_window: 1
     lio.dynamic_removal.raycast_min_hits: 2
@@ -79,6 +81,27 @@
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
     lio.lio_only_undistort: false
+    # ======================== 单核模式 ========================
+    # 是否启用单核运行模式。true: 关闭TBB并行，LIO主管线串行执行
+    lio.single_core: true
+
+    # ======================== 快速Odom模式 ========================
+    # 是否发布IMU预测位姿（低延迟，不经过ESKF更新）
+    lio.fast_odom: false
+
+    # ======================== 退化检测与正则化 ========================
+    # 是否启用观测Hessian退化检测，在病态方向上添加Tikhonov正则化
+    lio.degeneracy.detect_en: true
+    # 退化判定阈值（条件数阈值）：min_eig * threshold < max_eig 时认为退化
+    # 典型值 100，越大越敏感
+    lio.degeneracy.threshold: 100.0
+    # Tikhonov正则化强度，lambda * trace(H)/6 加到 Hessian 对角
+    # 0.1 = 添加 10% Hessian 量级的对角正则化，越大退化方向越依赖IMU预测
+    lio.degeneracy.tikhonov_lambda: 0.3
+
+    # ======================== 自适应观测权重 ========================
+    lio.adaptive_weight.en: false
+    lio.adaptive_weight.sigma: 30.0
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
@@ -86,3 +109,11 @@
     # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
     lio.ros.lidar_qos_reliable: false
+
+    # ======================== SC-PGO 离线处理参数 ========================
+    # 是否启用 SC-PGO 兼容数据输出（输出 body-frame 扫描 + KITTI 位姿到 Scans/ 目录）
+    lio.sc_pgo.enable: false
+    # 关键帧平移距离阈值(米)，累计平移超过此值抽取一帧
+    lio.sc_pgo.keyframe_gap: 5.0
+    # 关键帧旋转角度阈值(度)，累计旋转超过此值抽取一帧
+    lio.sc_pgo.keyframe_deg_gap: 10.0

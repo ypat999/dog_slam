@@ -12,7 +12,7 @@
   <BehaviorTree ID="MainTree">
     <RecoveryNode number_of_retries="5" name="NavigateRecovery">
       <PipelineSequence name="NavigateWithReplanning">
-        <RateController hz="0.2">
+        <RateController hz="1.0">
           <RecoveryNode number_of_retries="1" name="ComputePathToPose">
             <!-- Current planner: LatticeBased (narrow corridors, footprint-aware) -->
             <!-- Alternative planners (uncomment one, comment out the above):-->

@@ -33,33 +33,67 @@ self.onmessage = function(e) {
   const pixels = new Uint8ClampedArray(totalPixels * 4);
   
   if (scaleFactor < 1.0) {
-    // 需要预缩放 - 使用最近邻插值
+    // 需要预缩放 - 使用双线性插值
     for (let targetRow = 0; targetRow < targetHeight; targetRow++) {
-      // 计算对应的源行（翻转Y轴）
-      const srcRow = Math.round((height - 1 - (targetRow / scaleFactor)));
-      const clampedSrcRow = Math.max(0, Math.min(height - 1, srcRow));
-      
       for (let targetCol = 0; targetCol < targetWidth; targetCol++) {
-        // 计算对应的源列
-        const srcCol = Math.round(targetCol / scaleFactor);
-        const clampedSrcCol = Math.max(0, Math.min(width - 1, srcCol));
+        // 计算源坐标（浮点数）
+        const srcX = targetCol / scaleFactor;
+        const srcY = (height - 1) - (targetRow / scaleFactor);
         
-        // 获取源数据值
-        const dataIndex = clampedSrcRow * width + clampedSrcCol;
-        const value = mapData[dataIndex];
+        // 四个邻近像素坐标（含边界保护）
+        const x0_f = Math.floor(srcX);
+        const y0_f = Math.floor(srcY);
+        const fracX = Math.max(0, Math.min(1, srcX - x0_f));
+        const fracY = Math.max(0, Math.min(1, srcY - y0_f));
+        const x0 = Math.max(0, Math.min(x0_f, width - 1));
+        const x1 = Math.max(0, Math.min(x0_f + 1, width - 1));
+        const y0 = Math.max(0, Math.min(y0_f, height - 1));
+        const y1 = Math.max(0, Math.min(y0_f + 1, height - 1));
         
-        // 设置像素颜色
+        // 获取四个邻近像素的值
+        const v00 = mapData[y0 * width + x0];
+        const v10 = mapData[y0 * width + x1];
+        const v01 = mapData[y1 * width + x0];
+        const v11 = mapData[y1 * width + x1];
+        
+        // 计算未知权重（值为-1表示未知区域）
+        const u00 = v00 === -1 ? 1 : 0;
+        const u10 = v10 === -1 ? 1 : 0;
+        const u01 = v01 === -1 ? 1 : 0;
+        const u11 = v11 === -1 ? 1 : 0;
+        
+        // 双线性插值 - 未知权重
+        const unkTop = u00 * (1 - fracX) + u10 * fracX;
+        const unkBottom = u01 * (1 - fracX) + u11 * fracX;
+        const unknownWeight = unkTop * (1 - fracY) + unkBottom * fracY;
+        
+        // 将-1（未知）转换为0用于占用值插值
+        const n00 = v00 === -1 ? 0 : v00;
+        const n10 = v10 === -1 ? 0 : v10;
+        const n01 = v01 === -1 ? 0 : v01;
+        const n11 = v11 === -1 ? 0 : v11;
+        
+        // 双线性插值 - 占用值
+        const top = n00 * (1 - fracX) + n10 * fracX;
+        const bottom = n01 * (1 - fracX) + n11 * fracX;
+        const interpolatedValue = top * (1 - fracY) + bottom * fracY;
+        
+        // 像素索引
         const pixelIndex = (targetRow * targetWidth + targetCol) * 4;
         
         let color;
-        if (value === -1) {
+        // 如果超过半数为未知区域，则标记为未知
+        if (unknownWeight > 0.5) {
           color = unknownColor;
-        } else if (value > 50) {
-          color = obstacleColor;
-        } else if (value > 0) {
-          color = possibleObstacleColor;
         } else {
-          color = freeColor;
+          const value = Math.round(interpolatedValue);
+          if (value > 50) {
+            color = obstacleColor;
+          } else if (value > 0) {
+            color = possibleObstacleColor;
+          } else {
+            color = freeColor;
+          }
         }
         
         pixels[pixelIndex] = color.r;

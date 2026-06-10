@@ -706,7 +706,7 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.4
+        inflation_radius: 0.5
         cost_scaling_factor: 10.0
         # inflate_unknown: false      # 新增参数
         # inflate_around_unknown: false  # 新增参数

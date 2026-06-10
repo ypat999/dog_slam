@@ -18,9 +18,9 @@
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
-    lio.sensor.filter_rate: 17
+    lio.sensor.filter_rate: 13
     # 是否启用filter_rate的对称震荡offset，false则每帧固定取同一子集
-    lio.sensor.enable_filter_offset: true
+    lio.sensor.enable_filter_offset: false
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.2
     lio.sensor.intensity_filter_en: false
@@ -87,7 +87,7 @@
 
     # ======================== 快速Odom模式 ========================
     # 是否发布IMU预测位姿（低延迟，不经过ESKF更新）
-    lio.fast_odom: true
+    lio.fast_odom: false
 
     # ======================== 退化检测与正则化 ========================
     # 是否启用观测Hessian退化检测，在病态方向上添加Tikhonov正则化

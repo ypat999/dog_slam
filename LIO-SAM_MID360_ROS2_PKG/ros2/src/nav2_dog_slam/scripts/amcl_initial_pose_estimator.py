@@ -1,366 +1,542 @@
 #!/usr/bin/env python3
 
-# 订阅/map获取二维占用栅格地图
-# 订阅/scan获取当前激光扫描数据
-# 使用AMCL粒子滤波：在全地图自由空间均匀播撒粒子
-# 使用似然场模型评估每个粒子的得分
-# 记录得分最高的粒子，发布到/initialpose话题
+# AMCL 全局搜索初始位姿估计器 (v3 - timer 驱动, 无阻塞, 一轮)
+# 策略：
+# 1. 订阅 /rkbot/map 获取自由空间
+# 2. 生成网格候选位姿 (4朝向)
+# 3. Timer 驱动状态机：发 /initialpose → 等 AMCL 回调 → 记录协方差 → 下一个
+# 4. 一轮完成后取 Top-K 中最优，发布最终 /initialpose
+#
+# 本节点不自己做任何计算；所有评分由 AMCL 通过协方差反馈完成。
+# 无嵌套 spin_once，回调由主 executor 自然处理。
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
 import numpy as np
 import math
-from sensor_msgs.msg import LaserScan
+
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
-from collections import deque
+from geometry_msgs.msg import PoseWithCovarianceStamped, Point, Quaternion
 
 
-class AmclInitialPoseEstimator(Node):
+class AmclGlobalSearchEstimator(Node):
     """
-    AMCL 初始位姿估计节点
-
-    功能：
-    1. 订阅 /map 话题，获取占用栅格地图并预计算似然场
-    2. 订阅 /scan 话题，缓存激光扫描数据
-    3. 在地图自由空间中均匀播撒粒子
-    4. 使用似然场模型对每个粒子评分
-    5. 发布得分最高粒子的位姿到 /initialpose
+    AMCL 全局搜索初始位姿估计节点 (v3 - timer 驱动, 一轮)
     """
 
     def __init__(self):
-        super().__init__('amcl_initial_pose_estimator')
+        super().__init__('amcl_global_search_estimator')
 
         # ---------- 参数 ----------
-        self.declare_parameter('particle_count', 3000)       # 粒子数量
-        self.declare_parameter('map_resolution', 0.05)       # 地图分辨率 (m/pixel)
-        self.declare_parameter('scan_range_max', 50.0)       # 扫描最大范围 (m)
-        self.declare_parameter('laser_min_range', 0.1)       # 激光最小范围 (m)
-        self.declare_parameter('laser_max_range', 100.0)     # 激光最大范围 (m)
-        self.declare_parameter('max_beams', 180)             # 每次评分使用的激光束数
-        self.declare_parameter('sigma_hit', 0.08)            # 似然场高斯标准差 (m)
-        self.declare_parameter('z_hit', 0.60)                # 命中权重
-        self.declare_parameter('z_rand', 0.40)               # 随机权重
-        self.declare_parameter('likelihood_max_dist', 2.0)   # 似然场最大搜索距离 (m)
-        self.declare_parameter('trigger_on_map', True)       # 收到地图后自动触发估计
+        self.declare_parameter('grid_spacing', 2.0)
+        self.declare_parameter('top_k', 3)
+        self.declare_parameter('trigger_on_map', True)
+        self.declare_parameter('free_threshold', 250)
+        self.declare_parameter('feedback_timeout', 2.5)
+        self.declare_parameter('fine_search_radius', 1.0)
+        self.declare_parameter('min_topk_distance', 4.0)
+        self.declare_parameter('verify_settle_time', 3.0)
+        self.declare_parameter('verify_cov_threshold', 0.000000001)
 
-        self.particle_count = self.get_parameter('particle_count').value
-        self.map_resolution = self.get_parameter('map_resolution').value
-        self.scan_range_max = self.get_parameter('scan_range_max').value
-        self.laser_min_range = self.get_parameter('laser_min_range').value
-        self.laser_max_range = self.get_parameter('laser_max_range').value
-        self.max_beams = self.get_parameter('max_beams').value
-        self.sigma_hit = self.get_parameter('sigma_hit').value
-        self.z_hit = self.get_parameter('z_hit').value
-        self.z_rand = self.get_parameter('z_rand').value
-        self.likelihood_max_dist = self.get_parameter('likelihood_max_dist').value
+        self.grid_spacing = self.get_parameter('grid_spacing').value
+        self.top_k = self.get_parameter('top_k').value
         self.trigger_on_map = self.get_parameter('trigger_on_map').value
+        self.free_threshold = self.get_parameter('free_threshold').value
+        self.feedback_timeout = self.get_parameter('feedback_timeout').value
+        self.fine_search_radius = self.get_parameter('fine_search_radius').value
+        self.min_topk_distance = self.get_parameter('min_topk_distance').value
+        self.verify_settle_time = self.get_parameter('verify_settle_time').value
+        self.verify_cov_threshold = self.get_parameter('verify_cov_threshold').value
 
-        # ---------- 数据存储 ----------
-        self.map_image = None          # numpy 2D array: 0=占用, 255=空闲
-        self.map_info = None           # OccupancyGrid.info
+        # 1 个朝向：右(-90°)
+        self.direction_yaws = [0]
+        self.direction_names = ['右(0°)']
+
+        # ---------- 数据 ----------
+        self.map_image = None
+        self.map_info = None
         self.map_origin_x = 0.0
         self.map_origin_y = 0.0
         self.map_width = 0
         self.map_height = 0
-        self.likelihood_field = None   # 预计算的似然场 (距离变换)
-        self.free_space_indices = None # 自由空间像素坐标 (rows, cols)
-        self.scan_msg = None           # 最新一帧激光扫描
-        self.has_estimated = False     # 是否已经完成估计
+        self.has_estimated = False
+
+        # AMCL 反馈
+        self.latest_amcl_pose = None
+        self._pending_feedback = False
+
+        # ---------- 搜索状态机 ----------
+        self._search_timer = None
+        self._search_state = 'idle'      # idle | searching | done
+        self._candidates = []
+        self._results = []
+        self._current_idx = 0
+        self._publish_time = None
+        self._waiting_for_feedback = False
+        self._current_x = 0.0
+        self._current_y = 0.0
+        self._current_yaw = 0.0
+        self._current_name = ''
+        self._t_start = None
+        self._fine_phase = False
+        self._fine_candidates = []
+        self._fine_results = []
+
+        # ---------- 验证状态 ----------
+        self._verify_results = []
+        self._verify_idx = 0
+        self._verify_settle_start = None
+        self._verify_settled = False
+        self._verify_snapshot = None  # 验证通过时锁定的 AMCL 消息副本
 
         # ---------- QoS ----------
-        best_effort_qos = QoSProfile(
+        map_qos = QoSProfile(
             depth=100,
-            reliability=ReliabilityPolicy.BEST_EFFORT,
-            durability=DurabilityPolicy.VOLATILE
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
         )
 
         # ---------- 订阅 ----------
         self.map_sub = self.create_subscription(
-            OccupancyGrid, '/map', self.map_callback, best_effort_qos)
+            OccupancyGrid, '/rkbot/map', self.map_callback, map_qos)
 
-        self.scan_sub = self.create_subscription(
-            LaserScan, '/scan', self.scan_callback, best_effort_qos)
+        self.amcl_pose_sub = self.create_subscription(
+            PoseWithCovarianceStamped, '/rkbot/amcl_pose',
+            self.amcl_pose_callback, 10)
 
         # ---------- 发布 ----------
         self.initial_pose_pub = self.create_publisher(
             PoseWithCovarianceStamped, '/initialpose', 10)
 
-        self.get_logger().info('AMCL 初始位姿估计节点已启动')
+        self.get_logger().info('AMCL 全局搜索初始位姿估计节点 v3 (一轮) 已启动')
+        self.get_logger().info(
+            f'网格间距: {self.grid_spacing}m, 朝向: 右(-90°), Top-K: {self.top_k}, '
+            f'反馈超时: {self.feedback_timeout}s')
 
     # ============================================================
-    #  地图回调
+    #  回调
     # ============================================================
+    def amcl_pose_callback(self, msg):
+        self.latest_amcl_pose = msg
+        self._pending_feedback = False
+
     def map_callback(self, msg):
         try:
-            self.map_info = msg.info
             self.map_origin_x = msg.info.origin.position.x
             self.map_origin_y = msg.info.origin.position.y
             self.map_width = msg.info.width
             self.map_height = msg.info.height
+            self.map_info = msg.info
+            resolution = msg.info.resolution
 
-            # 转换为 numpy 数组
             map_data = np.array(msg.data, dtype=np.int8).reshape(
                 (self.map_height, self.map_width))
-
-            # 0=占用, 255=空闲
             self.map_image = np.zeros((self.map_height, self.map_width), dtype=np.uint8)
-            self.map_image[map_data == -1] = 128   # 未知 (归为空闲以增加粒子覆盖)
+            self.map_image[map_data == -1] = 128
             self.map_image[map_data == 0] = 255
             self.map_image[map_data == 100] = 0
 
-            # 预计算似然场 (距离变换)
-            self._build_likelihood_field()
-
-            # 收集自由空间像素坐标（用于均匀采样粒子）
-            free_mask = (self.map_image >= 128)  # 空闲 + 未知
-            rows, cols = np.where(free_mask)
-            self.free_space_indices = np.stack([rows, cols], axis=1)
-
             self.get_logger().info(
                 f'地图已更新: {self.map_width}x{self.map_height}, '
-                f'自由空间像素: {len(self.free_space_indices)}, '
-                f'原点: ({self.map_origin_x:.2f}, {self.map_origin_y:.2f})')
+                f'分辨率: {resolution:.3f}m/pixel')
 
-            # 如果有扫描数据且需要自动触发
-            if self.trigger_on_map and self.scan_msg is not None and not self.has_estimated:
-                self.get_logger().info('收到地图，自动触发初始位姿估计...')
-                self.estimate_initial_pose()
+            if self.trigger_on_map and not self.has_estimated:
+                self.get_logger().info('收到地图，自动触发全局搜索...')
+                self._start_search()
 
         except Exception as e:
             self.get_logger().error(f'处理地图数据时出错: {str(e)}')
 
     # ============================================================
-    #  构建似然场 (距离变换)
+    #  启动搜索
     # ============================================================
-    def _build_likelihood_field(self):
-        """对占用栅格地图做距离变换，生成似然场"""
-        # 障碍物二值图: 1=障碍物, 0=空闲
-        obstacle_binary = (self.map_image == 0).astype(np.uint8)
+    def _start_search(self):
+        if self.map_image is None or self.has_estimated:
+            return
 
-        # 使用 OpenCV 距离变换
-        import cv2
-        max_dist_pixels = self.likelihood_max_dist / self.map_resolution
-        dist = cv2.distanceTransform(
-            1 - obstacle_binary, cv2.DIST_L2, cv2.DIST_MASK_PRECISE)
+        self._candidates = self._generate_grid_candidates()
+        if not self._candidates:
+            self.get_logger().error('未生成任何候选点，请检查地图')
+            return
 
-        # 截断到最大距离
-        dist = np.clip(dist, 0, max_dist_pixels)
-        self.likelihood_field = dist.astype(np.float32)
+        total = len(self._candidates)
+        self.get_logger().info(f'第一轮(粗搜索)开始: {total} 候选点')
+        self._results = []
+        self._current_idx = 0
+        self._waiting_for_feedback = False
+        self._search_state = 'searching'
+        self._t_start = self.get_clock().now()
+
+        if self._search_timer is None:
+            self._search_timer = self.create_timer(0.01, self._search_tick)
+        else:
+            self._search_timer.reset()
+
+    # ============================================================
+    #  Timer 驱动核心 (10ms)
+    # ============================================================
+    def _search_tick(self):
+        if self._search_state == 'searching':
+            if self._fine_phase:
+                self._tick_fine()
+            else:
+                self._tick_coarse()
+        elif self._search_state == 'verifying':
+            self._tick_verify()
+        elif self._search_state == 'done':
+            pass
+
+    def _tick_coarse(self):
+        if self._current_idx >= len(self._candidates):
+            self._search_state = 'idle'
+            self._start_fine_search()
+            return
+
+        if not self._waiting_for_feedback:
+            self._publish_candidate()
+            return
+
+        if self._pending_feedback:
+            elapsed = (self.get_clock().now() - self._publish_time).nanoseconds / 1e9
+            if elapsed >= self.feedback_timeout:
+                self.get_logger().info(
+                    f'[超时] ({self._current_x:.1f},{self._current_y:.1f},'
+                    f'{math.degrees(self._current_yaw):.0f}°)')
+                self._results.append(
+                    (-float('inf'), self._current_x, self._current_y, self._current_yaw,
+                     self._current_name, self._current_x, self._current_y, self._current_yaw,
+                     float('inf')))
+                self._current_idx += 1
+                self._waiting_for_feedback = False
+            return
+
+        if self.latest_amcl_pose is not None:
+            self._record_amcl_result()
+        self._current_idx += 1
+        self._waiting_for_feedback = False
+
+    # ============================================================
+    #  第二轮搜索：在 Top-K 周围做精细检索
+    # ============================================================
+    def _start_fine_search(self):
+        # 取粗搜索 Top-K (带距离去重)
+        self._results.sort(key=lambda t: t[0], reverse=True)
+        topk = self._select_topk_with_distance(self._results)
+
+        fine_spacing = self.grid_spacing / 4.0
+        radius = self.fine_search_radius
+        self._fine_candidates = []
+        for r in topk:
+            _, _, _, _, _, ax, ay, ayaw, _ = r
+            x_start = ax - radius
+            x_end = ax + radius
+            y_start = ay - radius
+            y_end = ay + radius
+            x = x_start
+            while x <= x_end:
+                y = y_start
+                while y <= y_end:
+                    if self._is_free(x, y):
+                        for yaw, name in zip(self.direction_yaws, self.direction_names):
+                            self._fine_candidates.append((x, y, yaw, name))
+                    y += fine_spacing
+                x += fine_spacing
+
+        if not self._fine_candidates:
+            self.get_logger().warn('第二轮未生成候选点，直接使用粗搜索结果')
+            self._search_state = 'idle'
+            self._on_search_done()
+            return
 
         self.get_logger().info(
-            f'似然场已构建, 最大距离: {self.likelihood_max_dist}m '
-            f'({max_dist_pixels:.0f}像素)')
+            f'第二轮搜索: {len(self._fine_candidates)} 候选点, '
+            f'间距={fine_spacing:.2f}m, 半径={radius}m')
+        self._fine_results = []
+        self._current_idx = 0
+        self._waiting_for_feedback = False
+        self._fine_phase = True
+        self._search_state = 'searching'
+
+    def _tick_fine(self):
+        if self._current_idx >= len(self._fine_candidates):
+            self._search_state = 'idle'
+            self._fine_phase = False
+            self._results = self._fine_results
+            self._on_search_done()
+            return
+
+        if not self._waiting_for_feedback:
+            self._publish_fine_candidate()
+            return
+
+        if self._pending_feedback:
+            elapsed = (self.get_clock().now() - self._publish_time).nanoseconds / 1e9
+            if elapsed >= self.feedback_timeout:
+                self.get_logger().info(
+                    f'[超时] ({self._current_x:.1f},{self._current_y:.1f},'
+                    f'{math.degrees(self._current_yaw):.0f}°)')
+                self._fine_results.append(
+                    (-float('inf'), self._current_x, self._current_y, self._current_yaw,
+                     self._current_name, self._current_x, self._current_y, self._current_yaw,
+                     float('inf')))
+                self._current_idx += 1
+                self._waiting_for_feedback = False
+            return
+
+        if self.latest_amcl_pose is not None:
+            self._record_fine_result()
+        self._current_idx += 1
+        self._waiting_for_feedback = False
+
+    def _publish_fine_candidate(self):
+        cx, cy, cyaw, dname = self._fine_candidates[self._current_idx]
+        self._current_x, self._current_y, self._current_yaw, self._current_name = \
+            cx, cy, cyaw, dname
+        self._pending_feedback = True
+        self._waiting_for_feedback = True
+        self.latest_amcl_pose = None
+        self._publish_time = self.get_clock().now()
+        self._publish_initial_pose(cx, cy, cyaw)
+
+    def _record_fine_result(self):
+        msg = self.latest_amcl_pose
+        ax = msg.pose.pose.position.x
+        ay = msg.pose.pose.position.y
+        qz = msg.pose.pose.orientation.z
+        qw = msg.pose.pose.orientation.w
+        ayaw = 2.0 * math.atan2(qz, qw)
+        cov = msg.pose.covariance
+        cov_trace = abs(cov[0]) + abs(cov[7]) + abs(cov[35])
+
+        # 主要指标：AMCL 收敛位姿离初始猜测的距离
+        # AMCL 大幅漂移 → 初始猜测跟激光对不上 → 坏点
+        move_dist = math.hypot(ax - self._current_x, ay - self._current_y)
+        move_yaw = abs(self._normalize_angle(ayaw - self._current_yaw))
+
+        # 综合评分：偏移距离为主，yaw偏差为辅，协方差做微调
+        quality = -(move_dist + move_yaw * 0.5 + cov_trace * 1e3)
+
+        delay = (self.get_clock().now() - self._publish_time).nanoseconds / 1e9
+        self.get_logger().info(
+            f'[精{self._current_idx+1}/{len(self._fine_candidates)}] '
+            f'converged=({ax:.2f},{ay:.2f},{math.degrees(ayaw):.0f}°) '
+            f'init=({self._current_x:.1f},{self._current_y:.1f}) '
+            f'cov={cov_trace:.2e} move={move_dist:.2f}m quality={quality:.2f}')
+
+        self._fine_results.append(
+            (quality, self._current_x, self._current_y, self._current_yaw,
+             self._current_name, ax, ay, ayaw, cov_trace))
 
     # ============================================================
-    #  扫描回调
+    #  搜索完成 → 取 Top-K 中最优 (最终)
     # ============================================================
-    def scan_callback(self, msg):
-        self.scan_msg = msg
+    def _on_search_done(self):
+        elapsed = (self.get_clock().now() - self._t_start).nanoseconds / 1e9
+        self._results.sort(key=lambda t: t[0], reverse=True)
 
-        # 如果已有地图且未估计，自动触发
-        if self.trigger_on_map and self.map_image is not None and not self.has_estimated:
-            self.estimate_initial_pose()
+        topk_log = self._select_topk_with_distance(self._results)
+        self.get_logger().info(f'两轮搜索完成, 耗时 {elapsed:.1f}s, Top-{len(topk_log)}:')
+        for i, r in enumerate(topk_log):
+            self.get_logger().info(
+                f'  #{i+1}: quality={r[0]:.4e} '
+                f'pos=({r[5]:.2f},{r[6]:.2f},{math.degrees(r[7]):.0f}°)')
 
-    # ============================================================
-    #  均匀采样粒子
-    # ============================================================
-    def _sample_particles_uniform(self):
-        """在地图自由空间中均匀采样粒子"""
-
-        if self.free_space_indices is None or len(self.free_space_indices) == 0:
-            self.get_logger().error('没有自由空间可采样')
-            return None
-
-        n_free = len(self.free_space_indices)
-        n_sample = min(self.particle_count, n_free)
-
-        # 均匀随机采样像素位置
-        idx = np.random.choice(n_free, size=n_sample, replace=False)
-        sampled_pixels = self.free_space_indices[idx]  # (N, 2): [row, col]
-
-        # 像素坐标 -> 世界坐标
-        # row = (map_origin_y - y) / resolution + height, 反转后
-        # 地图数组第0行对应世界坐标y_max
-        world_x = (sampled_pixels[:, 1] + 0.5) * self.map_info.resolution + self.map_origin_x
-        world_y = (self.map_height - sampled_pixels[:, 0] - 0.5) * self.map_info.resolution + self.map_origin_y
-
-        # 均匀随机采样朝向
-        world_yaw = np.random.uniform(-math.pi, math.pi, size=n_sample)
-
-        particles = np.stack([world_x, world_y, world_yaw], axis=1)  # (N, 3)
-        return particles
+        # 进入验证阶段：按 quality 顺序，逐一发布 /initialpose，等待 AMCL 充分收敛后检查协方差
+        self._verify_results = list(self._results)
+        self._verify_idx = 0
+        self._search_state = 'verifying'
+        self._publish_verify_candidate()
 
     # ============================================================
-    #  似然场评分
+    #  验证阶段：逐一发布候选位姿，等 AMCL 充分收敛，检查协方差
     # ============================================================
-    def _score_particle(self, px, py, pyaw):
-        """对单个粒子评分，使用似然场模型"""
+    def _publish_verify_candidate(self):
+        if self._verify_idx >= len(self._verify_results):
+            self.get_logger().error('所有候选点验证均失败，无法找到可靠初始位姿')
+            self.has_estimated = True
+            self._search_state = 'done'
+            return
 
-        if self.scan_msg is None or self.likelihood_field is None:
-            return 0.0
+        r = self._verify_results[self._verify_idx]
+        ax, ay, ayaw = r[5], r[6], r[7]
+        self.get_logger().info(
+            f'验证候选 #{self._verify_idx+1}: '
+            f'({ax:.2f},{ay:.2f},{math.degrees(ayaw):.0f}°)')
+        self._publish_initial_pose(ax, ay, ayaw)
+        self._verify_settle_start = self.get_clock().now()
+        self._verify_settled = False
+        self.latest_amcl_pose = None
 
-        # 下采样激光束
-        ranges = self.scan_msg.ranges
-        angle_min = self.scan_msg.angle_min
-        angle_increment = self.scan_msg.angle_increment
-        num_beams = len(ranges)
+    def _tick_verify(self):
+        if self._verify_settled:
+            return
 
-        step = max(1, num_beams // self.max_beams)
-        indices = range(0, num_beams, step)
+        if self._verify_settle_start is None:
+            return
 
-        total_weight = 0.0
-        z_hit_denom = 1.0 / (self.sigma_hit * math.sqrt(2.0 * math.pi))
-        z_rand_mult = 1.0 / self.laser_max_range
+        elapsed = (self.get_clock().now() - self._verify_settle_start).nanoseconds / 1e9
+        if elapsed < self.verify_settle_time:
+            return  # 仍在等待 AMCL 收敛
 
-        for i in indices:
-            r = ranges[i]
-            if r < self.laser_min_range or r > self.laser_max_range:
-                continue
+        # 收敛时间到，检查 AMCL 协方差
+        self._verify_settled = True
 
-            # 激光端点在机器人坐标系
-            angle = angle_min + i * angle_increment
-            lx_local = r * math.cos(angle)
-            ly_local = r * math.sin(angle)
+        if self.latest_amcl_pose is None:
+            self.get_logger().warn('验证超时：未收到 AMCL 反馈')
+            self._verify_idx += 1
+            self._publish_verify_candidate()
+            return
 
-            # 转换到世界坐标系
-            cos_yaw = math.cos(pyaw)
-            sin_yaw = math.sin(pyaw)
-            lx_world = px + cos_yaw * lx_local - sin_yaw * ly_local
-            ly_world = py + sin_yaw * lx_local + cos_yaw * ly_local
+        cov = self.latest_amcl_pose.pose.covariance
+        cov_trace = abs(cov[0]) + abs(cov[7]) + abs(cov[35])
+        self.get_logger().info(f'验证结果: cov_trace={cov_trace:.4e} (阈值={self.verify_cov_threshold})')
 
-            # 查似然场
-            dist = self._lookup_likelihood(lx_world, ly_world)
-            if dist < 0:
-                continue
+        if cov_trace < self.verify_cov_threshold:
+            # 锁定当前 AMCL 消息的快照（后续回调可能覆盖 self.latest_amcl_pose）
+            self._verify_snapshot = copy.deepcopy(self.latest_amcl_pose)
+            self._accept_verify_result()
+        else:
+            self.get_logger().warn(f'协方差过大 ({cov_trace:.4e})，尝试下一个候选...')
+            self._verify_idx += 1
+            self._publish_verify_candidate()
 
-            # 似然场模型
-            dist_m = dist * self.map_resolution
-            p_hit = z_hit_denom * math.exp(-0.5 * (dist_m / self.sigma_hit) ** 2)
-            p = self.z_hit * p_hit + self.z_rand * z_rand_mult
+    def _accept_verify_result(self):
+        msg = self.latest_amcl_pose
+        ax = msg.pose.pose.position.x
+        ay = msg.pose.pose.position.y
+        qz = msg.pose.pose.orientation.z
+        qw = msg.pose.pose.orientation.w
+        ayaw = 2.0 * math.atan2(qz, qw)
 
-            if p > 0:
-                total_weight += math.log(p)
+        self.get_logger().info('=' * 60)
+        self.get_logger().info(f'验证通过! 最终位姿: x={ax:.3f}, y={ay:.3f}, yaw={math.degrees(ayaw):.1f}°')
+        self.get_logger().info('=' * 60)
 
-        return total_weight
+        # 重新发布最终确认的位姿（用 AMCL 收敛后的位姿）
+        self._publish_initial_pose(ax, ay, ayaw)
+        self.has_estimated = True
+        self._search_state = 'done'
 
-    def _lookup_likelihood(self, wx, wy):
-        """查询世界坐标(wx, wy)处的似然场距离（像素单位）"""
-        # 世界坐标 -> 像素坐标
+    # ============================================================
+    #  辅助
+    # ============================================================
+    def _select_topk_with_distance(self, results):
+        """从已按 quality 降序排列的 results 中选出 Top-K，且任意两点的 AMCL 估计位置距离 >= min_topk_distance。
+        如果候选点与已选点距离太近但质量更高，则替换已选点。"""
+        selected = []
+        for r in results:
+            ax, ay = r[5], r[6]
+            # 检查与所有已选点的距离冲突
+            conflicts = [(i, s) for i, s in enumerate(selected)
+                         if math.hypot(ax - s[5], ay - s[6]) < self.min_topk_distance]
+
+            if not conflicts:
+                if len(selected) < self.top_k:
+                    selected.append(r)
+            else:
+                # 有冲突 — 如果比冲突中任意一个质量更好，替换之
+                for i, s in conflicts:
+                    if r[0] > s[0]:
+                        selected[i] = r
+                        break
+
+        if not selected:
+            selected = [results[0]]
+        return selected
+    def _publish_candidate(self):
+        cx, cy, cyaw, dname = self._candidates[self._current_idx]
+        self._current_x, self._current_y, self._current_yaw, self._current_name = \
+            cx, cy, cyaw, dname
+        self._pending_feedback = True
+        self._waiting_for_feedback = True
+        self.latest_amcl_pose = None
+        self._publish_time = self.get_clock().now()
+        self._publish_initial_pose(cx, cy, cyaw)
+
+    def _record_amcl_result(self):
+        msg = self.latest_amcl_pose
+        ax = msg.pose.pose.position.x
+        ay = msg.pose.pose.position.y
+        qz = msg.pose.pose.orientation.z
+        qw = msg.pose.pose.orientation.w
+        ayaw = 2.0 * math.atan2(qz, qw)
+        cov = msg.pose.covariance
+        cov_trace = abs(cov[0]) + abs(cov[7]) + abs(cov[35])
+        move_dist = math.hypot(ax - self._current_x, ay - self._current_y)
+        move_yaw = abs(self._normalize_angle(ayaw - self._current_yaw))
+
+        quality = -(move_dist + move_yaw * 0.5 + cov_trace * 1e3)
+
+        delay = (self.get_clock().now() - self._publish_time).nanoseconds / 1e9
+        self.get_logger().info(
+            f'[{self._current_idx+1}/{len(self._candidates)}] '
+            f'converged=({ax:.2f},{ay:.2f},{math.degrees(ayaw):.0f}°) '
+            f'init=({self._current_x:.1f},{self._current_y:.1f}) '
+            f'cov={cov_trace:.2e} move={move_dist:.2f}m quality={quality:.2f}')
+
+        self._results.append(
+            (quality, self._current_x, self._current_y, self._current_yaw,
+             self._current_name, ax, ay, ayaw, cov_trace))
+
+    def _is_free(self, wx, wy):
+        if self.map_image is None:
+            return False
         col = int((wx - self.map_origin_x) / self.map_info.resolution)
         row = int((wy - self.map_origin_y) / self.map_info.resolution)
-        # 翻转row（地图第0行对应y_max）
-        row = self.map_height - 1 - row
-
         if 0 <= row < self.map_height and 0 <= col < self.map_width:
-            return self.likelihood_field[row, col]
-        return -1.0
+            return self.map_image[row, col] >= self.free_threshold
+        return False
 
-    # ============================================================
-    #  主估计流程
-    # ============================================================
-    def estimate_initial_pose(self):
-        """执行初始位姿估计"""
-        if self.map_image is None:
-            self.get_logger().warn('地图尚未就绪')
-            return
-        if self.scan_msg is None:
-            self.get_logger().warn('扫描数据尚未就绪')
-            return
-        if self.likelihood_field is None:
-            self.get_logger().warn('似然场尚未构建')
-            return
-        if self.has_estimated:
-            self.get_logger().info('已经完成估计，跳过')
-            return
+    @staticmethod
+    def _normalize_angle(angle):
+        """将角度归一化到 [-pi, pi)"""
+        return math.atan2(math.sin(angle), math.cos(angle))
 
-        self.get_logger().info('开始初始位姿估计...')
+    def _generate_grid_candidates(self):
+        resolution = self.map_info.resolution
+        map_w_m = self.map_width * resolution
+        map_h_m = self.map_height * resolution
+        candidates = []
+        x = self.map_origin_x
+        while x < self.map_origin_x + map_w_m:
+            y = self.map_origin_y
+            while y < self.map_origin_y + map_h_m:
+                if self._is_free(x, y):
+                    for yaw, name in zip(self.direction_yaws, self.direction_names):
+                        candidates.append((x, y, yaw, name))
+                y += self.grid_spacing
+            x += self.grid_spacing
+        return candidates
 
-        # 1. 均匀采样粒子
-        particles = self._sample_particles_uniform()
-        if particles is None or len(particles) == 0:
-            self.get_logger().error('粒子采样失败')
-            return
-
-        self.get_logger().info(f'已采样 {len(particles)} 个粒子')
-
-        # 2. 对每个粒子评分
-        best_score = -float('inf')
-        best_particle = None
-        scores = []
-
-        for i, (px, py, pyaw) in enumerate(particles):
-            score = self._score_particle(px, py, pyaw)
-            scores.append(score)
-
-            if score > best_score:
-                best_score = score
-                best_particle = (px, py, pyaw)
-
-            if (i + 1) % 500 == 0:
-                self.get_logger().info(f'评分进度: {i+1}/{len(particles)}')
-
-        if best_particle is None:
-            self.get_logger().error('未找到有效粒子')
-            return
-
-        # 3. 输出统计信息
-        scores_arr = np.array(scores)
-        self.get_logger().info(
-            f'评分统计: best={best_score:.2f}, mean={scores_arr.mean():.2f}, '
-            f'median={np.median(scores_arr):.2f}')
-
-        # 4. 发布 /initialpose
-        bx, by, byaw = best_particle
-        self.get_logger().info(
-            f'最佳初始位姿: x={bx:.3f}, y={by:.3f}, yaw={byaw:.3f}rad ({math.degrees(byaw):.1f}deg)')
-
-        self._publish_initial_pose(bx, by, byaw)
-        self.has_estimated = True
-
-        self.get_logger().info('初始位姿已发布到 /initialpose')
-
-    # ============================================================
-    #  发布 initialpose
-    # ============================================================
     def _publish_initial_pose(self, x, y, yaw):
-        """发布 PoseWithCovarianceStamped 到 /initialpose"""
         msg = PoseWithCovarianceStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = 'map'
-
+        msg.header.frame_id = 'rkbot/map'
         msg.pose.pose.position = Point(x=x, y=y, z=0.0)
         qz = math.sin(yaw / 2.0)
         qw = math.cos(yaw / 2.0)
         msg.pose.pose.orientation = Quaternion(x=0.0, y=0.0, z=qz, w=qw)
-
-        # 协方差矩阵 (与 nav2_amcl 默认一致)
         cov = [0.0] * 36
-        cov[0] = 0.25   # x 方差
-        cov[7] = 0.25   # y 方差
-        cov[35] = 0.06853892326654787  # yaw 方差
+        cov[0] = 1.0
+        cov[1] = 1.0
+        cov[6] = 1.0
+        cov[7] = 1.0
+        cov[35] = 3.14
         msg.pose.covariance = cov
-
         self.initial_pose_pub.publish(msg)
 
-    # ============================================================
-    #  手动触发估计的服务接口 (可选扩展)
-    # ============================================================
     def reset_and_estimate(self):
-        """重置状态并重新估计"""
         self.has_estimated = False
-        if self.map_image is not None and self.scan_msg is not None:
-            self.estimate_initial_pose()
+        if self.map_image is not None:
+            self._start_search()
         else:
-            self.get_logger().warn('地图或扫描数据未就绪，等待数据...')
+            self.get_logger().warn('地图未就绪')
 
 
 def main(args=None):
     rclpy.init(args=args)
-
-    node = AmclInitialPoseEstimator()
-
+    node = AmclGlobalSearchEstimator()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

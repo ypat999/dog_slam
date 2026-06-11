@@ -681,9 +681,11 @@
       const endRow = Math.min(info.height, Math.ceil(offsetY / cellSize));
 
       // 逐行扫描，合并同色连续像素
+      // 注：row 递增方向 = 世界坐标Y递增方向 = 画布从下到上，
+      // 而 ROS OccupancyGrid 数据 data[row * width + col] 中 row=0 = 地图底部(最小Y)，
+      // 所以直接用 row 索引数据，不需要翻转。
       for (let row = startRow; row < endRow; row++) {
-        const flippedRow = info.height - 1 - row; // 地图数据Y轴翻转
-        const dataRowBase = flippedRow * info.width;
+        const dataRowBase = row * info.width;
         // canvasY 是当前行 cell 的左上角Y坐标（fillRect 从左上角绘制）
         const wy = originY + row * info.resolution; // 当前行底部在世界坐标系的Y值
         const cy = offsetY - (wy - originY) * scale - cellSize;

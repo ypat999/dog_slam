@@ -81,24 +81,24 @@ controller_server:
       plugin: "nav2_mppi_controller::MPPIController"
 
       # 轨迹时间步数
-      time_steps: 48
+      time_steps: 38
       # 每个时间步的时长（s），time_steps * model_dt = 预测时域
       model_dt: 0.05
       # 每轮采样的候选轨迹数量
-      batch_size: 400
+      batch_size: 300
       # TF 变换容差（s）
       transform_tolerance: 0.2
 
       # 最大前向速度（m/s）
       vx_max: 2.0
       # 最大反向速度（m/s）
-      vx_min: -0.3
+      vx_min: -0.2
       # 前向速度采样标准差
       vx_std: 1.0
       # 最大横向速度（m/s，Omni 模型）
-      vy_max: 0.3
+      vy_max: 0.2
       # 横向速度采样标准差
-      vy_std: 0.3
+      vy_std: 0.2
       # 角速度采样标准差
       wz_std: 0.5
       # 最大角速度（rad/s）
@@ -139,9 +139,9 @@ controller_server:
       # MPPI 迭代次数，建议保持 1 并增大 batch_size
       iteration_count: 1
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
-      max_robot_pose_search_dist: 2.0
+      max_robot_pose_search_dist: 1.5
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 2.5
+      prune_distance: 1.5
       # 失败后重试次数（软重置）
       retry_attempt_limit: 1
   
@@ -263,9 +263,9 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 40.0
+        cost_weight: 15.0
         # 代价幂次
-        cost_power: 4
+        cost_power: 6
         # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
         # 从最远路径点算起的偏移量
@@ -297,11 +297,11 @@ controller_server:
       # =====================================================
       TwirlingCritic:
         # 是否启用
-        enabled: false
+        enabled: true
         # 代价幂次
         cost_power: 1
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 10.0
 
       # =====================================================
       # VelocityDeadbandCritic - 速度死区评价器
@@ -648,12 +648,12 @@ local_costmap:
       # =====================================================
       range_sensor_layer:
         plugin: "nav2_costmap_2d::RangeSensorLayer"
-        enabled: false
+        enabled: true
         topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
         input_sensor_type: "VARIABLE"
         no_readings_timeout: 0.0
-        clear_threshold: 0.6
-        mark_threshold: 0.8
+        clear_threshold: 0.8
+        mark_threshold: 0.9
         clear_on_max_reading: true
         phi: 1.2
         inflate_cone: 0.9

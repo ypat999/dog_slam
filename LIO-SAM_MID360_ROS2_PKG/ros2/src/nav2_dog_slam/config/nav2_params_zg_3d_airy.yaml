@@ -37,7 +37,7 @@ controller_server:
     # 被调用控制器插件连续失败（computeVelocityCommands 抛出异常）的最大持续时间（s），-1.0 无限，0 禁用
     failure_tolerance: 3.0
     # 获取瞬时速度测量的里程计话题
-    odom_topic: "/rkbot/lio/odom"
+    odom_topic: "/rkbot/lio/robo/odom"
 
     # 速度限制话题
     # 要订阅的速度限制话题名称，可由 Speed Filter 发布，也可由外部服务器提供
@@ -139,9 +139,9 @@ controller_server:
       # MPPI 迭代次数，建议保持 1 并增大 batch_size
       iteration_count: 1
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
-      max_robot_pose_search_dist: 2.0
+      max_robot_pose_search_dist: 1.0
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 3.0
+      prune_distance: 1.5
       # 失败后重试次数（软重置）
       retry_attempt_limit: 1
   

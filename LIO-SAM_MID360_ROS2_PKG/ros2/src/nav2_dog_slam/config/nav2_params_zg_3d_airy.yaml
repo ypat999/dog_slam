@@ -81,11 +81,11 @@ controller_server:
       plugin: "nav2_mppi_controller::MPPIController"
 
       # 轨迹时间步数
-      time_steps: 34
+      time_steps: 48
       # 每个时间步的时长（s），time_steps * model_dt = 预测时域
       model_dt: 0.05
       # 每轮采样的候选轨迹数量
-      batch_size: 200
+      batch_size: 400
       # TF 变换容差（s）
       transform_tolerance: 0.2
 
@@ -139,9 +139,9 @@ controller_server:
       # MPPI 迭代次数，建议保持 1 并增大 batch_size
       iteration_count: 1
       # 搜索路径最近点时沿路径向前搜索的最大距离（m）
-      max_robot_pose_search_dist: 1.0
+      max_robot_pose_search_dist: 2.0
       # 从最近路径点向前裁剪路径的距离（m），应与预测时域成比例
-      prune_distance: 1.5
+      prune_distance: 2.5
       # 失败后重试次数（软重置）
       retry_attempt_limit: 1
   

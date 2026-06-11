@@ -35,7 +35,8 @@ controller_server:
 
     # 容错与里程计
     # 被调用控制器插件连续失败（computeVelocityCommands 抛出异常）的最大持续时间（s），-1.0 无限，0 禁用
-    failure_tolerance: 3.0
+    # ★ 从 3.0 改为 0.3：TF 断流后快速刹车，约 6 次失败迭代（20Hz）即触发零速发布
+    failure_tolerance: 0.1
     # 获取瞬时速度测量的里程计话题
     odom_topic: "/rkbot/lio/robo/odom"
 
@@ -87,7 +88,8 @@ controller_server:
       # 每轮采样的候选轨迹数量
       batch_size: 300
       # TF 变换容差（s）
-      transform_tolerance: 0.2
+      # ★ 从 0.2 改为 0.1：更早发现 TF 断流，MPPI 快速报异常进入失败计数
+      transform_tolerance: 0.1
 
       # 最大前向速度（m/s）
       vx_max: 2.0
@@ -393,7 +395,8 @@ velocity_smoother:
     # 各轴最小速度死区 [vx, vy, vtheta]，低于此值不发送给硬件控制器，防止小命令因堵转扭矩而损坏硬件
     deadband_velocity: [0.1, 0.1, 0.1]
     # 速度超时时间（s），超过此时间无新命令则发送归零 Twist 命令并停止发布
-    velocity_timeout: 1.0
+    # ★ 从 1.0 改为 0.3：作为二级保护，避免断流期间速度平滑器继续输出旧命令
+    velocity_timeout: 0.1
 
 
 # =============================================================================
@@ -599,7 +602,8 @@ local_costmap:
       # 代价图发布到话题的频率（Hz），较高值提供更频繁的更新但增加带宽
       publish_frequency: 10.0
       # TF 变换容差（s）
-      transform_tolerance: 0.2
+      # ★ 从 0.2 改为 0.1：更早发现 TF 断流，MPPI 快速报异常进入失败计数
+      transform_tolerance: 0.1
       
       # 地图参数
       # 地图话题
@@ -906,7 +910,8 @@ global_costmap:
       # 代价图发布到话题的频率（Hz）
       publish_frequency: 0.1
       # TF 变换容差（s）
-      transform_tolerance: 0.2
+      # ★ 从 0.2 改为 0.1：更早发现 TF 断流，MPPI 快速报异常进入失败计数
+      transform_tolerance: 0.1
       
       # 地图参数
       # 是否使用滚动窗口。全局代价图通常为 false，使用静态地图的完整范围

@@ -94,7 +94,7 @@ controller_server:
       # 最大反向速度（m/s）
       vx_min: -0.3
       # 前向速度采样标准差
-      vx_std: 0.5
+      vx_std: 1.0
       # 最大横向速度（m/s，Omni 模型）
       vy_max: 0.3
       # 横向速度采样标准差
@@ -263,7 +263,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 评价器权重
-        cost_weight: 20.0
+        cost_weight: 40.0
         # 代价幂次
         cost_power: 4
         # 前向偏好（true=偏好前进，false=无偏好）

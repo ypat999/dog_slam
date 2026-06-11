@@ -18,7 +18,7 @@
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
-    lio.sensor.filter_rate: 13
+    lio.sensor.filter_rate: 17
     # 是否启用filter_rate的对称震荡offset，false则每帧固定取同一子集
     lio.sensor.enable_filter_offset: false
     lio.sensor.enable_downsample: true
@@ -105,7 +105,7 @@
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
-    lio.ros.imu_qos_reliable: true
+    lio.ros.imu_qos_reliable: false
     # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
     lio.ros.lidar_qos_reliable: false

@@ -134,7 +134,7 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='front_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', 'lio/body/cloud'),
+            ('cloud_in', 'lio/cloud_world'),
             ('scan', 'scan_front'),
         ],
         parameters=[
@@ -161,7 +161,7 @@ def generate_launch_description():
         executable='pointcloud_to_laserscan_node',
         name='rear_pointcloud_to_laserscan',
         remappings=[
-            ('cloud_in', 'rear_lidar/body/cloud'),
+            ('cloud_in', 'rear_lidar/cloud_world'),
             ('scan', 'scan_rear'),
         ],
         parameters=[

@@ -66,7 +66,7 @@ controller_server:
       # 目标检查器插件类型
       plugin: "nav2_controller::StoppedGoalChecker"
       # 到达目标的 XY 位置容差（m）
-      xy_goal_tolerance: 0.2
+      xy_goal_tolerance: 0.5
       # 到达目标的朝向容差（rad）
       yaw_goal_tolerance: 0.1
       # 判定为停止的线速度阈值（m/s）

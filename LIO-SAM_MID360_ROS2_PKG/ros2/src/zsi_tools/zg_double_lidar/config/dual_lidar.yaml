@@ -15,7 +15,7 @@
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
-    lio.sensor.filter_rate: 17
+    lio.sensor.filter_rate: 11
     lio.sensor.enable_filter_offset: false
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.2
@@ -75,9 +75,9 @@
     lio.degeneracy.detect_en: true
     lio.degeneracy.threshold: 100.0
     lio.degeneracy.tikhonov_lambda: 0.3
-    lio.degeneracy.min_effect_pts: 20
+    lio.degeneracy.min_effect_pts: 300
 
-    lio.bias_reset_skip_threshold: 50
+    lio.bias_reset_skip_threshold: 10
 
     lio.adaptive_weight.en: true
     lio.adaptive_weight.sigma: 30.0
@@ -100,4 +100,4 @@
     # 双IMU融合降噪：前后IMU时间对齐后取平均
     lio.dual.imu_fusion: true
     # 前后雷达共享IVox地图：true=共享, false=各自独立
-    lio.dual.share_ivox: true
+    lio.dual.share_ivox: false

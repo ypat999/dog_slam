@@ -19,6 +19,8 @@
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
     lio.sensor.filter_rate: 5
+    # 是否启用filter_rate的对称震荡offset，false则每帧固定取同一子集
+    lio.sensor.enable_filter_offset: false
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.2
     lio.sensor.intensity_filter_en: false
@@ -86,6 +88,26 @@
     # 优先级最高，启用后会跳过所有LIO和IMU相关计算
     # 默认: false
     lio.downsample_only: true
+
+    # ======================== 单核模式 ========================
+    lio.single_core: true
+
+    # ======================== 快速TF模式 ========================
+    # 是否在IMU频率下发布tf（world->imu, world->base_footprint），降低tf延迟
+    lio.fast_tf: false
+
+    # ======================== 退化检测与正则化 ========================
+    lio.degeneracy.detect_en: false
+    lio.degeneracy.threshold: 100.0
+    lio.degeneracy.tikhonov_lambda: 0.3
+    lio.degeneracy.min_effect_pts: 100
+
+    # 连续跳过观测更新的最大帧数，超限时重置IMU偏置（防止贴墙场景恶性漂移）
+    lio.bias_reset_skip_threshold: 50
+
+    # ======================== 自适应观测权重 ========================
+    lio.adaptive_weight.en: false
+    lio.adaptive_weight.sigma: 30.0
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据

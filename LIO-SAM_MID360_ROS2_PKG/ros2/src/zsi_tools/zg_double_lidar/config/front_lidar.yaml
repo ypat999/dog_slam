@@ -98,6 +98,11 @@
     # Tikhonov正则化强度，lambda * trace(H)/6 加到 Hessian 对角
     # 0.1 = 添加 10% Hessian 量级的对角正则化，越大退化方向越依赖IMU预测
     lio.degeneracy.tikhonov_lambda: 0.3
+    # 最小有效点数门槛，低于此值跳过观测更新（仅依赖IMU传播）
+    lio.degeneracy.min_effect_pts: 20
+
+    # 连续跳过观测更新的最大帧数，超限时重置IMU偏置（防止贴墙场景恶性漂移）
+    lio.bias_reset_skip_threshold: 50
 
     # ======================== 自适应观测权重 ========================
     lio.adaptive_weight.en: true

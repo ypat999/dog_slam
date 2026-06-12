@@ -13,6 +13,8 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, DurabilityPolicy
+import copy
+import cv2
 import numpy as np
 import math
 
@@ -137,9 +139,21 @@ class AmclGlobalSearchEstimator(Node):
             self.map_image[map_data == 0] = 255
             self.map_image[map_data == 100] = 0
 
+            # 将白色(自由空间)膨胀 2 米，候选点仅从膨胀后的区域选取
+            inflate_pixels = max(1, int(round(2.0 / resolution)))
+            free_mask = np.zeros_like(self.map_image, dtype=np.uint8)
+            free_mask[self.map_image >= self.free_threshold] = 1
+            kernel = cv2.getStructuringElement(
+                cv2.MORPH_ELLIPSE,
+                (inflate_pixels * 2 + 1, inflate_pixels * 2 + 1))
+            dilated = cv2.dilate(free_mask, kernel)
+            self.map_free_dilated = np.full_like(self.map_image, 0, dtype=np.uint8)
+            self.map_free_dilated[dilated == 1] = 255
+
             self.get_logger().info(
                 f'地图已更新: {self.map_width}x{self.map_height}, '
-                f'分辨率: {resolution:.3f}m/pixel')
+                f'分辨率: {resolution:.3f}m/pixel, '
+                f'白色膨胀+2m 内核半径={inflate_pixels}pix')
 
             if self.trigger_on_map and not self.has_estimated:
                 self.get_logger().info('收到地图，自动触发全局搜索...')
@@ -485,7 +499,9 @@ class AmclGlobalSearchEstimator(Node):
         col = int((wx - self.map_origin_x) / self.map_info.resolution)
         row = int((wy - self.map_origin_y) / self.map_info.resolution)
         if 0 <= row < self.map_height and 0 <= col < self.map_width:
-            return self.map_image[row, col] >= self.free_threshold
+            # 候选点选取使用膨胀后的地图（白色膨胀2m），确保离障碍物足够远
+            map_to_use = getattr(self, 'map_free_dilated', self.map_image)
+            return map_to_use[row, col] >= self.free_threshold
         return False
 
     @staticmethod

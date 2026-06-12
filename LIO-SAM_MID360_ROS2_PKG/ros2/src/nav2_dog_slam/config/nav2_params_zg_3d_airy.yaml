@@ -1190,11 +1190,11 @@ amcl:
     # z_rand 部分的混合权重（随机测量）
     z_rand: 0.40
     # 地图上障碍物膨胀的最大距离（m），用于 likelihood_field 模型
-    laser_likelihood_max_dist: 2.0
+    laser_likelihood_max_dist: 0.2
 
     # Beam 跳过参数 - 在 Likelihood 场模型中跳过大多数粒子不同意的光束
     # 是否在 Likelihood 场模型中执行光束跳过
-    do_beamskip: true
+    do_beamskip: false
     # 忽略大多数粒子不同意的光束，考虑跳过的最大距离（m）
     beam_skip_distance: 0.4
     # 跳过所需的光束比例阈值

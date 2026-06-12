@@ -1,0 +1,103 @@
+/**:
+  ros__parameters:
+    lio.map.save_map: true
+    lio.map.if_filter: false
+    lio.map.save_map_dir: "/home/robot/slam_data/pcd"
+    lio.map.map_name: "dual_lidar_map.pcd"
+    lio.map.ds_size: 0.2
+    lio.map.save_interval: 50
+    lio.map.pcd_prefix: "dual_"
+
+    lio.ros.lidar_topic: "/front_lidar"
+    lio.ros.imu_topic: "/front_lidar/imu"
+    lio.ros.map_save_service_topic: "/map_save"
+
+    lio.sensor.lidar_type: 9
+    lio.sensor.blind: 0.1
+    lio.sensor.maxrange: 200.0
+    lio.sensor.filter_rate: 17
+    lio.sensor.enable_filter_offset: false
+    lio.sensor.enable_downsample: true
+    lio.sensor.voxel_fliter_size: 0.2
+    lio.sensor.intensity_filter_en: false
+    lio.sensor.intensity_min: 10.0
+    lio.sensor.gravity_norm: 9.81
+    lio.sensor.imu_type: 1
+    lio.sensor.imu_na: 0.1
+    lio.sensor.imu_ng: 0.1
+    lio.sensor.imu_nba: 0.0001
+    lio.sensor.imu_nbg: 0.0001
+
+    lio.extrinsic.lidar_imu: [0.0, 0.0, 0.0,
+                              0.0, -1.0, 0.0,
+                              -1.0, 0.0, 0.0,
+                              0.0, 0.0, -1.0]
+    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36615, 0.0, 1.57, 0.0]
+
+    lio.hash_map.hash_capacity: 2000000
+    lio.hash_map.vox_resolution: 0.2
+
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 4
+    lio.kf.kf_align_gravity: true
+    lio.kf.ref_gravity_axis: 0
+    lio.kf.kf_quit_eps: 0.001
+
+    lio.output.robot: true
+    lio.output.plan_env_world: false
+    lio.output.plan_env_body: false
+    lio.output.ml_map: false
+    lio.output.planner: false
+    lio.output.map: true
+    lio.output.dense: false
+    lio.output.map_body: true
+    lio.output.dense_body: true
+    lio.output.pub_step: 1
+    lio.output.footprint_pub_en: false
+    lio.output.tf_base_footprint_frame: "base_footprint"
+    lio.output.world_frame: "world"
+    lio.output.imu_frame: "imu"
+
+    lio.eva.timer: true
+
+    lio.dynamic_removal.enable: true
+    lio.dynamic_removal.method: 0
+    lio.dynamic_removal.grid_size: 0.2
+    lio.dynamic_removal.min_neighbors: 2
+    lio.dynamic_removal.frame_window: 1
+    lio.dynamic_removal.raycast_min_hits: 2
+    lio.dynamic_removal.isolated_removal: false
+
+    lio.lio_only_undistort: false
+    lio.single_core: true
+    lio.fast_tf: true
+
+    lio.degeneracy.detect_en: true
+    lio.degeneracy.threshold: 100.0
+    lio.degeneracy.tikhonov_lambda: 0.3
+    lio.degeneracy.min_effect_pts: 20
+
+    lio.bias_reset_skip_threshold: 50
+
+    lio.adaptive_weight.en: true
+    lio.adaptive_weight.sigma: 30.0
+
+    lio.ros.imu_qos_reliable: false
+    lio.ros.lidar_qos_reliable: false
+
+    lio.sc_pgo.enable: false
+    lio.sc_pgo.keyframe_gap: 5.0
+    lio.sc_pgo.keyframe_deg_gap: 10.0
+
+    # ======================== 双雷达扩展参数 ========================
+    # 后雷达点云话题
+    lio.dual.rear_lidar_topic: "/rear_lidar"
+    # 后雷达IMU话题
+    lio.dual.rear_imu_topic: "/rear_lidar/imu"
+    # 后雷达→前雷达外参 [tx, ty, tz, roll, pitch, yaw(deg)]
+    # rslidar_head→rslidar_tail TF: [0,0,-1.028, 180,180,0] → 逆: Rx(180°), t=[0,0,-1.028]
+    lio.dual.rear_to_front: [0.0, 0.0, -1.028, 180.0, 0.0, 0.0]
+    # 双IMU融合降噪：前后IMU时间对齐后取平均
+    lio.dual.imu_fusion: true
+    # 前后雷达共享IVox地图：true=共享, false=各自独立
+    lio.dual.share_ivox: true

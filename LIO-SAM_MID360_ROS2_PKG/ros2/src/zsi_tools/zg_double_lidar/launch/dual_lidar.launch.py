@@ -1,12 +1,16 @@
 import os
+import math
 import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node, PushRosNamespace
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+
+def deg_to_rad(degrees):
+    return degrees * math.pi / 180.0
 
 
 def generate_launch_description():
@@ -22,6 +26,9 @@ def generate_launch_description():
         DEFAULT_NAMESPACE = ''
 
     pkg_super_lio = get_package_share_directory('super_lio')
+    pkg_zg_double_lidar = get_package_share_directory('zg_double_lidar')
+
+    dual_config_yaml = os.path.join(pkg_zg_double_lidar, 'config', 'dual_lidar.yaml')
 
     ld = LaunchDescription()
 
@@ -34,10 +41,12 @@ def generate_launch_description():
     ns = LaunchConfiguration('ns', default=DEFAULT_NAMESPACE)
     ld.add_action(PushRosNamespace(ns))
 
-    ns_base_footprint_frame = PythonExpression(
-        ["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
-    ns_base_link_frame = PythonExpression(
-        ["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
+    ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
+    ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
+    ns_base_footprint_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
+    ns_world_frame = PythonExpression(["'world' if '", ns, "' == '' else str('", ns, "/world')"])
+    ns_imu_frame = PythonExpression(["'imu' if '", ns, "' == '' else str('", ns, "/imu')"])
 
     declare_use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time',
@@ -47,19 +56,29 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
     ld.add_action(declare_use_sim_time_arg)
 
-    # ==================== Super-LIO Dual Node ====================
-    dual_lio_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_super_lio, 'launch', 'dual_lidar.launch.py')
-        ),
-        launch_arguments={
-            'ns': ns,
-            'use_sim_time': str(DEFAULT_USE_SIM_TIME),
-        }.items(),
+    # ==================== Dual-LiDAR SuperLIO ====================
+    dual_lio_node = Node(
+        package='super_lio',
+        executable='super_lio_dual_node',
+        name='super_lio_dual',
+        output='screen',
+        parameters=[
+            dual_config_yaml,
+            {'use_sim_time': DEFAULT_USE_SIM_TIME},
+            {'lio.output.tf_base_footprint_frame': ns_base_footprint_frame},
+            {'lio.output.world_frame': ns_world_frame},
+            {'lio.output.imu_frame': ns_imu_frame},
+        ],
+        prefix=['taskset -c 6,7'],
+        arguments=['--ros-args', '--log-level', 'info'],
+        remappings=[
+            ('/tf', '/tf'),
+            ('/tf_static', '/tf_static'),
+        ],
     )
-    ld.add_action(dual_lio_launch)
+    ld.add_action(dual_lio_node)
 
-    # ==================== pointcloud_to_laserscan ====================
+    # ==================== laserscan ====================
     front_pointcloud_to_laserscan = Node(
         package='pointcloud_to_laserscan',
         executable='pointcloud_to_laserscan_node',
@@ -126,11 +145,111 @@ def generate_launch_description():
     ld.add_action(scan_merger)
 
     # ==================== USS republisher ====================
-    pkg_share = get_package_share_directory('zg_double_lidar')
     uss_republisher = ExecuteProcess(
-        cmd=['python3', os.path.join(pkg_share, 'scripts', 'uss_republisher.py')],
+        cmd=['python3', os.path.join(pkg_zg_double_lidar, 'scripts', 'uss_republisher.py')],
         output='screen',
     )
     ld.add_action(uss_republisher)
+
+    # ==================== static transforms ====================
+    static_transform_map_to_odom = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_map_to_odom',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
+                   ns_map_frame, ns_odom_frame],
+        output='screen',
+    )
+    ld.add_action(static_transform_map_to_odom)
+
+    static_transform_odom_to_world = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_odom_to_world',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.5', '0.0', '0.0', '0.0', str(deg_to_rad(90)), '0.0',
+                   ns_odom_frame, ns_world_frame],
+        output='screen',
+    )
+    ld.add_action(static_transform_odom_to_world)
+
+    static_transform_world_to_imu = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_world_to_imu',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '-0.5', '0.0', '0.0', '0.0',
+                   ns_world_frame, ns_imu_frame],
+        output='screen',
+    )
+    ld.add_action(static_transform_world_to_imu)
+
+    imu_to_base_link_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='imu_to_base_link_tf',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0', '0.0', '0', str(deg_to_rad(-90)), '0',
+                   ns_imu_frame, ns_base_link_frame],
+        output='screen',
+    )
+    ld.add_action(imu_to_base_link_tf)
+
+    base_link_to_rslidar_head = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='base_link_to_rslidar_head',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.5', '0', '0.0', '0.0', str(deg_to_rad(90)), '0',
+                   ns_base_link_frame, 'rslidar_head'],
+        output='screen',
+    )
+    ld.add_action(base_link_to_rslidar_head)
+
+    rslidar_head_to_rslidar_tail = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='rslidar_head_to_rslidar_tail',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '-1.028',
+                   str(deg_to_rad(180)), str(deg_to_rad(180)), str(deg_to_rad(0)),
+                   'rslidar_head', 'rslidar_tail'],
+        output='screen',
+    )
+    ld.add_action(rslidar_head_to_rslidar_tail)
+
+    static_transform_base_link_to_base_footprint = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_base_footprint',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0',
+                   ns_base_link_frame, ns_base_footprint_frame],
+        output='screen',
+    )
+    ld.add_action(static_transform_base_link_to_base_footprint)
+
+    static_transform_base_link_to_uss_left = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_uss_left',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.15', '0.10', '0.0', '1.57', '0.0', '0.0',
+                   ns_base_link_frame, 'uss_left_link'],
+        output='screen',
+    )
+    ld.add_action(static_transform_base_link_to_uss_left)
+
+    static_transform_base_link_to_uss_right = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_transform_base_link_to_uss_right',
+        parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
+        arguments=['0.15', '-0.10', '0.0', '-1.57', '0.0', '0.0',
+                   ns_base_link_frame, 'uss_right_link'],
+        output='screen',
+    )
+    ld.add_action(static_transform_base_link_to_uss_right)
 
     return ld

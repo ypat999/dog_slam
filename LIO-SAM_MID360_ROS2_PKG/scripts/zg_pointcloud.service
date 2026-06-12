@@ -1,7 +1,9 @@
 [Unit]
 Description=ZG POINTCLOUD Service
-After=network.target rmw_control.service
-Wants=network.target rmw_control.service
+After=network.target 
+# rmw_control.service
+Wants=network.target 
+# rmw_control.service
 
 [Service]
 Type=simple

@@ -15,8 +15,16 @@
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
     lio.sensor.maxrange: 200.0
-    lio.sensor.filter_rate: 11
+    # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
+    # 原值11过于激进，严重破坏空间连续性
+    # 建议设为1~2，依赖体素滤波进行空间均匀降采样
+    lio.sensor.filter_rate: 16
+    # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
     lio.sensor.enable_filter_offset: false
+    # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
+    lio.sensor.full_column_interval: 36
+    # 多线雷达线数（Airy=96）
+    lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
     lio.sensor.voxel_fliter_size: 0.2
     lio.sensor.intensity_filter_en: false
@@ -81,6 +89,10 @@
 
     lio.adaptive_weight.en: true
     lio.adaptive_weight.sigma: 30.0
+
+    # ======================== 观测参数 ========================
+    # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
+    lio.observe.plane_fit_threshold: 0.15
 
     lio.ros.imu_qos_reliable: false
     lio.ros.lidar_qos_reliable: false

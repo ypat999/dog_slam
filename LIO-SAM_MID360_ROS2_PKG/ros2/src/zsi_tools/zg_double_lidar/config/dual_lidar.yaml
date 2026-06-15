@@ -18,11 +18,11 @@
     # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
     # 原值11过于激进，严重破坏空间连续性
     # 建议设为1~2，依赖体素滤波进行空间均匀降采样
-    lio.sensor.filter_rate: 17
+    lio.sensor.filter_rate: 16
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
     lio.sensor.enable_filter_offset: false
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
-    lio.sensor.full_column_interval: 17
+    lio.sensor.full_column_interval: 16
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
@@ -78,7 +78,7 @@
 
     lio.lio_only_undistort: false
     lio.single_core: true
-    lio.fast_tf: true
+    lio.fast_tf: false
 
     # ======================== 退化检测与正则化 ========================
     # 是否启用观测 Hessian 退化检测。true: 在病理方向上截断 LiDAR 观测，

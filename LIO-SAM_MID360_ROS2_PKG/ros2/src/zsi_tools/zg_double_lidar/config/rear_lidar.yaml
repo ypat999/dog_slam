@@ -24,11 +24,11 @@
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
     lio.sensor.enable_filter_offset: false
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
-    lio.sensor.full_column_interval: 8
+    lio.sensor.full_column_interval: 16
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.2
+    lio.sensor.voxel_fliter_size: 0.1
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81

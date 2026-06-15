@@ -1,6 +1,6 @@
 /**:
   ros__parameters:
-    lio.map.save_map: true
+    lio.map.save_map: false
     lio.map.if_filter: false
     lio.map.save_map_dir: "/home/robot/slam_data/pcd"
     lio.map.map_name: "front_lidar_map.pcd"
@@ -21,11 +21,11 @@
     # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
     # 原值17过于激进，每17个点才取1个，严重破坏空间连续性
     # 建议设为1~2，依赖体素滤波(VoxelGridFilter)进行空间均匀降采样
-    lio.sensor.filter_rate: 2
+    lio.sensor.filter_rate: 16
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
-    lio.sensor.enable_filter_offset: true
+    lio.sensor.enable_filter_offset: false
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
-    lio.sensor.full_column_interval: 2
+    lio.sensor.full_column_interval: 8
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
@@ -74,9 +74,9 @@
     lio.output.world_frame: "world"
     lio.output.imu_frame: "imu"
 
-    lio.eva.timer: true
+    lio.eva.timer: false
 
-    lio.dynamic_removal.enable: true
+    lio.dynamic_removal.enable: false
     lio.dynamic_removal.method: 0
     lio.dynamic_removal.grid_size: 0.2
     lio.dynamic_removal.min_neighbors: 2
@@ -98,7 +98,7 @@
 
     # ======================== 退化检测与正则化 ========================
     # 是否启用观测Hessian退化检测，在病态方向上添加Tikhonov正则化
-    lio.degeneracy.detect_en: true
+    lio.degeneracy.detect_en: false
     # 退化判定阈值（条件数阈值）：min_eig * threshold < max_eig 时认为退化
     # 典型值 100，越大越敏感
     lio.degeneracy.threshold: 100.0
@@ -123,14 +123,14 @@
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
-    lio.ros.imu_qos_reliable: false
+    lio.ros.imu_qos_reliable: true
     # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
     lio.ros.lidar_qos_reliable: false
 
     # ======================== SC-PGO 离线处理参数 ========================
     # 是否启用 SC-PGO 兼容数据输出（输出 body-frame 扫描 + KITTI 位姿到 Scans/ 目录）
-    lio.sc_pgo.enable: true
+    lio.sc_pgo.enable: false
     # 关键帧平移距离阈值(米)，累计平移超过此值抽取一帧
     lio.sc_pgo.keyframe_gap: 5.0
     # 关键帧旋转角度阈值(度)，累计旋转超过此值抽取一帧

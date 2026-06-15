@@ -43,7 +43,7 @@ install(TARGETS
 # Install Python scripts
 install(
   PROGRAMS scripts/uss_republisher.py
-  DESTINATION lib/${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/scripts
 )
 
 install(DIRECTORY

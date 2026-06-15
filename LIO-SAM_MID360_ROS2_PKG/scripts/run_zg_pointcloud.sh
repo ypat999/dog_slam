@@ -19,6 +19,6 @@ fi
 echo "加载工作空间环境..."
 source $WORKSPACE_DIR/install/setup.bash
 
-# ros2 launch zg_double_lidar double_lidar.launch.py
-ros2 launch zg_double_lidar dual_lidar.launch.py
+ros2 launch zg_double_lidar double_lidar.launch.py
+# ros2 launch zg_double_lidar dual_lidar.launch.py
 

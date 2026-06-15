@@ -267,7 +267,7 @@ controller_server:
         # 评价器权重
         cost_weight: 15.0
         # 代价幂次
-        cost_power: 6
+        cost_power: 4
         # 前向偏好（true=偏好前进，false=无偏好）
         forward_preference: true
         # 从最远路径点算起的偏移量
@@ -331,7 +331,7 @@ controller_server:
         # 评价器权重
         cost_weight: 50.0
         # 代价幂次
-        cost_power: 1
+        cost_power: 6
         # 距目标小于此值时开始考虑目标距离代价
         threshold_to_consider: 2.0
 
@@ -346,7 +346,7 @@ controller_server:
         # 评价器权重
         cost_weight: 50.0
         # 代价幂次
-        cost_power: 1
+        cost_power: 6
         # 距目标小于此值时开始考虑目标朝向代价（m）
         threshold_to_consider: 1.0
 

@@ -270,7 +270,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='rslidar_head_to_rslidar_tail_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '-1.028', str(deg_to_rad(180)), str(deg_to_rad(180)), str(deg_to_rad(0)), 'rslidar_head', 'rslidar_tail'],
+        arguments=['0.0', '0.0', '-0.7323', str(deg_to_rad(180)), str(deg_to_rad(180)), str(deg_to_rad(0)), 'rslidar_head', 'rslidar_tail'],
         output='screen'
     )
     ld.add_action(rslidar_head_to_rslidar_tail_tf)

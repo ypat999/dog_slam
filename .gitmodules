@@ -10,3 +10,6 @@
 [submodule "Livox-SDK2"]
 	path = Livox-SDK2
 	url = https://github.com/Livox-SDK/Livox-SDK2.git
+[submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2"]
+	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2
+	url = https://github.com/ypat999/livox_ros_driver2.git

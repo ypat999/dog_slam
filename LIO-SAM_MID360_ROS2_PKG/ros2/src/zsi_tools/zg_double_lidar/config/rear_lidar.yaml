@@ -13,7 +13,7 @@
 
     lio.ros.lidar_topic: "/rear_lidar"
     lio.ros.imu_topic: "/rear_lidar/imu"
-    lio.ros.map_save_service_topic: "/map_save_rear"
+    lio.ros.map_save_service_topic: "/map_save"
 
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
@@ -42,7 +42,7 @@
                               0.0, -1.0, 0.0,
                               -1.0, 0.0, 0.0,
                               0.0, 0.0, -1.0]
-    lio.extrinsic.odom_robo: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36, 3.14, 1.57, 0.0]
 
     lio.hash_map.hash_capacity: 20000000
     lio.hash_map.vox_resolution: 0.2
@@ -58,7 +58,7 @@
 
     lio.kf.kf_quit_eps: 0.001
 
-    lio.output.robot: false
+    lio.output.robot: true
     lio.output.plan_env_world: false
     lio.output.plan_env_body: false
     lio.output.ml_map: false
@@ -69,9 +69,9 @@
     lio.output.dense_body: true
     lio.output.pub_step: 1
     lio.output.footprint_pub_en: false
-    lio.output.tf_base_footprint_frame: "base_footprint_rear"
-    lio.output.world_frame: "world_rear"
-    lio.output.imu_frame: "imu_rear"
+    lio.output.tf_base_footprint_frame: "base_footprint"
+    lio.output.world_frame: "world"
+    lio.output.imu_frame: "imu"
 
     lio.eva.timer: true
 
@@ -93,7 +93,7 @@
     # 仅做降采样和滤波，不计算LIO也不使用IMU
     # 优先级最高，启用后会跳过所有LIO和IMU相关计算
     # 默认: false
-    lio.downsample_only: true
+    lio.downsample_only: false
 
     # ======================== 单核模式 ========================
     lio.single_core: true
@@ -102,22 +102,9 @@
     # 是否在IMU频率下发布tf（world->imu, world->base_footprint），降低tf延迟
     lio.fast_tf: false
 
-    # ======================== 退化检测与正则化 ========================
-    lio.degeneracy.detect_en: false
-    lio.degeneracy.threshold: 100.0
-    lio.degeneracy.tikhonov_lambda: 0.3
-    lio.degeneracy.min_effect_pts: 100
-
-    # 连续跳过观测更新的最大帧数，超限时重置IMU偏置（防止贴墙场景恶性漂移）
-    lio.bias_reset_skip_threshold: 50
-
-    # ======================== 自适应观测权重 ========================
-    lio.adaptive_weight.en: false
-    lio.adaptive_weight.sigma: 30.0
-
     # ======================== 观测参数 ========================
     # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
-    lio.observe.plane_fit_threshold: 0.15
+    lio.observe.plane_fit_threshold: 0.4
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
@@ -125,3 +112,11 @@
     # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
     lio.ros.lidar_qos_reliable: false
+
+    # ======================== SC-PGO 离线处理参数 ========================
+    # 是否启用 SC-PGO 兼容数据输出（输出 body-frame 扫描 + KITTI 位姿到 Scans/ 目录）
+    lio.sc_pgo.enable: false
+    # 关键帧平移距离阈值(米)，累计平移超过此值抽取一帧
+    lio.sc_pgo.keyframe_gap: 5.0
+    # 关键帧旋转角度阈值(度)，累计旋转超过此值抽取一帧
+    lio.sc_pgo.keyframe_deg_gap: 10.0

@@ -13,7 +13,7 @@
 
     lio.ros.lidar_topic: "/front_lidar"
     lio.ros.imu_topic: "/front_lidar/imu"
-    lio.ros.map_save_service_topic: "/map_save"
+    lio.ros.map_save_service_topic: "/map_save_front"
 
     lio.sensor.lidar_type: 9
     lio.sensor.blind: 0.1
@@ -25,11 +25,11 @@
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
     lio.sensor.enable_filter_offset: true
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
-    lio.sensor.full_column_interval: 16
+    lio.sensor.full_column_interval: 8
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.2
+    lio.sensor.voxel_fliter_size: 0.1
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81
@@ -46,7 +46,7 @@
     lio.extrinsic.odom_robo: [0.0, 0.0, -0.36, 0.0, 1.57, 0.0]
 
     lio.hash_map.hash_capacity: 2000000
-    lio.hash_map.vox_resolution: 0.1
+    lio.hash_map.vox_resolution: 0.2
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
@@ -70,9 +70,9 @@
     lio.output.dense_body: true
     lio.output.pub_step: 1
     lio.output.footprint_pub_en: false
-    lio.output.tf_base_footprint_frame: "base_footprint"
-    lio.output.world_frame: "world"
-    lio.output.imu_frame: "imu"
+    lio.output.tf_base_footprint_frame: "base_footprint_front"
+    lio.output.world_frame: "world_front"
+    lio.output.imu_frame: "imu_front"
 
     lio.eva.timer: true
 
@@ -87,7 +87,15 @@
     # 仅做点云去畸变和降采样模式，不计算LIO
     # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
     # 默认: false（正常计算LIO）
+    # 注意: 修改后的逻辑会进行LIO计算和校正，但不发布odom和TF
     lio.lio_only_undistort: false
+
+    # ================= downsample_only 模式 =================
+    # 仅做降采样和滤波，不计算LIO也不使用IMU
+    # 优先级最高，启用后会跳过所有LIO和IMU相关计算
+    # 默认: false
+    lio.downsample_only: true
+
     # ======================== 单核模式 ========================
     # 是否启用单核运行模式。true: 关闭TBB并行，LIO主管线串行执行
     lio.single_core: true

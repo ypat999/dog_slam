@@ -23,9 +23,9 @@
     # 建议设为1~2，依赖体素滤波(VoxelGridFilter)进行空间均匀降采样
     lio.sensor.filter_rate: 16
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
-    lio.sensor.enable_filter_offset: false
+    lio.sensor.enable_filter_offset: true
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
-    lio.sensor.full_column_interval: 32
+    lio.sensor.full_column_interval: 16
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
@@ -43,10 +43,10 @@
                               0.0, -1.0, 0.0,
                               -1.0, 0.0, 0.0,
                               0.0, 0.0, -1.0]
-    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36615, 0.0, 1.57, 0.0]
+    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36, 0.0, 1.57, 0.0]
 
     lio.hash_map.hash_capacity: 2000000
-    lio.hash_map.vox_resolution: 0.2
+    lio.hash_map.vox_resolution: 0.1
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4
@@ -74,7 +74,7 @@
     lio.output.world_frame: "world"
     lio.output.imu_frame: "imu"
 
-    lio.eva.timer: false
+    lio.eva.timer: true
 
     lio.dynamic_removal.enable: false
     lio.dynamic_removal.method: 0
@@ -96,25 +96,6 @@
     # 是否在IMU频率下发布tf（world->imu, world->base_footprint），降低tf延迟
     lio.fast_tf: false
 
-    # ======================== 退化检测与正则化 ========================
-    # 是否启用观测Hessian退化检测，在病态方向上添加Tikhonov正则化
-    lio.degeneracy.detect_en: false
-    # 退化判定阈值（条件数阈值）：min_eig * threshold < max_eig 时认为退化
-    # 典型值 100，越大越敏感
-    lio.degeneracy.threshold: 100.0
-    # Tikhonov正则化强度，lambda * trace(H)/6 加到 Hessian 对角
-    # 0.1 = 添加 10% Hessian 量级的对角正则化，越大退化方向越依赖IMU预测
-    lio.degeneracy.tikhonov_lambda: 0.3
-    # 最小有效点数门槛，低于此值跳过观测更新（仅依赖IMU传播）
-    # 原值20过低，走廊中正常effect_pts应300+，20点Hessian完全由噪声主导
-    lio.degeneracy.min_effect_pts: 200
-
-    # 连续跳过观测更新的最大帧数，超限时重置IMU偏置（防止贴墙场景恶性漂移）
-    lio.bias_reset_skip_threshold: 50
-
-    # ======================== 自适应观测权重 ========================
-    lio.adaptive_weight.en: true
-    lio.adaptive_weight.sigma: 30.0
 
     # ======================== 观测参数 ========================
     # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
@@ -123,7 +104,7 @@
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
-    lio.ros.imu_qos_reliable: true
+    lio.ros.imu_qos_reliable: false
     # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
     lio.ros.lidar_qos_reliable: false

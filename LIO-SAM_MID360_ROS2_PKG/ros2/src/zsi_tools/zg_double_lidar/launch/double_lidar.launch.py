@@ -218,7 +218,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_world',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.5', '0.0', '0.0', '0.0', str(deg_to_rad(90)), '0.0', ns_odom_frame, ns_world_frame],
+        arguments=['0.0', '0.0', '0.0', '0.0', str(deg_to_rad(90)), '0.0', ns_odom_frame, ns_world_frame],
         output='screen'
     )
     ld.add_action(static_transform_odom_to_world)
@@ -228,7 +228,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_world_rear',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['-0.5', '0.0', '0.0', '0.0', str(deg_to_rad(90)), str(deg_to_rad(180)), ns_odom_frame, ns_world_rear_frame],
+        arguments=['-0.7323', '0.0', '0.0', '0.0', str(deg_to_rad(90)), str(deg_to_rad(180)), ns_odom_frame, ns_world_rear_frame],
         output='screen'
     )
     ld.add_action(static_transform_odom_to_world_rear)
@@ -238,7 +238,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_world_to_imu',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '-0.5', '0.0', '0.0', '0.0', ns_world_frame, ns_imu_frame],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_world_frame, ns_imu_frame],
         output='screen'
     )
     ld.add_action(static_transform_world_to_imu)
@@ -248,7 +248,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='imu_to_base_link_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0', '0.0', '0', str(deg_to_rad(-90)), '0', ns_imu_frame, ns_base_link_frame],
+        arguments=['0.0', '0', '-0.36', '0', str(deg_to_rad(-90)), '0', ns_imu_frame, ns_base_link_frame],
         output='screen'
     )
     ld.add_action(imu_to_base_link_tf)
@@ -259,7 +259,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='base_link_to_rslidar_head_tf',    
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.5', '0', '0.0', '0.0', str(deg_to_rad(90)), '0', ns_base_link_frame, 'rslidar_head'],
+        arguments=['0.36', '0', '0.0', '0.0', str(deg_to_rad(90)), '0', ns_base_link_frame, 'rslidar_head'],
         output='screen'
     )
     ld.add_action(base_link_to_rslidar_head_tf)
@@ -270,7 +270,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='rslidar_head_to_rslidar_tail_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '-0.7323', str(deg_to_rad(180)), str(deg_to_rad(180)), str(deg_to_rad(0)), 'rslidar_head', 'rslidar_tail'],
+        arguments=['-0.007', '-0.048000', '-0.7323', str(deg_to_rad(179.77)), str(deg_to_rad(180.57)), str(deg_to_rad(-0.63)), 'rslidar_head', 'rslidar_tail'],
         output='screen'
     )
     ld.add_action(rslidar_head_to_rslidar_tail_tf)

@@ -13,3 +13,6 @@
 [submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2"]
 	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/livox_ros_driver2
 	url = https://github.com/ypat999/livox_ros_driver2.git
+[submodule "LIO-SAM_MID360_ROS2_PKG/ros2/src/ndt_omp_ros2"]
+	path = LIO-SAM_MID360_ROS2_PKG/ros2/src/ndt_omp_ros2
+	url = https://github.com/rsasaki0109/ndt_omp_ros2.git

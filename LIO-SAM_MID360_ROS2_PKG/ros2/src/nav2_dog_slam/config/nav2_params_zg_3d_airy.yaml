@@ -194,7 +194,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 4
+        cost_power: 6
         # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重

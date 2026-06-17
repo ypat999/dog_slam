@@ -11,7 +11,7 @@
     # 空字符串表示无前缀（默认）
     lio.map.pcd_prefix: "rear_"
     
-    lio.ros.use_local_timestamp: false
+    lio.ros.use_local_timestamp: true
 
     lio.ros.lidar_topic: "/rear_lidar"
     lio.ros.imu_topic: "/rear_lidar/imu"

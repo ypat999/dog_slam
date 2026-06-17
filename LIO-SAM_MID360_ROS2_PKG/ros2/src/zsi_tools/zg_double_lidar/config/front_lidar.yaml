@@ -29,7 +29,7 @@
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.1
+    lio.sensor.voxel_fliter_size: 0.2
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81
@@ -100,7 +100,7 @@
     # ======================== 观测参数 ========================
     # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
     # 原硬编码0.1m过严，位姿微漂导致正确点被拒绝
-    lio.observe.plane_fit_threshold: 0.15
+    lio.observe.plane_fit_threshold: 0.4
     
     # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
     # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据

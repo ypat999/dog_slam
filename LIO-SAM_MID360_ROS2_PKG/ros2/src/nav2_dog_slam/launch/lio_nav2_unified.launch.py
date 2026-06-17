@@ -352,10 +352,14 @@ def generate_launch_description():
         parameters=[
             {'port': 9090},
             {'default_call_service_timeout': 5.0},
-            {'call_services_in_new_thread': True},
-            {'send_action_goals_in_new_thread': True},
-            {'fragment_timeout': 600},
-            {'max_message_size': 100000000}
+            {'call_services_in_new_thread': False},  # True→False，避免每次调用产生新线程，降低CPU
+            {'send_action_goals_in_new_thread': False},  # True→False，避免每次目标产生新线程
+            {'fragment_timeout': 10},           # 600→10s，超时分片快速清理，防止内存堆积
+            {'max_message_size': 10000000},     # 100MB→10MB，限制单条消息内存上限
+            {'unregister_timeout': 10.0},       # 订阅者注销超时，清理断开连接的积压
+            {'publish_timeout': 2.0},           # 发布超时，超时丢弃不再占用内存
+            {'retry_startup_delay': 5.0},       # 重连间隔
+            {'delay_between_messages': 0.003},  # 3ms间隔限制突发序列化，平滑CPU峰值
         ],
         prefix=['taskset -c 1,2,3'],
     )

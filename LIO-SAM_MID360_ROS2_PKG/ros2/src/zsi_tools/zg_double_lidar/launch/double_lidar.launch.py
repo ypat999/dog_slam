@@ -249,7 +249,7 @@ def generate_launch_description():
         name='imu_to_base_link_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.0', '0', '-0.36', '0', str(deg_to_rad(-90)), '0', ns_imu_frame, ns_base_link_frame],
-        arguments=['0.0', '0', '-0.36',  str(deg_to_rad(180)), str(deg_to_rad(-90)), '0', ns_imu_frame, ns_base_link_frame],
+        arguments=['0.0', '0', '-0.36',  str(deg_to_rad(180)), str(deg_to_rad(90)), str(deg_to_rad(0)), ns_imu_frame, ns_base_link_frame],
         output='screen'
     )
     ld.add_action(imu_to_base_link_tf)

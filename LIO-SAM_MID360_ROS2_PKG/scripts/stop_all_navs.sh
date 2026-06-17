@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# # 检查是否已加载ROS2环境
-# if [ -z "$ROS_DISTRO" ]; then
-#     echo "加载ROS2环境..."
-#     source /opt/ros/humble/setup.bash
+# 检查是否已加载ROS2环境
+if [ -z "$ROS_DISTRO" ]; then
+    echo "加载ROS2环境..."
+    source /opt/ros/humble/setup.bash
 
-#     if [ $? -ne 0 ]; then
-#         echo "错误: 无法加载ROS2环境"
-#         exit 1
-#     fi
-# fi
+    if [ $? -ne 0 ]; then
+        echo "错误: 无法加载ROS2环境"
+        exit 1
+    fi
+fi
 
 REMOTE_IP="192.168.168.100"
 REMOTE_USER="robot"
@@ -24,8 +24,6 @@ else
 fi
 
 echo "退出本地服务"
-
-# ros2 daemon stop 
 
 # pkill -f _lio
 # pkill -f lio_sam
@@ -75,4 +73,6 @@ ps -ef | awk '/rosbridge/ {print $2}' | xargs -r kill -9
 ps -ef | awk '/publisher/ {print $2}' | xargs -r kill -9
 ps -ef | awk '/rclcpp/ {print $2}' | xargs -r kill -9
 
-# ros2 daemon start
+
+ros2 daemon stop 
+ros2 daemon start

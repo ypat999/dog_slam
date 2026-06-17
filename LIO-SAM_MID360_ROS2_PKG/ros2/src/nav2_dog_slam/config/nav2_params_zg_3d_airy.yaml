@@ -906,9 +906,9 @@ global_costmap:
       # 机器人基坐标系
       robot_base_frame: base_link
       # 代价图更新频率（Hz），全局图通常较低
-      update_frequency: 0.1
+      update_frequency: 0.2
       # 代价图发布到话题的频率（Hz）
-      publish_frequency: 0.1
+      publish_frequency: 0.2
       # TF 变换容差（s）
       # ★ 从 0.2 改为 0.1：更早发现 TF 断流，MPPI 快速报异常进入失败计数
       transform_tolerance: 0.2
@@ -986,18 +986,52 @@ global_costmap:
       obstacle_layer:
         # 插件类型
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        # 全局代价图默认禁用障碍物层，由静态地图提供全局信息
-        enabled: false
+        # 是否启用
+        enabled: true
         # 观测数据源名称列表
-        observation_sources: scan
-        # 将数据添加到主代价图的方法：0=覆盖，1=取最大值
+        observation_sources: scan_rear scan_front
+        # 将数据添加到主代价图的方法：0=覆盖，1=取最大值（默认），2=取最大值但不覆盖未知信息
         combination_method: 1
         # 是否清除机器人足迹下的占用单元格
         footprint_clearing_enabled: true
+        # 添加到占位栅格的最大高度（m）
+        max_obstacle_height: 100.0
+        # 添加到占位栅格的最小高度（m）
+        min_obstacle_height: -100.0
+        
+        scan_rear:
+          # 数据话题。相对话题相对于节点父命名空间
+          topic: /rkbot/scan_rear
+          # 传感器帧，若消息未提供则使用此帧。空字符串使用消息的 frame_id
+          sensor_frame: ""
+          # 输入数据类型：LaserScan 或 PointCloud2
+          data_type: "LaserScan"
+          # 在缓冲区中存储消息以添加到代价图的时长（s），之后移除
+          observation_persistence: 0.0
+          # 从传感器获取新数据的预期频率（Hz）
+          expected_update_rate: 0.0
+          # 激光扫描仪的无限返回值是否为有效测量（用于射线投射）
+          inf_is_valid: true
+          # 此数据源是否应在代价图中标记障碍物
+          marking: true
+          # 此数据源是否应在代价图中射线追踪清除障碍物
+          clearing: true
+          # 此数据源添加到占位栅格的最大高度（m）
+          max_obstacle_height: 100.0
+          # 此数据源添加到占位栅格的最小高度（m）
+          min_obstacle_height: -100.0
+          # 在代价图中标记障碍物的最大距离（m）
+          obstacle_max_range: 15.0
+          # 在代价图中标记障碍物的最小距离（m）
+          obstacle_min_range: 0.0
+          # 从代价图中射线追踪清除障碍物的最大距离（m）
+          raytrace_max_range: 15.0
+          # 从代价图中射线追踪清除障碍物的最小距离（m）
+          raytrace_min_range: 0.0
 
-        scan:
+        scan_front:
           # 数据话题
-          topic: /rkbot/scan
+          topic: /rkbot/scan_front
           # 传感器帧
           sensor_frame: ""
           # 数据类型
@@ -1008,21 +1042,21 @@ global_costmap:
           expected_update_rate: 0.0
           # 无限返回值是否有效
           inf_is_valid: true
-          # 是否标记障碍物
-          marking: true
+          # 仅清除不标记（用于动态物体去除）
+          marking: false
           # 是否清除障碍物（射线追踪）
           clearing: true
-          # 此数据源的最大障碍物高度（m）
-          max_obstacle_height: 1.8
-          # 此数据源的最小障碍物高度（m）
-          min_obstacle_height: -0.1
-          # 标记障碍物的最大距离（m）
-          obstacle_max_range: 10.0
-          # 标记障碍物的最小距离（m）
+          # 最大障碍物高度（m）
+          max_obstacle_height: 100.0
+          # 最小障碍物高度（m）
+          min_obstacle_height: -100.0
+          # 0=不标记障碍物
+          obstacle_max_range: 0.0
+          # 障碍物检测最小范围（m）
           obstacle_min_range: 0.0
-          # 射线追踪清除的最大距离（m）
-          raytrace_max_range: 10.0
-          # 射线追踪清除的最小距离（m）
+          # 射线追踪最大范围（m）
+          raytrace_max_range: 15.0
+          # 射线追踪最小范围（m）
           raytrace_min_range: 0.0
       
       # =====================================================
@@ -1103,7 +1137,7 @@ amcl:
     # 允许的最大粒子数
     max_particles: 4000
     # 粒子滤波器种群误差
-    pf_err: 0.03
+    pf_err: 0.02
     # 粒子滤波器种群密度，0.99 对应 99% 分位数
     pf_z: 0.99
     # 重采样前所需的滤波器更新次数
@@ -1125,11 +1159,11 @@ amcl:
     # 里程计旋转估计中由旋转引起的预期过程噪声
     alpha1: 0.01
     # 里程计旋转估计中由平移引起的预期过程噪声
-    alpha2: 0.01
+    alpha2: 0.005
     # 里程计平移估计中由平移引起的预期过程噪声
-    alpha3: 0.02
+    alpha3: 0.01
     # 里程计平移估计中由旋转引起的预期过程噪声
-    alpha4: 0.02
+    alpha4: 0.01
     # 仅 Omni 模型：平移噪声
     alpha5: 0.03
 
@@ -1186,11 +1220,11 @@ amcl:
     # 模型 z_short 部分的指数衰减参数
     lambda_short: 0.1
     # z_hit 部分的混合权重（命中）
-    z_hit: 0.60
+    z_hit: 0.65
     # z_rand 部分的混合权重（随机测量）
-    z_rand: 0.40
+    z_rand: 0.35
     # 地图上障碍物膨胀的最大距离（m），用于 likelihood_field 模型
-    laser_likelihood_max_dist: 0.2
+    laser_likelihood_max_dist: 1.0
 
     # Beam 跳过参数 - 在 Likelihood 场模型中跳过大多数粒子不同意的光束
     # 是否在 Likelihood 场模型中执行光束跳过

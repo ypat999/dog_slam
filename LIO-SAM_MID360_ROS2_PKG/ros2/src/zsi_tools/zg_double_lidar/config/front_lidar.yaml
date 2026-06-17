@@ -10,6 +10,8 @@
     # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
     # 空字符串表示无前缀（默认）
     lio.map.pcd_prefix: "front_"
+    
+    lio.ros.use_local_timestamp: false
 
     lio.ros.lidar_topic: "/front_lidar"
     lio.ros.imu_topic: "/front_lidar/imu"
@@ -74,7 +76,7 @@
     lio.output.world_frame: "world_front"
     lio.output.imu_frame: "imu_front"
 
-    lio.eva.timer: true
+    lio.eva.timer: false
 
     lio.dynamic_removal.enable: false
     lio.dynamic_removal.method: 0

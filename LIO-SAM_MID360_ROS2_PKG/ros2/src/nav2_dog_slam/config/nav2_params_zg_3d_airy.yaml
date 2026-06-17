@@ -481,9 +481,9 @@ planner_server:
       # 最大搜索迭代次数，-1 表示不限制
       max_iterations: 1000000
       # 进入容差范围后继续尝试精确匹配的最大迭代次数
-      max_on_approach_iterations: 1000
+      max_on_approach_iterations: 10000
       # 规划器最大规划时间（s）
-      max_planning_time: 2.0
+      max_planning_time: 10.0
       # 代价乘数，越大越倾向于走低代价区域（0.0=忽略代价仅做二值搜索）
       cost_travel_multiplier: 2.0
       # 是否将路径终点朝向设为接近方向（false=使用请求的目标朝向）
@@ -645,22 +645,22 @@ local_costmap:
 
       # 插件配置
       # "voxel_layer", "stvl_layer",  # 映射的插件名称列表，用于参数命名空间和名称
-      plugins: ["traversability_layer_local","obstacle_layer_local", "inflation_layer_local"] #"range_sensor_layer",
+      plugins: ["range_sensor_layer", "traversability_layer_local","obstacle_layer_local", "inflation_layer_local"]
       
-      # # =====================================================
-      # # 超声波Range传感器层参数 - USS超声波传感器
-      # # =====================================================
-      # range_sensor_layer:
-      #   plugin: "nav2_costmap_2d::RangeSensorLayer"
-      #   enabled: false
-      #   topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
-      #   input_sensor_type: "VARIABLE"
-      #   no_readings_timeout: 0.0
-      #   clear_threshold: 0.8
-      #   mark_threshold: 0.9
-      #   clear_on_max_reading: true
-      #   phi: 1.2
-      #   inflate_cone: 0.9
+      # =====================================================
+      # 超声波Range传感器层参数 - USS超声波传感器
+      # =====================================================
+      range_sensor_layer:
+        plugin: "nav2_costmap_2d::RangeSensorLayer"
+        enabled: false
+        topics: ["/rkbot/uss_left/range", "/rkbot/uss_right/range"]
+        input_sensor_type: "VARIABLE"
+        no_readings_timeout: 0.0
+        clear_threshold: 0.8
+        mark_threshold: 0.9
+        clear_on_max_reading: true
+        phi: 1.2
+        inflate_cone: 0.9
 
       # =====================================================
       # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
@@ -669,9 +669,9 @@ local_costmap:
         # 插件类型
         plugin: "traversability_layer::TraversabilityLayer"
         # 是否启用
-        enabled: false
+        enabled: true
         # 点云话题
-        pointcloud_topic: /rkbot/lio/cloud_world
+        pointcloud_topic: /rkbot/front_lidar/cloud_world
         # 机器人基准坐标系
         base_frame: base_link
         # 最大障碍物高度（m），高于此忽略
@@ -775,7 +775,7 @@ local_costmap:
           # 无限返回值是否有效
           inf_is_valid: true
           # 仅清除不标记（用于动态物体去除）
-          marking: true
+          marking: false
           # 是否清除障碍物（射线追踪）
           clearing: true
           # 最大障碍物高度（m）
@@ -783,7 +783,7 @@ local_costmap:
           # 最小障碍物高度（m）
           min_obstacle_height: -100.0
           # 0=不标记障碍物
-          obstacle_max_range: 15.0
+          obstacle_max_range: 0.0
           # 障碍物检测最小范围（m）
           obstacle_min_range: 0.0
           # 射线追踪最大范围（m）

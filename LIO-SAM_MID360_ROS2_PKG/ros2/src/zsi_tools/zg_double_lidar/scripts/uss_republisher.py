@@ -75,7 +75,10 @@ class UssRepublisher(Node):
         msg.max_range = self.max_range
         msg.field_of_view = self.field_of_view
         msg.radiation_type = self.radiation_type
-        
+
+        # 将时间戳重置为当前系统时间
+        msg.header.stamp = self.get_clock().now().to_msg()
+
         # 发布修复后的消息
         pub.publish(msg)
 

@@ -194,7 +194,7 @@ controller_server:
         # 是否启用
         enabled: true
         # 代价幂次
-        cost_power: 6
+        cost_power: 4
         # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
         # 近碰撞区域（collision_margin_distance 内）的惩罚权重
@@ -210,7 +210,7 @@ controller_server:
         # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
         inflation_radius: 1.0
         # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 15.0
       
       # =====================================================
       # PathFollowCritic - 路径跟随评价器
@@ -807,7 +807,7 @@ local_costmap:
         # 在致命障碍物周围膨胀代价图的半径（m）
         inflation_radius: 1.0
         # 膨胀半径上的指数衰减因子
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 15.0
         # 是否将未知单元格如同致命单元格一样膨胀
         inflate_unknown: false
         # 是否在未知单元格周围膨胀
@@ -1103,7 +1103,7 @@ amcl:
     # 允许的最大粒子数
     max_particles: 4000
     # 粒子滤波器种群误差
-    pf_err: 0.05
+    pf_err: 0.03
     # 粒子滤波器种群密度，0.99 对应 99% 分位数
     pf_z: 0.99
     # 重采样前所需的滤波器更新次数
@@ -1111,9 +1111,9 @@ amcl:
 
     # 更新阈值 - 执行滤波器更新前需要的最小平移/旋转运动量
     # 执行滤波器更新前所需的最小平移运动量（m）
-    update_min_d: 0.2
+    update_min_d: 0.1
     # 执行滤波器更新前所需的最小旋转运动量（rad）
-    update_min_a: 0.2
+    update_min_a: 0.1
 
     # 恢复参数 - 用于决定何时通过添加随机位姿进行恢复的指数衰减率
     # 慢速平均权重滤波器的指数衰减率，用于决定何时通过添加随机位姿恢复。合理值约为 0.001
@@ -1123,15 +1123,15 @@ amcl:
 
     # 里程计运动模型噪声参数 - 里程计旋转/平移估计中的预期过程噪声
     # 里程计旋转估计中由旋转引起的预期过程噪声
-    alpha1: 0.001
+    alpha1: 0.01
     # 里程计旋转估计中由平移引起的预期过程噪声
-    alpha2: 0.001
+    alpha2: 0.01
     # 里程计平移估计中由平移引起的预期过程噪声
-    alpha3: 0.002
+    alpha3: 0.02
     # 里程计平移估计中由旋转引起的预期过程噪声
-    alpha4: 0.002
+    alpha4: 0.02
     # 仅 Omni 模型：平移噪声
-    alpha5: 0.003
+    alpha5: 0.03
 
     # 机器人运动模型类型 - 插件类的完全限定类型
     # 全向运动模型，可选 nav2_amcl::DifferentialMotionModel

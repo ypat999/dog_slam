@@ -4,7 +4,7 @@
     lio.map.if_filter: false
     lio.map.save_map_dir: "/home/robot/slam_data/pcd"
     lio.map.map_name: "rear_lidar_map.pcd"
-    lio.map.ds_size: 0.2
+    lio.map.ds_size: 0.1
     lio.map.save_interval: 50
     # 点云切片保存前缀，用于多雷达同时建图时区分不同雷达的切片
     # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
@@ -22,7 +22,7 @@
     lio.sensor.maxrange: 200.0
     # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
     # 建议设为1~2，依赖体素滤波进行空间均匀降采样
-    lio.sensor.filter_rate: 16
+    lio.sensor.filter_rate: 32
     # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
     lio.sensor.enable_filter_offset: true
     # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
@@ -30,7 +30,7 @@
     # 多线雷达线数（Airy=96）
     lio.sensor.lidar_channels: 96
     lio.sensor.enable_downsample: true
-    lio.sensor.voxel_fliter_size: 0.2
+    lio.sensor.voxel_fliter_size: 0.1
     lio.sensor.intensity_filter_en: false
     lio.sensor.intensity_min: 10.0
     lio.sensor.gravity_norm: 9.81
@@ -44,10 +44,10 @@
                               0.0, -1.0, 0.0,
                               -1.0, 0.0, 0.0,
                               0.0, 0.0, -1.0]
-    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36, 3.14, 1.57, 0.0]
+    lio.extrinsic.odom_robo: [-0.36, 0.0, 0.0, 180.0, 90.0, 0.0]
 
     lio.hash_map.hash_capacity: 20000000
-    lio.hash_map.vox_resolution: 0.2
+    lio.hash_map.vox_resolution: 0.1
 
     lio.kf.kf_type: 0
     lio.kf.kf_max_iterations: 4

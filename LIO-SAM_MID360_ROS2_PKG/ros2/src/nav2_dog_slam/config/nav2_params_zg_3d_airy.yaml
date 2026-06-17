@@ -625,7 +625,7 @@ local_costmap:
       # 有序的足迹点集，以字符串形式传入，必须为闭合多边形。可通过 ~/footprint 话题动态调整
       footprint: "[[-0.45, -0.15], [-0.45, 0.15], [0.45, 0.15], [0.45, -0.15]]"
       # 足迹膨胀填充量（m）
-      footprint_padding: 0.00
+      footprint_padding: 0.03
       # 若未提供足迹坐标，则使用此半径（m）。设置此参数时 isPathValid 使用圆形碰撞检查
       robot_radius: 0.35
 

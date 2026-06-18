@@ -66,9 +66,9 @@ controller_server:
       # 目标检查器插件类型
       plugin: "nav2_controller::StoppedGoalChecker"
       # 到达目标的 XY 位置容差（m）
-      xy_goal_tolerance: 0.5
+      xy_goal_tolerance: 0.3
       # 到达目标的朝向容差（rad）
-      yaw_goal_tolerance: 0.2
+      yaw_goal_tolerance: 0.1
       # 判定为停止的线速度阈值（m/s）
       trans_stopped_velocity: 2.0
       # 判定为停止的角速度阈值（rad/s）
@@ -189,6 +189,7 @@ controller_server:
       # ObstaclesCritic - 障碍物评价器
       # =====================================================
       # 激励远离障碍物和临界碰撞，使用圆形机器人点检查或基于障碍物距离的完整 SE2 足迹检查。
+      # 动态避障增大这个
       # =====================================================
       ObstaclesCritic:
         # 是否启用
@@ -215,9 +216,8 @@ controller_server:
       # =====================================================
       # PathFollowCritic - 路径跟随评价器
       # =====================================================
-      # 用于近似跟随路径的评价器目标函数。允许在动态障碍物情况下偏离路径。
-      # PathAlign 用于更精确地将轨迹对齐到路径上。较高的权重和 offset > 1
-      # 会加速样本达到全速并推进跟随点，产生一些捷径行为。
+      # 用于近似跟随路径的评价器目标函数。只评价某条路径是否更能走到路径远处的点，允许在动态障碍物情况下偏离路径。
+      # 会加速样本达到全速并推进跟随点，产生一些捷径行为。是前进和绕过障碍的主要动力。
       # =====================================================
       PathFollowCritic:
         # 是否启用
@@ -235,7 +235,7 @@ controller_server:
       # PathAlignCritic - 路径对齐评价器
       # =====================================================
       # 用于对齐路径的评价器目标函数。注意：较高的设置会更精确地跟随路径，
-      # 但也使在动态障碍物存在时难以（或不可能）偏离。这是一个重要的评价器，
+      # 但也使在动态障碍物存在时难以（或不可能）偏离。且由于要求角度平行于路径，会导致难调头的问题。
       # 需要与 Obstacle 评价器一起调优和考虑。
       # =====================================================
       PathAlignCritic:
@@ -260,6 +260,7 @@ controller_server:
       # PathAngleCritic - 路径角度评价器
       # =====================================================
       # 用于在极端未对齐或转向情况下对齐路径的评价器目标函数。
+      # 增大cost可提升路径追踪性和安全性，以及调头意愿，但会导致慢速，极端情况下会行进卡顿。
       # =====================================================
       PathAngleCritic:
         # 是否启用
@@ -645,7 +646,7 @@ local_costmap:
 
       # 插件配置
       # "voxel_layer", "stvl_layer",  # 映射的插件名称列表，用于参数命名空间和名称
-      plugins: ["traversability_layer_local","obstacle_layer_local", "inflation_layer_local"]  #"range_sensor_layer", 
+      plugins: ["obstacle_layer_local", "obstacle_layer_360", "traversability_layer_local", "inflation_layer_local"]  #"range_sensor_layer", 
       
       # =====================================================
       # 超声波Range传感器层参数 - USS超声波传感器
@@ -662,52 +663,7 @@ local_costmap:
       #   phi: 1.2
       #   inflate_cone: 0.9
 
-      # =====================================================
-      # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
-      # =====================================================
-      traversability_layer_local:
-        # 插件类型
-        plugin: "traversability_layer::TraversabilityLayer"
-        # 是否启用
-        enabled: true
-        # 点云话题
-        pointcloud_topic: /rkbot/front_lidar/cloud_world
-        # 机器人基准坐标系
-        base_frame: base_link
-        # 最大障碍物高度（m），高于此忽略
-        max_obstacle_height: 1.0
-        # 最小障碍物高度（m），低于此忽略
-        min_obstacle_height: -1.0
-        # 最大可通行坡度（°），超过则 lethal
-        max_slope_traversable: 60.0
-        # 开始产生坡度代价的坡度角（°）
-        slope_cost_start: 40.0
-        # 坡度代价缩放系数
-        slope_cost_scale: 1.0
-        # 障碍物比率阈值
-        obstacle_ratio_threshold: 0.5
-        # 障碍物命中阈值
-        obstacle_hit_threshold: 1
-        # 台阶高度阈值（m），超过则 lethal
-        step_height_threshold: 0.4
-        # 产生高度代价的最小高度（m）
-        height_cost_start: 0.2
-        # 高度代价缩放系数
-        height_cost_scale: 0.1
-        # 致命代价阈值
-        lethal_cost_threshold: 254.0
-        # 点云保留时间（s），0=仅用最新帧
-        observation_persistence: 0.0
-        # 点云缓冲队列长度
-        cloud_buffer_size: 5
-        # 是否发布坡度可视化点云
-        publish_slope_map: true
-        # 是否启用射线追踪清除
-        enable_raycast_clear: false
-        # 可通行性分析网格分辨率（m）
-        cell_resolution: 0.1
-        # OpenMP 线程数，0=系统默认
-        num_threads: 4
+      
 
       # =====================================================
       # 障碍物层参数
@@ -791,6 +747,98 @@ local_costmap:
           # 射线追踪最小范围（m）
           raytrace_min_range: 0.0
 
+      obstacle_layer_360:
+        # 插件类型
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        # 是否启用
+        enabled: false
+        # 观测数据源名称列表
+        observation_sources: scan
+        # 将数据添加到主代价图的方法：0=覆盖，1=取最大值（默认），2=取最大值但不覆盖未知信息
+        combination_method: 1
+        # 是否清除机器人足迹下的占用单元格
+        footprint_clearing_enabled: true
+        # 添加到占位栅格的最大高度（m）
+        max_obstacle_height: 100.0
+        # 添加到占位栅格的最小高度（m）
+        min_obstacle_height: -100.0
+        
+        scan:
+          # 数据话题。相对话题相对于节点父命名空间
+          topic: /rkbot/scan
+          # 传感器帧，若消息未提供则使用此帧。空字符串使用消息的 frame_id
+          sensor_frame: ""
+          # 输入数据类型：LaserScan 或 PointCloud2
+          data_type: "LaserScan"
+          # 在缓冲区中存储消息以添加到代价图的时长（s），之后移除
+          observation_persistence: 0.0
+          # 从传感器获取新数据的预期频率（Hz）
+          expected_update_rate: 0.0
+          # 激光扫描仪的无限返回值是否为有效测量（用于射线投射）
+          inf_is_valid: true
+          # 此数据源是否应在代价图中标记障碍物
+          marking: true
+          # 此数据源是否应在代价图中射线追踪清除障碍物
+          clearing: true
+          # 此数据源添加到占位栅格的最大高度（m）
+          max_obstacle_height: 100.0
+          # 此数据源添加到占位栅格的最小高度（m）
+          min_obstacle_height: -100.0
+          # 在代价图中标记障碍物的最大距离（m）
+          obstacle_max_range: 15.0
+          # 在代价图中标记障碍物的最小距离（m）
+          obstacle_min_range: 0.0
+          # 从代价图中射线追踪清除障碍物的最大距离（m）
+          raytrace_max_range: 15.0
+          # 从代价图中射线追踪清除障碍物的最小距离（m）
+          raytrace_min_range: 0.0
+
+      # =====================================================
+      # 可通行性层参数 - 基于点云高度差和坡度分析三维地形
+      # =====================================================
+      traversability_layer_local:
+        # 插件类型
+        plugin: "traversability_layer::TraversabilityLayer"
+        # 是否启用
+        enabled: true
+        # 点云话题
+        pointcloud_topic: /rkbot/front_lidar/cloud_world
+        # 机器人基准坐标系
+        base_frame: base_link
+        # 最大障碍物高度（m），高于此忽略
+        max_obstacle_height: 1.0
+        # 最小障碍物高度（m），低于此忽略
+        min_obstacle_height: -1.0
+        # 最大可通行坡度（°），超过则 lethal
+        max_slope_traversable: 60.0
+        # 开始产生坡度代价的坡度角（°）
+        slope_cost_start: 40.0
+        # 坡度代价缩放系数
+        slope_cost_scale: 1.0
+        # 障碍物比率阈值
+        obstacle_ratio_threshold: 0.5
+        # 障碍物命中阈值
+        obstacle_hit_threshold: 1
+        # 台阶高度阈值（m），超过则 lethal
+        step_height_threshold: 0.4
+        # 产生高度代价的最小高度（m）
+        height_cost_start: 0.2
+        # 高度代价缩放系数
+        height_cost_scale: 0.1
+        # 致命代价阈值
+        lethal_cost_threshold: 254.0
+        # 点云保留时间（s），0=仅用最新帧
+        observation_persistence: 0.0
+        # 点云缓冲队列长度
+        cloud_buffer_size: 5
+        # 是否发布坡度可视化点云
+        publish_slope_map: true
+        # 是否启用射线追踪清除
+        enable_raycast_clear: false
+        # 可通行性分析网格分辨率（m）
+        cell_resolution: 0.1
+        # OpenMP 线程数，0=系统默认
+        num_threads: 4
       
       # =====================================================
       # 膨胀层参数
@@ -1133,9 +1181,9 @@ amcl:
 
     # 粒子滤波器参数
     # 允许的最小粒子数
-    min_particles: 400
+    min_particles: 800
     # 允许的最大粒子数
-    max_particles: 4000
+    max_particles: 6000
     # 粒子滤波器种群误差
     pf_err: 0.02
     # 粒子滤波器种群密度，0.99 对应 99% 分位数
@@ -1157,15 +1205,15 @@ amcl:
 
     # 里程计运动模型噪声参数 - 里程计旋转/平移估计中的预期过程噪声
     # 里程计旋转估计中由旋转引起的预期过程噪声
-    alpha1: 0.01
+    alpha1: 0.05
     # 里程计旋转估计中由平移引起的预期过程噪声
-    alpha2: 0.005
+    alpha2: 0.05
     # 里程计平移估计中由平移引起的预期过程噪声
-    alpha3: 0.01
+    alpha3: 0.05
     # 里程计平移估计中由旋转引起的预期过程噪声
-    alpha4: 0.01
+    alpha4: 0.05
     # 仅 Omni 模型：平移噪声
-    alpha5: 0.03
+    alpha5: 0.1
 
     # 机器人运动模型类型 - 插件类的完全限定类型
     # 全向运动模型，可选 nav2_amcl::DifferentialMotionModel
@@ -1192,7 +1240,7 @@ amcl:
     # 要考虑的最大扫描距离，-1.0 使用激光雷达报告的最大距离
     laser_max_range: 200.0
     # 每次扫描中用于更新滤波器的均匀分布光束数量
-    max_beams: 180
+    max_beams: 360
 
     # =============================================================================
     # BEAM MODEL 参数 - 适用于结构化环境
@@ -1216,19 +1264,19 @@ amcl:
 
     # 传感器模型参数
     # 模型 z_hit 部分使用的高斯模型标准差
-    sigma_hit: 0.08
+    sigma_hit: 0.15
     # 模型 z_short 部分的指数衰减参数
     lambda_short: 0.1
     # z_hit 部分的混合权重（命中）
-    z_hit: 0.65
+    z_hit: 0.8
     # z_rand 部分的混合权重（随机测量）
-    z_rand: 0.35
+    z_rand: 0.2
     # 地图上障碍物膨胀的最大距离（m），用于 likelihood_field 模型
-    laser_likelihood_max_dist: 1.0
+    laser_likelihood_max_dist: 0.2
 
     # Beam 跳过参数 - 在 Likelihood 场模型中跳过大多数粒子不同意的光束
     # 是否在 Likelihood 场模型中执行光束跳过
-    do_beamskip: true
+    do_beamskip: false
     # 忽略大多数粒子不同意的光束，考虑跳过的最大距离（m）
     beam_skip_distance: 0.4
     # 跳过所需的光束比例阈值

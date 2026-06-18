@@ -1094,10 +1094,9 @@ void TraversabilityLayer::updateCosts(
 
           unsigned int mit = static_cast<unsigned int>(my) * master_span +
                              static_cast<unsigned int>(mx);
-          unsigned char master_old = master_array[mit];
-          if (master_old == nav2_costmap_2d::NO_INFORMATION || cost > master_old) {
-            master_array[mit] = cost;
-          }
+          // 无条件写入：traversability_layer 在其覆盖区域内为权威数据源，
+          // 可覆盖 obstacle_layer 误判为障碍但实际可通行的区域
+          master_array[mit] = cost;
         }
       }
     }

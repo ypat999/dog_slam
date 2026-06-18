@@ -142,7 +142,7 @@ def generate_launch_description():
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
             {'target_frame': ns_base_footprint_frame},
-            {'transform_tolerance': 0.1},
+            {'transform_tolerance': 0.5},
             {'min_height': -0.3},
             {'max_height': 1.0},
             {'angle_min': -3.14159},
@@ -169,7 +169,7 @@ def generate_launch_description():
         parameters=[
             {'use_sim_time': DEFAULT_USE_SIM_TIME},
             {'target_frame': ns_base_footprint_frame},
-            {'transform_tolerance': 0.1},
+            {'transform_tolerance': 0.5},
             {'min_height': -0.3},
             {'max_height': 1.0},
             {'angle_min': -3.14159},

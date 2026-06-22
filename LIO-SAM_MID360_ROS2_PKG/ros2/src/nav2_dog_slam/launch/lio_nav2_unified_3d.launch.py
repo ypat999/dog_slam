@@ -379,55 +379,55 @@ def generate_launch_description():
     #     default_value=NAV2_DEFAULT_PARAMS_FILE,
     #     description='Full path to slam_toolbox parameters file')
     
-    slam_toolbox_node = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox_node',
-        output='screen',
-        parameters=[
-            configured_params,
-            {
-                'use_sim_time': use_sim_time,
-                'odom_frame': ns_odom_frame,
-                'map_frame': ns_map_frame,
-                'base_frame': ns_base_footprint_frame,
-                'map_topic': ns_map_topic,
-            }
-        ],
-        prefix=['taskset -c 5,6'],
-        remappings=[
-            ('/tf', '/tf'),
-            ('/tf_static', '/tf_static'),
-            ('initialpose', '/initialpose')
-        ],
-        respawn=True,
-        respawn_delay=2.0
-    )
+    # slam_toolbox_node = Node(
+    #     package='slam_toolbox',
+    #     executable='async_slam_toolbox_node',
+    #     name='slam_toolbox_node',
+    #     output='screen',
+    #     parameters=[
+    #         configured_params,
+    #         {
+    #             'use_sim_time': use_sim_time,
+    #             'odom_frame': ns_odom_frame,
+    #             'map_frame': ns_map_frame,
+    #             'base_frame': ns_base_footprint_frame,
+    #             'map_topic': ns_map_topic,
+    #         }
+    #     ],
+    #     prefix=['taskset -c 5,6'],
+    #     remappings=[
+    #         ('/tf', '/tf'),
+    #         ('/tf_static', '/tf_static'),
+    #         ('initialpose', '/initialpose')
+    #     ],
+    #     respawn=True,
+    #     respawn_delay=2.0
+    # )
     
-    # octomap_server节点
-    octomap_server_node = Node(
-        package='octomap_server',
-        executable='octomap_server_node',
-        name='octomap_server',
-        output='screen',
-        parameters=[{
-            'frame_id': ns_map_frame,
-            'sensor_model/max_range': 100.0,
-            'sensor_model/min_range': 0.4,
-            'sensor_model/insert_free_space': 'True',
-            'resolution': 0.05,
-            'occupancy_min_z': -0.1,
-            'occupancy_max_z': 1.0,
-            'publish_2d_map': 'True',
-            'use_sim_time': use_sim_time,
-        }],
-        prefix=['taskset -c 4,5'],
-        remappings=[
-            ('cloud_in', lio_config['octomap_topic']),
-            ('/tf', '/tf'),
-            ('/tf_static', '/tf_static')
-        ]
-    )
+    # # octomap_server节点
+    # octomap_server_node = Node(
+    #     package='octomap_server',
+    #     executable='octomap_server_node',
+    #     name='octomap_server',
+    #     output='screen',
+    #     parameters=[{
+    #         'frame_id': ns_map_frame,
+    #         'sensor_model/max_range': 100.0,
+    #         'sensor_model/min_range': 0.4,
+    #         'sensor_model/insert_free_space': 'True',
+    #         'resolution': 0.05,
+    #         'occupancy_min_z': -0.1,
+    #         'occupancy_max_z': 1.0,
+    #         'publish_2d_map': 'True',
+    #         'use_sim_time': use_sim_time,
+    #     }],
+    #     prefix=['taskset -c 4,5'],
+    #     remappings=[
+    #         ('cloud_in', lio_config['octomap_topic']),
+    #         ('/tf', '/tf'),
+    #         ('/tf_static', '/tf_static')
+    #     ]
+    # )
     
     # 3. 导航相关节点
     
@@ -449,41 +449,57 @@ def generate_launch_description():
         ]
     )
 
-    amcl_node = Node(
-        package='nav2_amcl',
-        executable='amcl',
-        name='amcl',
-        output='screen',
-        parameters=[
-            configured_params,
-            {
-                'global_frame_id': ns_map_frame,
-                'odom_frame_id': ns_odom_frame,
-                'base_frame_id': ns_base_footprint_frame,
-                'map_topic': ns_map_topic,
-            }
-        ],
-        remappings=[
-            ('/tf', '/tf'),
-            ('/tf_static', '/tf_static'),
-            ('initialpose', '/initialpose')
-        ],
-        prefix=['taskset -c 5,6']
-    )
+    # amcl_node = Node(
+    #     package='nav2_amcl',
+    #     executable='amcl',
+    #     name='amcl',
+    #     output='screen',
+    #     parameters=[
+    #         configured_params,
+    #         {
+    #             'global_frame_id': ns_map_frame,
+    #             'odom_frame_id': ns_odom_frame,
+    #             'base_frame_id': ns_base_footprint_frame,
+    #             'map_topic': ns_map_topic,
+    #         }
+    #     ],
+    #     remappings=[
+    #         ('/tf', '/tf'),
+    #         ('/tf_static', '/tf_static'),
+    #         ('initialpose', '/initialpose')
+    #     ],
+    #     prefix=['taskset -c 5,6']
+    # )
     
-    # 生命周期管理器节点
-    lifecycle_manager_amcl = Node(
-        package='nav2_lifecycle_manager',
-        executable='lifecycle_manager',
-        name='lifecycle_manager_amcl',
-        output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'autostart': True,
-            'node_names': ['amcl']
-        }],
-        prefix=['taskset -c 1,2,3'],
+    # # 生命周期管理器节点
+    # lifecycle_manager_amcl = Node(
+    #     package='nav2_lifecycle_manager',
+    #     executable='lifecycle_manager',
+    #     name='lifecycle_manager_amcl',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': use_sim_time,
+    #         'autostart': True,
+    #         'node_names': ['amcl']
+    #     }],
+    #     prefix=['taskset -c 1,2,3'],
+    # )
+
+    lidar_localization_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('lidar_localization_ros2'),
+                'launch',
+                'lidar_localization_dog.launch.py'
+            ])
+        ]),
+        launch_arguments={
+            'rviz': 'false',
+            'use_sim_time': use_sim_time_str,
+        }.items()
     )
+
+
 
     lifecycle_manager_map_server = Node(
         package='nav2_lifecycle_manager',
@@ -625,43 +641,43 @@ def generate_launch_description():
     web_actions.append(web_script_process)
     web_actions.append(rosbridge_websocket)
     
-    # 3. 建图模式配置
-    if MANUAL_BUILD_MAP:
-        if BUILD_TOOL == 'slam_toolbox':
-            # 建图模式 + slam_toolbox
-            # unified_nodes.append(declare_slam_toolbox_params_cmd)
-            unified_nodes.append(
-                TimerAction(
-                    period=5.0,
-                    actions=[slam_toolbox_node]
-                )
-            )
+    # # 3. 建图模式配置
+    # if MANUAL_BUILD_MAP:
+    #     if BUILD_TOOL == 'slam_toolbox':
+    #         # 建图模式 + slam_toolbox
+    #         # unified_nodes.append(declare_slam_toolbox_params_cmd)
+    #         unified_nodes.append(
+    #             TimerAction(
+    #                 period=5.0,
+    #                 actions=[slam_toolbox_node]
+    #             )
+    #         )
 
-            # 自动保存地图脚本（每隔2分钟）
-            auto_save_map_script = os.path.join(
-                get_package_share_directory('nav2_dog_slam'),
-                'scripts', 'auto_save_map.sh'
-            )
-            auto_save_map_process = ExecuteProcess(
-                cmd=['bash', auto_save_map_script],
-                name='auto_save_map',
-                output='screen'
-            )
-            unified_nodes.append(
-                TimerAction(
-                    period=120.0,  # 延迟10秒启动，等待slam_toolbox初始化
-                    actions=[auto_save_map_process]
-                )
-            )
-        
-        else:
-            # 建图模式：添加octomap server
-            unified_nodes.append(
-                TimerAction(
-                    period=15.0,
-                    actions=[octomap_server_node]
-                )
-            )
+    #         # 自动保存地图脚本（每隔2分钟）
+    #         auto_save_map_script = os.path.join(
+    #             get_package_share_directory('nav2_dog_slam'),
+    #             'scripts', 'auto_save_map.sh'
+    #         )
+    #         auto_save_map_process = ExecuteProcess(
+    #             cmd=['bash', auto_save_map_script],
+    #             name='auto_save_map',
+    #             output='screen'
+    #         )
+    #         unified_nodes.append(
+    #             TimerAction(
+    #                 period=120.0,  # 延迟10秒启动，等待slam_toolbox初始化
+    #                 actions=[auto_save_map_process]
+    #             )
+    #         )
+        # 
+        # else:
+        #     # 建图模式：添加octomap server
+        #     unified_nodes.append(
+        #         TimerAction(
+        #             period=15.0,
+        #             actions=[octomap_server_node]
+        #         )
+        #     )
 
     # if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
     #     # 建图模式 + SC-PGO
@@ -689,32 +705,40 @@ def generate_launch_description():
         )
 
     # 4. 导航模式配置
-    if BUILD_TOOL != 'slam_toolbox' :
-        # 根据localization参数选择AMCL或SLAM Toolbox
-        nav2_actions.append(
+    # if BUILD_TOOL != 'slam_toolbox' :
+    #     # 根据localization参数选择AMCL或SLAM Toolbox
+    #     nav2_actions.append(
+    #         TimerAction(
+    #             period=2.0,
+    #             actions=[amcl_node],
+    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+    #         )
+    #     )
+    #     nav2_actions.append(
+    #         TimerAction(
+    #             period=2.0,
+    #             actions=[lifecycle_manager_amcl],
+    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+    #         )
+    #     )
+        
+    #     # SLAM Toolbox导航模式
+    #     nav2_actions.append(
+    #         TimerAction(
+    #             period=2.0,
+    #             actions=[slam_toolbox_node],
+    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
+    #         )
+    #     )
+
+    nav2_actions.append(
             TimerAction(
                 period=2.0,
-                actions=[amcl_node],
-                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
-            )
-        )
-        nav2_actions.append(
-            TimerAction(
-                period=2.0,
-                actions=[lifecycle_manager_amcl],
-                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
+                actions=[lidar_localization_launch]
             )
         )
         
-        # SLAM Toolbox导航模式
-        nav2_actions.append(
-            TimerAction(
-                period=2.0,
-                actions=[slam_toolbox_node],
-                condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
-            )
-        )
-        
+        # # GPS融合节点
         # # GPS融合节点
         # nav2_actions.append(
         #     TimerAction(

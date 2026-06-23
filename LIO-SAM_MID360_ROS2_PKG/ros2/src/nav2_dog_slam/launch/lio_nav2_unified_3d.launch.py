@@ -5,7 +5,8 @@ from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDesc
 from launch.conditions import IfCondition
 from launch_ros.actions import PushRosNamespace, Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression, TextSubstitution
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.descriptions import ParameterFile
 import os
@@ -158,11 +159,11 @@ def generate_launch_description():
         default_value=NAV2_DEFAULT_PARAMS_FILE,
         description='Full path to the Nav2 parameters file')
 
-    declare_localization_cmd = DeclareLaunchArgument(
-        'localization',
-        default_value='amcl',
-        description='Localization backend to use: amcl or slam_toolbox'
-    )
+    # declare_localization_cmd = DeclareLaunchArgument(
+    #     'localization',
+    #     default_value='amcl',
+    #     description='Localization backend to use: amcl or slam_toolbox'
+    # )
 
     # 创建RewrittenYaml配置 - 支持namespace
     if ns == '':
@@ -358,8 +359,7 @@ def generate_launch_description():
             {'max_message_size': 10000000},     # 100MB→10MB，限制单条消息内存上限
             {'unregister_timeout': 10.0},       # 订阅者注销超时，清理断开连接的积压
             {'publish_timeout': 2.0},           # 发布超时，超时丢弃不再占用内存
-            {'retry_startup_delay': 5.0},       # 重连间隔
-            {'delay_between_messages': 3},  # 3ms间隔限制突发序列化，平滑CPU峰值
+            {'retry_startup_delay': 5.0}       # 重连间隔
         ],
         prefix=['taskset -c 1,2,3'],
     )
@@ -486,16 +486,14 @@ def generate_launch_description():
     # )
 
     lidar_localization_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('lidar_localization_ros2'),
-                'launch',
-                'lidar_localization_dog.launch.py'
-            ])
-        ]),
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('lidar_localization_ros2'),
+            'launch',
+            'lidar_localization_dog.launch.py'
+        )]),
         launch_arguments={
             'rviz': 'false',
-            'use_sim_time': use_sim_time_str,
+            'use_sim_time': use_sim_time,
         }.items()
     )
 
@@ -679,14 +677,14 @@ def generate_launch_description():
         #         )
         #     )
 
-    # if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
-    #     # 建图模式 + SC-PGO
-    #     unified_nodes.append(
-    #         TimerAction(
-    #             period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
-    #             actions=[sc_pgo_node]
-    #         )
-    #     )
+    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+        # 建图模式 + SC-PGO
+        unified_nodes.append(
+            TimerAction(
+                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+                actions=[sc_pgo_node]
+            )
+        )
     
 
         
@@ -780,7 +778,7 @@ def generate_launch_description():
         PushRosNamespace(ns),
         # 1. 声明所有启动参数
         declare_map_file_cmd,
-        declare_localization_cmd,
+        # declare_localization_cmd,
         declare_nav2_params_file_cmd,
         # 2. 启动主要组件（根据SLAM_ALGORITHM参数选择）
         fast_lio_launch,

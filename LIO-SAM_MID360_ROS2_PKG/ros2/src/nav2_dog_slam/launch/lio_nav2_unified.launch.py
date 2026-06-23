@@ -359,7 +359,6 @@ def generate_launch_description():
             {'unregister_timeout': 10.0},       # 订阅者注销超时，清理断开连接的积压
             {'publish_timeout': 2.0},           # 发布超时，超时丢弃不再占用内存
             {'retry_startup_delay': 5.0},       # 重连间隔
-            {'delay_between_messages': 3},  # 3ms间隔限制突发序列化，平滑CPU峰值
         ],
         prefix=['taskset -c 1,2,3'],
     )

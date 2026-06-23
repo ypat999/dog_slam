@@ -127,6 +127,23 @@
     # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m,原装0.1
     lio.observe.plane_fit_threshold: 0.1
 
+    # 观测权重，等价于 1/σ²（σ为点到面残差标准差）
+    # 权重越高，ESKF越信任观测，响应越快但越容易过冲震荡
+    # Mid-360(高精度): 1000 (σ≈0.032m)
+    # Airy(低精度):    200  (σ≈0.071m, 5m处法向偏差±0.1m)
+    lio.observe.obs_weight: 200
+
+    # Huber核基础阈值(米)：点到面残差小于此值使用满权重，超过时线性降权
+    # 设为近处(5m)残差标准差的1.5~2倍
+    # Mid-360: 0.05, Airy: 0.10
+    # 作用：静止时bias漂移导致残差偏大，Huber核自动降权防止修正过冲震荡
+    lio.observe.huber_delta_base: 0.10
+
+    # Huber核距离缩放系数(米/米)：远处点测量噪声更大，阈值随距离线性增长
+    # delta = huber_delta_base + huber_delta_scale × 点距离
+    # 0.003: 30m处阈值增加0.09m，保证走廊尽头远点不被误降权
+    lio.observe.huber_delta_scale: 0.003
+
     lio.ros.imu_qos_reliable: true
     lio.ros.lidar_qos_reliable: false
 

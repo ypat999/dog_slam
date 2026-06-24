@@ -3,6 +3,9 @@ cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/ && source install/setup.bash
 colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_garden fast_lio_robosense
 
 
+colcon build --symlink-install --packages-skip livox_gazebo_garden fast_lio_robosense --parallel-workers 2 \
+  --cmake-args -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
+
 
 # 机器狗站立：
 ros2 service call /rkbot/setctrlmode robot_interface/srv/SetCtrlMode "{mode: {value: 1}}"

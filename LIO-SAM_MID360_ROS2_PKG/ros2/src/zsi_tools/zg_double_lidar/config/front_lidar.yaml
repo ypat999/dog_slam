@@ -10,8 +10,6 @@
     # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
     # 空字符串表示无前缀（默认）
     lio.map.pcd_prefix: "front_"
-    
-    lio.ros.use_local_timestamp: true
 
     lio.ros.lidar_topic: "/front_lidar"
     lio.ros.imu_topic: "/front_lidar/imu"
@@ -111,7 +109,7 @@
     # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
     # 原硬编码0.1m过严，位姿微漂导致正确点被拒绝
     lio.observe.plane_fit_threshold: 0.4
-
+    
     # 观测权重，等价于 1/σ²（σ为点到面残差标准差）
     # 权重越高，ESKF越信任观测，响应越快但越容易过冲震荡
     # Mid-360(高精度): 1000 (σ≈0.032m)

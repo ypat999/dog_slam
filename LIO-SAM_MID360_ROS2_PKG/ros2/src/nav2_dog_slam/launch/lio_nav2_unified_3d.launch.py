@@ -615,9 +615,9 @@ def generate_launch_description():
         remappings=[
             ("/aft_mapped_to_init", lio_config['odom_topic']),
             ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
-            ("/cloud_for_scancontext", lio_config['pointcloud_topic']),
-            ("/tf", "tf"),
-            ("/tf_static", "tf_static"),
+            ("/cloud_for_scancontext", lio_config['octomap_topic']),
+            ("/tf", "/tf"),
+            ("/tf_static", "/tf_static"),
         ],
         prefix=['taskset -c 6'],
     )
@@ -704,6 +704,12 @@ def generate_launch_description():
                 actions=[lifecycle_manager_map_server]
             )
         )
+        nav2_actions.append(
+            TimerAction(
+                period=2.0,
+                actions=[lidar_localization_launch]
+            )
+        )
 
     # 4. 导航模式配置
     # if BUILD_TOOL != 'slam_toolbox' :
@@ -732,12 +738,7 @@ def generate_launch_description():
     #         )
     #     )
 
-    nav2_actions.append(
-            TimerAction(
-                period=2.0,
-                actions=[lidar_localization_launch]
-            )
-        )
+    
         
         # # GPS融合节点
         # # GPS融合节点

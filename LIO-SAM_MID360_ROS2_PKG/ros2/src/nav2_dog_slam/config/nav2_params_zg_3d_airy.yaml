@@ -92,11 +92,11 @@ controller_server:
       transform_tolerance: 0.01
 
       # 最大前向速度（m/s）
-      vx_max: 2.0
+      vx_max: 3.0
       # 最大反向速度（m/s）
       vx_min: -0.2
       # 前向速度采样标准差
-      vx_std: 0.5
+      vx_std: 1.0
       # 最大横向速度（m/s，Omni 模型）
       vy_max: 0.2
       # 横向速度采样标准差
@@ -612,15 +612,15 @@ local_costmap:
       # 是否使用滚动窗口（代价图跟随机器人移动，保持以机器人为中心的局部视图）
       rolling_window: true
       # 代价图宽度（m）
-      width: 8
+      width: 10
       # 代价图高度（m）
-      height: 8
+      height: 10
       # 代价图中每个单元格（像素）的分辨率（m），越小精度越高但计算量更大
       resolution: 0.1
       # 代价图 X 原点相对于宽度的偏移（m）
-      origin_x: -4.0
+      origin_x: -5.0
       # 代价图 Y 原点相对于高度的偏移（m）
-      origin_y: -4.0
+      origin_y: -5.0
 
       # 足迹参数
       # 有序的足迹点集，以字符串形式传入，必须为闭合多边形。可通过 ~/footprint 话题动态调整
@@ -991,7 +991,7 @@ global_costmap:
       # 是否每次更新发送完整代价图。全局代价图通常为 false，发送增量更新
       always_send_full_costmap: false
       # 是否追踪未知空间
-      track_unknown_space: false
+      track_unknown_space: true
       # 占位栅格地图是否应仅解释为 3 种值（自由、占用、未知）
       trinary_costmap: true
       # 追踪未知空间时未知空间的代价值

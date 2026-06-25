@@ -132,6 +132,7 @@ def generate_launch_description():
     ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
     ns_base_footprint_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
     ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
+    ns_aft_pgo_frame = PythonExpression(["'aft_pgo' if '", ns, "' == '' else str('", ns, "/aft_pgo')"])
     ns_scan_topic = PythonExpression(["'/scan' if '", ns, "' == '' else str('/", ns, "/scan')"])
     ns_pointcloud_topic = PythonExpression(["'/lio/body/cloud' if '", ns, "' == '' else str('/", ns, "/lio/body/cloud')"])
     ns_map_topic = PythonExpression(["'/map' if '", ns, "' == '' else str('/", ns, "/map')"])
@@ -600,6 +601,7 @@ def generate_launch_description():
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
+        namespace=ns,
         parameters=[
             {"scan_line": 4},
             {"minimum_range": 0.3},
@@ -610,12 +612,15 @@ def generate_launch_description():
             {"sc_dist_thres": 0.3},
             {"sc_max_radius": 290.0},
             {"save_directory": SC_PGO_SAVE_DIRECTORY},
-            {"use_sim_time": use_sim_time}
+            {"use_sim_time": use_sim_time},
+            {"frame_id_odom": ns_odom_frame},
+            {"frame_id_aft_pgo": ns_aft_pgo_frame}
         ],
         remappings=[
             ("/aft_mapped_to_init", lio_config['odom_topic']),
             ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
             ("/cloud_for_scancontext", lio_config['octomap_topic']),
+            ("/gps/fix", "/gps/fix"),
             ("/tf", "/tf"),
             ("/tf_static", "/tf_static"),
         ],

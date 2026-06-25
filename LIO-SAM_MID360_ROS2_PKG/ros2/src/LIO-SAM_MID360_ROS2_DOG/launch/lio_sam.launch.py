@@ -78,6 +78,23 @@ def generate_launch_description():
 
     print("urdf_file_name : {}".format(xacro_path))
 
+    # Namespace support (multi-robot)
+    declare_ns_arg = DeclareLaunchArgument(
+        'ns',
+        default_value=DEFAULT_NAMESPACE,
+        description='Namespace for multi-robot support'
+    )
+    ns = LaunchConfiguration('ns')
+
+    ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
+    ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
+    ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_world_frame = PythonExpression(["'world' if '", ns, "' == '' else str('", ns, "/world')"])
+    ns_imu_frame = PythonExpression(["'imu' if '", ns, "' == '' else str('", ns, "/imu')"])
+    ns_livox_frame = PythonExpression(["'livox_frame' if '", ns, "' == '' else str('", ns, "/livox_frame')"])
+    ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
+    ns_lidar_link_frame = PythonExpression(["'lidar_link' if '", ns, "' == '' else str('", ns, "/lidar_link')"])
+
     # #请另开窗口，source install/setup.sh后使用命令行录制，在launch内录制会缺少meta文件
     # rosbag_record = ExecuteProcess(
     #         cmd=['ros2', 'bag', 'record', '-o', '/home/ztl/slam_data/livox_record_tilt_new/', 
@@ -93,7 +110,7 @@ def generate_launch_description():
         {"data_src": data_src},
         {"publish_freq": publish_freq},
         {"output_data_type": output_type},
-        {"frame_id": frame_id},
+        {"frame_id": ns_livox_frame},
         # {"lvx_file_path": lvx_file_path},
         {"user_config_path": user_config_path},
         {"cmdline_input_bd_code": cmdline_bd_code},
@@ -114,7 +131,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_map_to_odom',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_map_frame, ns_odom_frame],
         output='screen'
     )
     # odom -> base_link (里程计到机器人基坐标系的静态变换)
@@ -123,7 +140,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_odom_frame, ns_base_link_frame],
         output='screen'
     )
     # # base_link -> livox_frame (机器人基坐标系到激光雷达的静态变换)
@@ -135,7 +152,7 @@ def generate_launch_description():
         name='static_transform_base_to_livox',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.2', '0.0', '0.1', '0.0', '0.5235987756', '0.0', 'base_link', 'livox_frame'],
-        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', ns_base_link_frame, ns_livox_frame],
         output='screen'
     )
 
@@ -145,7 +162,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_base_to_lidar_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', 'base_link', 'lidar_link'],
+        arguments=['0.1', '0.0', '-0.3', '0.0', '0.0', '0.0', ns_base_link_frame, ns_lidar_link_frame],
         output='screen'
     )
 
@@ -219,7 +236,7 @@ def generate_launch_description():
     if RECORD_ONLY:
         return LaunchDescription([livox_driver_node])
 
-    launch_nodes = [params_declare]
+    launch_nodes = [params_declare, declare_ns_arg]
 
     if ONLINE_LIDAR:
         launch_nodes.extend([

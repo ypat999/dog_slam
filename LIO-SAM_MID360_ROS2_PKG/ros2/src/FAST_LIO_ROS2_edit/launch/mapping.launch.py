@@ -22,7 +22,7 @@ def generate_launch_description():
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
             DEFAULT_USE_SIM_TIME, MANUAL_BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
-            NAV2_DEFAULT_PARAMS_FILE
+            NAV2_DEFAULT_PARAMS_FILE, DEFAULT_NAMESPACE
         )
     except ImportError as e:
         print(f"方法2导入global_config失败: {e}")
@@ -35,6 +35,7 @@ def generate_launch_description():
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+        DEFAULT_NAMESPACE = ''
     
     package_path = get_package_share_directory('fast_lio')
     config_path = os.path.join(package_path, 'config')
@@ -51,9 +52,24 @@ def generate_launch_description():
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
 
+    # Namespace support (multi-robot)
+    declare_ns_arg = DeclareLaunchArgument(
+        'ns',
+        default_value=DEFAULT_NAMESPACE,
+        description='Namespace for multi-robot support'
+    )
+    ns = LaunchConfiguration('ns')
+
+    ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
+    ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
+    ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_world_frame = PythonExpression(["'world' if '", ns, "' == '' else str('", ns, "/world')"])
+    ns_imu_frame = PythonExpression(["'imu' if '", ns, "' == '' else str('", ns, "/imu')"])
+    ns_livox_frame = PythonExpression(["'livox_frame' if '", ns, "' == '' else str('", ns, "/livox_frame')"])
+    ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
 
     ld = LaunchDescription()
-
+    ld.add_action(declare_ns_arg)
 
     # 在线模式：Livox雷达驱动
     livox_driver_node = Node(
@@ -67,7 +83,7 @@ def generate_launch_description():
             {"data_src": 0},
             {"publish_freq": 10.0},
             {"output_data_type": 0},
-            {"frame_id": 'livox_frame'},
+            {"frame_id": ns_livox_frame},
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
         ],
@@ -143,7 +159,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_map_to_odom',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_map_frame, ns_odom_frame],
         output='screen'
     )
     ld.add_action(static_transform_map_to_odom)
@@ -154,7 +170,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_odom_frame, ns_base_link_frame],
         output='screen'
     )
     ld.add_action(static_transform_odom_to_base_link)
@@ -165,7 +181,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
         # arguments=['0.1', '0', '0.1', '0', '0.0', '0', 'base_link', 'livox_frame'],
-        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', ns_base_link_frame, ns_livox_frame],
         output='screen'
     )
     ld.add_action(base_link_to_livox_frame_tf)

@@ -494,8 +494,11 @@ def generate_launch_description():
         launch_arguments={
             'rviz': 'false',
             'use_sim_time': use_sim_time,
+            'cloud_topic': lio_config['pointcloud_topic'],
+            'odom_topic': lio_config['odom_topic'],
         }.items()
     )
+
 
 
 

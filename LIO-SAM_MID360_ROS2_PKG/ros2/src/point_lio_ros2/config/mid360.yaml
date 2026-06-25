@@ -1,8 +1,8 @@
 /**:
     ros__parameters:
         common:
-            lid_topic: "/livox/lidar"
-            imu_topic: "/livox/imu"
+            lid_topic: "livox/lidar"
+            imu_topic: "livox/imu"
             con_frame: false # true: if you need to combine several LiDAR frames into one
             con_frame_num: 4 # the number of frames combined
             cut_frame: false # true: if you need to cut one LiDAR frame into several subframes
@@ -56,13 +56,13 @@
             scan_publish_en: true         # false: close all the point cloud output
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
             footprint_pub_en: true        # true: publish base_footprint transform
-            tf_imu_frame: "base_link" #"livox_frame" #"body"
-            tf_world_frame: "odom" #"camera_init"
-            tf_lidar_frame: "livox_frame" #"lidar_link"
-            tf_camera_init_frame: "odom" #"base_link"  #"camera_init"
-            tf_odom_frame: "odom" #"odom"
+            tf_imu_frame: "rkbot/base_link" #"livox_frame" #"body"
+            tf_world_frame: "rkbot/odom" #"camera_init"
+            tf_lidar_frame: "rkbot/livox_frame" #"lidar_link"
+            tf_camera_init_frame: "rkbot/odom" #"base_link"  #"camera_init"
+            tf_odom_frame: "rkbot/odom" #"odom"
             tf_base_link_frame: "base_link" #"livox_frame"
-            tf_base_footprint_frame: "base_footprint" 
+            tf_base_footprint_frame: "rkbot/base_footprint" 
 
         pcd_save:
             pcd_save_en: false

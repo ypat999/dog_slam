@@ -68,12 +68,6 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Install dynamic base footprint script as executable
-install(
-  PROGRAMS scripts/dynamic_base_footprint.py
-  DESTINATION lib/${PROJECT_NAME}
-)
-
 # Install gps preprocessor script as executable
 install(
   PROGRAMS src/gps_preprocessor.py

@@ -16,7 +16,7 @@ def generate_launch_description():
         from global_config import (
             ONLINE_LIDAR, DEFAULT_BAG_PATH, DEFAULT_RELIABILITY_OVERRIDE,
             DEFAULT_USE_SIM_TIME, MANUAL_BUILD_MAP, BUILD_TOOL, RECORD_ONLY,
-            NAV2_DEFAULT_PARAMS_FILE
+            NAV2_DEFAULT_PARAMS_FILE, DEFAULT_NAMESPACE
         )
     except ImportError as e:
         print(f"方法2导入global_config失败: {e}")
@@ -29,6 +29,7 @@ def generate_launch_description():
         BUILD_TOOL = 'octomap_server'
         RECORD_ONLY = False
         NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+        DEFAULT_NAMESPACE = ''
 
     # 导入全局配置
     from global_config import LIVOX_MID360_CONFIG
@@ -37,6 +38,22 @@ def generate_launch_description():
     lidar_mode = "ONLINE"
     if not ONLINE_LIDAR:
         lidar_mode = "OFFLINE"
+
+    # Namespace support (multi-robot)
+    declare_ns_arg = DeclareLaunchArgument(
+        'ns',
+        default_value=DEFAULT_NAMESPACE,
+        description='Namespace for multi-robot support'
+    )
+    ns = LaunchConfiguration('ns')
+
+    ns_map_frame = PythonExpression(["'map' if '", ns, "' == '' else str('", ns, "/map')"])
+    ns_odom_frame = PythonExpression(["'odom' if '", ns, "' == '' else str('", ns, "/odom')"])
+    ns_base_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
+    ns_world_frame = PythonExpression(["'world' if '", ns, "' == '' else str('", ns, "/world')"])
+    ns_imu_frame = PythonExpression(["'imu' if '", ns, "' == '' else str('", ns, "/imu')"])
+    ns_livox_frame = PythonExpression(["'livox_frame' if '", ns, "' == '' else str('", ns, "/livox_frame')"])
+    ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
 
     use_sim_time = LaunchConfiguration('use_sim_time', default=str(DEFAULT_USE_SIM_TIME))
 
@@ -79,7 +96,7 @@ def generate_launch_description():
             {"data_src": 0},
             {"publish_freq": 40.0},
             {"output_data_type": 0},
-            {"frame_id": 'livox_frame'},
+            {"frame_id": ns_livox_frame},
             {"user_config_path": livox_config_path},
             {"cmdline_input_bd_code": 'livox0000000001'},
         ],
@@ -87,19 +104,14 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression("'" + lidar_mode + "' == 'ONLINE'")),
     )
 
-  
-
-
-
     static_transform_map_to_odom = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_transform_map_to_odom',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_map_frame, ns_odom_frame],
         output='screen'
     )
-
 
     # odom -> base_link (里程计到机器人基坐标系的静态变换)
     static_transform_odom_to_base_link = Node(
@@ -107,7 +119,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='static_transform_odom_to_base_link',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'odom', 'base_link'],
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', ns_odom_frame, ns_base_link_frame],
         output='screen'
     )
 
@@ -116,7 +128,7 @@ def generate_launch_description():
         executable='static_transform_publisher',
         name='base_link_to_livox_frame_tf',
         parameters=[{'use_sim_time': DEFAULT_USE_SIM_TIME}],
-        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', 'base_link', 'livox_frame'],
+        arguments=['0.1', '0', '0.1', '0', '0.5235987756', '0', ns_base_link_frame, ns_livox_frame],
         output='screen'
     )
 
@@ -158,6 +170,7 @@ def generate_launch_description():
 
     # Assemble the launch description
     ld = LaunchDescription([
+        declare_ns_arg,
         # rviz_arg,
         livox_driver_node,
         static_transform_map_to_odom,

@@ -3,7 +3,9 @@ cd ~/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/ && source install/setup.bash
 colcon build --symlink-install --parallel-workers 4 --packages-skip livox_gazebo_garden fast_lio_robosense
 
 
-colcon build --symlink-install --packages-skip livox_gazebo_garden fast_lio_robosense --parallel-workers 2 \
+MAKEFLAGS=-j8 colcon build --symlink-install \
+  --packages-skip livox_gazebo_garden fast_lio_robosense \
+  --parallel-workers 4 \
   --cmake-args -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache
 
 
@@ -220,6 +222,8 @@ MANUAL_BUILD_MAP=False SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2
 MANUAL_BUILD_MAP=False SLAM_ALGORITHM=point_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
 
 MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified.launch.py
+
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
 
 ros2 launch fast_lio mapping.launch.py
 ros2 launch lio_sam lio_sam.launch.py

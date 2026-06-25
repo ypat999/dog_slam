@@ -1025,7 +1025,7 @@ slam_toolbox_node:
     # 扫描话题 - 绝对路径，即 /scan 而不是 scan
     scan_topic: /rkbot/scan
     # 里程计话题
-    odom_topic: lio/odom
+    odom_topic: /rkbot/lio/odom
 
     # 保持 transform publish（map->odom 发布通常需要）
     # 地图到里程计变换的发布周期，0 表示不发布变换
@@ -1079,14 +1079,14 @@ slam_toolbox_node:
     # 偏航角协方差缩放 - 控制角度估计的不确定性，值越小表示对角度估计越自信
     yaw_covariance_scale: 0.3
     
-    # # 分辨率 - 地图分辨率
+    # 分辨率 - 地图分辨率
     resolution: 0.05
     
-    # # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
-    # occupancy_threshold: 0.65
+    # 占用阈值 - 标记为占用的单元格的光束命中率与光束通过率的最小比率
+    occupancy_threshold: 0.1
     
-    # # 地图名称
-    # map_name: "map"
+    # 地图名称
+    map_name: "map"
     
     # 最小时间间隔 - 扫描处理间隔，降低频率以减少计算负载，提高长距离稳定性
     minimum_time_interval: 0.2

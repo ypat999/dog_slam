@@ -329,7 +329,7 @@ def generate_launch_description():
             'max_height': 1.0,
             'angle_min': -3.1,
             'angle_max': 3.1,
-            'angle_increment': 0.017,
+            'angle_increment': 0.0174532925166667,
             'scan_time': 0.1,
             'range_min': 0.1,
             'range_max': 100.0,

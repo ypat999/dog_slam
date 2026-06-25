@@ -281,12 +281,16 @@
       const worldX = (mouseX - offsetX) / scale + originX;
       const worldY = (offsetY - mouseY) / scale + originY;
       
-      // 检查坐标是否在有效范围内
+      // 检查坐标是否在有效范围内（origin可能为负数）
       if (currentMap) {
         const mapWidth = currentMap.info.width * currentMap.info.resolution;
         const mapHeight = currentMap.info.height * currentMap.info.resolution;
+        const minX = originX;
+        const maxX = originX + mapWidth;
+        const minY = originY;
+        const maxY = originY + mapHeight;
         
-        if (worldX < 0 || worldX > mapWidth || worldY < 0 || worldY > mapHeight) {
+        if (worldX < minX || worldX > maxX || worldY < minY || worldY > maxY) {
           return; // 点击在地图范围外，忽略
         }
       }
@@ -1448,13 +1452,8 @@
       function startMapToOdomTFQuery(ros) {
         console.log('启动TF查询，跟踪map→odom→world→base_footprint链');
         
-        const tfTopic = new ROSLIB.Topic({
-          ros: ros,
-          name: TF_TOPIC,
-          messageType: 'tf2_msgs/TFMessage'
-        });
-        
-        tfTopic.subscribe(function(tfMsg) {
+        // 处理TF消息的通用函数（同时用于/tf和/tf_static）
+        function processTfMessage(tfMsg) {
           if (!tfMsg.transforms) return;
           
           // 先遍历，提取map→odom和odom→world
@@ -1466,6 +1465,10 @@
             if (parent === nsFrame('map') && child === nsFrame('odom')) {
               mapToOdomTransform = extractTransform(t.transform);
               lastMapToOdomUpdate = Date.now();
+              console.log('[TF-DEBUG] 收到map→odom变换:', 
+                'tx=', mapToOdomTransform.translation.x.toFixed(3), 
+                'ty=', mapToOdomTransform.translation.y.toFixed(3),
+                'from topic:', tfMsg._topic || 'unknown');
             }
             
             // odom→world
@@ -1482,6 +1485,9 @@
           // 从map→odom + odom→world 合成 map→world
           if (mapToOdomTransform && window.odomToWorldTransform) {
             window.mapToWorldTransform = composeTransforms(mapToOdomTransform, window.odomToWorldTransform);
+          } else if (mapToOdomTransform && !window.odomToWorldTransform) {
+            // odom→world未发布（恒等变换），直接用map→odom作为map→world
+            window.mapToWorldTransform = mapToOdomTransform;
           }
           
           // 再遍历，从world→base_footprint推算机器人位置
@@ -1491,13 +1497,22 @@
               const wp = extractTransform(t.transform);
               
               let pos = null;
+              let method = '';
               if (parent === nsFrame('world')) {
+                method = 'applyMapToWorldTransform(world→base)';
                 pos = applyMapToWorldTransform(wp.translation.x, wp.translation.y, quaternionToYaw(wp.rotation));
               } else if (parent === nsFrame('odom') && mapToOdomTransform) {
+                method = 'applyMapToOdomTransform(odom→base)';
                 pos = applyMapToOdomTransform(wp.translation.x, wp.translation.y, quaternionToYaw(wp.rotation));
               }
               
               if (pos) {
+                if (window.mapToWorldTransform) {
+                  console.log('[TF-DEBUG] 机器人位置计算:', method,
+                    ' | world base:', wp.translation.x.toFixed(3), wp.translation.y.toFixed(3),
+                    ' | map→world:', window.mapToWorldTransform.translation.x.toFixed(3), window.mapToWorldTransform.translation.y.toFixed(3),
+                    ' |最终map位置:', pos.x.toFixed(3), pos.y.toFixed(3));
+                }
                 robotPosition.x = pos.x;
                 robotPosition.y = pos.y;
                 robotPosition.theta = pos.theta;
@@ -1506,7 +1521,23 @@
               break; // 只需要最新的一个
             }
           }
+        }
+        
+        // 订阅 /tf（动态变换）
+        const tfTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/tf',
+          messageType: 'tf2_msgs/TFMessage'
         });
+        tfTopic.subscribe(processTfMessage);
+        
+        // 也订阅 /tf_static（静态变换，如map→odom）
+        const tfStaticTopic = new ROSLIB.Topic({
+          ros: ros,
+          name: '/tf_static',
+          messageType: 'tf2_msgs/TFMessage'
+        });
+        tfStaticTopic.subscribe(processTfMessage);
       }
       
       function extractTransform(tf) {
@@ -2213,7 +2244,7 @@
     // 发送控制模式命令
     function sendCtrlMode(modeValue) {
       if (!ros) {
-        alert('ROS未连接，请先连接ROS Bridge');
+        console.error('ROS未连接，请先连接ROS Bridge');
         return;
       }
       
@@ -2230,10 +2261,10 @@
       service.callService(request, function(result) {
         console.log('控制模式设置成功:', result);
         const modeNames = {0: '趴下', 1: '站立', 2: '半蹲', 61: '退出充电', 62: '进入充电'};
-        alert(`已设置为${modeNames[modeValue] || ('模式' + modeValue)}模式`);
+        showMessage(`已设置为${modeNames[modeValue] || ('模式' + modeValue)}模式`);
       }, function(error) {
         console.error('控制模式设置失败:', error);
-        alert('控制模式设置失败，请检查ROS连接');
+        showMessage('控制模式设置失败，请检查ROS连接');
       });
     }
     

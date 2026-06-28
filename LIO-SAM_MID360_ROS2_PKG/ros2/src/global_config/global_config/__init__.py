@@ -178,11 +178,11 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - Super-LIO
         'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
-        'SUPER_LIO_SAVE_MAP': False,  # 离线开发可能需要保存地图
+        'SUPER_LIO_SAVE_MAP': True,  # 离线开发可能需要保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_X': -0.15,  # 雷达x轴偏移量
         'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',

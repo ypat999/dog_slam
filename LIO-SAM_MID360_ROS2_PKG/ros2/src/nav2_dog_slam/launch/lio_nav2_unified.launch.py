@@ -588,18 +588,35 @@ def generate_launch_description():
             {"mapping_line_resolution": 0.4},
             {"mapping_plane_resolution": 0.8},
             {"mapviz_filter_size": 0.05},
-            {"keyframe_meter_gap": 1.0},
+            {"keyframe_meter_gap": 5.0},
+            {"keyframe_deg_gap": 30.0},
             {"sc_dist_thres": 0.3},
             {"sc_max_radius": 290.0},
             {"save_directory": SC_PGO_SAVE_DIRECTORY},
-            {"use_sim_time": use_sim_time}
+            {"use_sim_time": use_sim_time},
+            # GICP parameters (from btc_config.yaml)
+            {"use_gicp_for_loop_closure": True},
+            {"gicp_fitness_score_threshold": 0.25},
+            {"gicp_max_correspondence_distance": 10.0},
+            {"gicp_max_iterations": 64},
+            {"gicp_transformation_epsilon": 0.001},
+            {"gicp_max_init_translation": 10.0},
+            {"gicp_num_threads": 4},
+            {"gicp_scan_ds_size": 0.1},
+            {"gicp_coarse_ds_size": 0.25},
+            {"gicp_coarse_max_iter": 50},
+            {"gicp_coarse_max_dist": 10.0},
+            # Loop validation (from btc_config.yaml)
+            {"max_loop_distance": 10.0},
+            {"max_yaw_diff": 6.28},
+            {"odom_direct_threshold": 1.0},
         ],
         remappings=[
-            ("/aft_mapped_to_init", lio_config['odom_topic']),
-            ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
-            ("/cloud_for_scancontext", lio_config['pointcloud_topic']),
-            ("/tf", "tf"),
-            ("/tf_static", "tf_static"),
+            ("aft_mapped_to_init", lio_config['odom_topic']),
+            ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
+            ("cloud_for_scancontext", lio_config['pointcloud_topic']),
+            ("tf", "/tf"),
+            ("tf_static", "/tf_static"),
         ],
         prefix=['taskset -c 6'],
     )
@@ -662,14 +679,14 @@ def generate_launch_description():
                 )
             )
 
-    # if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
-    #     # 建图模式 + SC-PGO
-    #     unified_nodes.append(
-    #         TimerAction(
-    #             period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
-    #             actions=[sc_pgo_node]
-    #         )
-    #     )
+    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+        # 建图模式 + SC-PGO
+        unified_nodes.append(
+            TimerAction(
+                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+                actions=[sc_pgo_node]
+            )
+        )
     
 
         

@@ -642,7 +642,7 @@ def generate_launch_description():
     web_actions.append(rosbridge_websocket)
     
     # 3. 建图模式配置
-    if MANUAL_BUILD_MAP:
+    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
         if BUILD_TOOL == 'slam_toolbox':
             # 建图模式 + slam_toolbox
             # unified_nodes.append(declare_slam_toolbox_params_cmd)
@@ -679,14 +679,14 @@ def generate_launch_description():
                 )
             )
 
-    if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
-        # 建图模式 + SC-PGO
-        unified_nodes.append(
-            TimerAction(
-                period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
-                actions=[sc_pgo_node]
-            )
-        )
+    # if MANUAL_BUILD_MAP or AUTO_BUILD_MAP:
+    #     # 建图模式 + SC-PGO
+    #     unified_nodes.append(
+    #         TimerAction(
+    #             period=10.0,  # 延迟10秒启动SC-PGO，确保LIO算法已初始化
+    #             actions=[sc_pgo_node]
+    #         )
+    #     )
     
 
         

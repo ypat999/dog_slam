@@ -1,0 +1,23 @@
+# config/robot_roamerx.yaml
+robot_roamerx:
+  ros__parameters:
+    log_level: !!str info
+    server_ip: "192.168.168.100"  # nx robot_alg_mgr ip
+    # server_ip: "127.0.0.1"  # nx robot_alg_mgr ip
+    server_port: "10012"
+    reconnect_interval_ms : 5000
+    error_log_throttle_min: 1
+    enable_forward_cmd_vel : !!bool false
+    arc:
+      enable_arc: !!bool true
+      net:
+        broadcast_addr: !!str "192.168.234.255"
+        port: !!int 53100
+        broadcast_interval_ms: !!int 500
+        filter_local: !!bool true
+        local_ip: !!str "192.168.234.1"
+      contact_check_window_ms: !!int 3000
+      close_pin_on_contact_fail: !!bool true
+      finished_hold_ms: !!int 3000
+      contact_to_charging_hold_ms: !!int 3000
+      passive_to_standby_hold_ms: !!int 3000

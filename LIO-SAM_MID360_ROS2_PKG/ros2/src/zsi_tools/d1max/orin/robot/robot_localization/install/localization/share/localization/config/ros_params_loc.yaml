@@ -1,0 +1,29 @@
+localization:
+  ros__parameters:
+    enable_ota_calibration: true
+    calibration_file_path: "/ota/calibration_results.yaml"
+    sub_lidar_topic: "/front_lidar"            # "/rslidar_points_head" | "/livox/lidar"
+    sub_imu_topic: "/front_lidar/imu"            # "/rslidar_imu_data_head" | "/livox/imu"
+    sub_gps_topic: "/gps/rtk"
+    sub_rtk_pvh_topic: "/rtk_pvh"
+    sub_odom_topic: "/odom/mc_odom"
+    sub_camera_topic: "/front_camera/image_compressed"   #"/front_camera/image_compressed"
+    sub_rtk_pos_topic: "/uni_best_nav"
+    sub_rtk_head_topic: "/uni_heading"
+    enable_realsense: false
+    use_pcl_normal: true      # 2.0 faslio/fasterlio use normal(true), 1.0 ukf localization not use normal(false)
+    process_every_n_frames: 1  # 每N帧雷达数据处理1帧, NX 1; 3588 2
+    
+    # 发布topic配置
+    pub_lidar_odom_topic: "/odom/localization_odom"    # LiDAR里程计发布topic   # "/odom/ground_truth" "/odom/current_pose" "/odom/localization_odom"
+    pub_gnss_eskf_topic: "/odom/localization_odom"     # GNSS ESKF发布topic    # "/odom/ground_truth" "/odom/current_pose" "/odom/localization_odom"
+    pub_lio_pose_topic: "/lio_pose"
+    pub_aligned_points_topic: "/aligned_points"    # 对齐点云发布topic
+    pub_global_map_points_topic: "/global_map_points"  # 全局地图点云发布topic
+    pub_body_points_topic: "/body_points"  # 机体坐标系点云发布topic
+    pub_perception_points_topic: "/perception_points"  # 融合感知点云发布topic
+    pub_localization_info_topic: "/localization_info"  # 定位信息发布topic
+    pub_localization_state_topic: "/localization_state"  # 定位状态发布topic
+    pub_localization_path_topic: "/localization_path"  # 定位路径发布topic
+
+    lidar_format: "livox"    # livox | rslidar | velodyne

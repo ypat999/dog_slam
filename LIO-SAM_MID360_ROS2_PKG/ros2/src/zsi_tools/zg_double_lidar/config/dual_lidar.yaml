@@ -1,0 +1,165 @@
+/**:
+  ros__parameters:
+    lio.map.save_map: false
+    lio.map.if_filter: false
+    lio.map.save_map_dir: "/home/robot/slam_data/pcd"
+    lio.map.map_name: "dual_lidar_map.pcd"
+    lio.map.ds_size: 0.2
+    lio.map.save_interval: 50
+    lio.map.pcd_prefix: "dual_"
+
+    lio.ros.lidar_topic: "/front_lidar"
+    lio.ros.imu_topic: "/front_lidar/imu"
+    lio.ros.map_save_service_topic: "/map_save"
+
+    lio.sensor.lidar_type: 9
+    lio.sensor.blind: 0.1
+    lio.sensor.maxrange: 200.0
+    # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
+    # 原值11过于激进，严重破坏空间连续性
+    # 建议设为1~2，依赖体素滤波进行空间均匀降采样
+    lio.sensor.filter_rate: 16
+    # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
+    lio.sensor.enable_filter_offset: false
+    # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
+    lio.sensor.full_column_interval: 16
+    # 多线雷达线数（Airy=96）
+    lio.sensor.lidar_channels: 96
+    lio.sensor.enable_downsample: true
+    lio.sensor.voxel_fliter_size: 0.1
+    lio.sensor.intensity_filter_en: false
+    lio.sensor.intensity_min: 10.0
+    lio.sensor.gravity_norm: 9.81
+    lio.sensor.imu_type: 1
+    lio.sensor.imu_na: 0.1
+    lio.sensor.imu_ng: 0.1
+    lio.sensor.imu_nba: 0.0001
+    lio.sensor.imu_nbg: 0.0001
+
+    lio.extrinsic.lidar_imu: [0.0, 0.0, 0.0,
+                              0.0, -1.0, 0.0,
+                              -1.0, 0.0, 0.0,
+                              0.0, 0.0, -1.0]
+    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36615, 0.0, 1.57, 0.0]
+
+    lio.hash_map.hash_capacity: 2000000
+    lio.hash_map.vox_resolution: 0.2
+
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 4
+    lio.kf.kf_align_gravity: true
+    lio.kf.ref_gravity_axis: 0
+    lio.kf.kf_quit_eps: 0.001
+
+    lio.output.robot: true
+    lio.output.plan_env_world: false
+    lio.output.plan_env_body: false
+    lio.output.ml_map: false
+    lio.output.planner: false
+    lio.output.map: true
+    lio.output.dense: false
+    lio.output.map_body: true
+    lio.output.dense_body: true
+    lio.output.pub_step: 1
+    lio.output.footprint_pub_en: false
+    lio.output.tf_base_footprint_frame: "base_footprint"
+    lio.output.world_frame: "world"
+    lio.output.imu_frame: "imu"
+
+    lio.eva.timer: true
+
+    lio.dynamic_removal.enable: false
+    lio.dynamic_removal.method: 0
+    lio.dynamic_removal.grid_size: 0.2
+    lio.dynamic_removal.min_neighbors: 2
+    lio.dynamic_removal.frame_window: 1
+    lio.dynamic_removal.raycast_min_hits: 2
+    lio.dynamic_removal.isolated_removal: false
+
+    lio.lio_only_undistort: false
+    lio.single_core: true
+    lio.fast_tf: false
+
+    # ======================== 退化检测与正则化 ========================
+    # 是否启用观测 Hessian 退化检测。true: 在病理方向上截断 LiDAR 观测，
+    # 改为依赖 IMU 预积分驱动，并附加 Tikhonov 底板防止协方差奇异。
+    lio.degeneracy.detect_en: false
+
+    # 退化判定阈值（条件数阈值）：cond = max_eig / min_eig。
+    # 当 cond > threshold 时触发退化处理。
+    # 值越小越敏感（更容易判定为退化），典型值 100。
+    lio.degeneracy.threshold: 100.0
+
+    # Tikhonov 正则化强度：lambda * avg(H) * I 加到 Hessian 对角。
+    # 作用：退化方向 LiDAR 贡献被截断为 0 后，Tikhonov 提供极小底板
+    # （约 0.1% 均值特征值），仅保证协方差可逆，不注入假几何约束。
+    #
+    # 【调参经验】
+    # 0.1~1.0 → 正则化过强，退化方向注入虚假约束 → TF 抖动（flooring 效应）
+    # 0.001   → 纯数值防护，不干扰退化方向的 IMU 主导权
+    #
+    # 注意：若增大此值仍然漂移，说明漂移根因是 IMU 偏置在无观测方向上
+    # 自由累积，应从偏置估计（bg/ba 的随机游走噪声、偏置重置机制）入手，
+    # 而非继续增大 Tikhonov。
+    lio.degeneracy.tikhonov_lambda: 0.001
+
+    # 有效匹配点下限。单帧 point-to-plane 匹配数少于此值则跳过观测更新，
+    # 该帧完全由 IMU 传播驱动。贴墙/空旷场景 H=0 时的小特征值是噪声，
+    # 强行纳入卡尔曼更新反而导致发散。
+    lio.degeneracy.min_effect_pts: 20
+
+    # 连续跳过观测更新的帧数上限。超限时 bg/ba 重置为 0，防止贴墙环境
+    # 中偏置无限漂移（偏置漂移 → 点云畸变 → 匹配失败 → 持续跳过 → 恶性循环）。
+    lio.bias_reset_skip_threshold: 20
+
+    # 是否启用距离相关的观测权重（替代硬编码×1000）
+    lio.adaptive_weight.en: true
+    # 自适应权重衰减距离Sigma(米)，越大则远端点权重衰减越慢
+    lio.adaptive_weight.sigma: 30.0
+    
+    # ======================== 时间戳模式 ========================
+    # 是否使用本机时间戳替代话题原始时间戳。true: 用 this->now() 覆盖IMU/LiDAR时间戳;
+    # false: 保留话题header中的原始时间戳。在线实时运行时建议true(避免时钟不同步)，
+    # 回放rosbag时建议false(保证时间基准一致)
+    lio.ros.use_local_timestamp: true
+
+    # ======================== 观测参数 ========================
+    # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m,原装0.1
+    lio.observe.plane_fit_threshold: 0.1
+
+    # 观测权重，等价于 1/σ²（σ为点到面残差标准差）
+    # 权重越高，ESKF越信任观测，响应越快但越容易过冲震荡
+    # Mid-360(高精度): 1000 (σ≈0.032m)
+    # Airy(低精度):    200  (σ≈0.071m, 5m处法向偏差±0.1m)
+    lio.observe.obs_weight: 200
+
+    # Huber核基础阈值(米)：点到面残差小于此值使用满权重，超过时线性降权
+    # 设为近处(5m)残差标准差的1.5~2倍
+    # Mid-360: 0.05, Airy: 0.10
+    # 作用：静止时bias漂移导致残差偏大，Huber核自动降权防止修正过冲震荡
+    lio.observe.huber_delta_base: 0.10
+
+    # Huber核距离缩放系数(米/米)：远处点测量噪声更大，阈值随距离线性增长
+    # delta = huber_delta_base + huber_delta_scale × 点距离
+    # 0.003: 30m处阈值增加0.09m，保证走廊尽头远点不被误降权
+    lio.observe.huber_delta_scale: 0.003
+
+    lio.ros.imu_qos_reliable: true
+    lio.ros.lidar_qos_reliable: false
+
+    lio.sc_pgo.enable: false
+    lio.sc_pgo.keyframe_gap: 5.0
+    lio.sc_pgo.keyframe_deg_gap: 10.0
+
+    # ======================== 双雷达扩展参数 ========================
+    # 后雷达点云话题
+    lio.dual.rear_lidar_topic: "/rear_lidar"
+    # 后雷达IMU话题
+    lio.dual.rear_imu_topic: "/rear_lidar/imu"
+    # 后雷达→前雷达外参 [tx, ty, tz, roll, pitch, yaw(deg)]
+    # rslidar_head→rslidar_tail TF: [0,0,-1.028, 180,180,0] → 逆: Rx(180°), t=[0,0,-1.028]
+    lio.dual.rear_to_front: [0.0, 0.0, -0.7323, 180.0, 0.0, 0.0]
+    # 双IMU融合降噪：前后IMU时间对齐后取平均
+    lio.dual.imu_fusion: true
+    # 前后雷达共享IVox地图：true=共享, false=各自独立
+    lio.dual.share_ivox: false

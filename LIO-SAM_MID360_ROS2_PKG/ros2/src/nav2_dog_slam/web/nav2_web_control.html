@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROS2 Web导航控制</title>
+  <!-- 使用简化的依赖，只保留必要的roslib -->
+  <script src="libs/roslib.min.js?v=2"></script>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #eee;
+      font-family: "Segoe UI", sans-serif;
+      display: flex;
+      padding: 10px;
+      margin: 0;
+      height: calc(100vh - 20px);
+      box-sizing: border-box;
+    }
+    #control-panel {
+      width: 300px;
+      padding: 10px;
+      margin-right: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    #map-container {
+      position: relative;
+      flex: 1;
+      border: 2px solid #555;
+      background-color: #2a2a2a;
+      overflow: hidden;
+      min-width: 0; /* 允许flex子元素收缩 */
+    }
+    #map-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      z-index: 1;
+    }
+    #laser-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+      z-index: 2;
+      pointer-events: none; /* 让鼠标事件穿透到下层 */
+    }
+    .marker {
+      background: none;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+      content: "";
+      pointer-events: none;
+    }
+    
+    #robot-marker {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      transform: translate(-50%, -50%) rotate(0deg);
+      display: none;
+      z-index: 10;
+    }
+    #goal-marker {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #00ff00;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 5;
+    }
+    #initial-pose-marker {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background-color: #ff8800;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      z-index: 6;
+      border: 2px solid #ffffff;
+      pointer-events: none;
+    }
+    #goal-arrow, #initial-pose-arrow {
+      pointer-events: none;
+    }
+    #status {
+      margin: 10px;
+      font-size: 14px;
+    }
+    #map-info {
+      margin: 10px 0;
+      font-size: 12px;
+      color: #aaa;
+    }
+    button {
+      background: #3a7bd5;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    button:hover {
+      background: #2a5fb0;
+    }
+    
+    /* 侧边栏折叠按钮 */
+    #toggle-sidebar-btn {
+      width: 20px;
+      min-width: 20px;
+      background: #3a3a3a;
+      border: 1px solid #555;
+      border-left: none;
+      border-right: none;
+      color: #aaa;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      margin-right: 10px;
+      border-radius: 0;
+      font-size: 14px;
+      user-select: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    #toggle-sidebar-btn:hover {
+      background: #555;
+      color: #fff;
+    }
+    #toggle-sidebar-btn.collapsed {
+      margin-right: 0;
+      margin-left: 0;
+      border-left: 1px solid #555;
+      border-right: 1px solid #555;
+    }
+    
+    /* 侧边栏折叠状态 */
+    #control-panel.collapsed {
+      width: 0;
+      padding: 0;
+      margin-right: 0;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    body.sidebar-collapsed #map-container {
+      border-radius: 4px;
+    }
+    
+    /* 地图缩放按钮 */
+    #map-zoom-controls {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      pointer-events: none;
+    }
+    #map-zoom-controls button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      margin: 0;
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 40px;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(58, 123, 213, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    #map-zoom-controls button:hover {
+      background: #3a7bd5;
+    }
+    #map-zoom-controls button:active {
+      background: #2a5fb0;
+    }
+    
+    /* 地图平移控制按钮 */
+    #map-pan-grid {
+      display: grid;
+      grid-template-columns: 40px 40px 40px;
+      gap: 2px;
+      margin-bottom: 4px;
+      justify-items: center;
+      align-items: center;
+    }
+    #map-pan-grid .pan-placeholder {
+      width: 40px;
+      height: 40px;
+      visibility: hidden;
+    }
+    #map-pan-grid button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      margin: 0;
+      font-size: 20px;
+      font-weight: bold;
+      line-height: 40px;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(58, 123, 213, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    #map-pan-grid button:hover {
+      background: #3a7bd5;
+    }
+    #map-pan-grid button:active {
+      background: #2a5fb0;
+    }
+    #map-pan-grid .pan-center-btn {
+      background: rgba(200, 100, 50, 0.85);
+      font-size: 16px;
+    }
+    #map-pan-grid .pan-center-btn:hover {
+      background: #cc7733;
+    }
+  </style>
+</head>
+<body>
+  <div id="control-panel">
+    <h2>ROS2 网页导航控制</h2>
+    <div id="status">连接状态：<span id="conn-status">未连接</span></div>
+    <div id="map-info">地图信息：等待连接...</div>
+    
+    <!-- 主机名配置 -->
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+      <label for="hostname-input">ROS主机名/IP：</label>
+      <input type="text" id="hostname-input" value="" placeholder="留空使用当前主机" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
+      <button onclick="updateHostname()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
+    </div>
+    
+    <!-- 命名空间配置 -->
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+      <label for="namespace-input">机器人命名空间：</label>
+      <input type="text" id="namespace-input" value="/rkbot" placeholder="留空表示不设命名空间" style="width: 150px; padding: 4px; background: #333; color: #fff; border: 1px solid #555; border-radius: 3px;">
+      <button onclick="updateNamespace()" style="margin-left: 5px; padding: 4px 8px; font-size: 12px;">更新</button>
+    </div>
+    <div>
+      <button onclick="clearGoal()">清除目标</button>
+      <button onclick="resetZoom()">重置缩放</button>
+      <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
+        操作提示：第一次点击定位置，第二次点击定方向
+      </div>
+    </div>
+    <div style="margin-top: 10px;">
+      <button onclick="setInitialPose()">设置初始点</button>
+      <button onclick="clearInitialPose()">清除初始点</button>
+      <span id="initial-pose-status">未设置</span>
+      <div style="margin-top: 5px; font-size: 12px; color: #aaa;">
+        操作提示：第一次点击定位置，第二次点击定方向
+      </div>
+    </div>
+    <div style="margin-top: 10px;">
+      <select id="position-source-select" onchange="changePositionSource(this.value)">
+        <option value="amcl" selected>使用AMCL定位</option>
+        <option value="super_lio">使用super_lio里程计</option>
+        <option value="pcl_pose">使用3D定位(PCL)</option>
+      </select>
+      <span id="position-source-status">当前：使用AMCL定位</span>
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <label>
+        <input type="checkbox" id="show-laser-scan" onchange="toggleLaserScan(this.checked)" checked>
+        显示激光扫描数据
+      </label>
+      <label style="margin-left: 10px;">
+        <input type="checkbox" id="show-local-costmap" onchange="toggleLocalCostmap(this.checked)">
+        显示local_costmap
+      </label>
+    </div>
+    
+    <!-- 机器人控制按钮 -->
+    <div style="margin-top: 10px;">
+      <h3>机器人控制</h3>
+      <div style="margin-bottom: 10px;">
+        <button onclick="sendCtrlMode(1)">站立</button>
+        <button onclick="sendCtrlMode(2)">半蹲</button>
+        <button onclick="sendCtrlMode(0)">趴下</button>
+        <button onclick="sendCtrlMode(61)">退出充电</button>
+        <button onclick="sendCtrlMode(62)">进入充电</button>
+      </div>
+      <div>
+        <button onclick="stopRobotControl()">关闭控制服务</button>
+        <button onclick="startRobotControl()">启动控制服务</button>
+      </div>
+    </div>
+    
+    <!-- Teleop控制按钮 -->
+    <div style="margin-top: 10px;">
+      <h3>远程控制</h3>
+      
+      <!-- 9宫格控制按钮（x轴和z旋转） -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-bottom: 10px;">
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, 1.0)">左前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, 0)">前进</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0, 0, 0, 0, -1.0)">右前</button>
+        
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, 1.0)">左转</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, 0)">停止</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0, 0, 0, 0, -1.0)">右转</button>
+        
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, 1.0)">左后</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, 0)">后退</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0, 0, 0, 0, -1.0)">右后</button>
+      </div>
+      
+      <!-- x轴和y轴组合按钮 -->
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 3px; margin-bottom: 10px;">
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, 0.5, 0, 0, 0, 0)">左前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0.5, -0.5, 0, 0, 0, 0)">右前</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, 0.5, 0, 0, 0, 0)">左移</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(0, -0.5, 0, 0, 0, 0)">右移</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, 0.5, 0, 0, 0, 0)">左后</button>
+        <button style="padding: 4px 8px; font-size: 12px;" onclick="sendCmdVel(-0.5, -0.5, 0, 0, 0, 0)">右后</button>
+      </div>
+    </div>
+  </div>
+  <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="收起/展开侧边栏">◀</button>
+  <div id="map-container">
+    <canvas id="map-canvas"></canvas>
+    <canvas id="laser-canvas"></canvas>
+    <div id="robot-marker" class="marker"></div>
+    <div id="goal-marker" class="marker"></div>
+    <div id="initial-pose-marker" class="marker"></div>
+    <div id="map-zoom-controls">
+      <div id="map-pan-grid">
+        <div class="pan-placeholder"></div>
+        <button onclick="panUp()" title="上移">↑</button>
+        <div class="pan-placeholder"></div>
+        <button onclick="panLeft()" title="左移">←</button>
+        <button class="pan-center-btn" onclick="resetViewCenter()" title="居中复位">⊙</button>
+        <button onclick="panRight()" title="右移">→</button>
+        <div class="pan-placeholder"></div>
+        <button onclick="panDown()" title="下移">↓</button>
+        <div class="pan-placeholder"></div>
+      </div>
+      <button onclick="zoomIn()" title="放大">+</button>
+      <button onclick="zoomOut()" title="缩小">−</button>
+    </div>
+  </div>
+
+  <script src="libs/nav2_web_control.js?v=1"></script>
+</body>
+</html>

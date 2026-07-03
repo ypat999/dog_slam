@@ -1,0 +1,136 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 1000  # Hz
+
+    joint_shm_controller:
+      type: joint_controller/JointShmController
+
+    imu_shm_publisher:
+      type: imu_publisher/ImuShmPublisher
+    
+    switch_controller:
+      type: switch_controller/SwitchController
+
+    battery_controller:
+      type: battery_controller/BatteryController
+
+    sbus_controller:
+      type: sbus_controller/SbusController
+
+    fill_light_controller:
+      type: fill_light_controller/FillLightController
+
+    led_controller:
+      type: led_controller/LedController
+      
+joint_shm_controller:
+  ros__parameters:
+    state_pub_rate: 200.0  # Hz, 0.0 to disable
+    sensor_pub_rate: 1.0
+    enable_pub_cmd: true
+    enable_shm_control: true
+    enable_topic_control: false
+    joint_cmd_timeout: 500 # ms
+
+    estop_kd: 35.0
+    hw_estop_interface: hw_estop/switch_state
+    estop_exclude_joints:
+      - reserved
+
+    joint_cmd_shm_name: joint_cmd
+    joint_state_shm_name: joint_state
+    joints:
+      - fl1_hip_roll
+      - fl2_hip_pitch
+      - fl3_knee_pitch
+
+      - fr1_hip_roll
+      - fr2_hip_pitch
+      - fr3_knee_pitch
+
+      - bl1_hip_roll
+      - bl2_hip_pitch
+      - bl3_knee_pitch
+
+      - br1_hip_roll
+      - br2_hip_pitch
+      - br3_knee_pitch
+
+imu_shm_publisher:
+  ros__parameters:
+    pub_rate: 200.
+    imu_names:
+      - imu_central
+    
+    imu_central:
+      frame_id: imu_sensor_frame
+      enable_shm: true
+      enable_topic: true
+      interface_name: imu_central/state
+
+switch_controller:
+  ros__parameters:
+    pub_rate: 10.
+    # cmd_switches:    # switch list, controller will find switch_name/switch_cmd interface from resouces manager
+      # - power_leg
+      # - power_rk
+      # - power_24v_in
+      # - power_bat_fan
+      # - power_ext_24v
+      # - power_battery
+      # - power_orin
+      # - power_can
+      # - front_light
+      # - back_light
+    
+    state_switches:
+      - hw_estop
+
+battery_controller:
+  ros__parameters:
+    pub_rate: 1.
+    batterys: 
+      - battery1
+      - battery2
+
+sbus_controller:
+  ros__parameters:
+    state_interface_name: sbus/state
+    min_channel_val: 42
+    mid_channel_val: 1002
+    max_channel_val: 1962
+    dead_zone: 0.0
+    min_vel_x: 1.0
+    min_vel_y: 0.5
+    min_yaw_rate: 1.0
+    mid_vel_x: 2.0
+    mid_vel_y: 0.8
+    mid_yaw_rate: 2.0
+    max_vel_x: 3.0
+    max_vel_y: 1.0
+    max_yaw_rate: 3.0
+    vel_x_reverse: false
+    vel_y_reverse: true
+    yaw_reverse: true
+    enable_ecal_topic_publish: true
+    enable_ros_topic_publish: true
+    publish_interval_ms: 10
+    timeout_ms: 500
+
+fill_light_controller:
+  ros__parameters:
+    auto_mode: false
+    ambient_lux_threshold: 100.0
+    ambient_light_lux_interface: light_sensor/lux
+    light_names:
+      - front_light
+      - back_light
+
+led_controller:
+  ros__parameters:
+    log_level: info
+    lookup_rate: 10.
+    led_front_cmd_ifs_name: led_front/cmd
+    led_back_cmd_ifs_name: led_back/cmd
+    estop_ifs_name: hw_estop/switch_state
+  

@@ -1,0 +1,124 @@
+cmake_minimum_required(VERSION 3.5)
+project(nav2_dog_slam)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+cmake_policy(SET CMP0074 NEW)
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+
+# Python script for initial pose publishing (install as script, not as executable target)
+
+
+
+
+# Install launch files
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+# Install configuration files
+install(
+  DIRECTORY config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+# # Install Python scripts with symlink support
+# install(
+#   DIRECTORY scripts
+#   DESTINATION lib/${PROJECT_NAME}/
+#   PATTERN "*.py"
+# )
+
+# Install Python scripts as executables with symlink support
+install(
+  PROGRAMS scripts/publish_initial_pose.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the new SURF map matching script as executable
+install(
+  PROGRAMS scripts/surf_map_matching.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install the GPS Waypoint Navigator script as executable
+install(
+  PROGRAMS scripts/gps_waypoint_navigator.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install AMCL initial pose estimator script as executable
+install(
+  PROGRAMS scripts/amcl_initial_pose_estimator.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps preprocessor script as executable
+install(
+  PROGRAMS src/gps_preprocessor.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps test publisher script as executable
+install(
+  PROGRAMS scripts/gps_test_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps fusion verification script as executable
+install(
+  PROGRAMS scripts/verify_gps_fusion.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install gps map calibrator script as executable
+install(
+  PROGRAMS src/gps_map_calibrator.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install odom corrector script as executable
+install(
+  PROGRAMS src/odom_corrector.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install USS republisher script as executable
+install(
+  PROGRAMS scripts/uss_republisher.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install web interface files
+install(
+  DIRECTORY web
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+# Install scripts
+install(
+  DIRECTORY scripts
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_package()

@@ -1,0 +1,12 @@
+max_image_cache_size: 1
+hz: 10
+det_dnn_cfg: detection/det_dnn_config.yaml
+camera_cfg: detection/camera.yaml
+
+track_cfg: detection/track_config.yaml
+
+vis_cfg:
+    track_mode: "single_track"
+    text_color: [0, 255, 255]
+    number_color: [255, 0, 0]
+    class_names: ["person", "car"]

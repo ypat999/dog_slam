@@ -1,0 +1,11 @@
+pub_obs_point_topic_name: /laser_scan
+pub_state_topic_name: /perception_state
+pub_polygon_topic_name: /polygons
+
+msg_names_config: perception_job/message_names.yaml
+image_topic_name: /front_camera/image_compressed
+lidar_topic_name: /front_lidar
+odom_topic_name: /odom/mc_odom
+pub_seg_vis_topic_name: /seg_vis/compressed
+
+T_lidar_rs: [-0.00442166514215539, -0.33596451162897994, 0.9418642661250463, 0.05676099317985453, -0.9999636570967201, -0.005380133471349607, -0.0066135202111813896, 0.006129523160996329, 0.007289263551545411, -0.9418592788149043, -0.3359285125545979, -0.06997502575552486, 0.0, 0.0, 0.0, 1.0]

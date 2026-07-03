@@ -1,0 +1,151 @@
+robot_hal:
+  ros__parameters:
+    spinners: 4
+    use_sim_time: false
+    cpu_affinity: 7
+    thread_priority: 90
+    logger_enable: false
+    logger_pool_size: 8192
+    logger_thread_count: 4
+    
+    default_controllers:
+      - switch_controller
+      - battery_controller
+      - imu_shm_publisher
+      # - sbus_controller
+      - fill_light_controller
+      - led_controller
+      - joint_shm_controller
+
+power_control_driver:
+  ros__parameters:
+    Offline_time: 3000  # ms
+    # dev: /dev/ttyUSB0
+    dev: /dev/ttyCH9344USB6
+    baudrate: 460800
+    led_error_blink_count: 3
+    # self test parameter
+    min_power_fw_ver: 0x00000000
+    min_power_bl_ver: 0x00000000
+    min_hotswap_fw_ver: 0x00000000
+    min_hotswap_bl_ver: 0x00000000
+    # diagnoitcs
+    power_low: 20
+    power_min: 10
+
+    battery_log_enable: true
+    battery_log_size: 50  # MB
+    battery_log_file_num: 10
+    battery_log_dir: /home/robot/debug_log
+
+gpio_driver:
+  ros__parameters:
+    gpio_names:
+      - demo_gpio_input
+    
+    demo_gpio_input:
+      direction: input
+      chip: gpiochip0
+      number: 10
+      invert: false
+
+zsi_imu_driver:
+  ros__parameters:
+    dev: /dev/ttyS1
+    baudrate: 921600
+    imu_name: imu_central
+    filter_dt: 0.001
+    filter_type: 0 # 0: null, 1: digital_lp_filter
+    recv_timeout: 500  #ms
+    cpu_affinity: -1
+    thread_priority: 90
+    pose_param_path: /userdata/bak/calibration/pose_calibrate_param.yaml
+    crc_error_threshold: 8  # 一定时间内允许的 CRC 错误总数
+    crc_consecutive_error_threshold: 5  # 连续CRC错误次数超过该值则报警
+
+ltr_light_sensor_driver:
+  ros__parameters:
+    light_sensor_name: light_sensor
+    dev: /dev/i2c-2
+    address: 0x23
+    fetch_rate: 1.0
+    window_factor: 1.0
+    gain: 1
+    integration_time: 100
+    measurement_rate: 400
+
+zsi_actuator_driver:
+  ros__parameters:
+    recv_cpu_affinity: -1
+    recv_thread_priority: 90
+    limit_enable: true
+    limit_tolerance: 0.1
+    temp_max: 215.
+    temp_min: -40.
+    temp_warn: 100.
+    temp_protect: 110.
+    temp_protect_recover: 90.
+    Offline_time: 500 #ms
+
+    debug_log_enable: true
+    debug_log_size: 50  # MB
+    debug_log_file_num: 10
+    debug_log_dir: /home/robot/debug_log
+
+    actuator_groups:
+      - front_left_leg
+      - front_right_leg
+      - back_left_leg
+      - back_right_leg
+    
+    front_left_leg:
+      can_port: 0
+      name_list:
+        - fl1_hip_roll
+        - fl2_hip_pitch
+        - fl3_knee_pitch
+        - fl4_foot
+      id_list: [1, 2, 3, 4]
+      sw_ver_min: [0, 0, 0, 0]
+      hw_ver_min: [0, 0, 0, 0]
+      pos_limit_min: [-1.22, 0., 0., 0.]
+      pos_limit_max: [0., 4.886, 5.602, 0.]
+  
+    front_right_leg:
+      can_port: 1
+      name_list:
+        - fr1_hip_roll
+        - fr2_hip_pitch
+        - fr3_knee_pitch
+        - fr4_foot
+      id_list: [1, 2, 3, 4]
+      sw_ver_min: [0, 0, 0, 0]
+      hw_ver_min: [0, 0, 0, 0]
+      pos_limit_min: [0., -4.886, -5.602, 0.]
+      pos_limit_max: [1.22, 0., 0., 0.]
+    
+    back_left_leg:
+      can_port: 2
+      name_list:
+        - bl1_hip_roll
+        - bl2_hip_pitch
+        - bl3_knee_pitch
+        - bl4_foot
+      id_list: [1, 2, 3, 4]
+      sw_ver_min: [0, 0, 0, 0]
+      hw_ver_min: [0, 0, 0, 0]
+      pos_limit_min: [0., -4.886, -5.602, 0.]
+      pos_limit_max: [1.22, 0., 0., 0.]
+
+    back_right_leg:
+      can_port: 3
+      name_list:
+        - br1_hip_roll
+        - br2_hip_pitch
+        - br3_knee_pitch
+        - br4_foot
+      id_list: [1, 2, 3, 4]
+      sw_ver_min: [0, 0, 0, 0]
+      hw_ver_min: [0, 0, 0, 0]
+      pos_limit_min: [-1.22, 0., 0., 0.]
+      pos_limit_max: [0., 4.886, 5.602, 0.]

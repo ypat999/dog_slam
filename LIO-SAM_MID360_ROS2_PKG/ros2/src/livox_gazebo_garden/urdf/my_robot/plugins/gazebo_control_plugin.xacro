@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="my_robot_ros2_control_planar">
+        <gazebo>
+            <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+                <left_joint>behind_left_wheel_joint</left_joint>
+                <right_joint>behind_right_wheel_joint</right_joint>
+                <left_joint>ahead_left_wheel_joint</left_joint>
+                <right_joint>ahead_right_wheel_joint</right_joint>
+                <wheel_separation>0.14</wheel_separation>
+                <wheel_radius>0.04</wheel_radius>
+                <topic>/cmd_vel</topic>
+            </plugin>
+        </gazebo>
+    </xacro:macro>
+</robot>

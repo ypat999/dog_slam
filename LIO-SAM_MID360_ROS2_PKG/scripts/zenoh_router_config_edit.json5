@@ -1,0 +1,245 @@
+/// ============================================================================
+///  高性能 Zenoh Router 配置 — 面向多机 ROS2 实时通信场景
+///  基于 orin/zenoh_router_config.json5 优化
+///
+///  设计目标:
+///    - 多机 topic 互传（多 router 级联，gossip 全连通）
+///    - 实时 TF 通信（低延迟、快速故障检测）
+///    - 大体积点云传输（大缓冲区、高队列、不掉消息）
+///    - 容忍 SIGKILL 导致的重连（短 lease + 高 max_links）
+///
+///  配套 session config 需同步修改的参数:
+///    - transport.link.tx.lease        → 10000
+///    - transport.link.tx.keep_alive    → 4
+///    - transport.unicast.max_links     → 100
+///    - routing.router.peers_failover_brokering → true
+/// ============================================================================
+{
+  id: "d0907122",
+  mode: "router",
+
+  // ---------- 连接其他 Router（多 router 级联）----------
+  // 此处填入集群中其他 router 的地址，每台机器部署一个 router
+  // 所有 router 互联后通过 gossip 自动发现全网 peers
+  connect: {
+    timeout_ms: { router: -1, peer: -1, client: 0 },
+    endpoints: [
+      // "<proto>/<address>"
+      // "tcp/192.168.144.144:7447",
+      "tcp/192.168.168.151:7447"
+    ],
+    exit_on_failure: { router: false, peer: false, client: true },
+    retry: {
+      period_init_ms: 1000,
+      period_max_ms: 4000,
+      period_increase_factor: 2,
+    },
+  },
+
+  // ---------- 监听地址 ----------
+  listen: {
+    timeout_ms: 0,
+    endpoints: [
+      "tcp/[::]:7447"   // 监听所有网卡，外部机器可连接
+    ],
+    exit_on_failure: true,
+    retry: {
+      period_init_ms: 1000,
+      period_max_ms: 4000,
+      period_increase_factor: 2,
+    },
+  },
+
+  // ---------- 会话打开行为 ----------
+  open: {
+    return_conditions: {
+      connect_scouted: true,
+      declares: true,
+    },
+  },
+
+  // ---------- 发现机制 ----------
+  scouting: {
+    timeout: 3000,
+    delay: 500,
+    multicast: {
+      enabled: false,  // 禁用组播，纯用 gossip（多机场景更可控）
+      address: "224.0.0.224:7446",
+      interface: "auto",
+      ttl: 1,
+      autoconnect: { router: [], peer: ["router", "peer"], client: ["router"] },
+      autoconnect_strategy: { router: { to_router: "always", to_peer: "always" } },
+      listen: true,
+    },
+    gossip: {
+      enabled: true,
+      multihop: false,
+      // router 之间互发 gossip，router 也接收 peer 的 gossip
+      target: { router: ["router", "peer"], peer: ["router"] },
+      // router 不主动自动连接（由 peer 来连 router），
+      // 但 router 间通过 connect.endpoints 手动互联
+      autoconnect: { router: [], peer: ["router", "peer"] },
+      autoconnect_strategy: { router: { to_router: "always", to_peer: "always" } },
+    },
+  },
+
+  // ---------- 时间戳 ----------
+  // Router 需要 timestamping 以支持 transient_local durability (PublicationCache)
+  timestamping: {
+    enabled: { router: false, peer: false, client: false },
+    drop_future_timestamp: false,
+  },
+
+  // ---------- 查询默认超时 ----------
+  // 跨机 service 调用可能较慢，设为 10 分钟
+  queries_default_timeout: 600000,
+
+  // ---------- 路由策略 ----------
+  routing: {
+    router: {
+      // 启用：跨机 peer 的 router 之间自动桥接转发数据
+      // 必须配合 gossip enabled + peer gossip target "router"
+      peers_failover_brokering: true,
+      linkstate: {},
+    },
+    peer: {
+      mode: "peer_to_peer",
+      linkstate: {},
+    },
+    interests: {
+      // 声明超时，网络差时适当放长
+      timeout: 30000,
+    },
+  },
+
+  // ---------- 传输层参数（核心性能调优区）----------
+  transport: {
+    unicast: {
+      // 链路建立/接受超时（长超时避免大集群启动时失败）
+      open_timeout: 60000,
+      accept_timeout: 60000,
+      // 握手中挂起的最大链路数
+      accept_pending: 10000,
+      // 最大同时存活的 transport 数
+      max_sessions: 10000,
+      // ★ 关键：每个 transport 允许的最大入站链路数
+      //   原来为 1 → SIGKILL 重连被拒的元凶
+      //   设为 100 允许旧 session 未清理时新连接也能建立
+      max_links: 100,
+      lowlatency: false,
+      qos: { enabled: true },
+      compression: { enabled: false },
+    },
+
+    multicast: {
+      join_interval: 2500,
+      max_sessions: 1000,
+      qos: { enabled: false },
+      compression: { enabled: false },
+    },
+
+    link: {
+      tx: {
+        sequence_number_resolution: "32bit",
+        // ★ 链路租约：原 60s → 10s
+        //   配合 keep_alive=4，约 2.5s 发一次心跳
+        //   约 8.75s 无心跳即判定链路死亡
+        //   SIGKILL 后 router 10s 内释放旧 session
+        lease: 3000,
+        // 每租约周期发 4 次 keep_alive（ITU-T G.8013/Y.1731 建议值）
+        keep_alive: 4,
+        // 最大批次大小 = 65535 bytes (16bit 上限)
+        batch_size: 65535,
+
+        // ------- 发送队列调优（大点云场景核心）-------
+        queue: {
+          // 每个优先级队列的批次数 (1~16)
+          //   队列内存 = SIZE × BATCH_SIZE(65535)
+          //   control=2 → 128KB,  data_high=8 → 512KB
+          size: {
+            control: 2,            // 控制消息（小量）
+            real_time: 2,          // TF 等实时数据
+            interactive_high: 2,   // Service 请求/响应
+            interactive_low: 2,
+            data_high: 2,          // 点云等大数据（高优先级）
+            data: 2,               // 普通 topic 数据
+            data_low: 2,
+            background: 2,         // 后台数据
+          },
+          congestion_control: {
+            drop: {
+              // 可丢弃消息等待可用 batch 的最大时间 (μs)
+              wait_before_drop: 1000,
+              // 分片消息的超时上限 (μs)
+              max_wait_before_drop_fragments: 50000,
+            },
+            block: {
+              // 阻塞消息等待可用 batch 的最大时间 (μs)
+              //   原 5s → 15s，容忍 WiFi 拥塞时的长等
+              //   超时后关闭 transport
+              wait_before_close: 15000000,
+            },
+          },
+          batching: {
+            enabled: true,
+            // 背压时消息最多保留 0.5ms 等凑批，保障实时性
+            time_limit: 0.5,
+          },
+          allocation: {
+            mode: "lazy",
+          },
+        },
+      },
+
+      // ------- 接收端调优（大点云场景核心）-------
+      rx: {
+        // ★ 接收缓冲区：原 64KB → 1MB
+        //   大点云消息分片后需要足够缓冲容纳
+        buffer_size: 1048576,
+        // 最大消息大小：512MB（支持极端大的点云）
+        max_message_size: 1073741824,
+      },
+
+      tls: {
+        root_ca_certificate: null,
+        listen_private_key: null,
+        listen_certificate: null,
+        enable_mtls: false,
+        connect_private_key: null,
+        connect_certificate: null,
+        verify_name_on_connect: true,
+        close_link_on_expiration: false,
+      },
+    },
+
+    shared_memory: {
+      enabled: false,
+      mode: "lazy",
+    },
+
+    auth: {
+      usrpwd: {
+        user: null,
+        password: null,
+        dictionary_file: null,
+      },
+      pubkey: {
+        public_key_pem: null,
+        private_key_pem: null,
+        public_key_file: null,
+        private_key_file: null,
+        key_size: null,
+        known_keys_file: null,
+      },
+    },
+  },
+
+  // ---------- Admin Space ----------
+  adminspace: {
+    enabled: true,
+    permissions: {
+      read: true,
+      write: false,
+    },
+  },
+}

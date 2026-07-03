@@ -1,0 +1,2 @@
+obstacle_detection_config_file: obstacle_detection/obstacle_detection_main.yaml
+state_machine_config_file_job: state_config/perception_job_state.txt

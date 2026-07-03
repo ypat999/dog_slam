@@ -1,0 +1,51 @@
+robot_camera:
+  ros__parameters:
+    log_lvl: !!str info
+    enable_disk_check: !!bool true
+    disk_check_interval: !!int 10                                   # unit(s)
+    disk_check_threshold: !!int 1
+    storage_path: !!str /mnt/sdcard   
+    topics:
+      tf_ack: !!str /tf/tf_ack 
+      tf_request: !!str /tf/tf_req 
+      record_mp4_req: !!str /robot_camera/record_mp4
+      record_mp4_ack: !!str /robot_camera/record_mp4_ack
+      photo_req: !!str  /robot_camera/take_photo
+      photo_ack: !!str /robot_camera/take_photo_ack
+      record_mp4_status: !!str /robot_camera/record_mp4_status                            # uinit(GB)
+    cameras:
+      - camera_front
+      - camera_back
+    camera_front:
+      device_name: !!str /dev/video22
+      rtsp_location: !!str rtsp://127.0.0.1:8554/front
+      width: !!int 1920
+      height: !!int 1080
+      iframes: !!int 8
+      rcmode:  !!int 1
+      bps: !!int 2000000
+      min_bps: !!int 50000
+      max_bps: !!int 100000000
+      stream_fps: !!int 25
+      jpeg_fps: !!int 10
+      jpeg_quality: !!int 85          
+      enable_pub_image: !!bool true
+      topic: !!str /front_camera/image_compressed
+      photo_thumb_height: !!int 720
+
+    camera_back:
+      device_name: !!str /dev/video31
+      rtsp_location: !!str rtsp://127.0.0.1:8554/back
+      width: !!int 1920
+      height: !!int 1080
+      iframes: !!int 8
+      rcmode:  !!int 1
+      bps: !!int 2000000
+      min_bps: !!int 50000
+      max_bps: !!int 100000000
+      stream_fps: !!int 25
+      jpeg_fps: !!int 10
+      jpeg_quality: !!int 85
+      enable_pub_image: !!bool true
+      topic: !!str /rear_camera/image_compressed
+      photo_thumb_height: !!int 720

@@ -1,0 +1,24 @@
+
+onnx_model_path: "detection/model/detection/reid.onnx"
+precision: "fp16"
+key: reid_detection
+
+rknn_model_path: "detection/model/detection/reid.rknn"
+
+preprocess:
+  crop_flag: False
+
+  resize_width: 64
+  resize_height: 128
+  resize_flag: True
+
+  float_flag: True
+
+  normalize_flag: False
+  
+  transpose_flag: False
+
+postprocess:
+  feat_num: 512
+
+model_yaml_path: model_md5.yaml

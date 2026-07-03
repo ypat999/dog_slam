@@ -1,0 +1,30 @@
+/// ============================================================================
+///  Session Config 补丁 — 配合 zenoh_router_config_hpc.json5 使用
+///  修改文件: scripts/DEFAULT_RMW_ZENOH_SESSION_CONFIG.json5
+///
+///  找到以下 4 个参数，将原值改为新值。
+///  Router 和 Peer 握手时取两侧最小值，必须两边同步。
+/// ============================================================================
+
+{
+  transport: {
+    unicast: {
+      // 原值: 1  →  新值: 100
+      max_links: 100,
+    },
+    link: {
+      tx: {
+        // 原值: 60000  →  新值: 10000
+        lease: 10000,
+        // 原值: 2  →  新值: 4
+        keep_alive: 4,
+      },
+    },
+  },
+  routing: {
+    router: {
+      // 原值: true  →  保持不变（确认与此一致即可）
+      peers_failover_brokering: true,
+    },
+  },
+}

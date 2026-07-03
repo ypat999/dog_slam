@@ -1,0 +1,8 @@
+#! /bin/bash
+
+source /opt/ros/humble/setup.bash
+source /home/jszr/jszr_workspace/install/setup.bash
+export ROS_DOMAIN_ID=24
+export ROS_DISCOVERY_SERVER=192.168.133.1:20000
+
+ros2 run zsibot_track track --ros-args --params-file /home/jszr/jszr_workspace/install/zsibot_track/share/zsibot_track/config/ros_params.yaml

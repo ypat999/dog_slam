@@ -1,0 +1,9 @@
+max_image_cache_size: 10
+hz: 10
+input_name: input
+output_name: output
+output_height: 544
+output_width: 960
+dnn_cfg: segmentation/segmentation_dnn_cfg.yaml
+send_seg_vis: false
+message_names_file: perception_job/message_names.yaml

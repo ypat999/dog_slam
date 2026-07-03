@@ -1,0 +1,50 @@
+
+sam_type: efficienttam
+
+sam2.1_tiny:
+  encode: detection/model/sam_track/sam2.1_tiny_preprocess.onnx
+  decode: detection/model/sam_track/sam2.1_tiny.onnx
+  memory_attention: detection/model/sam_track/sam2.1_tiny_memory_attention.onnx
+  memory_encoder: detection/model/sam_track/sam2.1_tiny_memory_encoder.onnx
+  input_width: 1024
+  input_height: 1024
+  use_high_res_features: true
+  token_num: 4096
+  memory_num: 2
+
+efficienttam:
+  encode: detection/model/sam_track/efficienttam_ti_512x512_preprocess.onnx
+  decode: detection/model/sam_track/efficienttam_ti_512x512.onnx
+  memory_attention: detection/model/sam_track/efficienttam_ti_512x512_memory_attention.onnx
+  memory_encoder: detection/model/sam_track/efficienttam_ti_512x512_memory_encoder.onnx
+  encode_type: fp32
+  decode_type: fp32
+  memory_attention_type: fp32
+  memory_encoder_type: fp32
+  input_width: 512
+  input_height: 512
+  use_high_res_features: false
+  token_num: 1024
+  memory_num: 3
+
+param:
+  # 连续跟踪的情况
+  min_object_score_thresh: 2.0
+  min_iou_score_thresh: 0.5
+
+  object_score_thresh: 4.0
+  iou_score_thresh: 0.6  # 为了适配远处的得分
+
+  # 目标召回的阈值 条件苛刻一些 不然很容易误检
+  recall_high_object_score_thresh: 7.0
+  recall_high_iou_score_thresh: 0.9
+
+  recall_frame: 5
+  recall_frame_reid_thresh: 0.6
+
+  recall_object_score_thresh: 2.0
+  recall_iou_score_thresh: 0.5
+  recall_association_bbox_thresh: 0.7
+  
+  recall_reid_thresh: 0.7
+  recall_reid_interval: 10

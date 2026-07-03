@@ -1,0 +1,136 @@
+/**:
+  ros__parameters:
+
+    # Topics
+    pointCloudTopic: "livox/lidar"                   # Point cloud data
+    imuTopic: "livox/imu"                         # IMU data
+    odomTopic: "odometry/imu"                    # IMU pre-preintegration odometry, same frequency as IMU
+    gpsTopic: "odometry/gpsz"                    # GPS odometry topic from navsat, see module_navsat.launch file
+
+    # Frames
+    lidarFrame: "livox_frame"
+    baselinkFrame: "base_link"
+    odometryFrame: "odom"
+    mapFrame: "map"
+    
+    # TF Publishing Control
+    # Set to false to disable publishing of map->odom transform
+    publishMapToOdomTF: false
+    # baseLinkProjection: true   # 有的分支叫 baseLinkProjection
+
+    # GPS Settings
+    useImuHeadingInitialization: false           # if using GPS data, set to "true"
+    useGpsElevation: false                       # if GPS elevation is bad, set to "false"
+    gpsCovThreshold: 2.0                         # m^2, threshold for using GPS data
+    poseCovThreshold: 25.0                       # m^2, threshold for using GPS data
+
+    # Export settings
+    savePCD: true                               # https://github.com/TixiaoShan/LIO-SAM/issues/3
+    savePCDDirectory: "/slam_data/pcd/"         # in your home folder, starts and ends with "/". Warning: the code deletes "LOAM" folder then recreates it. See "mapOptimization" for implementation
+
+    # Sensor Settings
+    sensor: livox                               # lidar sensor type, either 'velodyne', 'ouster' or 'livox'
+    N_SCAN: 4                                   # number of lidar channels (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
+    Horizon_SCAN: 6000                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
+# 传感器设置
+    downsampleRate: 3                           # 增加下采样率，减少数据处理量，避免IMU数据积压
+    # points. i.e., 16 = 64 / 4, 16 = 16 / 1
+    lidarMinRange: 0.3                           # default: 1.0, minimum lidar range to be used
+    lidarMaxRange: 50.0                        # default: 1000.0, maximum lidar range to be used
+
+    # IMU Settings
+    imuAccNoise: 3.9939570888238808e-03
+    imuGyrNoise: 1.5636343949698187e-03
+    imuAccBiasN: 6.4356659353532566e-05
+    imuGyrBiasN: 3.5640318696367613e-05
+
+    imuGravity: 1.0 #默认9.80511，但是livox驱动输出的imu数据已抵消重力，此处置1.0
+    imuRPYWeight: 0.1  # IMU姿态权重，提高姿态稳定性
+
+    extrinsicTrans:  [ 0.1,  0.0,  -0.3 ] #能否保持机器人在地面以上
+    # extrinsicRot: [0.8660, 0.0, 0.5,
+    #                0.0, 1.0, 0.0,
+    #                -0.5, 0.0, 0.8660]
+    extrinsicRot: [1.0, 0.0, 0.0,
+                   0.0, 1.0, 0.0,
+                   0.0, 0.0, 1.0]
+
+    # LOAM feature threshold
+    edgeThreshold: 1.0              # 增加边缘检测阈值，减少噪声点的误判 (原1.0)
+    surfThreshold: 0.1
+    edgeFeatureMinValidNum: 10     # 增加最小有效边缘特征数，提高特征质量 (原10)
+    surfFeatureMinValidNum: 100
+
+    # voxel filter paprams
+    odometrySurfLeafSize: 0.2                     # 增加里程计表面体素大小，减少噪声影响 (原0.2)
+    mappingCornerLeafSize: 0.1                   # 适当增加体素大小，减少噪声点的影响 (原0.1)
+    mappingSurfLeafSize: 0.2                     # 适当增加体素大小，提高表面特征稳定性 (原0.2)
+
+    # robot motion constraint (in case you are using a 2D robot) more limit for map building
+    z_tollerance: 0.2                          # meters
+    rotation_tollerance: 0.05                   # radians
+
+    # CPU Params - 优化以减轻处理负担，避免IMU数据丢失
+
+    numberOfCores: 2                              # 减少使用的核心数，避免CPU过载
+
+    mappingProcessInterval: 0.05                  # 增加映射处理间隔，减少CPU负担
+
+    # Surrounding map
+    surroundingkeyframeAddingDistThreshold: 1.0   # meters, regulate keyframe adding threshold
+    surroundingkeyframeAddingAngleThreshold: 0.2  # radians, regulate keyframe adding threshold
+    surroundingKeyframeDensity: 2.0               # meters, downsample surrounding keyframe poses   
+    surroundingKeyframeSearchRadius: 30.0         # meters, within n meters scan-to-map optimization
+    # (when loop closure disabled)
+
+    # Loop closure
+    loopClosureEnableFlag: true
+    loopClosureFrequency: 1.0                     # Hz, regulate loop closure constraint add frequency
+    surroundingKeyframeSize: 20                   # submap size (when loop closure enabled)
+    historyKeyframeSearchRadius: 30.0             # meters, key frame that is within n meters from
+    historyKeyframeSearchTimeDiff: 10.0           # seconds, key frame that is n seconds older will be
+    # considered for loop closure
+    historyKeyframeSearchNum: 20                  # number of hostory key frames will be fused into a
+    # submap for loop closure
+    historyKeyframeFitnessScore: 0.13             # icp threshold, the smaller the better alignment
+
+    # Discrete noise filtering (新增参数)
+    enableDiscreteNoiseFilter: false               # 启用离散噪点过滤
+    discreteNoiseMinNeighbors: 6                  # 有效点最小邻居数量（少于则被标记为噪点）
+    discreteNoiseSearchRadius: 0.2                     # 邻居搜索半径（米）
+    discreteNoiseMinRange: 0.2                 # 距离过滤最小范围（米）
+    discreteNoiseMaxRange: 40.0                  # 距离过滤最大范围（米）
+    discreteNoiseMinIntensity: 5.0                  # 最小强度阈值
+    discreteNoiseMaxIntensity: 1000.0                    # 最大强度阈值
+
+    # Visualization
+    globalMapVisualizationSearchRadius: 100.0    # meters, global map visualization radius
+    globalMapVisualizationPoseDensity: 1.0       # meters, global map visualization keyframe density
+    globalMapVisualizationLeafSize: 0.2          # meters, global map visualization cloud density
+
+    # TF Delay Parameters (TF延迟发布参数)
+    tfDelayEnabled: true                        # 启用TF延迟发布功能
+    tfDelaySeconds: 3.0                       # TF延迟发布时间（秒），系统启动后延迟多久开始发布TF变换
+    odometryDelayEnabled: true                        # 启用里程计延迟发布功能
+    odometryDelaySeconds: 3.0
+
+    # IMU Failure Detection Parameters (IMU失败检测参数)
+    imuFailureDetectionEnabled: false             # 启用IMU失败检测
+    imuVelocityThreshold: 5.0                 # 速度阈值（m/s），超过此值重置IMU预积分（10秒后生效）
+    imuBiasThreshold: 1.0                      # Bias阈值，超过此值重置IMU预积分（10秒后生效）
+
+    # # QoS Overrides - TF Publisher (新增参数)
+    # qos_overrides./tf.publisher.depth: 100
+    # qos_overrides./tf.publisher.durability: "volatile"
+    # qos_overrides./tf.publisher.history: "keep_last"
+    # qos_overrides./tf.publisher.reliability: "reliable"
+
+    # # QoS Overrides - Parameter Events Publisher (已存在参数)
+    # qos_overrides./parameter_events.publisher.depth: 1000
+    # qos_overrides./parameter_events.publisher.durability: "volatile"
+    # qos_overrides./parameter_events.publisher.history: "keep_last"
+    # qos_overrides./parameter_events.publisher.reliability: "reliable"
+
+    # 以下参数在系统输出中提及但不存在于当前配置 - 标为不存在参数
+    # extrinsicRPY: [0.0, 0.0, 0.0]  # 不存在参数 - 外部旋转RPY
+    # use_sim_time: false  # 不存在参数 - 仿真时间设置

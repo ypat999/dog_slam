@@ -1,0 +1,8 @@
+left_image_path: /data/code/zsibot_perception/src/perception/dnn_ternsorrt/test/config/images/left/000035_10.png
+right_image_path: /data/code/zsibot_perception/src/perception/dnn_ternsorrt/test/config/images/right/000035_10.png
+
+input_image_width: 1248
+input_image_height: 384
+
+dnn_config_file: stereo_match_app.yaml
+hz: 17.0

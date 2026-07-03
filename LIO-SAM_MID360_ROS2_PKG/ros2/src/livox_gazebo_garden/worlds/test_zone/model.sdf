@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="test_zone">
+    <static>true</static>
+    <link name="link">
+      <inertial>
+        <pose>-8.12 8.8 0 1.57 0 0</pose>
+        <mass>100</mass>
+        <inertia>
+          <ixx>10</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>10</iyy><iyz>0</iyz>
+          <izz>10</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>-8.12 8.8 0 1.57 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://test_zone/meshes/building.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <pose>-8.12 8.8 0 1.57 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://test_zone/meshes/building.dae</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

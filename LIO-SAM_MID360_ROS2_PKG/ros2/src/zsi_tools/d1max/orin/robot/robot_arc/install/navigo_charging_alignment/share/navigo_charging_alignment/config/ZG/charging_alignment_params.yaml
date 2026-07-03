@@ -1,0 +1,197 @@
+# ZSIBOT Charging Alignment Configuration
+# Modular architecture with three alignment phases
+# Enhanced with 6DOF target pose support aligned with arc_state_machine parameters
+
+charging_alignment_server:
+  ros__parameters:
+    # =========================================================================
+    # System Configuration
+    # =========================================================================
+    system:
+      status_publish_frequency: 50.0 # Hz - Continuous state publishing
+      execution_frequency: 100.0 # Hz - Real-time processing
+      max_data_age: 1.0 # seconds - Data validity threshold
+      enable_debug_output: true # JSON debug information
+      enable_visualization: true # RViz error vectors
+      enable_performance_monitoring: true
+      performance_report_interval: 10.0 # seconds
+
+    # =========================================================================
+    # Velocity Optimization Parameters
+    # =========================================================================
+    velocity_optimization:
+      velocity_smoothing_frequency: 100.0 # Hz - Should match execution_frequency
+      low_pass_filter_tau: 0.008 # Time constant for low pass filter
+      scale_velocities: false # Enable proportional velocity scaling
+
+      # Velocity limits (absolute bounds)
+      max_positive_velocity: [ 0.50, 0.50, 2.5 ]   # [vx, vy, vyaw] m/s, rad/s
+      min_negative_velocity: [ -0.50, -0.50, -2.5 ] # [vx, vy, vyaw] m/s, rad/s
+
+      # Minimum velocity thresholds (deadband boundaries)
+      min_positive_velocity: [ 0.01, 0.01, 0.01 ]    # [vx, vy, vyaw] m/s, rad/s
+      max_negative_velocity: [ -0.01, -0.01, -0.01 ] # [vx, vy, vyaw] m/s, rad/s
+
+      # Acceleration/Deceleration limits
+      max_accel: [ 2.5, 2.5, 3.2 ] # [vx, vy, vyaw] m/s², rad/s²
+      max_decel: [ -2.5, -2.5, -3.2 ] # [vx, vy, vyaw] m/s², rad/s²
+
+      # Deadband (output filtering)
+      deadband_velocity: [ 0.0, 0.0, 0.0 ] # [vx, vy, vyaw] m/s, rad/s
+
+    # =========================================================================
+    # Safety Parameters
+    # =========================================================================
+    safety:
+      emergency_stop_timeout: 5.0 # seconds
+      max_execution_time: 30.0 # seconds per alignment
+      enable_safety_checks: true
+
+    # =========================================================================
+    # Coarse Alignment Module (3DOF控制 + 6DOF收敛检查)
+    # 结束条件对应: arc_state_machine.fine_start_pose
+    # =========================================================================
+    coarse:
+      # Edge trigger mode: Only enter RUNNING on activation condition rising edge (false→true)
+      # true:  After completion, stays in STANDBY even if conditions remain met (recommended)
+      # false: Legacy behavior - enters RUNNING whenever conditions are met
+      enable_edge_trigger_mode: true
+
+      # PID控制器参数
+      x_pid:
+        kp: 0.5
+        ki: 0.08
+        kd: 0.15
+        windup_limit: 0.3
+        output_limit: 0.3
+
+      y_pid:
+        kp: 1.2
+        ki: 0.08
+        kd: 0.20
+        windup_limit: 0.3
+        output_limit: 0.3
+
+      yaw_pid:
+        kp: 1.5
+        ki: 0.10
+        kd: 0.20
+        windup_limit: 0.5
+        output_limit: 0.5
+
+      # 速度限制
+      limits:
+        max_linear_velocity: 0.3 # m/s
+        max_angular_velocity: 0.5 # rad/s
+
+      control_frequency: 100.0 # Hz
+
+      # Target pose is now provided by arc_state_machine via /arc/coarse_alignment_mode_cmd
+      # Configuration location: arc_state_machine/config/arc_state_machine_params.yaml -> transition.fine_start_pose
+      # target_pose:
+      #   x: 2.0
+      #   y: 0.0
+      #   z: 0.0
+      #   yaw: 0.0
+      #   pitch: 0.0
+      #   roll: 0.0
+      #   x_tol: 0.1
+      #   y_tol: 0.1
+      #   z_tol: 1.0
+      #   yaw_tol: 0.052
+      #   pitch_tol: 1.0
+      #   roll_tol: 1.0
+
+    # =========================================================================
+    # Fine Alignment Module (3DOF控制 + 6DOF收敛检查)
+    # 结束条件对应: arc_state_machine.contact_start_pose
+    # =========================================================================
+    fine:
+      # Edge trigger mode: Only enter RUNNING on activation condition rising edge (false→true)
+      # true:  After completion, stays in STANDBY even if conditions remain met (recommended)
+      # false: Legacy behavior - enters RUNNING whenever conditions are met
+      enable_edge_trigger_mode: true
+
+      # PID控制器参数
+      x_pid:
+        kp: 0.8
+        ki: 0.08
+        kd: 0.25
+        windup_limit: 0.15
+        output_limit: 0.15
+
+      y_pid:
+        kp: 1.8
+        ki: 0.10
+        kd: 0.25
+        windup_limit: 0.15
+        output_limit: 0.15
+
+      yaw_pid:
+        kp: 0.8
+        ki: 0.08
+        kd: 0.15
+        windup_limit: 0.2
+        output_limit: 0.2
+
+      # 速度限制
+      limits:
+        max_linear_velocity: 0.15   # m/s (fallback)
+        max_linear_velocity_x: 0.15 # m/s
+        max_linear_velocity_y: 0.15 # m/s
+        max_angular_velocity: 0.2   # rad/s
+
+      control_frequency: 100.0 # Hz
+      stability_time: 1.0 # seconds to maintain convergence
+
+      # Strict tolerances for Y_YAW_ONLY -> X_ONLY stage transition
+      y_strict_tolerance: 0.01    # m
+      yaw_strict_tolerance: 0.009 # rad
+
+      # Target pose is now provided by arc_state_machine via /arc/fine_alignment_mode_cmd
+      # Configuration location: arc_state_machine/config/arc_state_machine_params.yaml -> transition.contact_start_pose
+      # target_pose:
+      #   x: -0.04
+      #   y: 0.0
+      #   z: 0.0
+      #   yaw: 0.0
+      #   pitch: 0.0
+      #   roll: 0.0
+      #   x_tol: 0.04
+      #   y_tol: 0.02
+      #   z_tol: 1.0
+      #   yaw_tol: 0.0175
+      #   pitch_tol: 1.0
+      #   roll_tol: 1.0
+
+    # =========================================================================
+    # Contact Alignment Module (支持6DOF位姿控制)
+    # 结束条件对应: arc_state_machine.contact_end_pose
+    # =========================================================================
+    contact:
+      # Edge trigger mode: Only enter RUNNING on activation condition rising edge (false→true)
+      # true:  After completion, stays in STANDBY even if conditions remain met (recommended)
+      # false: Legacy behavior - enters RUNNING whenever conditions are met
+      enable_edge_trigger_mode: true
+
+      onetime_control: true # keep publish first cmd
+      approach_velocity: 0.02 # m/s - approach velocity
+      contact_timeout: 30.0 # seconds
+      position_update_frequency: 100.0 # Hz
+      enable_force_feedback: false # Future feature
+
+      # Target pose is now provided by arc_state_machine via /arc/contact_alignment_mode_cmd
+      # Configuration location: arc_state_machine/config/arc_state_machine_params.yaml -> transition.contact_end_pose
+      # target_pose:
+      #   x: 0.0
+      #   y: 0.0
+      #   z: 0.0
+      #   yaw: 0.0
+      #   pitch: 0.0
+      #   roll: 0.0
+      #   x_tol: 0.015
+      #   y_tol: 0.015
+      #   z_tol: 0.005
+      #   yaw_tol: 0.0087
+      #   pitch_tol: 0.175
+      #   roll_tol: 0.175

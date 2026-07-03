@@ -1,0 +1,108 @@
+localization_type: "LIO_UKF"  # 可选值：RTK_IO(RTK定位), LIO_UKF（点云地图定位）, RTK_IO_LIO（Faster-lio里程计）, ODOM, 
+frequency: 0.1  # 频率，单位：秒， RTK_IO选择0.01，其他选择0.1
+
+lio_ukf_general_options:
+  is_use_imu_: true
+  is_use_odom_: false
+  is_use_gnss_: true
+  pcd_map_file_: "/home/user/map/0701/map.pcd"
+  motion_mode_: 3
+  send_tf_transforms_: false
+  send_aligned_cloud_: false
+  send_global_map_cloud_: false
+  is_use_pose_smoothing_pub_: true
+  smooth_window_size_: 10
+
+lio_ukf_imu_options:
+  imu_init_time_: 0.5
+  imu_init_queue_length_: 100
+  imu_init_pos_cov_thre_: 5
+  imu_init_quat_cov_thre_: 5
+  imu_use_filter_num_: 4
+
+lio_ukf_init_pose_options:
+  is_init_pose_: true
+  init_pos_x_: 0.0
+  init_pos_y_: 0.0
+  init_pos_z_: 0.0
+  init_ori_w_: 1.0
+  init_ori_x_: 0.0
+  init_ori_y_: 0.0
+  init_ori_z_: 0.0
+
+lio_ukf_localization_state_options:
+  match_score_thre_: 0.5
+  match_init_count_thre_: 1
+  continue_count_thre_: 5
+  timeout_count_thre_: 5
+  init_time_thre_: 5
+
+lio_ukf_point_cloud_filter_options:
+  globalmap_voxel_size_: 0.12
+  cloud_voxel_size_: 0.15
+
+lio_ukf_ndt_options:
+  cool_time_duration_: 0.02
+  match_search_method: "DIRECT7"
+  match_resolution: 0.5
+  match_err_thre: 0.01
+  match_score_thre: 0.15
+  match_init_count_thre: 2
+  timeout_count_thre: 2
+  continue_count_thre: 2
+  init_time_thre: 2
+
+lio_ukf_imu2base_options:
+  imu2base_00_: 1.0
+  imu2base_01_: 0.0
+  imu2base_02_: 0.0
+  imu2base_03_: 0.14111
+  imu2base_10_: 0.0
+  imu2base_11_: 1.0
+  imu2base_12_: 0.0
+  imu2base_13_: 0.0
+  imu2base_20_: 0.0
+  imu2base_21_: 0.0
+  imu2base_22_: 1.0
+  imu2base_23_: 0.13186
+  imu2base_30_: 0.0
+  imu2base_31_: 0.0
+  imu2base_32_: 0.0
+  imu2base_33_: 1.0
+
+lio_ukf_lidar2base_options:
+  init_rot_00_: 1.0
+  init_rot_01_: 0.0
+  init_rot_02_: 0.0
+  init_rot_03_: 0.13011
+  init_rot_10_: 0.0
+  init_rot_11_: 1.0
+  init_rot_12_: 0.0
+  init_rot_13_: -0.02329
+  init_rot_20_: 0.0
+  init_rot_21_: 0.0
+  init_rot_22_: 1.0
+  init_rot_23_: 0.17598
+  init_rot_30_: 0.0
+  init_rot_31_: 0.0
+  init_rot_32_: 0.0
+  init_rot_33_: 1.0
+
+lio_ukf_lidar2imu_options:
+  init_trans_00_: 1.0
+  init_trans_01_: 0.0
+  init_trans_02_: 0.0
+  init_trans_03_: -0.011
+  init_trans_10_: 0.0
+  init_trans_11_: 1.0
+  init_trans_12_: 0.0
+  init_trans_13_: -0.02329
+  init_trans_20_: 0.0
+  init_trans_21_: 0.0
+  init_trans_22_: 1.0
+  init_trans_23_: 0.04412
+  init_trans_30_: 0.0
+  init_trans_31_: 0.0
+  init_trans_32_: 0.0
+  init_trans_33_: 1.0
+

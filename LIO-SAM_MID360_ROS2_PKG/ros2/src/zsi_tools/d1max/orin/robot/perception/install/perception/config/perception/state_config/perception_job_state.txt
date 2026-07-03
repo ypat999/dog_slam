@@ -1,0 +1,18 @@
+begin_state
+3
+IDLE
+OBSTACLE_DETETION
+PURSUIT
+end_state
+
+begin_change_flag
+2
+OBS_DET_EVENT
+PURSUIT_EVENT
+end_change_flag
+
+begin_transition
+2
+IDLE OBS_DET_EVENT OBSTACLE_DETETION
+IDLE PURSUIT_EVENT PURSUIT
+end_transition

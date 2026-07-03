@@ -1,0 +1,14 @@
+input_image_topic: /image_raw/compressed
+target_id_topic: /start_navigation
+output_detection_2d_topic: /perception/detection2d
+output_detection_3d_topic: /perception/detection3d
+output_target_3d_topic: /perception/target3d
+output_detection_vis_topic: /perception/image_vis/compressed
+pipeline_config_file: detection/app.yaml
+
+flip_flag: false
+channel_order: bgr8
+
+image_from_shared_memory: true
+publish_raw_image: false
+raw_image_topic: /perception/image_raw/compressed

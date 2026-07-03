@@ -1,0 +1,65 @@
+%YAML:1.0
+---
+image_path: "/home/user/work/data/apriltag_locazation/bag/bag_0924_afternoon/dynamic1.bag"
+camera_intrinsic_path: "/ota/calibration_results.yaml"
+state_machine_config_path: "./config/machine_status.txt"
+hz: 10.0
+arc_state_topic_name: /arc/arc_state
+arc_cmd_topic_name: /arc/perception_mode_cmd
+calibration_cmd_topic_name: /arc/perception_calibration_cmd
+calibration_state_name: /arc/calibration_state
+perception_state_name: /arc/perception_state
+perception_dock_pose_name: /arc/perception_dock_pose
+img_topic_name: /front_camera/image_compressed 
+
+detect_result_show: 0
+detect_result_save: 0
+
+tag_description:
+    tag_family: "tag36h11"
+    tagnum: 1
+
+    # detection of quads can be done on a lower-resolution image,
+    # improving speed at a cost of pose accuracy and a slight
+    # decrease in detection rate. Decoding the binary payload is
+    # still done at full resolution. .
+    tag_quad_decimate: 2.0
+
+    tag0:
+        id: 0
+        size: 0.15
+        # [tx, ty, tz, qw, qx, qy, qz]
+        pose: [0.0, 0.0, 0.0]
+
+    tag_slave:
+        id: 51
+        size: 0.08
+        # [tx, ty, tz, qw, qx, qy, qz]
+        pose: [0.0, 0.0, 0.0]
+
+T_baselink_camera: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [ 0.00442844, -0.00292847,  0.99998591,  0.43367031,
+        -0.99945363, -0.03276731,  0.00433012,  0.00329756,
+        0.03275417, -0.99945872, -0.00307198,  0.07760254,
+        0., 0., 0., 1. ]
+
+T_tag_dockbase_calib: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [0.004723714012092213, -0.9995686185015131, 0.0289872074535648, 0.003682000260796385,
+          -0.01131335957710356, 0.02893225885574192, 0.9995173468678202, -0.154117646573608,
+          -0.9999248407781, -0.00504938020487564, -0.01117181349690659, 0.8996076718961898,
+          0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000]
+
+T_tagonchargingbox_chargingbox: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: d
+   data: [-0.015062, -0.999405,  0.031018, -0.002003,
+         0.042586,  0.030352,  0.998631,  0.13991,
+          -0.998979,  0.016362,  0.042103, -0.232682,
+           0.       , 0.      ,  0.      ,  1.       ]

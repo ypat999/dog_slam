@@ -1,0 +1,17 @@
+uss_driver:
+  ros__parameters:
+    update_rate: 10.0  # Hz, Max 10 Hz
+    invalid_reading_threshold: 65530  # Value indicating no object detected
+    sensor_names:
+      - uss_left
+      - uss_right
+
+    uss_left:
+      dev: "/dev/ttyCH9344USB1"
+      baudrate: 115200
+      frame_id: "uss_left_link"
+
+    uss_right:
+      dev: "/dev/ttyCH9344USB0"
+      baudrate: 115200
+      frame_id: "uss_right_link"

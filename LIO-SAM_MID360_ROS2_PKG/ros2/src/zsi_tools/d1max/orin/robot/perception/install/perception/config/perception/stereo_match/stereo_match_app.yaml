@@ -1,0 +1,9 @@
+hz: 10
+focal: 7.215377e+02
+cx: 609.5593
+cy: 172.8540
+baseline: 0.533
+min_depth: 0.5
+max_depth: 50.0
+max_image_cache_size: 10
+dnn_cfg: stereo_match_dnn_cfg.yaml

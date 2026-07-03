@@ -1,0 +1,143 @@
+/**:
+  ros__parameters:
+    lio.map.save_map: false
+    lio.map.if_filter: false
+    lio.map.save_map_dir: "/home/robot/slam_data/pcd"
+    lio.map.map_name: "front_lidar_map.pcd"
+    lio.map.ds_size: 0.2
+    lio.map.save_interval: 50
+    # 点云切片保存前缀，用于多雷达同时建图时区分不同雷达的切片
+    # 例如: "front_" -> 保存为 front_scans_0.pcd, front_scans_1.pcd
+    # 空字符串表示无前缀（默认）
+    lio.map.pcd_prefix: "front_"
+
+    lio.ros.lidar_topic: "/front_lidar"
+    lio.ros.imu_topic: "/front_lidar/imu"
+    lio.ros.map_save_service_topic: "/map_save_front"
+
+    lio.sensor.lidar_type: 9
+    lio.sensor.blind: 0.1
+    lio.sensor.maxrange: 200.0
+    # IMPORTANT: 固态雷达Z轴朝前安装时，filter_rate>1会导致正前方空间盲区
+    # 原值17过于激进，每17个点才取1个，严重破坏空间连续性
+    # 建议设为1~2，依赖体素滤波(VoxelGridFilter)进行空间均匀降采样
+    lio.sensor.filter_rate: 16
+    # 是否启用filter_rate的对称震荡offset（Z轴朝前安装时必须开启）
+    lio.sensor.enable_filter_offset: true
+    # 每隔多少列保留完整一列（0=禁用），用于多线雷达保纵向信息
+    lio.sensor.full_column_interval: 8
+    # 多线雷达线数（Airy=96）
+    lio.sensor.lidar_channels: 96
+    lio.sensor.enable_downsample: true
+    lio.sensor.voxel_fliter_size: 0.1
+    lio.sensor.intensity_filter_en: false
+    lio.sensor.intensity_min: 10.0
+    lio.sensor.gravity_norm: 9.81
+    lio.sensor.imu_type: 1
+    lio.sensor.imu_na: 0.1
+    lio.sensor.imu_ng: 0.1
+    lio.sensor.imu_nba: 0.0001
+    lio.sensor.imu_nbg: 0.0001
+
+    lio.extrinsic.lidar_imu: [0.0, 0.0, 0.0,
+                              0.0, -1.0, 0.0,
+                              -1.0, 0.0, 0.0,
+                              0.0, 0.0, -1.0]
+    lio.extrinsic.odom_robo: [0.0, 0.0, -0.36, 0.0, 1.57, 0.0]
+
+    lio.hash_map.hash_capacity: 2000000
+    lio.hash_map.vox_resolution: 0.2
+
+    lio.kf.kf_type: 0
+    lio.kf.kf_max_iterations: 4
+    lio.kf.kf_align_gravity: true
+
+    # - 0 : 参考重力指向 +X轴
+    # - 1 : 参考重力指向 +Y轴
+    # - 2 : 参考重力指向 -Z轴 （默认值）
+    lio.kf.ref_gravity_axis: 0
+
+    lio.kf.kf_quit_eps: 0.001
+
+    lio.output.robot: true
+    lio.output.plan_env_world: false
+    lio.output.plan_env_body: false
+    lio.output.ml_map: false
+    lio.output.planner: false
+    lio.output.map: true
+    lio.output.dense: false
+    lio.output.map_body: true
+    lio.output.dense_body: true
+    lio.output.pub_step: 1
+    lio.output.footprint_pub_en: false
+    lio.output.tf_base_footprint_frame: "base_footprint_front"
+    lio.output.world_frame: "world_front"
+    lio.output.imu_frame: "imu_front"
+
+    lio.eva.timer: false
+
+    lio.dynamic_removal.enable: false
+    lio.dynamic_removal.method: 0
+    lio.dynamic_removal.grid_size: 0.2
+    lio.dynamic_removal.min_neighbors: 2
+    lio.dynamic_removal.frame_window: 1
+    lio.dynamic_removal.raycast_min_hits: 2
+    lio.dynamic_removal.isolated_removal: false
+
+    # 仅做点云去畸变和降采样模式，不计算LIO
+    # 启用后: 只进行IMU传播去畸变+降采样，跳过观测和地图更新
+    # 默认: false（正常计算LIO）
+    # 注意: 修改后的逻辑会进行LIO计算和校正，但不发布odom和TF
+    lio.lio_only_undistort: false
+
+    # ================= downsample_only 模式 =================
+    # 仅做降采样和滤波，不计算LIO也不使用IMU
+    # 优先级最高，启用后会跳过所有LIO和IMU相关计算
+    # 默认: false
+    lio.downsample_only: true
+
+    # ======================== 单核模式 ========================
+    # 是否启用单核运行模式。true: 关闭TBB并行，LIO主管线串行执行
+    lio.single_core: true
+
+    # ======================== 快速TF模式 ========================
+    # 是否在IMU频率下发布tf（world->imu, world->base_footprint），降低tf延迟
+    lio.fast_tf: false
+
+
+    # ======================== 观测参数 ========================
+    # 平面拟合距离门限(米)，Z轴朝前安装走廊场景建议0.15~0.2m
+    # 原硬编码0.1m过严，位姿微漂导致正确点被拒绝
+    lio.observe.plane_fit_threshold: 0.4
+    
+    # 观测权重，等价于 1/σ²（σ为点到面残差标准差）
+    # 权重越高，ESKF越信任观测，响应越快但越容易过冲震荡
+    # Mid-360(高精度): 1000 (σ≈0.032m)
+    # Airy(低精度):    200  (σ≈0.071m, 5m处法向偏差±0.1m)
+    lio.observe.obs_weight: 200
+
+    # Huber核基础阈值(米)：点到面残差小于此值使用满权重，超过时线性降权
+    # 设为近处(5m)残差标准差的1.5~2倍
+    # Mid-360: 0.05, Airy: 0.10
+    # 作用：静止时bias漂移导致残差偏大，Huber核自动降权防止修正过冲震荡
+    lio.observe.huber_delta_base: 0.10
+
+    # Huber核距离缩放系数(米/米)：远处点测量噪声更大，阈值随距离线性增长
+    # delta = huber_delta_base + huber_delta_scale × 点距离
+    # 0.003: 30m处阈值增加0.09m，保证走廊尽头远点不被误降权
+    lio.observe.huber_delta_scale: 0.003
+    
+    # IMU订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
+    # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
+    lio.ros.imu_qos_reliable: false
+    # LiDAR订阅的QoS可靠性设置。true: reliable(可靠传输); false: best_effort(尽力传输)
+    # reliable: 保证数据完整性,适合关键数据; best_effort: 低延迟,适合高频传感器数据
+    lio.ros.lidar_qos_reliable: false
+
+    # ======================== SC-PGO 离线处理参数 ========================
+    # 是否启用 SC-PGO 兼容数据输出（输出 body-frame 扫描 + KITTI 位姿到 Scans/ 目录）
+    lio.sc_pgo.enable: false
+    # 关键帧平移距离阈值(米)，累计平移超过此值抽取一帧
+    lio.sc_pgo.keyframe_gap: 5.0
+    # 关键帧旋转角度阈值(度)，累计旋转超过此值抽取一帧
+    lio.sc_pgo.keyframe_deg_gap: 10.0

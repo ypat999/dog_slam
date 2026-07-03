@@ -1,0 +1,42 @@
+lpc_test_node:
+  ros__parameters:
+    scan_frame_id: "base_link"
+    scan_frequency: 10.0
+    scan_angle_increment: 0.0174532925
+    scan_range_min: 0.05
+    scan_range_max: 10.0
+    max_initialpose_points: 500
+
+    local_planner_controller:
+      enable_footprint_check: true
+      enable_footprint_visualization: true
+      comparison_path_topic: "/navigo/cs/lpc/vis/base_candidate_plan"
+      footprint_collision_marker_topic: "/navigo/cs/lpc/vis/footprint_collision"
+      footprint_samples_marker_topic: "/navigo/cs/lpc/vis/footprint_samples"
+      footprint_marker_z: 0.02
+      footprint_collision_marker_size: 0.1
+      footprint_samples_line_width: 0.02
+      footprint_points: [0.3, 0.25, 0.3, -0.25, -0.3, -0.25, -0.3, 0.25]
+      robot_length: 0.6
+      adjacent_range: 1.8
+      yaw_p_gain: 1.2
+      small_yaw_gain: 1.68
+      slow_down_dis_thre: 1.0
+      max_linear_vel: 0.6
+      max_linear_accel: 0.6
+      max_angular_accel: 12.5
+      max_angular_vel: 0.6
+      yaw_diff_thre: 0.45
+      dir_thre: 30.0
+      vel_y_gain: 0.5
+      vel_x_gain: 1.0
+      lookahead_distance: 1.0
+      two_way_drive_mode: false
+      goal_path_dir_weight: 0.01
+      trajectory_smooth_weight: 0.3
+      stop_dis_thre: 0.05
+      use_omni_mode: true
+      lidar_min_range: 0.15
+      control_frequency: 50.0
+      min_yaw_dead_zone: 0.3
+

@@ -1,0 +1,13 @@
+version: 0.6.5
+last_commit_id: e99ce5ad943dc39b5ee8d7cd080c9d55abdfd867
+last_commit_time: 2026-01-29 14:45:41 +08:00
+last_commit_info: |
+  ci: update 0.6.5 release info
+release_info: |
+  1. 3D自主导航测试版本
+  2. UWB跟随测试版本
+  3. 新增LocalPlanner多级轨迹束生成策略；新增LocalPlanner后退脱困算法；新增裁剪局部轨迹；优化LocalPlanner控制器footprint碰撞检测
+  4. 更新紧急避障检测框大小；上线选择性速度过滤策略；过滤机器人内部噪点
+  5. 新增统一的导航控制指令；原有速度控制接口保留；导航结束时发布STANDBY运控指令
+  6. 局部规划使用HybridQuadtreeKino组合规划器；降低HybridQuadtreeKino内部重规划次数，由3*2降到1*2次
+  7. 重构PlannerServer参数配置，重构KinoSearcher规划器；KinoSearcher内部新增根据引导线距离选取不同参数生成多样化探索节点策略

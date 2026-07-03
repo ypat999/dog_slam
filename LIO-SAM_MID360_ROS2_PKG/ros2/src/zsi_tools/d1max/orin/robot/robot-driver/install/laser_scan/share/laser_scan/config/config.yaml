@@ -1,0 +1,36 @@
+laser_scan:
+  ros__parameters:
+    sub_radar_topic: /livox/lidar
+    pub_laser_scan_topic: /laser_scan
+    image_sub_topic: /left_image_seg
+    odom_sub_topic: /odom/mc_odom
+    pub_points_frame: base_link
+    use_image: true
+    voxel_filter_flag: true
+    radius_filter_flag: true
+    max_range: 8.0
+    min_range: 0.5
+    voxel_filter_x: 0.08
+    voxel_filter_z: 0.06
+    radius_filter_r: 0.3
+    radius_filter_nums: 10
+    scan_time: 0.1
+    angle_increment: 0.00349
+    max_angle: 2.618
+    min_angle: -2.618
+    max_height: 1.0
+    min_height: 0.1
+    cx: 477.9461
+    cy: 233.3754
+    fx: 620.0553
+    fy: 614.6717
+    k1: -0.3693
+    k2: 0.1212
+    k3: 0.0039
+    p1: -0.001
+    p2: 0.0
+    ransac_thre: 0.05
+    plane_dis_thre: 0.32
+    ext_R: [1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+    ext_T: [0.205, -0.02329, 0.17598]
+    ext_lidar_2_camera_T: [-0.02710399,-0.9996303,-0.00215111,0.03866519 ,0.48119114, -0.01116078, -0.87654465, -0.06369728, 0.87619659, -0.02479296,  0.48131574, -0.03313097,0.0,0.0,0.0,1.0]

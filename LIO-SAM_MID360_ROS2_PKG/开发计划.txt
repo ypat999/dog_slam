@@ -1,0 +1,164 @@
+costmap 使用点云体素         STVL插件
+测试VP控制器
+测试Smac Lattice规划器
+中狗高速度转换自适应
+
+
+
+
+
+
+
+
+
+
+
+
+
+costmap使用梯度地图检测三维通过性
+https://github.com/ANYbotics/grid_map/tree/master/grid_map_costmap_2d
+https://github.com/roboskel/traversability_layer
+
+参数 默认值 说明 pointcloud_topic /cloud_registered_body 点云话题 
+step_height_threshold 0.15 台阶高度阈值（米），超过此值开始分配 
+cost max_slope_traversable 45.0 最大可通行坡度（度），超过则 lethal 
+slope_cost_scale 2.0 坡度 cost 缩放因子 
+height_cost_scale 3.0 高度差 cost 缩放因子 
+max_obstacle_height 2.0 最高考虑高度 
+min_obstacle_height -0.5 最低考虑高度 
+publish_slope_map false 是否发布坡度可视化点云
+
+
+
+
+
+
+## 修改的文件
+### 1. dynamic_remove.cpp
+文件
+
+- 新增 --output_dir 选项 ：当指定时，每帧滤波结果保存为独立的 filtered_{原始文件名}.pcd ，而非合并输出单一文件
+- loadPointCloudFrames / loadPointCloudFramesWithOdom ：新增 out_filenames 可选参数，用于追踪原始文件名，确保 filtered_ 文件名与原文件对应
+- filterDynamicPointsTemporal ：支持 per-frame 输出模式，每帧滤波后的点云单独保存，避免在内存中累积所有点云
+- runDynamicRemoval ：同时支持 Temporal 和 Raycast 两种方法的 per-frame 输出模式
+### 2. super_lio.h
+文件
+
+- 新增 #include <pcl/PCLPointCloud2.h> （流式 merge 需要）
+### 3. super_lio.cpp
+文件
+
+- init() ：启动时也删除 filtered_ 前缀的旧 PCD 文件
+- saveMap() ：将 --output_file 改为 --output_dir ，filtered_ PCD 输出到原 PCD 目录
+- ProcessCaceMap() ：重写为两种模式：
+  - 无降采样 （ !g_if_filter ）： 流式二进制拼接 ——只读 header 统计总点数，然后逐个文件追加二进制数据到输出文件， 全程不将全部点云加载到内存
+  - 有降采样 ：逐个加载 filtered_ PCD 到内存做体素滤波（降采样必须看到全部点）
+## 流程变化
+阶段 旧流程 新流程 动态去除 输出一个合并的大 PCD 文件 每帧输出独立的 filtered_ PCD merge 加载全部原始 PCD 到内存 → OOM 流式读取 filtered_ PCD，逐个追加写入
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 2. SC-PGO 离线处理分析
+### SC-PGO 的数据需求
+从 SC-PGO 主程序 可以清楚看到它运行时：
+
+需求 话题/格式 用途 点云 /velodyne_cloud_registered_local (PointCloud2) 原始扫描，保存为 Scans/NNNNNN.pcd 里程计 /aft_mapped_to_init (Odometry) 关键帧位姿，保存为 odom_poses.txt GPS(可选) /gps/fix 高度约束
+
+盘上产出 ：
+
+- Scans/000000.pcd , 000001.pcd , ... (每关键帧原始点云)
+- odom_poses.txt (KITTI 格式：3x4 旋转矩阵+平移)
+- optimized_poses.txt (优化后位姿，ISAM2 增量输出)
+- times.txt (时间戳)
+### SuperLIO 当前输出是否够用？
+够了，但有两点不匹配需要转换：
+
+1. 目录结构 ：SuperLIO 输出在 PCD/{prefix}scans_{index}.pcd ，SC-PGO 离线脚本期望 Scans/NNNNNN.pcd
+2. 位姿格式 ：SuperLIO 的 scans_{index}.txt 格式是：
+   
+   ```
+   timestamp x y z qx qy qz qw   (四
+   元数)
+   ```
+   SC-PGO 的 odom_poses.txt 格式是：
+   
+   ```
+   R11 R12 R13 tx R21 R22 R23 ty 
+   R31 R32 R33 tz   (旋转矩阵)
+   ```
+此外注意：SC-PGO 用的是 关键帧 （每 5m 或 10° 抽一帧），且保存的是下采样前的 原始全分辨率点云 ，不是用于动态滤除的那个点云。如果你已经做了动态滤除，也没关系——SC-PGO 对干净的点云也能正常工作。
+
+### 能否离线处理？
+能 。SC-PGO 的 process_pg() 函数虽然是在线读取 ROS 队列的 while(1) 循环，但它所有关键数据都有落盘（Scans + odom_poses）。而 makeMergedMap.py 就是一个 已有的离线 merge 脚本 ——它读 optimized_poses.txt + Scans/ 目录生成最终地图。
+
+离线方案有两种：
+
+方案 做法 优缺点 A 在 SuperLIO 保存时 直接输出 SC-PGO 兼容格式 （Scans/ 目录 + KITTI 位姿），跑完 SuperLIO 后单独跑 SC-PGO 的图优化 最灵活，解耦，但需改 SuperLIO 的输出逻辑 B 用 ROS bag 录制 /lio/odom + /lio/body/cloud ，事后回放给 SC-PGO 在线处理 不用改代码，但多了录制/回放步骤
+
+需要我实现方案 A（从 SuperLIO 直接输出 SC-PGO 兼容格式）吗？
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## 已完成的修改
+### SC-PGO 离线数据输出（方案 A）
+SuperLIO 现在可以输出 SC-PGO 兼容的离线数据，无需录制 ROS bag。
+
+新增配置参数 （ livox_360.yaml / livox_360_zg.yaml ）：
+
+```
+lio.sc_pgo.enable: false          # 
+启用 SC-PGO 数据输出
+lio.sc_pgo.keyframe_gap: 5.0      # 
+关键帧平移间隔(米)
+lio.sc_pgo.keyframe_deg_gap: 10.0 # 
+关键帧旋转间隔(度)
+```
+输出目录结构 （在 save_map_dir 下）：
+
+```
+{save_map_dir}/
+├── Scans/
+│   ├── 000000.pcd    ← body-frame 
+去畸变扫描（原始分辨率）
+│   ├── 000001.pcd
+│   └── ...
+├── odom_poses.txt    ← KITTI 格式位
+姿（旋转矩阵3x4）
+├── PCD/              ← 原有增量点云、
+filtered_ 动态滤除输出
+└── test.pcd          ← 最终合并地图
+```
+关键帧抽取逻辑 ：每帧累加平移和旋转量，超过阈值时保存一帧并清零累加器，等效于 SC-PGO 原版的 keyframeMeterGap / keyframeDegGap 。
+
+数据来源 ：
+
+- 点云： scan_undistort_full_ （去畸变后的机体坐标系原始扫描，未经降采样）
+- 位姿： kf_->GetNavState() 的 R.R_ + p ，以 KITTI 格式写入 odom_poses.txt

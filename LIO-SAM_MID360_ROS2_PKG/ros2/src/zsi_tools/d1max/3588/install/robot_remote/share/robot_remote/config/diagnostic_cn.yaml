@@ -1,0 +1,141 @@
+diagnostics:
+  # ----------------------------------------------------Remote-----------------------------------------------------
+  - "/Remote": "/遥控模块"
+  - "/Remote/node_state": "/遥控模块/节点状态"
+  - "Keepalive Failure": "心跳保活失败"
+  - "Keep Alive Check": "保活检测"
+  - "Mile Data": "里程累积数据(米)"
+
+  # ----------------------------------------------------Hal-----------------------------------------------------
+  - "/Hal": "/硬件抽象层"
+  # 填写key、value汉化...
+  
+  - "/Hal/node_state": "/硬件抽象层/节点状态"
+  # 填写key、value汉化...
+
+  # ----------------------------------------------------Mcu-----------------------------------------------------
+  - "/Mcu": "/单片机"
+  - "PowerControl": "电源控制"
+  - "Uart2Can": "串口转Can"
+
+  - "/Mcu/PowerControl": "/单片机/电源控制"
+  - "robot_hal: /power_control_driver": "硬件抽象层: /电源控制驱动"
+  - "robot_hal: /power_control_driver/battery1": "硬件抽象层: /电源控制驱动/电池1"
+  - "robot_hal: /power_control_driver/battery2": "硬件抽象层: /电源控制驱动/电池2"
+  - "Not In Place": "电池不在位"
+
+  - "/Mcu/PowerControl/power_control_driver": "/单片机/电源控制/电源控制驱动"
+  # 填写key、value汉化...
+
+  - "/Mcu/PowerControl/power_control_driver battery1": "/单片机/电源控制/电源控制驱动 电池1"
+  # 填写key、value汉化...
+
+  - "/Mcu/PowerControl/power_control_driver battery2": "/单片机/电源控制/电源控制驱动 电池2"
+  # 填写key、value汉化...
+
+  - "/Mcu/Uart2Can": "/单片机/串口转Can"
+  # 填写key、value汉化...
+
+  - "/Mcu/Uart2Can/can0": "/单片机/串口转Can/can0"
+  # 填写key、value汉化...
+
+  - "/Mcu/Uart2Can/can1": "/单片机/串口转Can/can1"
+  # 填写key、value汉化...
+
+  - "/Mcu/Uart2Can/can2": "/单片机/串口转Can/can2"
+  # 填写key、value汉化...
+
+  - "/Mcu/Uart2Can/can3": "/单片机/串口转Can/can3"
+  # 填写key、value汉化...
+
+
+  # ----------------------------------------------------Actuator-----------------------------------------------------
+  - "/Actuator": "/执行器"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontRightLeg": "/执行器/右前腿"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontRightLeg/fr1_hip_roll": "/执行器/右前腿/髋部1号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontRightLeg/fr2_hip_pitch": "/执行器/右前腿/髋部2号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontRightLeg/fr3_knee_pitch": "/执行器/右前腿/膝盖3号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontRightLeg/fr4_foot": "/执行器/右前腿/足部4号"
+  # 填写key、value汉化...
+
+
+  - "/Actuator/FrontLeftLeg": "/执行器/左前腿"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontLeftLeg/fl1_hip_roll": "/执行器/左前腿/髋部1号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontLeftLeg/fl2_hip_pitch": "/执行器/左前腿/髋部2号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontLeftLeg/fl3_knee_pitch": "/执行器/左前腿/膝盖3号"
+  # 填写key、value汉化...
+
+  - "/Actuator/FrontLeftLeg/fl4_foot": "/执行器/左前腿/足部4号"
+  # 填写key、value汉化...
+
+
+  - "/Actuator/BackRightLeg": "/执行器/右后腿"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackRightLeg/br1_hip_roll": "/执行器/右后腿/髋部1号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackRightLeg/br2_hip_pitch": "/执行器/右后腿/髋部2号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackRightLeg/br3_knee_pitch": "/执行器/右后腿/膝盖3号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackRightLeg/br4_foot": "/执行器/右后腿/足部4号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackLeftLeg": "/执行器/左后腿"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackLeftLeg/bl1_hip_roll": "/执行器/左后腿/髋部1号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackLeftLeg/bl2_hip_pitch": "/执行器/左后腿/髋部2号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackLeftLeg/bl3_knee_pitch": "/执行器/左后腿/膝盖3号"
+  # 填写key、value汉化...
+
+  - "/Actuator/BackLeftLeg/bl4_foot": "/执行器/左后腿/足部4号"
+  # 填写key、value汉化...
+
+  # ----------------------------------------------------Sensor-----------------------------------------------------
+  - "/Sensor": "/传感器"
+  # 填写key、value汉化...
+
+  - "/Sensor/imu_central": "/传感器/IMU"
+  # 填写key、value汉化...
+
+  - "/Sensor/lux": "/传感器/环境光传感器"
+  # 填写key、value汉化...
+
+  # ----------------------------------------------------RobotState-----------------------------------------------------
+  - "/RobotState": "/机器人状态"
+  # 填写key、value汉化...
+
+  - "/RobotState/robot_status": "/机器人状态/机器人状态"
+  # 填写key、value汉化...
+
+  - "/RobotState/clock_sanity": "/机器人状态/时钟"
+  # 填写key、value汉化...
+
+  - "/RobotState/power_on_status": "/机器人状态/电源状态"
+  # 填写key、value汉化...
+
+  # ----------------------------------------------------Roamerx-----------------------------------------------------

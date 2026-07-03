@@ -37,6 +37,7 @@
     let MAP_TOPIC = ns('/map');
     let ROBOT_FRAME = nsFrame('base_link');
     let AMCL_POSE_TOPIC = ns('/amcl_pose'); // AMCL发布的定位话题
+    let PCL_POSE_TOPIC = ns('/pcl_pose'); // 3D定位(PCL)发布的定位话题
     let CMD_TOPIC = '/cmd_vel';
     let GOAL_TOPIC = '/goal_pose';
     let INITIAL_POSE_TOPIC = '/initialpose';
@@ -225,6 +226,7 @@
       MAP_TOPIC = ns('/map');
       ROBOT_FRAME = nsFrame('base_footprint');
       AMCL_POSE_TOPIC = ns('/amcl_pose');
+      PCL_POSE_TOPIC = ns('/pcl_pose');
       CMD_TOPIC = '/cmd_vel';
       GOAL_TOPIC = '/goal_pose';
       INITIAL_POSE_TOPIC = '/initialpose';
@@ -1698,7 +1700,7 @@
 
       // 不使用里程计话题，机器人位置完全从TF树中的world→base_footprint获取
       
-      // 订阅AMCL位置主题（仍然保持）
+      // 订阅AMCL位置主题
       var amclPoseTopic = new ROSLIB.Topic({
         ros: ros,
         name: AMCL_POSE_TOPIC,
@@ -1716,6 +1718,23 @@
           robotPosition.theta = quaternionToYaw(poseMsg.pose.pose.orientation);
           
           // 重绘地图以更新机器人位置
+          drawMap();
+        }
+      });
+      
+      // 订阅3D定位(PCL)位置主题
+      var pclPoseTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: PCL_POSE_TOPIC,
+        messageType: 'geometry_msgs/PoseWithCovarianceStamped'
+      });
+      
+      pclPoseTopic.subscribe(function(poseMsg) {
+        // 只有当位置源设置为pcl_pose时才使用这些数据
+        if (positionSource === 'pcl_pose') {
+          robotPosition.x = poseMsg.pose.pose.position.x;
+          robotPosition.y = poseMsg.pose.pose.position.y;
+          robotPosition.theta = quaternionToYaw(poseMsg.pose.pose.orientation);
           drawMap();
         }
       });
@@ -2326,6 +2345,8 @@
         statusElement.textContent = '当前：使用AMCL定位';
       } else if (source === 'super_lio') {
         statusElement.textContent = '当前：使用super_lio里程计';
+      } else if (source === 'pcl_pose') {
+        statusElement.textContent = '当前：使用3D定位(PCL)';
       }
       console.log('位置源已切换为:', source);
       // 切换位置源后，可能需要等待新数据到来才能更新显示

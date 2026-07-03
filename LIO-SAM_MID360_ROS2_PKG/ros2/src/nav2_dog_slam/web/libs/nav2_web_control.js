@@ -736,17 +736,6 @@
       
       const info = currentMap.info;
       
-      // 检查缓存是否需要重建
-      const cacheRebuildStart = performance.now();
-      const needsRebuild = checkMapCacheNeedsRebuild(info);
-      
-      if (needsRebuild) {
-        // 同步重建缓存（为了准确计时，不使用Web Worker）
-        rebuildMapCacheSync(info, currentMap.data);
-      }
-      
-      const cacheRebuildTime = performance.now() - cacheRebuildStart;
-      
       // 计算地图在Canvas上的绘制参数
       const mapWidthPixels = info.width * info.resolution * scale;
       const mapHeightPixels = info.height * info.resolution * scale;
@@ -754,32 +743,53 @@
       const startX = offsetX;
       const startY = offsetY - mapHeightPixels;
       
-      // 判断是否需要直接从原始数据渲染（缩放较大时缓存分辨率不足）
-      // 条件：当地图在画布上的像素尺寸超过缓存图像尺寸的2倍时，考虑直渲染
-      const cacheTooSmall = mapCacheCanvas && mapCacheValid && (
+      // 检查缓存是否需要重建（只检查，不同步重建以避免大图卡死主线程）
+      const cacheRebuildStart = performance.now();
+      const needsRebuild = checkMapCacheNeedsRebuild(info);
+      
+      if (needsRebuild) {
+        // 触发异步重建（使用 Web Worker，不阻塞主线程）
+        // 注意：只更新 mapCacheCanvas 尺寸，实际数据由 Worker 异步填充
+        updateMapCache();
+      }
+      
+      const cacheRebuildTime = performance.now() - cacheRebuildStart;
+      
+      // 根据缓存状态决定渲染方式
+      const useDirectRender = !mapCacheValid || (
         mapWidthPixels > mapCacheCanvas.width * 2.0 ||
         mapHeightPixels > mapCacheCanvas.height * 2.0
       );
-
-      if (cacheTooSmall) {
+      
+      if (useDirectRender) {
         // 计算可见区域的地图格子数量，避免大图时主线程卡死
         const cellSize = info.resolution * scale;
         const visibleCols = Math.min(info.width, Math.ceil(canvas.width / cellSize));
         const visibleRows = Math.min(info.height, Math.ceil(canvas.height / cellSize));
         const visibleCells = visibleCols * visibleRows;
-        const MAX_VISIBLE_CELLS = 200000; // 最多处理20万格，超出则使用缓存
+        const MAX_VISIBLE_CELLS = 200000; // 最多处理20万格
         
         if (visibleCells <= MAX_VISIBLE_CELLS) {
-          // 可见格数可控，直接渲染以获得清晰细节
+          // 可见格数可控，直接渲染原始数据
           drawMapDirectFromData(ctx, currentMap, scale, offsetX, offsetY, canvas.width, canvas.height);
-        } else {
-          // 可见格数过多（大图缩小查看），使用缓存避免卡死
+          if (!mapCacheValid && mapWidthPixels > canvas.width) {
+            console.log(`[渲染] 缓存重建中，可见格数${visibleCells}，使用直接渲染`);
+          }
+        } else if (mapCacheCanvas && mapCacheValid) {
+          // 可见格数过多（大图缩小查看），缓存可用则用它
           console.log(`[渲染优化] 可见格数${visibleCells}超过${MAX_VISIBLE_CELLS}，使用缓存渲染（可能有轻微模糊）`);
           ctx.imageSmoothingEnabled = true;
           ctx.drawImage(mapCacheCanvas, startX, startY, mapWidthPixels, mapHeightPixels);
+        } else {
+          // 缓存不可用，只显示提示
+          ctx.fillStyle = '#999';
+          ctx.font = '16px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('地图加载中...', canvas.width / 2, canvas.height / 2);
         }
-      } else if (mapCacheCanvas && mapCacheValid) {
-        // 使用drawImage直接绘制缓存的地图
+      } else {
+        // 缓存有效且尺寸合适，直接使用缓存
         ctx.imageSmoothingEnabled = true;
         ctx.drawImage(mapCacheCanvas, startX, startY, mapWidthPixels, mapHeightPixels);
       }

@@ -2,7 +2,7 @@
 // 在后台线程处理像素数据，避免阻塞主线程
 
 // 最大缓存边长，超过此值会预先缩放
-const MAX_CACHE_SIZE = 720;
+const MAX_CACHE_SIZE = 8192;
 
 self.onmessage = function(e) {
   const { mapData, width, height, colors, resolution } = e.data;

@@ -478,7 +478,7 @@
       const data = currentMap.data;
       
       // 计算目标缓存尺寸（如果地图太大则预缩放）
-      const MAX_CACHE_SIZE = 720;
+      const MAX_CACHE_SIZE = 8192;
       const maxDimension = Math.max(info.width, info.height);
       let targetWidth = info.width;
       let targetHeight = info.height;
@@ -755,15 +755,29 @@
       const startY = offsetY - mapHeightPixels;
       
       // 判断是否需要直接从原始数据渲染（缩放较大时缓存分辨率不足）
-      // 条件：当地图在画布上的像素尺寸超过缓存图像尺寸的1.2倍时，直渲染以获得清晰细节
+      // 条件：当地图在画布上的像素尺寸超过缓存图像尺寸的2倍时，考虑直渲染
       const cacheTooSmall = mapCacheCanvas && mapCacheValid && (
-        mapWidthPixels > mapCacheCanvas.width * 1.2 ||
-        mapHeightPixels > mapCacheCanvas.height * 1.2
+        mapWidthPixels > mapCacheCanvas.width * 2.0 ||
+        mapHeightPixels > mapCacheCanvas.height * 2.0
       );
 
       if (cacheTooSmall) {
-        // 直接从原始地图数据渲染可见区域，避免缓存拉伸导致的模糊
-        drawMapDirectFromData(ctx, currentMap, scale, offsetX, offsetY, canvas.width, canvas.height);
+        // 计算可见区域的地图格子数量，避免大图时主线程卡死
+        const cellSize = info.resolution * scale;
+        const visibleCols = Math.min(info.width, Math.ceil(canvas.width / cellSize));
+        const visibleRows = Math.min(info.height, Math.ceil(canvas.height / cellSize));
+        const visibleCells = visibleCols * visibleRows;
+        const MAX_VISIBLE_CELLS = 200000; // 最多处理20万格，超出则使用缓存
+        
+        if (visibleCells <= MAX_VISIBLE_CELLS) {
+          // 可见格数可控，直接渲染以获得清晰细节
+          drawMapDirectFromData(ctx, currentMap, scale, offsetX, offsetY, canvas.width, canvas.height);
+        } else {
+          // 可见格数过多（大图缩小查看），使用缓存避免卡死
+          console.log(`[渲染优化] 可见格数${visibleCells}超过${MAX_VISIBLE_CELLS}，使用缓存渲染（可能有轻微模糊）`);
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(mapCacheCanvas, startX, startY, mapWidthPixels, mapHeightPixels);
+        }
       } else if (mapCacheCanvas && mapCacheValid) {
         // 使用drawImage直接绘制缓存的地图
         ctx.imageSmoothingEnabled = true;
@@ -817,7 +831,7 @@
       const data = currentMap.data;
       
       // 计算目标缓存尺寸
-      const MAX_CACHE_SIZE = 720;
+      const MAX_CACHE_SIZE = 8192;
       const maxDimension = Math.max(info.width, info.height);
       let targetWidth = info.width;
       let targetHeight = info.height;
@@ -846,7 +860,7 @@
       const startTime = performance.now();
       
       // 计算是否需要预缩放
-      const MAX_CACHE_SIZE = 720;
+      const MAX_CACHE_SIZE = 8192;
       const maxDimension = Math.max(info.width, info.height);
       let targetWidth = info.width;
       let targetHeight = info.height;

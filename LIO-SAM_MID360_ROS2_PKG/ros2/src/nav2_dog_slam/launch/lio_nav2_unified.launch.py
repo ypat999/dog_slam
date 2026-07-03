@@ -354,8 +354,8 @@ def generate_launch_description():
             {'default_call_service_timeout': 5.0},
             {'call_services_in_new_thread': False},  # True→False，避免每次调用产生新线程，降低CPU
             {'send_action_goals_in_new_thread': False},  # True→False，避免每次目标产生新线程
-            {'fragment_timeout': 10},           # 600→10s，超时分片快速清理，防止内存堆积
-            {'max_message_size': 10000000},     # 100MB→10MB，限制单条消息内存上限
+            {'fragment_timeout': 120},          # 120s，匹配前端120s超时，6000x2000大图传输需30-50s
+            {'max_message_size': 500000000},     # 500MB，支持超大OccupancyGrid地图
             {'unregister_timeout': 10.0},       # 订阅者注销超时，清理断开连接的积压
             {'publish_timeout': 2.0},           # 发布超时，超时丢弃不再占用内存
             {'retry_startup_delay': 5.0},       # 重连间隔

@@ -97,6 +97,11 @@
     let pendingMapData = null; // 待处理的最新地图数据
     let pendingMapReceiveTime = 0; // 待处理地图数据的接收时间
     
+    // 地图接收超时检测
+    let mapWaitStartTime = 0;       // 开始等待地图的时间戳
+    let mapWaitTimedOut = false;    // 是否已超时
+    const MAP_WAIT_TIMEOUT_MS = 120000; // 120秒超时（6000x2000大图JSON序列化需30-50秒）
+    
     // 独立渲染：地图和激光点云使用不同的渲染循环
     let mapRenderPending = false; // 地图渲染待处理
     let laserRenderPending = false; // 激光渲染待处理
@@ -730,7 +735,23 @@
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('等待地图数据...', canvas.width / 2, canvas.height / 2);
+        
+        if (mapWaitTimedOut) {
+          // 超时提示
+          ctx.fillStyle = '#ff4444';
+          ctx.font = 'bold 18px Arial';
+          ctx.fillText('[超时] 地图接收超时', canvas.width / 2, canvas.height / 2 - 60);
+          ctx.font = '14px Arial';
+          ctx.fillStyle = '#ff8888';
+          ctx.fillText('可能原因及排查步骤：', canvas.width / 2, canvas.height / 2 - 25);
+          ctx.fillStyle = '#ffaa66';
+          ctx.fillText('1. rosbridge fragment_timeout(10s) 对大图传输不够，已自动重试中', canvas.width / 2, canvas.height / 2);
+          ctx.fillText('2. map_server/octomap_server 生成大图耗时过长', canvas.width / 2, canvas.height / 2 + 22);
+          ctx.fillText('3. 在终端执行 ros2 topic echo /map --once | wc -c 检查地图大小', canvas.width / 2, canvas.height / 2 + 44);
+        } else {
+          const elapsed = Math.floor((performance.now() - mapWaitStartTime) / 1000);
+          ctx.fillText(`等待地图数据... (${elapsed}s)`, canvas.width / 2, canvas.height / 2);
+        }
         return { cacheRebuildTime: 0 };
       }
       
@@ -1298,7 +1319,7 @@
         console.log('ROS Bridge连接已关闭');
       });
       
-      // 订阅地图主题
+      // 订阅地图主题（保存引用以便重试）
       var mapTopic = new ROSLIB.Topic({
         ros: ros,
         name: MAP_TOPIC,
@@ -1315,7 +1336,44 @@
       let lastMapProcessCompleteTime = 0; // 上一次处理完成的时间
       let mapUpdateCount = 0;
       
-      mapTopic.subscribe(function(mapMsg) {
+      // 地图重试订阅相关
+      let mapRetryCount = 0;
+      const MAP_MAX_RETRIES = 3;
+      
+      // 启动地图接收超时检测
+      function startMapTimeoutCheck() {
+        mapWaitStartTime = performance.now();
+        mapWaitTimedOut = false;
+        setTimeout(function checkMapTimeout() {
+          if (!currentMap && mapWaitStartTime > 0) {
+            mapRetryCount++;
+            if (mapRetryCount <= MAP_MAX_RETRIES) {
+              mapWaitTimedOut = true;
+              console.warn(`[地图超时] 第${mapRetryCount}次超时，正在重新订阅地图话题...`);
+              // 退避重试：指数退避 2s, 4s, 8s
+              const backoffMs = Math.min(2000 * Math.pow(2, mapRetryCount - 1), 10000);
+              document.getElementById('map-info').innerHTML = `⏳ 地图接收超时(第${mapRetryCount}次)，${backoffMs/1000}s后重试... 地图尺寸可能过大`;
+              // 取消旧订阅，重新订阅
+              mapTopic.unsubscribe();
+              setTimeout(() => {
+                mapWaitStartTime = performance.now();
+                mapWaitTimedOut = false;
+                mapTopic.subscribe(mapCallback);
+                console.log(`[地图重试] 已重新订阅 ${MAP_TOPIC}，重试次数:${mapRetryCount}`);
+                // 重新启动超时检测
+                setTimeout(checkMapTimeout, MAP_WAIT_TIMEOUT_MS);
+              }, backoffMs);
+            } else {
+              mapWaitTimedOut = true;
+              console.error(`[地图超时] 已重试${MAP_MAX_RETRIES}次仍未收到地图数据`);
+            }
+          }
+        }, MAP_WAIT_TIMEOUT_MS);
+      }
+      
+      // 地图消息回调（命名以便重用时引用）
+      function mapCallback(mapMsg) {
+        mapRetryCount = 0; // 收到数据后重置重试计数
         const receiveTime = performance.now();
         mapUpdateCount++;
         
@@ -1331,10 +1389,18 @@
         
         // 开始处理地图数据
         processMapData(mapMsg, receiveTime);
-      });
+      }
+      
+      // 首次订阅地图并启动超时检测
+      mapTopic.subscribe(mapCallback);
+      startMapTimeoutCheck();
       
       // 处理地图数据的函数
       function processMapData(mapMsg, originalReceiveTime) {
+        // 收到地图数据，清除超时状态
+        mapWaitTimedOut = false;
+        mapWaitStartTime = 0;
+        
         isProcessingMap = true;
         pendingMapData = null;
         

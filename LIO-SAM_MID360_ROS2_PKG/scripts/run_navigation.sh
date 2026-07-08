@@ -64,4 +64,4 @@ echo "启动导航..."
 echo "SLAM算法: $SLAM_ALGORITHM"
 echo "MANUAL_BUILD_MAP=$MANUAL_BUILD_MAP"
 export SLAM_ALGORITHM=$SLAM_ALGORITHM
-ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+ros2 launch nav2_dog_slam lio_nav2_unified.launch.py

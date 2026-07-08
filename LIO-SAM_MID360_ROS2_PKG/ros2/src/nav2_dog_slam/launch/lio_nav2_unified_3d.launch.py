@@ -603,50 +603,25 @@ def generate_launch_description():
             get_package_share_directory('octo_planner3d'), 'launch', 'octo_planner3d.launch.py')])
     )
 
+    # SC-PGO配置文件路径
+    sc_pgo_config_file = PathJoinSubstitution([
+        get_package_share_directory('sc_pgo_ros2'), 'config', 'btc_config.yaml'
+    ])
+
     sc_pgo_node = Node(
         package="sc_pgo_ros2",
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
         namespace=ns,
-        parameters=[
-            {"scan_line": 4},
-            {"minimum_range": 0.3},
-            {"mapping_line_resolution": 0.4},
-            {"mapping_plane_resolution": 0.8},
-            {"mapviz_filter_size": 0.05},
-            {"keyframe_meter_gap": 5.0},
-            {"keyframe_deg_gap": 30.0},
-            {"sc_dist_thres": 0.3},
-            {"sc_max_radius": 290.0},
-            {"save_directory": SC_PGO_SAVE_DIRECTORY},
-            {"use_sim_time": use_sim_time},
-            {"frame_id_odom": ns_odom_frame},
-            {"frame_id_aft_pgo": ns_aft_pgo_frame},
-            # GICP parameters (from btc_config.yaml)
-            {"use_gicp_for_loop_closure": True},
-            {"gicp_fitness_score_threshold": 0.25},
-            {"gicp_max_correspondence_distance": 10.0},
-            {"gicp_max_iterations": 64},
-            {"gicp_transformation_epsilon": 0.001},
-            {"gicp_max_init_translation": 10.0},
-            {"gicp_num_threads": 4},
-            {"gicp_scan_ds_size": 0.1},
-            {"gicp_coarse_ds_size": 0.25},
-            {"gicp_coarse_max_iter": 50},
-            {"gicp_coarse_max_dist": 10.0},
-            # Loop validation (from btc_config.yaml)
-            {"max_loop_distance": 10.0},
-            {"max_yaw_diff": 6.28},
-            {"odom_direct_threshold": 1.0},
-        ],
+        parameters=[sc_pgo_config_file],
         remappings=[
-            ("/aft_mapped_to_init", lio_config['odom_topic']),
-            ("/velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
-            ("/cloud_for_scancontext", lio_config['octomap_topic']),
-            ("/gps/fix", "/gps/fix"),
-            ("/tf", "/tf"),
-            ("/tf_static", "/tf_static"),
+            ("aft_mapped_to_init", lio_config['odom_topic']),
+            ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
+            ("cloud_for_scancontext", lio_config['octomap_topic']),
+            ("gps/fix", "/gps/fix"),
+            ("tf", "/tf"),
+            ("tf_static", "/tf_static"),
         ],
         prefix=['taskset -c 6'],
     )

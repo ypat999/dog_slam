@@ -5,7 +5,7 @@ from launch.actions import DeclareLaunchArgument, TimerAction, IncludeLaunchDesc
 from launch.conditions import IfCondition
 from launch_ros.actions import PushRosNamespace, Node
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
+from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.descriptions import ParameterFile
 import os
@@ -577,40 +577,19 @@ def generate_launch_description():
         }.items()
     )
 
+    # SC-PGO配置文件路径
+    sc_pgo_config_file = PathJoinSubstitution([
+        get_package_share_directory('sc_pgo_ros2'), 'config', 'btc_config.yaml'
+    ])
+
+    # 注意：2D模式下SC-PGO已禁用，此节点定义保留但未使用
+    # 如需启用2D建图+SC-PGO，请在launch_actions中添加
     sc_pgo_node = Node(
         package="sc_pgo_ros2",
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
-        parameters=[
-            {"scan_line": 4},
-            {"minimum_range": 0.3},
-            {"mapping_line_resolution": 0.4},
-            {"mapping_plane_resolution": 0.8},
-            {"mapviz_filter_size": 0.05},
-            {"keyframe_meter_gap": 3.0},
-            {"keyframe_deg_gap": 30.0},
-            {"sc_dist_thres": 0.3},
-            {"sc_max_radius": 290.0},
-            {"save_directory": SC_PGO_SAVE_DIRECTORY},
-            {"use_sim_time": use_sim_time},
-            # GICP parameters (from btc_config.yaml)
-            {"use_gicp_for_loop_closure": True},
-            {"gicp_fitness_score_threshold": 0.05},
-            {"gicp_max_correspondence_distance": 10.0},
-            {"gicp_max_iterations": 32},
-            {"gicp_transformation_epsilon": 0.001},
-            {"gicp_max_init_translation": 10.0},
-            {"gicp_num_threads": 2},
-            {"gicp_scan_ds_size": 0.1},
-            {"gicp_coarse_ds_size": 0.25},
-            {"gicp_coarse_max_iter": 50},
-            {"gicp_coarse_max_dist": 10.0},
-            # Loop validation (from btc_config.yaml)
-            {"max_loop_distance": 10.0},
-            {"max_yaw_diff": 6.28},
-            {"odom_direct_threshold": 2.0},
-        ],
+        parameters=[sc_pgo_config_file],
         remappings=[
             ("aft_mapped_to_init", lio_config['odom_topic']),
             ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),

@@ -70,6 +70,11 @@ config_by_machine = {
 
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
+        
+        # RK3588主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'RK3588ZG': {
         # RK3588主机配置 - 全局配置
@@ -109,6 +114,11 @@ config_by_machine = {
 
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
+        
+        # RK3588ZG主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap_zg.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - 全局配置
@@ -147,6 +157,11 @@ config_by_machine = {
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
+        
+        # DESKTOP-ypat主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'DESKTOP-ypat': {
         # DESKTOP-ypat主机配置 - 全局配置
@@ -186,6 +201,11 @@ config_by_machine = {
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
+        
+        # DESKTOP-ypat主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'ywj-B250-D3A': {
         # ywj-B250-D3A主机配置 - 全局配置
@@ -226,6 +246,11 @@ config_by_machine = {
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
+        
+        # DESKTOP-ypat主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'orin-nx': {
         # orin-nx主机配置 - 全局配置
@@ -264,6 +289,11 @@ config_by_machine = {
 
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
+        
+        # orin-nx主机配置 - OctoPlanner3D
+        'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     }
 }
 
@@ -307,6 +337,11 @@ default_config = {
     
     #SC-PGO
     'SC_PGO_SAVE_DIRECTORY': '/home/ztl/save_data/',
+    
+    # OctoPlanner3D 默认配置
+    'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
+    'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+    'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
 }
 
 # 根据当前主机名选择配置
@@ -357,6 +392,11 @@ SUPER_LIO_LIDAR_TILT_ANGLE = selected_config['SUPER_LIO_LIDAR_TILT_ANGLE']
 
 # ========== 导出SC-PGO配置参数 ==========
 SC_PGO_SAVE_DIRECTORY = selected_config['SC_PGO_SAVE_DIRECTORY']
+
+# ========== 导出OctoPlanner配置参数 ==========
+OCTOPLANNER_BASE_CODE_PATH = selected_config['OCTOPLANNER_BASE_CODE_PATH']
+OCTOPLANNER_PCD_FILE_PATH = selected_config['OCTOPLANNER_PCD_FILE_PATH']
+OCTOPLANNER_PARAMS_FILE = selected_config['OCTOPLANNER_PARAMS_FILE']
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'

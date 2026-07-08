@@ -226,6 +226,37 @@ MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_na
 MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
 
 
+# ===== OctoPlanner3D 三维导航 =====
+# 编译OctoPlanner（狗里面）
+colcon build --symlink-install --parallel-workers 4 --packages-select octo_planner3d global_config nav2_dog_slam
+
+# 启动3D导航系统（OctoPlanner + Nav2，默认SLAM算法）
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+
+# 使用其他SLAM算法的3D导航
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+
+# 3D建图模式（OctoPlanner + SLAM建图）
+MANUAL_BUILD_MAP=True SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+
+# OctoPlanner单独测试（无Nav2）
+ros2 launch octo_planner3d octo_planner3d_nav2.launch.py
+
+# 发送3D导航目标
+ros2 topic pub /goal_pose geometry_msgs/msg/PoseStamped "{header: {frame_id: 'map'}, pose: {position: {x: 10.0, y: 5.0, z: 0.3}}}"
+
+# 观察OctoPlanner规划路径
+ros2 topic echo /planned_path
+
+# 测试模式：RViz Publish Point（蓝色路径，不影响导航）
+# 点击第1次：起点
+# 点击第2次：终点
+
+# 检查OctoPlanner配置（验证global_config）
+python3 -c "from global_config.global_config import OCTOPLANNER_PCD_FILE_PATH; print(OCTOPLANNER_PCD_FILE_PATH)"
+
+
 MANUAL_BUILD_MAP=True SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
 
 ros2 launch fast_lio mapping.launch.py

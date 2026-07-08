@@ -104,6 +104,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install OctoPlanner Nav2 Adapter script as executable (for 3D navigation)
+install(
+  PROGRAMS scripts/octoplanner_nav2_adapter.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install web interface files
 install(
   DIRECTORY web

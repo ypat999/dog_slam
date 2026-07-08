@@ -5,11 +5,14 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
+        - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
         - /PointCloud2_front1/Topic1
+        - /PointCloud2_rear1/Topic1
         - /LaserScan1/Topic1
         - /Map1/Topic1
+        - /Map2
         - /Map2/Topic1
         - /Map3/Topic1
         - /LaserScan3/Topic1
@@ -61,12 +64,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_link:
-          Value: true
-        map:
-          Value: true
-        odom:
-          Value: true
         rkbot/base_footprint:
           Value: true
         rkbot/base_link:
@@ -81,14 +78,6 @@ Visualization Manager:
           Value: true
         rkbot/world:
           Value: true
-        rslidar_head:
-          Value: true
-        rslidar_tail:
-          Value: true
-        uss_left_link:
-          Value: true
-        uss_right_link:
-          Value: true
       Marker Scale: 5
       Name: TF
       Show Arrows: true
@@ -98,19 +87,12 @@ Visualization Manager:
         rkbot/map:
           rkbot/odom:
             rkbot/world:
+              rkbot/base_footprint:
+                {}
               rkbot/imu:
-                rkbot/base_link:
-                  rkbot/base_footprint:
-                    {}
-                  rslidar_head:
-                    rslidar_tail:
-                      {}
-                  uss_left_link:
-                    {}
-                  uss_right_link:
-                    {}
                 rkbot/livox_frame:
-                  {}
+                  rkbot/base_link:
+                    {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -165,7 +147,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 1000
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 229
@@ -186,7 +168,7 @@ Visualization Manager:
         Value: /rkbot/front_lidar/cloud_world
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -202,9 +184,9 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 38; 162; 105
-      Max Intensity: 148
+      Max Intensity: 153
       Min Color: 0; 0; 0
-      Min Intensity: 2
+      Min Intensity: 0
       Name: PointCloud2_rear
       Position Transformer: XYZ
       Selectable: false
@@ -216,7 +198,7 @@ Visualization Manager:
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /rkbot/lio/cloud_world
       Use Fixed Frame: true
       Use rainbow: true
@@ -361,7 +343,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map
       Topic:
         Depth: 5
@@ -377,7 +359,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /rkbot/local_costmap/costmap_updates
       Use Timestamp: false
-      Value: false
+      Value: true
     - Alpha: 0.30000001192092896
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
@@ -756,8 +738,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 55.547664642333984
-        Min Value: -2.202559232711792
+        Max Value: 3.234252691268921
+        Min Value: -1.1082117557525635
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -833,25 +815,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 127.19564056396484
+      Distance: 8.295973777770996
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.268566131591797
-        Y: 0.5013295412063599
-        Z: -5.501941204071045
+        X: 22.90288543701172
+        Y: 13.907450675964355
+        Z: -1.5677592754364014
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.844796895980835
+      Pitch: 0.7047961950302124
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.254567623138428
+      Yaw: 2.6427385807037354
     Saved: ~
 Window Geometry:
   Displays:

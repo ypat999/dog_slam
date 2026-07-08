@@ -377,6 +377,7 @@ LIO-SAM_MID360_ROS2_PKG/
 │   ├── Super-LIO/                    # Super-LIO实现
 │   ├── SC_PGO_ROS2/                  # SC-PGO姿态图优化
 │   ├── nav2_dog_slam/                # 统一导航系统
+│   ├── OctoPlanner3D-ROS2/           # 三维可通行性规划器（符号链接）
 │   ├── traversability_layer/         # 纯三维可通行区域检测Nav2 costmap插件
 │   ├── lidar_localization_ros2/      # 激光雷达定位
 │   ├── ndt_omp_ros2/                 # NDT OMP匹配定位
@@ -384,14 +385,63 @@ LIO-SAM_MID360_ROS2_PKG/
 │   ├── autorccar_interfaces/         # 自动遥控车接口定义
 │   ├── livox_ros_driver2/            # Livox雷达驱动
 │   ├── livox_gazebo_garden/          # Gazebo Garden仿真环境
-│   ├── global_config/                # 全局配置管理
+│   ├── global_config/                # 全局配置管理（OctoPlanner参数已集成）
 │   └── m-explore/                    # 自主探索
 ├── map_sample/                       # 地图示例
 └── build_ros2.sh                     # 构建脚本
 ```
 
+### 三维导航系统（OctoPlanner3D）
+
+系统集成了基于OctoMap的三维可通行性导航系统 `OctoPlanner3D-ROS2`，支持三维地形规划：
+
+- **三维可通行性分析**：基于OctoMap体素化分析三维地形可通行性
+- **智能路径规划**：A*算法搜索三维可通行路径，避免楼梯、陡坡等不可通行区域
+- **Nav2集成**：通过Action适配器集成到Nav2导航栈，无缝替换planner_server
+- **双模式运行**：
+  - **导航模式**：`initialpose` + `goal_pose`（Nav2执行）
+  - **测试模式**：`clicked_point`（路径可视化，不影响导航）
+- **多主机适配**：通过global_config自动适配不同主机的PCD地图路径
+- **Namespace支持**：支持多机器人场景的namespace隔离
+
+#### 3D导航启动方式
+
+```bash
+# 启动3D导航系统（OctoPlanner + Nav2）
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=super_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+
+# 使用其他SLAM算法
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=fast_lio ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+MANUAL_BUILD_MAP=False SLAM_ALGORITHM=lio_sam ros2 launch nav2_dog_slam lio_nav2_unified_3d.launch.py
+```
+
+#### 3D导航配置
+
+配置文件位于 `OctoPlanner3D-ROS2/config/params.yaml`，通过 `global_config` 自动适配不同主机：
+
+```yaml
+# 不同主机配置示例（在global_config/__init__.py）
+'ywj-B250-D3A': {
+    'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+    'OCTOPLANNER_PARAMS_FILE': '/path/to/OctoPlanner3D-ROS2/config/params.yaml',
+}
+```
+
+#### 3D导航测试
+
+```bash
+# 发送3D导航目标（带朝向）
+ros2 topic pub /goal_pose geometry_msgs/msg/PoseStamped \
+    "{header: {frame_id: 'map'}, pose: {position: {x: 10.0, y: 5.0, z: 0.3}, orientation: {w: 1.0}}}"
+
+# 测试模式：RViz Publish Point工具（蓝色路径，不影响导航）
+# 第1次点击：起点
+# 第2次点击：终点（自动规划测试路径）
+```
+
 ## 最新更新
 
+- **2026-07-08**: 集成OctoPlanner3D三维导航系统，支持三维可通行性规划和Nav2集成
 - **2026-05-27**: 可通行检测优化随机器人移动；TF加入namespace支持多机器人隔离
 - **2026-05-26**: 适配中狗Livox MID360雷达配置；导航使用本体雷达；多配置2种全局/局部planner
 - **2026-05-25**: Web控制界面修正与调整
@@ -439,6 +489,27 @@ ros2 node list
 1. **雷达连接问题**: 检查Livox-SDK2是否正确安装
 2. **TF变换错误**: 确认base_footprint坐标系设置正确
 3. **导航失败**: 检查地图质量和导航参数配置
+4. **OctoPlanner PCD文件加载失败**:
+   ```bash
+   # 检查global_config配置
+   python3 -c "from global_config.global_config import OCTOPLANNER_PCD_FILE_PATH; print(OCTOPLANNER_PCD_FILE_PATH)"
+   # 确认PCD文件存在
+   ls -l $OCTOPLANNER_PCD_FILE_PATH
+   ```
+5. **OctoPlanner规划失败**:
+   ```bash
+   # 查看日志
+   ros2 topic echo /rosout | grep octo_planner
+   # 检查OctoMap缓存状态
+   ls -l /path/to/octomap.bt*
+   ```
+6. **Nav2与OctoPlanner集成失败**:
+   ```bash
+   # 检查Action接口
+   ros2 action list | grep compute_path_to_pose
+   # 检查octoplanner_nav2_adapter状态
+   ros2 node list | grep octoplanner_adapter
+   ```
 
 ## 后续规划
 
@@ -451,6 +522,10 @@ ros2 node list
 - Loop closure 优化
 
 ### 导航方向
+- **OctoPlanner3D 稳定性验证**：集成测试、异常处理、实际环境验证
+- **OctoPlanner3D 性能优化**：规划时间<1秒、动态分辨率调整、路径分段规划
+- **OctoPlanner3D 参数调优**：robot_radius、voxel分辨率、可通行性阈值、A*启发函数权重
+- **3D vs 2D对比验证**：坡地、楼梯、复杂环境对比测试
 - 可通行区域检测完善（楼梯检测、坡度分析）
 - 导航直行优化（MPPI/TEB）
 - 超时问题处理

@@ -575,9 +575,9 @@ def generate_launch_description():
     #     }]
     # )
 
-    # 5. 导航栈节点
+    # 5. 3D导航栈节点（不包含planner_server，使用OctoPlanner替代）
     navigation_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch_3d.py')),
         launch_arguments={
             'namespace': ns,
             'use_sim_time': use_sim_time,
@@ -594,6 +594,13 @@ def generate_launch_description():
             'pointcloud_topic': ns_pointcloud_topic,
             'map_topic': ns_map_topic,
         }.items()
+    )
+
+    # OctoPlanner3D节点（替代nav2 planner_server）
+    # 注意：params_file参数会由octo_planner3d.launch.py的默认值处理
+    octoplanner_include = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('octo_planner3d'), 'launch', 'octo_planner3d.launch.py')])
     )
 
     sc_pgo_node = Node(
@@ -776,7 +783,15 @@ def generate_launch_description():
         #     )
         # )
         
-    # 导航栈
+    # OctoPlanner3D（3D规划器，替代nav2 planner_server）
+    nav2_actions.append(
+        TimerAction(
+            period=2.5,
+            actions=[octoplanner_include]
+        )
+    )
+
+    # 导航栈（不包含planner_server）
     nav2_actions.append(
         TimerAction(
             period=3.0,

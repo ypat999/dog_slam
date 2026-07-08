@@ -577,7 +577,7 @@ def generate_launch_description():
         }.items()
     )
 
-    # SC-PGO配置文件路径
+    # SC-PGO参数文件（统一ROS2参数格式）
     sc_pgo_config_file = PathJoinSubstitution([
         get_package_share_directory('sc_pgo_ros2'), 'config', 'btc_config.yaml'
     ])

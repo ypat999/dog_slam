@@ -94,7 +94,7 @@ LIO_TOPIC_CONFIGS = {
     },
     'super_lio': {
         'pointcloud_topic': 'lio/body/cloud',
-        'odom_topic': 'lio/odom',
+        'odom_topic': 'lio/robo/odom',
         'octomap_topic': 'lio/cloud_world',
         'target_frame': 'base_footprint',
         'map_frame': 'map'
@@ -596,14 +596,20 @@ def generate_launch_description():
         }.items()
     )
 
-    # OctoPlanner3D节点（替代nav2 planner_server）
-    # 注意：params_file参数会由octo_planner3d.launch.py的默认值处理
-    octoplanner_include = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('octo_planner3d'), 'launch', 'octo_planner3d.launch.py')])
+    # OctoPlanner3D节点（3D规划器，替代nav2 planner_server）
+    # params_file参数可在运行时通过参数覆盖
+    octo_planner_config_file = PathJoinSubstitution([
+        get_package_share_directory('octo_planner3d'), 'config', 'params.yaml'
+    ])
+    octo_planner_node = Node(
+        package="octo_planner3d",
+        executable="octo_planner_rviz_node",
+        name="octo_planner_rviz_node",
+        output="screen",
+        parameters=[octo_planner_config_file],
     )
 
-    # SC-PGO配置文件路径
+    # SC-PGO参数文件（统一ROS2参数格式）
     sc_pgo_config_file = PathJoinSubstitution([
         get_package_share_directory('sc_pgo_ros2'), 'config', 'btc_config.yaml'
     ])
@@ -613,12 +619,11 @@ def generate_launch_description():
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
-        namespace=ns,
         parameters=[sc_pgo_config_file],
         remappings=[
             ("aft_mapped_to_init", lio_config['odom_topic']),
             ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),
-            ("cloud_for_scancontext", lio_config['octomap_topic']),
+            ("cloud_for_scancontext", lio_config['pointcloud_topic']),
             ("gps/fix", "/gps/fix"),
             ("tf", "/tf"),
             ("tf_static", "/tf_static"),
@@ -715,64 +720,23 @@ def generate_launch_description():
             )
         )
 
-    # 4. 导航模式配置
-    # if BUILD_TOOL != 'slam_toolbox' :
-    #     # 根据localization参数选择AMCL或SLAM Toolbox
-    #     nav2_actions.append(
-    #         TimerAction(
-    #             period=2.0,
-    #             actions=[amcl_node],
-    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
-    #         )
-    #     )
-    #     nav2_actions.append(
-    #         TimerAction(
-    #             period=2.0,
-    #             actions=[lifecycle_manager_amcl],
-    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'slam_toolbox'"]))
-    #         )
-    #     )
-        
-    #     # SLAM Toolbox导航模式
-    #     nav2_actions.append(
-    #         TimerAction(
-    #             period=2.0,
-    #             actions=[slam_toolbox_node],
-    #             condition=IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'slam_toolbox'"]))
-    #         )
-    #     )
-
-    
-        
-        # # GPS融合节点
-        # # GPS融合节点
-        # nav2_actions.append(
-        #     TimerAction(
-        #         period=2.5,
-        #         actions=[
-        #             gps_preprocessor_node, 
-        #             # navsat_transform_node, 
-        #             # ekf_filter_node, 
-        #             # lifecycle_manager_gps
-        #             ]
-        #     )
-        # )
-        
-    # OctoPlanner3D（3D规划器，替代nav2 planner_server）
-    nav2_actions.append(
-        TimerAction(
-            period=2.5,
-            actions=[octoplanner_include]
+        # OctoPlanner3D（3D规划器，替代nav2 planner_server）
+        nav2_actions.append(
+            TimerAction(
+                period=2.5,
+                actions=[octo_planner_node]
+            )
         )
-    )
 
-    # 导航栈（不包含planner_server）
-    nav2_actions.append(
-        TimerAction(
-            period=3.0,
-            actions=[navigation_include]
+        # 导航栈（不包含planner_server）
+        nav2_actions.append(
+            TimerAction(
+                period=3.0,
+                actions=[navigation_include]
+            )
         )
-    )
+
+    # 建图模式：不加载localization和planner
     
     # 创建延迟启动动作
     delayed_web_launch = TimerAction(

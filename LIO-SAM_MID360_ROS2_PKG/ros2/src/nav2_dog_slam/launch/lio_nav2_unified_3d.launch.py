@@ -94,7 +94,7 @@ LIO_TOPIC_CONFIGS = {
     },
     'super_lio': {
         'pointcloud_topic': 'lio/body/cloud',
-        'odom_topic': 'lio/robo/odom',
+        'odom_topic': 'lio/odom',
         'octomap_topic': 'lio/cloud_world',
         'target_frame': 'base_footprint',
         'map_frame': 'map'

@@ -73,8 +73,11 @@ config_by_machine = {
         
         # RK3588主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # RK3588主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     },
     'RK3588ZG': {
         # RK3588主机配置 - 全局配置
@@ -119,6 +122,9 @@ config_by_machine = {
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
         'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap_zg.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # RK3588ZG主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - 全局配置
@@ -158,9 +164,12 @@ config_by_machine = {
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
         
+        # DESKTOP-4LS1SSN主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
+        
         # DESKTOP-ypat主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'DESKTOP-ypat': {
@@ -204,8 +213,11 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # DESKTOP-ypat主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
     },
     'ywj-B250-D3A': {
         # ywj-B250-D3A主机配置 - 全局配置
@@ -240,16 +252,19 @@ config_by_machine = {
         'SUPER_LIO_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/Super-LIO/',
         'SUPER_LIO_SAVE_MAP': True,  # 台式机离线开发，不保存地图
         'SUPER_LIO_SAVE_MAP_DIR': '/home/ywj/slam_data/pcd',
-        'SUPER_LIO_LIDAR_X': -0.07,  # 雷达x轴偏移量
+        'SUPER_LIO_LIDAR_X': -0.15,  # 雷达x轴偏移量
         'SUPER_LIO_LIDAR_Z': -0.1,  # 雷达z轴偏移量
-        'SUPER_LIO_LIDAR_TILT_ANGLE': -0.0,  # 雷达倾斜角度
+        'SUPER_LIO_LIDAR_TILT_ANGLE': -30.0,  # 雷达倾斜角度
         
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
         
+        # ywj-B250-D3A主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
+        
         # DESKTOP-ypat主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     },
     'orin-nx': {
@@ -292,8 +307,11 @@ config_by_machine = {
         
         # orin-nx主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # orin-nx主机配置 - Lidar Localization
+        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     }
 }
 
@@ -340,8 +358,11 @@ default_config = {
     
     # OctoPlanner3D 默认配置
     'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-    'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap.pcd',
+    'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+    
+    # Lidar Localization 默认配置
+    'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
 }
 
 # 根据当前主机名选择配置
@@ -397,6 +418,9 @@ SC_PGO_SAVE_DIRECTORY = selected_config['SC_PGO_SAVE_DIRECTORY']
 OCTOPLANNER_BASE_CODE_PATH = selected_config['OCTOPLANNER_BASE_CODE_PATH']
 OCTOPLANNER_PCD_FILE_PATH = selected_config['OCTOPLANNER_PCD_FILE_PATH']
 OCTOPLANNER_PARAMS_FILE = selected_config['OCTOPLANNER_PARAMS_FILE']
+
+# ========== 导出Lidar Localization配置参数 ==========
+LOCALIZATION_MAP_PATH = selected_config['LOCALIZATION_MAP_PATH']
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'
@@ -506,6 +530,25 @@ def update_super_lio_params():
             except Exception as e:
                 print(f"更新Super-LIO参数文件 {yaml_file} 时出错: {e}")
 
+# ========== OctoPlanner3D参数文件自动更新 ==========
+def update_octoplanner_params():
+    """自动更新OctoPlanner3D的配置文件"""
+    config_dir = os.path.join(OCTOPLANNER_BASE_CODE_PATH, 'config')
+    if os.path.exists(config_dir):
+        yaml_file = os.path.join(config_dir, "params.yaml")
+        if os.path.exists(yaml_file):
+            try:
+                with open(yaml_file, 'r') as file:
+                    lines = file.readlines()
+                with open(yaml_file, 'w') as file:
+                    for line in lines:
+                        if 'input_pcd:' in line:
+                            file.write(f'    input_pcd: "{OCTOPLANNER_PCD_FILE_PATH}"  # 默认路径，可被global_config覆盖\n')
+                        else:
+                            file.write(line)
+                print(f"OctoPlanner3D参数文件已更新: {yaml_file}")
+            except Exception as e:
+                print(f"更新OctoPlanner3D参数文件 {yaml_file} 时出错: {e}")
 
 # 导入时自动更新Nav2参数
 update_nav2_params()
@@ -515,3 +558,6 @@ update_lio_params()
 
 # 导入时自动更新Super-LIO参数
 update_super_lio_params()
+
+# 导入时自动更新OctoPlanner3D参数
+update_octoplanner_params()

@@ -589,7 +589,7 @@ def generate_launch_description():
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
-        parameters=[sc_pgo_config_file],
+        parameters=[sc_pgo_config_file, {'save_directory': SC_PGO_SAVE_DIRECTORY}],
         remappings=[
             ("aft_mapped_to_init", lio_config['odom_topic']),
             ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),

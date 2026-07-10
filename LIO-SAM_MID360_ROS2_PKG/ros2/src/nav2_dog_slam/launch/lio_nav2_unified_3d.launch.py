@@ -36,7 +36,8 @@ try:
         NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE,
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME, SLAM_ALGORITHM,
-        SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE
+        SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE,
+        OCTOPLANNER_PCD_FILE_PATH, OCTOPLANNER_PARAMS_FILE,
     )
 except Exception as e:
     print(f"导入global_config失败: {e}")
@@ -65,6 +66,8 @@ except Exception as e:
     SLAM_ALGORITHM = 'super_lio'  # 默认算法
     SC_PGO_SAVE_DIRECTORY = '/home/ztl/save_data/'
     DEFAULT_NAMESPACE = ''
+    OCTOPLANNER_PCD_FILE_PATH = '/home/ywj/slam_data/pcd/octomap.pcd'  # 默认PCD路径
+    OCTOPLANNER_PARAMS_FILE = '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml'  # 默认参数文件路径
 
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -136,6 +139,9 @@ def generate_launch_description():
     ns_scan_topic = PythonExpression(["'/scan' if '", ns, "' == '' else str('/", ns, "/scan')"])
     ns_pointcloud_topic = PythonExpression(["'/lio/body/cloud' if '", ns, "' == '' else str('/", ns, "/lio/body/cloud')"])
     ns_map_topic = PythonExpression(["'/map' if '", ns, "' == '' else str('/", ns, "/map')"])
+    # OctoPlanner 话题（支持namespace）
+    ns_planned_path_topic = PythonExpression(["'/planned_path' if '", ns, "' == '' else str('/", ns, "/planned_path')"])
+    ns_test_path_topic = PythonExpression(["'/test_path' if '", ns, "' == '' else str('/", ns, "/test_path')"])
     
     # 定义启动参数
     use_sim_time = LaunchConfiguration('use_sim_time', default=DEFAULT_USE_SIM_TIME)
@@ -597,16 +603,27 @@ def generate_launch_description():
     )
 
     # OctoPlanner3D节点（3D规划器，替代nav2 planner_server）
-    # params_file参数可在运行时通过参数覆盖
-    octo_planner_config_file = PathJoinSubstitution([
-        get_package_share_directory('octo_planner3d'), 'config', 'params.yaml'
-    ])
     octo_planner_node = Node(
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
         name="octo_planner_rviz_node",
         output="screen",
-        parameters=[octo_planner_config_file],
+        parameters=[
+            OCTOPLANNER_PARAMS_FILE,
+            {
+                "input_pcd": OCTOPLANNER_PCD_FILE_PATH,
+                "frame_id": ns_map_frame,
+                "robot_base_frame": ns_base_footprint_frame,
+                "map_frame": ns_map_frame,
+            },
+        ],
+        remappings=[
+            ("goal_pose", '/goal_pose'),
+            ("planned_path", ns_planned_path_topic),
+            ("initialpose", '/initialpose'),
+            ("clicked_point", "/clicked_point"),
+            ("test_path", ns_test_path_topic),
+        ],
     )
 
     # SC-PGO参数文件（统一ROS2参数格式）
@@ -619,7 +636,7 @@ def generate_launch_description():
         executable="alaserPGO",
         name="alaserPGO",
         output="screen",
-        parameters=[sc_pgo_config_file],
+        parameters=[sc_pgo_config_file, {'save_directory': SC_PGO_SAVE_DIRECTORY}],
         remappings=[
             ("aft_mapped_to_init", lio_config['odom_topic']),
             ("velodyne_cloud_registered_local", lio_config['pointcloud_topic']),

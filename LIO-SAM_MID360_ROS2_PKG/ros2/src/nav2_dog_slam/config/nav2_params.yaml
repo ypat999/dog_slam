@@ -692,7 +692,7 @@ bt_navigator:
     # 缺失参数 - 根据系统输出添加
     # bond_disable_heartbeat_timeout: false
     # always_reload_bt_xml: false
-    default_nav_through_poses_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
+    # default_nav_through_poses_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
     # odom_topic: "odom"
     # goal_blackboard_id: "goal"
     # goals_blackboard_id: "goals"

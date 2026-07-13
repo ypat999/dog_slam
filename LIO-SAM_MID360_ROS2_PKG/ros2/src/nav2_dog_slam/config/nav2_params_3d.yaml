@@ -2,8 +2,7 @@
 # NAV2 Configuration - 3D Navigation (OctoPlanner Integration)
 # =============================================================================
 # 架构说明：
-# - 全局规划：OctoPlanner3D（三维可通行性规划，作为 Nav2 GlobalPlanner 插件运行）
-# - planner_server 通过 pluginlib 加载 OctoPlannerGlobalPlanner
+# - 全局规划：OctoPlanner3D（octo_planner_rviz_node 提供 ComputePathToPose action）
 # - 局部规划：MPPI Controller（全向移动，适配三维路径）
 # =============================================================================
 
@@ -277,34 +276,7 @@ local_costmap:
       always_send_full_costmap: true
 
 # =============================================================================
-# Global Costmap Configuration - 空白最小接口（兼容 2D 导航结构）
-# 实际全局规划由 octo_planner_rviz_node 直接提供 ComputePathToPose action
-# =============================================================================
-global_costmap:
-  global_costmap:
-    ros__parameters:
-      use_sim_time: true
-      global_frame: map
-      robot_base_frame: base_footprint
-      plugins: ["static_layer"]
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        enabled: false
-
-# =============================================================================
-# Planner Server Configuration - 空白最小接口（兼容 2D 导航结构）
-# 实际全局规划由 octo_planner_rviz_node 直接提供 ComputePathToPose action
-# =============================================================================
-planner_server:
-  ros__parameters:
-    planner_plugins: ["GridBased"]
-    GridBased:
-      plugin: "octo_planner3d/OctoPlannerGlobalPlanner"
-      resolution: 0.5
-      max_iterations: 800000
-
-# =============================================================================
-# Lifecycle Manager Configuration - 3D导航节点列表 (无 planner_server)
+# Lifecycle Manager Configuration - 3D导航节点列表
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
@@ -314,7 +286,7 @@ lifecycle_manager:
     bond_timeout_ms: 10000
 
 # =============================================================================
-# BT Navigator Configuration - 使用现有行为树
+# BT Navigator Configuration - 使用 3D 行为树
 # =============================================================================
 bt_navigator:
   ros__parameters:

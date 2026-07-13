@@ -212,7 +212,7 @@ local_costmap:
         max_obstacle_height: 100.0
         min_obstacle_height: -100.0
         scan:
-          topic: scan
+          topic: /rkbot/scan
           max_obstacle_height: 100.0
           min_obstacle_height: -100.0
           clearing: true
@@ -227,8 +227,8 @@ local_costmap:
       # 可通行性层参数 - 三维地形分析
       traversability_layer_local:
         plugin: "traversability_layer::TraversabilityLayer"
-        enabled: true
-        pointcloud_topic: lio/body/cloud
+        enabled: false
+        pointcloud_topic: /rkbot/lio/body/cloud
         base_frame: base_footprint
         max_obstacle_height: 1.0
         min_obstacle_height: -1.0

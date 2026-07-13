@@ -1,0 +1,37 @@
+<!--
+  3D Navigation Behavior Tree - OctoPlanner Integration
+  ======================================================
+  Differences from the 2D version:
+  - Removed global_costmap/clear_entirely_global_costmap (no global_costmap in 3D mode)
+  - Kept local_costmap clearing (controller still uses local_costmap for path following)
+  - ComputePathToPose uses planner_id="GridBased" (maps to OctoPlannerGlobalPlanner via plugin)
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="5" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <RateController hz="0.2">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+            <AlwaysSuccess name="NoGlobalCostmapToClear"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="2" name="FollowPath">
+          <FollowPath path="{path}" controller_id="FollowPath"/>
+          <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+            <AlwaysSuccess name="NoGlobalCostmapToClear"/>
+          </Sequence>
+          <BackUp backup_dist="0.30" backup_speed="0.15"/>
+          <Wait wait_duration="2"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

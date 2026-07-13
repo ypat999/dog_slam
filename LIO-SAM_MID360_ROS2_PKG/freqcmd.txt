@@ -162,8 +162,7 @@ ros2 run nav2_dog_slam surf_map_matching.py
 ros2 launch sc_pgo_ros2 sc_pgo.launch.py
 
 # 播放bag
-ros2 bag play /home/ywj/slam_data/livox_record_noshell/ --clock  --remap /livox/lidar:=/rkbot/livox/lidar --remap /livox/imu:=/rkbot/livox/imu
-
+ros2 bag play /home/ywj/slam_data/livox_record_noshell/ --remap /livox/lidar:=/rkbot/livox/lidar /livox/imu:=/rkbot/livox/imu --clock
 # GPS测试
 /bin/python3 -d /home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/src/gps_map_calibrator.py
 

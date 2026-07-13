@@ -326,8 +326,8 @@ bt_navigator:
     wait_for_service_timeout: 10
     
     # 行为树配置 - OctoPlanner适配器提供ComputePathToPose接口
-    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
-    # default_nav_through_poses_bt_xml: ""  # 未使用，保持注释
+    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml"
+    default_nav_through_poses_bt_xml: ""  # 禁用：3D 导航不使用 navigate_through_poses
     
     # Groot监控
     enable_groot_monitoring: false

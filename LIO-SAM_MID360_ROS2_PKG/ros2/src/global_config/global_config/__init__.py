@@ -450,8 +450,9 @@ GOAL_POSE_SERVICE = '/goal_pose'
 # ========== Nav2参数文件自动更新 ==========
 def update_nav2_params():
     """自动更新nav2_params.yaml中的配置"""
-    nav2_params_path = NAV2_DEFAULT_PARAMS_FILE
-    if os.path.exists(nav2_params_path):
+    for nav2_params_path in [NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_PARAMS_3D_FILE]:
+        if not os.path.exists(nav2_params_path):
+            continue
         try:
             with open(nav2_params_path, 'r') as file:
                 lines = file.readlines()
@@ -461,6 +462,10 @@ def update_nav2_params():
                         file.write(f'      use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
                     elif '    use_sim_time:' in line:
                         file.write(f'    use_sim_time: {DEFAULT_USE_SIM_TIME_STRING}\n')
+                    elif '      input_pcd:' in line:
+                        file.write(f'      input_pcd: "{OCTOPLANNER_PCD_FILE_PATH}"\n')
+                    elif '    input_pcd:' in line:
+                        file.write(f'    input_pcd: "{OCTOPLANNER_PCD_FILE_PATH}"  # 默认路径，可被global_config覆盖\n')
                     elif 'yaml_filename:' in line:
                         file.write(f'    yaml_filename: {NAV2_DEFAULT_MAP_FILE}\n')
                     elif 'default_nav_to_pose_bt_xml:' in line:
@@ -469,7 +474,7 @@ def update_nav2_params():
                         file.write(line)
             print(f"Nav2参数文件已更新: {nav2_params_path}")
         except Exception as e:
-            print(f"更新Nav2参数文件时出错: {e}")
+            print(f"更新Nav2参数文件 {nav2_params_path} 时出错: {e}")
 
 # ========== FAST-LIO参数文件自动更新 ==========
 def update_lio_params():

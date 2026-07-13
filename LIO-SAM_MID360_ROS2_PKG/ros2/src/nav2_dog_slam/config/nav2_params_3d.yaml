@@ -323,6 +323,8 @@ planner_server:
       robot_radius: 0.25
       max_iterations: 800000
       snap_search_radius_cells: 12
+      start_z: 0.3
+      goal_z: 0.3
       require_ground_support: true
       strict_direct_ground_support: false
       ground_support_xy_radius_cells: 1

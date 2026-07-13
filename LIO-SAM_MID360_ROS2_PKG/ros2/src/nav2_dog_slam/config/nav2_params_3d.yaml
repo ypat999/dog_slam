@@ -308,6 +308,7 @@ global_costmap:
 # =============================================================================
 planner_server:
   ros__parameters:
+    expected_planner_frequency: 0.2
     planner_plugins: ["GridBased"]
 
     GridBased:
@@ -337,7 +338,7 @@ planner_server:
       smoothing_enabled: true
       smoothing_simplify_epsilon: 0.1
       smoothing_interp_spacing: 0.15
-      smoothing_gradient_iterations: 50
+      smoothing_gradient_iterations: 20
       smoothing_gradient_alpha: 0.3
 
 # =============================================================================

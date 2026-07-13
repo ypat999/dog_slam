@@ -33,7 +33,7 @@ try:
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
-        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE,
+        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_PARAMS_3D_FILE,
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME, SLAM_ALGORITHM,
         SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE,
@@ -59,6 +59,7 @@ except Exception as e:
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
     NAV2_DEFAULT_BT_XML_PATH = '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml'
     NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+    NAV2_DEFAULT_PARAMS_3D_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'
     BASE_LINK_FRAME = 'base_link' 
@@ -163,8 +164,8 @@ def generate_launch_description():
     
     declare_nav2_params_file_cmd = DeclareLaunchArgument(
         'nav2_params_file',
-        default_value=NAV2_DEFAULT_PARAMS_FILE,
-        description='Full path to the Nav2 parameters file')
+        default_value=NAV2_DEFAULT_PARAMS_3D_FILE,
+        description='Full path to the Nav2 3D parameters file')
 
     # declare_localization_cmd = DeclareLaunchArgument(
     #     'localization',

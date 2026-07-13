@@ -622,7 +622,8 @@ def generate_launch_description():
         remappings=[
             # 不 remap goal_pose：OctoPlanner 不再通过 topic 接收导航目标，
             # 由 bt_navigator 通过 compute_path_to_pose action 调用
-            ("planned_path", ns_planned_path_topic),
+            # 不 remap planned_path：避免与 planner_server 的 /plan 冲突，
+            # viz node 只负责测试路径（test_path）和地图可视化
             ("initialpose", '/initialpose'),
             ("clicked_point", "/clicked_point"),
             ("test_path", ns_test_path_topic),

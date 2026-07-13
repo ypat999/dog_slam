@@ -602,8 +602,8 @@ def generate_launch_description():
         }.items()
     )
 
-    # OctoPlanner3D节点（3D规划器，替代nav2 planner_server）
-    # 必须与导航栈同namespace，使 compute_path_to_pose action 可被 bt_navigator 发现
+    # OctoPlanner3D节点（地图可视化 + Publish Point 测试模式）
+    # 实际的导航规划由 planner_server 加载 OctoPlannerGlobalPlanner 插件执行
     octo_planner_node = Node(
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
@@ -739,7 +739,7 @@ def generate_launch_description():
             )
         )
 
-        # OctoPlanner3D（3D规划器，替代nav2 planner_server）
+        # OctoPlanner3D（地图可视化 + 测试模式）
         nav2_actions.append(
             TimerAction(
                 period=2.5,

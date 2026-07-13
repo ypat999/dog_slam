@@ -47,8 +47,9 @@ def generate_launch_description():
 
     map_topic = PythonExpression(["'/", map_frame,"'"])
 
-    # 3D导航生命周期节点列表 - 不包含planner_server（使用OctoPlanner替代）
+    # 3D导航生命周期节点列表
     lifecycle_nodes = ['controller_server',
+                       'planner_server',
                        'behavior_server',
                        'bt_navigator',
                        'velocity_smoother']
@@ -178,7 +179,18 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', '/cmd_vel_nav')]),
-            # 3D导航：不启动smoother_server（未使用）和planner_server（使用OctoPlanner替代）
+            # Planner server (uses OctoPlanner3D GlobalPlanner plugin)
+            Node(
+                package='nav2_planner',
+                executable='planner_server',
+                name='planner_server',
+                output='screen',
+                respawn=use_respawn,
+                respawn_delay=2.0,
+                parameters=[configured_params_local],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=remappings),
+            # 3D导航：不启动smoother_server
             Node(
                 package='nav2_behaviors',
                 executable='behavior_server',

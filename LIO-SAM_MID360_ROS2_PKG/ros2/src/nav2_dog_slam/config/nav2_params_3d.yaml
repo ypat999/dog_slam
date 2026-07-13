@@ -308,9 +308,9 @@ global_costmap:
 # =============================================================================
 planner_server:
   ros__parameters:
-    planner_plugins: ["OctoPlanner3D"]
+    planner_plugins: ["GridBased"]
 
-    OctoPlanner3D:
+    GridBased:
       plugin: "octo_planner3d/OctoPlannerGlobalPlanner"
       # OctoMap 构建参数
       input_pcd: "/home/ztl/slam_data/3d_map/3dmap.pcd"

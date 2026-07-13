@@ -50,6 +50,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
         
@@ -97,6 +98,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_3d_airy.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_3d_airy.yaml',
         # 'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_2d_livox.yaml',
@@ -145,6 +147,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_sim.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
         
@@ -192,6 +195,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
         # 'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_3d.yaml',
@@ -240,6 +244,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
         
@@ -289,6 +294,7 @@ config_by_machine = {
         'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
+        'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
         'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg.yaml',
         'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_zg_3d.yaml',
         
@@ -339,6 +345,7 @@ default_config = {
     'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
     'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
     'NAV2_DEFAULT_BT_XML_PATH': '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml',
+    'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
     'NAV2_DEFAULT_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml',
     'NAV2_DEFAULT_PARAMS_3D_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml',
     
@@ -402,6 +409,7 @@ NAV2_BASE_CODE_PATH = selected_config['NAV2_BASE_CODE_PATH']
 NAV2_DEFAULT_MAP_FILE = selected_config['NAV2_DEFAULT_MAP_FILE']
 NAV2_DEFAULT_WEB_SCRIPT_PATH = selected_config['NAV2_DEFAULT_WEB_SCRIPT_PATH']
 NAV2_DEFAULT_BT_XML_PATH = selected_config['NAV2_DEFAULT_BT_XML_PATH']
+NAV2_DEFAULT_BT_XML_3D_PATH = selected_config['NAV2_DEFAULT_BT_XML_3D_PATH']
 NAV2_DEFAULT_PARAMS_FILE = selected_config['NAV2_DEFAULT_PARAMS_FILE']
 NAV2_DEFAULT_PARAMS_3D_FILE = selected_config['NAV2_DEFAULT_PARAMS_3D_FILE']
 
@@ -453,6 +461,9 @@ def update_nav2_params():
     for nav2_params_path in [NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_PARAMS_3D_FILE]:
         if not os.path.exists(nav2_params_path):
             continue
+        # 根据文件名选择使用2D还是3D的行为树
+        is_3d = '3d' in os.path.basename(nav2_params_path).lower()
+        bt_xml_path = NAV2_DEFAULT_BT_XML_3D_PATH if is_3d else NAV2_DEFAULT_BT_XML_PATH
         try:
             with open(nav2_params_path, 'r') as file:
                 lines = file.readlines()
@@ -469,7 +480,7 @@ def update_nav2_params():
                     elif 'yaml_filename:' in line:
                         file.write(f'    yaml_filename: {NAV2_DEFAULT_MAP_FILE}\n')
                     elif 'default_nav_to_pose_bt_xml:' in line:
-                        file.write(f'    default_nav_to_pose_bt_xml: "{NAV2_DEFAULT_BT_XML_PATH}"\n')
+                        file.write(f'    default_nav_to_pose_bt_xml: "{bt_xml_path}"\n')
                     else:
                         file.write(line)
             print(f"Nav2参数文件已更新: {nav2_params_path}")

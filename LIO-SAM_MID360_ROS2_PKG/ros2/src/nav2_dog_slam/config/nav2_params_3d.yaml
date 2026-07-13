@@ -277,10 +277,31 @@ local_costmap:
       always_send_full_costmap: true
 
 # =============================================================================
-# 全局规划：由 octo_planner_rviz_node 直接提供 ComputePathToPose action server
-# bt_navigator 的 ComputePathToPose BT node 直连此 action。
-# planner_server 和 global_costmap 不再需要 — 规划节点自己管理 OctoMap。
+# Global Costmap Configuration - 空白最小接口（兼容 2D 导航结构）
+# 实际全局规划由 octo_planner_rviz_node 直接提供 ComputePathToPose action
 # =============================================================================
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      use_sim_time: true
+      global_frame: map
+      robot_base_frame: base_footprint
+      plugins: ["static_layer"]
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        enabled: false
+
+# =============================================================================
+# Planner Server Configuration - 空白最小接口（兼容 2D 导航结构）
+# 实际全局规划由 octo_planner_rviz_node 直接提供 ComputePathToPose action
+# =============================================================================
+planner_server:
+  ros__parameters:
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "octo_planner3d/OctoPlannerGlobalPlanner"
+      resolution: 0.5
+      max_iterations: 800000
 
 # =============================================================================
 # Lifecycle Manager Configuration - 3D导航节点列表 (无 planner_server)

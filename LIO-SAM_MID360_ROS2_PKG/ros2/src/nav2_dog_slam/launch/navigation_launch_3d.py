@@ -48,7 +48,6 @@ def generate_launch_description():
     map_topic = PythonExpression(["'/", map_frame,"'"])
 
     # 3D导航生命周期节点列表 - 不包含planner_server（使用OctoPlanner替代）
-    # 注意：octoplanner_nav2_adapter不是lifecycle节点，单独启动
     lifecycle_nodes = ['controller_server',
                        'behavior_server',
                        'bt_navigator',
@@ -169,22 +168,6 @@ def generate_launch_description():
     load_nodes = GroupAction(
         condition=IfCondition(PythonExpression(['not ', use_composition])),
         actions=[
-            # 3D导航适配节点：将OctoPlanner接口适配为Nav2 ComputePathToPose服务
-            Node(
-                package='nav2_dog_slam',
-                executable='octoplanner_nav2_adapter.py',
-                name='octoplanner_nav2_adapter',
-                output='screen',
-                parameters=[{
-                    'planner_id': 'GridBased',
-                    'wait_timeout': 5.0,
-                    'use_sim_time': use_sim_time
-                }],
-                remappings=[
-                    ('goal_pose', '/goal_pose'),
-                    ('planned_path', '/planned_path'),
-                    ('compute_path_to_pose', '/compute_path_to_pose')
-                ]),
             Node(
                 package='nav2_controller',
                 executable='controller_server',

@@ -603,10 +603,12 @@ def generate_launch_description():
     )
 
     # OctoPlanner3D节点（3D规划器，替代nav2 planner_server）
+    # 必须与导航栈同namespace，使 compute_path_to_pose action 可被 bt_navigator 发现
     octo_planner_node = Node(
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
         name="octo_planner_rviz_node",
+        namespace=ns,
         output="screen",
         parameters=[
             OCTOPLANNER_PARAMS_FILE,

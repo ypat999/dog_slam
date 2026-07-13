@@ -207,7 +207,7 @@ local_costmap:
       traversability_layer_local:
         plugin: "traversability_layer::TraversabilityLayer"
         enabled: true
-        pointcloud_topic: /lio/body/cloud
+        pointcloud_topic: lio/body/cloud
         base_frame: base_footprint
         max_obstacle_height: 1.0
         min_obstacle_height: -1.0
@@ -316,16 +316,16 @@ planner_server:
       # OctoMap 构建参数
       input_pcd: "/home/ywj/slam_data/3d_map/3dmap.pcd"
       output_bt: ""
-      resolution: 0.2
-      min_points_per_voxel: 2
-      min_cluster_voxels: 2
+      resolution: 0.5  # 与 test mode 一致，避免细粒度噪声阻塞路径
+      min_points_per_voxel: 1
+      min_cluster_voxels: 1
       openmp_num_threads: 0
       # 规划参数
       robot_radius: 0.25
       max_iterations: 800000
       snap_search_radius_cells: 12
-      start_z: 0.3
-      goal_z: 0.3
+      start_z: 0.05
+      goal_z: 0.05
       require_ground_support: true
       strict_direct_ground_support: false
       ground_support_xy_radius_cells: 1

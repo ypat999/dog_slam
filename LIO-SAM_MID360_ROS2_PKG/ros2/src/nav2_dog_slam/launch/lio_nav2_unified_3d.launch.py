@@ -582,7 +582,7 @@ def generate_launch_description():
     #     }]
     # )
 
-    # 5. 3D导航栈节点（不包含planner_server，使用OctoPlanner替代）
+    # 5. 3D导航栈节点（不含planner_server，octo_planner_rviz_node 提供compute_path_to_pose action）
     navigation_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch_3d.py')),
         launch_arguments={
@@ -603,8 +603,9 @@ def generate_launch_description():
         }.items()
     )
 
-    # OctoPlanner3D节点（地图可视化 + Publish Point 测试模式）
-    # 实际的导航规划由 planner_server 加载 OctoPlannerGlobalPlanner 插件执行
+    # OctoPlanner3D节点（地图可视化 + test mode + ComputePathToPose action server）
+    # bt_navigator 的 ComputePathToPose BT node 直连此节点的 action server，
+    # planner_server 不再需要。
     octo_planner_node = Node(
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
@@ -620,10 +621,8 @@ def generate_launch_description():
             },
         ],
         remappings=[
-            # 不 remap goal_pose：OctoPlanner 不再通过 topic 接收导航目标，
-            # 由 bt_navigator 通过 compute_path_to_pose action 调用
-            # 不 remap planned_path：避免与 planner_server 的 /plan 冲突，
-            # viz node 只负责测试路径（test_path）和地图可视化
+            # OctoPlanner 通过 ComputePathToPose action 为 Nav2 提供路径，
+            # 并直接发布到 /rkbot/plan 供 RViz 显示。
             ("initialpose", '/initialpose'),
             ("clicked_point", "/clicked_point"),
             ("test_path", ns_test_path_topic),
@@ -749,7 +748,7 @@ def generate_launch_description():
             )
         )
 
-        # 导航栈（不包含planner_server）
+        # 导航栈（不含planner_server）
         nav2_actions.append(
             TimerAction(
                 period=3.0,

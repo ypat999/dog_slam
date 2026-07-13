@@ -201,7 +201,29 @@ local_costmap:
       track_unknown_space: true
       
       # 插件配置 - 使用可通行性层（适配3D）
-      plugins: ["traversability_layer_local", "obstacle_layer_local", "inflation_layer_local"]
+      plugins: [ "obstacle_layer_local", "traversability_layer_local", "inflation_layer_local"]
+
+      # 障碍物层参数 - 禁用（使用可通行性层）
+      obstacle_layer_local:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: false
+        observation_sources: scan
+        combination_method: 1
+        footprint_clearing_enabled: true
+        max_obstacle_height: 100.0
+        min_obstacle_height: -100.0
+        scan:
+          topic: scan
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 15.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 15.0
+          obstacle_min_range: 0.0
+      
       
       # 可通行性层参数 - 三维地形分析
       traversability_layer_local:
@@ -244,26 +266,6 @@ local_costmap:
         # 并行计算
         num_threads: 4
       
-      # 障碍物层参数 - 禁用（使用可通行性层）
-      obstacle_layer_local:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: false
-        observation_sources: scan
-        combination_method: 1
-        footprint_clearing_enabled: true
-        max_obstacle_height: 100.0
-        min_obstacle_height: -100.0
-        scan:
-          topic: scan
-          max_obstacle_height: 100.0
-          min_obstacle_height: -100.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 15.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 15.0
-          obstacle_min_range: 0.0
       
       # 膨胀层参数 - 适度增加膨胀半径
       inflation_layer_local:
@@ -275,80 +277,19 @@ local_costmap:
       always_send_full_costmap: true
 
 # =============================================================================
-# Global Costmap Configuration - 禁用（OctoPlanner替代）
+# 全局规划：由 octo_planner_rviz_node 直接提供 ComputePathToPose action server
+# bt_navigator 的 ComputePathToPose BT node 直连此 action。
+# planner_server 和 global_costmap 不再需要 — 规划节点自己管理 OctoMap。
 # =============================================================================
-global_costmap:
-  global_costmap:
-    ros__parameters:
-      use_sim_time: true
-      update_frequency: 0.5
-      publish_frequency: 0.5
-      global_frame: map
-      robot_base_frame: base_footprint
-      transform_tolerance: 0.5
-      
-      # 地图参数
-      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"
-      footprint_padding: 0.05
-      resolution: 0.05
-      track_unknown_space: true
-      
-      # 插件配置 - 使用静态地图层（仅提供reference frame，OctoPlanner不依赖costmap）
-      plugins: ["static_layer"]
-      
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        enabled: true
-        map_topic: "map"
-        
-      always_send_full_costmap: false
 
 # =============================================================================
-# Planner Server Configuration - OctoPlanner GlobalPlanner Plugin
-# =============================================================================
-planner_server:
-  ros__parameters:
-    expected_planner_frequency: 0.2
-    planner_plugins: ["GridBased"]
-
-    GridBased:
-      plugin: "octo_planner3d/OctoPlannerGlobalPlanner"
-      # OctoMap 构建参数
-      input_pcd: "/home/ywj/slam_data/3d_map/3dmap.pcd"
-      output_bt: ""
-      resolution: 0.5  # 与 test mode 一致，避免细粒度噪声阻塞路径
-      min_points_per_voxel: 1
-      min_cluster_voxels: 1
-      openmp_num_threads: 0
-      # 规划参数
-      robot_radius: 0.25
-      max_iterations: 800000
-      snap_search_radius_cells: 12
-      start_z: 0.05
-      goal_z: 0.05
-      require_ground_support: true
-      strict_direct_ground_support: false
-      ground_support_xy_radius_cells: 1
-      ground_support_depth_cells: 1
-      enable_preblocked_costmap: true
-      preblocked_costmap_radius_cells: 3
-      preblocked_costmap_weight: 2.5
-      lowest_traversable_only: false
-      # 平滑参数
-      smoothing_enabled: true
-      smoothing_simplify_epsilon: 0.1
-      smoothing_interp_spacing: 0.15
-      smoothing_gradient_iterations: 20
-      smoothing_gradient_alpha: 0.3
-
-# =============================================================================
-# Lifecycle Manager Configuration - 3D导航节点列表
+# Lifecycle Manager Configuration - 3D导航节点列表 (无 planner_server)
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
     use_sim_time: true
     autostart: true
-    node_names: ['controller_server', 'planner_server', 'behavior_server', 'bt_navigator', 'velocity_smoother']
+    node_names: ['controller_server', 'behavior_server', 'bt_navigator', 'velocity_smoother']
     bond_timeout_ms: 10000
 
 # =============================================================================

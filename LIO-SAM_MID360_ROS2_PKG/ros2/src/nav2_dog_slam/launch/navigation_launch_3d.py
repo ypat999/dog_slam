@@ -47,9 +47,8 @@ def generate_launch_description():
 
     map_topic = PythonExpression(["'/", map_frame,"'"])
 
-    # 3D导航生命周期节点列表
+    # 3D导航生命周期节点列表（不含planner_server：octo_planner_rviz_node提供compute_path_to_pose action）
     lifecycle_nodes = ['controller_server',
-                       'planner_server',
                        'behavior_server',
                        'bt_navigator',
                        'velocity_smoother']
@@ -179,18 +178,8 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 prefix=['taskset -c 5,6'],
                 remappings=remappings + [('cmd_vel', '/cmd_vel_nav')]),
-            # Planner server (uses OctoPlanner3D GlobalPlanner plugin)
-            Node(
-                package='nav2_planner',
-                executable='planner_server',
-                name='planner_server',
-                output='screen',
-                respawn=use_respawn,
-                respawn_delay=2.0,
-                parameters=[configured_params_local],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=remappings),
-            # 3D导航：不启动smoother_server
+            # Planner: octo_planner_rviz_node 提供 compute_path_to_pose action，
+            # bt_navigator 直连，不需要 planner_server 节点。
             Node(
                 package='nav2_behaviors',
                 executable='behavior_server',
@@ -249,7 +238,7 @@ def generate_launch_description():
                 name='controller_server',
                 parameters=[configured_params_local],
                 remappings=remappings + [('cmd_vel', 'cmd_vel_nav')]),
-            # 3D导航：不启动smoother_server（未使用）和planner_server（使用OctoPlanner替代）
+            # 3D导航：不启动smoother_server（未使用）和planner_server（octo_planner_rviz_node替代）
             ComposableNode(
                 package='nav2_behaviors',
                 plugin='behavior_server::BehaviorServer',

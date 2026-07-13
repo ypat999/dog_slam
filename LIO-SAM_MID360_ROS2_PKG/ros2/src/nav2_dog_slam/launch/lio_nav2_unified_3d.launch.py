@@ -608,7 +608,6 @@ def generate_launch_description():
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
         name="octo_planner_rviz_node",
-        namespace=ns,
         output="screen",
         parameters=[
             OCTOPLANNER_PARAMS_FILE,
@@ -620,7 +619,8 @@ def generate_launch_description():
             },
         ],
         remappings=[
-            ("goal_pose", '/goal_pose'),
+            # 不 remap goal_pose：OctoPlanner 不再通过 topic 接收导航目标，
+            # 由 bt_navigator 通过 compute_path_to_pose action 调用
             ("planned_path", ns_planned_path_topic),
             ("initialpose", '/initialpose'),
             ("clicked_point", "/clicked_point"),

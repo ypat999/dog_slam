@@ -33,7 +33,7 @@ try:
         DEFAULT_RELIABILITY_OVERRIDE as DEFAULT_RELIABILITY_OVERRIDE, 
         LIO_SAM_DEFAULT_LOAM_SAVE_DIR as DEFAULT_LOAM_SAVE_DIR,
         NAV2_BASE_CODE_PATH, NAV2_DEFAULT_MAP_FILE, NAV2_DEFAULT_WEB_SCRIPT_PATH,
-        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE,
+        NAV2_DEFAULT_BT_XML_PATH, NAV2_DEFAULT_PARAMS_FILE, NAV2_DEFAULT_PARAMS_3D_FILE,
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME, SLAM_ALGORITHM,
         SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE,
@@ -59,6 +59,7 @@ except Exception as e:
     NAV2_DEFAULT_WEB_SCRIPT_PATH = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh'
     NAV2_DEFAULT_BT_XML_PATH = '/opt/ros/humble/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml'
     NAV2_DEFAULT_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params.yaml'
+    NAV2_DEFAULT_PARAMS_3D_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/nav2_params_3d.yaml'
     MAP_FRAME = 'map'
     ODOM_FRAME = 'odom'
     BASE_LINK_FRAME = 'base_link' 
@@ -163,8 +164,8 @@ def generate_launch_description():
     
     declare_nav2_params_file_cmd = DeclareLaunchArgument(
         'nav2_params_file',
-        default_value=NAV2_DEFAULT_PARAMS_FILE,
-        description='Full path to the Nav2 parameters file')
+        default_value=NAV2_DEFAULT_PARAMS_3D_FILE,
+        description='Full path to the Nav2 3D parameters file')
 
     # declare_localization_cmd = DeclareLaunchArgument(
     #     'localization',
@@ -581,7 +582,7 @@ def generate_launch_description():
     #     }]
     # )
 
-    # 5. 3D导航栈节点（不包含planner_server，使用OctoPlanner替代）
+    # 5. 3D导航栈节点（不含planner_server，octo_planner_rviz_node 提供compute_path_to_pose action）
     navigation_include = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'navigation_launch_3d.py')),
         launch_arguments={
@@ -602,7 +603,9 @@ def generate_launch_description():
         }.items()
     )
 
-    # OctoPlanner3D节点（3D规划器，替代nav2 planner_server）
+    # OctoPlanner3D节点（地图可视化 + test mode + ComputePathToPose action server）
+    # bt_navigator 的 ComputePathToPose BT node 直连此节点的 action server，
+    # planner_server 不再需要。
     octo_planner_node = Node(
         package="octo_planner3d",
         executable="octo_planner_rviz_node",
@@ -618,8 +621,8 @@ def generate_launch_description():
             },
         ],
         remappings=[
-            ("goal_pose", '/goal_pose'),
-            ("planned_path", ns_planned_path_topic),
+            # OctoPlanner 通过 ComputePathToPose action 为 Nav2 提供路径，
+            # 并直接发布到 /rkbot/plan 供 RViz 显示。
             ("initialpose", '/initialpose'),
             ("clicked_point", "/clicked_point"),
             ("test_path", ns_test_path_topic),
@@ -737,7 +740,7 @@ def generate_launch_description():
             )
         )
 
-        # OctoPlanner3D（3D规划器，替代nav2 planner_server）
+        # OctoPlanner3D（地图可视化 + 测试模式）
         nav2_actions.append(
             TimerAction(
                 period=2.5,
@@ -745,7 +748,7 @@ def generate_launch_description():
             )
         )
 
-        # 导航栈（不包含planner_server）
+        # 导航栈（不含planner_server）
         nav2_actions.append(
             TimerAction(
                 period=3.0,

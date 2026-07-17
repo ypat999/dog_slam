@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
+        - /Path1
         - /PointCloud2_front1/Topic1
         - /PointCloud2_rear1/Topic1
         - /LaserScan1/Topic1
@@ -64,8 +65,6 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        mid360_robot/livox_frame/lidar:
-          Value: true
         rkbot/base_footprint:
           Value: true
         rkbot/base_link:
@@ -106,7 +105,7 @@ Visualization Manager:
       Head Length: 0.20000000298023224
       Length: 0.30000001192092896
       Line Style: Billboards
-      Line Width: 0.029999999329447746
+      Line Width: 0.30000001192092896
       Name: Path
       Offset:
         X: 0
@@ -774,7 +773,7 @@ Visualization Manager:
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
-      Color: 12; 218; 140
+      Color: 26; 95; 180
       Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
@@ -797,7 +796,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/planned_path
+        Value: /rkbot/test_path
       Value: true
   Enabled: true
   Global Options:
@@ -845,25 +844,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 38.333126068115234
+      Distance: 136.65895080566406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 5.114267826080322
-        Y: 5.266258239746094
-        Z: 3.0637402534484863
+        X: 70.8597412109375
+        Y: -41.123687744140625
+        Z: -19.378658294677734
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2797966003417969
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.687771797180176
+      Yaw: 4.645956039428711
     Saved: ~
 Window Geometry:
   Displays:

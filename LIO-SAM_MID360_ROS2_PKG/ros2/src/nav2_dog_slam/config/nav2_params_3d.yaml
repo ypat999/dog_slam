@@ -2,10 +2,8 @@
 # NAV2 Configuration - 3D Navigation (OctoPlanner Integration)
 # =============================================================================
 # 架构说明：
-# - 全局规划：OctoPlanner3D（三维可通行性规划）
+# - 全局规划：OctoPlanner3D（octo_planner_rviz_node 提供 ComputePathToPose action）
 # - 局部规划：MPPI Controller（全向移动，适配三维路径）
-# - OctoPlanner提供ComputePathToPose Action接口（通过适配器）
-# - 移除了planner_server（避免与OctoPlanner冲突）
 # =============================================================================
 
 # =============================================================================
@@ -13,7 +11,7 @@
 # =============================================================================
 controller_server:
   ros__parameters:
-    use_sim_time: false  # 真实机器人使用false
+    use_sim_time: true
     
     controller_frequency: 20.0
     failure_tolerance: 3.0
@@ -162,7 +160,7 @@ controller_server:
 # =============================================================================
 velocity_smoother:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP" 
@@ -184,7 +182,7 @@ velocity_smoother:
 local_costmap:
   local_costmap:
     ros__parameters:
-      use_sim_time: false
+      use_sim_time: true
       update_frequency: 10.0
       publish_frequency: 10.0
       global_frame: odom  # 使用odom（局部规划）
@@ -202,13 +200,35 @@ local_costmap:
       track_unknown_space: true
       
       # 插件配置 - 使用可通行性层（适配3D）
-      plugins: ["traversability_layer_local", "obstacle_layer_local", "inflation_layer_local"]
+      plugins: [ "obstacle_layer_local", "traversability_layer_local", "inflation_layer_local"]
+
+      # 障碍物层参数 - 禁用（使用可通行性层）
+      obstacle_layer_local:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: false
+        observation_sources: scan
+        combination_method: 1
+        footprint_clearing_enabled: true
+        max_obstacle_height: 100.0
+        min_obstacle_height: -100.0
+        scan:
+          topic: /rkbot/scan
+          max_obstacle_height: 100.0
+          min_obstacle_height: -100.0
+          clearing: true
+          marking: true
+          data_type: "LaserScan"
+          raytrace_max_range: 15.0
+          raytrace_min_range: 0.0
+          obstacle_max_range: 15.0
+          obstacle_min_range: 0.0
+      
       
       # 可通行性层参数 - 三维地形分析
       traversability_layer_local:
         plugin: "traversability_layer::TraversabilityLayer"
-        enabled: true
-        pointcloud_topic: /lio/body/cloud
+        enabled: false
+        pointcloud_topic: /rkbot/lio/body/cloud
         base_frame: base_footprint
         max_obstacle_height: 1.0
         min_obstacle_height: -1.0
@@ -245,26 +265,6 @@ local_costmap:
         # 并行计算
         num_threads: 4
       
-      # 障碍物层参数 - 禁用（使用可通行性层）
-      obstacle_layer_local:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: false
-        observation_sources: scan
-        combination_method: 1
-        footprint_clearing_enabled: true
-        max_obstacle_height: 100.0
-        min_obstacle_height: -100.0
-        scan:
-          topic: scan
-          max_obstacle_height: 100.0
-          min_obstacle_height: -100.0
-          clearing: true
-          marking: true
-          data_type: "LaserScan"
-          raytrace_max_range: 15.0
-          raytrace_min_range: 0.0
-          obstacle_max_range: 15.0
-          obstacle_min_range: 0.0
       
       # 膨胀层参数 - 适度增加膨胀半径
       inflation_layer_local:
@@ -276,46 +276,21 @@ local_costmap:
       always_send_full_costmap: true
 
 # =============================================================================
-# Global Costmap Configuration - 禁用（OctoPlanner替代）
-# =============================================================================
-global_costmap:
-  global_costmap:
-    ros__parameters:
-      use_sim_time: false
-      update_frequency: 0.5
-      publish_frequency: 0.5
-      global_frame: map
-      robot_base_frame: base_footprint
-      transform_tolerance: 0.5
-      
-      # 地图参数
-      footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"
-      footprint_padding: 0.05
-      resolution: 0.05
-      track_unknown_space: true
-      
-      # 插件配置 - 禁用（OctoPlanner替代全局规划）
-      plugins: []
-      
-      always_send_full_costmap: false
-
-# =============================================================================
 # Lifecycle Manager Configuration - 3D导航节点列表
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     autostart: true
-    # 移除planner_server（使用OctoPlanner）
     node_names: ['controller_server', 'behavior_server', 'bt_navigator', 'velocity_smoother']
     bond_timeout_ms: 10000
 
 # =============================================================================
-# BT Navigator Configuration - 使用现有行为树
+# BT Navigator Configuration - 使用 3D 行为树
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     global_frame: map
     robot_base_frame: base_footprint
     bt_loop_duration: 100
@@ -323,7 +298,8 @@ bt_navigator:
     wait_for_service_timeout: 10
     
     # 行为树配置 - OctoPlanner适配器提供ComputePathToPose接口
-    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml"
+    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml"
+    default_nav_through_poses_bt_xml: ""  # 禁用：3D 导航不使用 navigate_through_poses
     
     # Groot监控
     enable_groot_monitoring: false
@@ -386,7 +362,7 @@ bt_navigator:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: false
+    use_sim_time: true
     
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
     footprint_topic: "/local_costmap/published_footprint"

@@ -62,7 +62,7 @@ controller_server:
       vx_max: 1.8  # 适度降低速度，适应3D环境
       vy_max: 0.3
       vy_std: 0.2
-      vx_min: -0.1
+      vx_min: -0.2
       wz_max: 1.0
       
       # 温度参数
@@ -76,8 +76,8 @@ controller_server:
         time_step: 5
         trajectory_step: 25
       
-      enforce_path_inversion: false
-      max_robot_pose_search_dist: 0.8  # 增加，适应3D路径曲率
+      enforce_path_inversion: true
+      max_robot_pose_search_dist: 2.0  # 增加，适应3D路径曲率
       
       # 评价器参数 - 优化权重适应3D路径
       critics: ["ConstraintCritic", "CostCritic", "PathFollowCritic", "GoalCritic", 
@@ -90,7 +90,7 @@ controller_server:
         cost_weight: 25.0
       
       CostCritic:
-        enabled: true
+        enabled: false
         cost_weight: 4.0  # 降低权重，OctoPlanner已处理全局可通行性
         cost_power: 2
         collision_cost: 254.0
@@ -100,13 +100,26 @@ controller_server:
         near_goal_distance: 1.5
 
       ObstaclesCritic:
+        # 是否启用
         enabled: true
-        cost_weight: 25.0
-        cost_power: 3
-        collision_cost: 254.0
+        # 代价幂次
+        cost_power: 4
+        # 是否使用 SE2 footprint 碰撞检测
         consider_footprint: true
-        critical_cost: 250.0
-        near_goal_distance: 1.5
+        # 近碰撞区域（collision_margin_distance 内）的惩罚权重
+        critical_weight: 300.0
+        # 一般避障偏好权重（inflation_radius 内），鼓励轨迹远离障碍物
+        repulsion_weight: 20.0
+        # 真实碰撞代价值
+        collision_cost: 250.0
+        # 碰撞临界距离（m），类似 footprint 膨胀
+        collision_margin_distance: 0.3
+        # 接近目标时停止避障偏好项的距离（m），使机器人可平滑收敛到目标
+        near_goal_distance: 1.0
+        # 障碍物周围膨胀半径（m），应与代价图膨胀层一致，Humble only
+        inflation_radius: 1.0
+        # 跨膨胀半径的指数衰减因子，应与代价图膨胀层一致，Humble only
+        cost_scaling_factor: 15.0
         
       PathFollowCritic:
         enabled: true
@@ -134,7 +147,7 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 2
-        cost_weight: 15.0
+        cost_weight: 5.0
         threshold_to_consider: 1.5
       
       VelocityDeadbandCritic: 
@@ -167,7 +180,7 @@ velocity_smoother:
     
     # 移动速度限制 - 适度降低适应3D环境
     max_velocity: [2.5, 1.2, 4.5]  
-    min_velocity: [-0.1, -1.2, -4.5]  
+    min_velocity: [-0.5, -1.2, -4.5]  
     
     # 加速度限制 - 适度降低避免急转急停
     max_accel: [2.5, 1.8, 8.0]  
@@ -196,6 +209,10 @@ local_costmap:
       rolling_window: true
       width: 10
       height: 10
+      # 代价图 X 原点相对于宽度的偏移（m）
+      origin_x: -5.0
+      # 代价图 Y 原点相对于高度的偏移（m）
+      origin_y: -5.0
       
       track_unknown_space: true
       
@@ -227,7 +244,7 @@ local_costmap:
       # 可通行性层参数 - 三维地形分析
       traversability_layer_local:
         plugin: "traversability_layer::TraversabilityLayer"
-        enabled: false
+        enabled: true
         pointcloud_topic: /rkbot/lio/body/cloud
         base_frame: base_footprint
         max_obstacle_height: 1.0
@@ -239,30 +256,22 @@ local_costmap:
         slope_cost_scale: 2.5
         
         # 高度差参数
-        step_height_threshold: 0.4  # 台阶高度阈值
+        step_height_threshold: 0.3  # 台阶高度阈值
         height_cost_start: 0.12
         
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
-        
-        # 障碍物密度参数
-        obstacle_ratio_threshold: 0.55  # 适度放宽
-        obstacle_hit_threshold: 2
-        
-        # 点云持久化
+        # 点云保留时间（s），0=仅用最新帧
         observation_persistence: 0.0
+        # 点云缓冲队列长度
         cloud_buffer_size: 5
-        
-        # 调试输出
+        # 是否发布坡度可视化点云
         publish_slope_map: true
-        
-        # 射线清除
+        # 是否启用射线追踪清除
         enable_raycast_clear: false
-        
-        # 网格分辨率
-        cell_resolution: 0.2
-        
-        # 并行计算
+        # 可通行性分析网格分辨率（m）
+        cell_resolution: 0.1
+        # OpenMP 线程数，0=系统默认
         num_threads: 4
       
       
@@ -270,8 +279,8 @@ local_costmap:
       inflation_layer_local:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: true
-        inflation_radius: 0.35  # 适度降低，OctoPlanner已处理全局障碍
-        cost_scaling_factor: 1.3
+        inflation_radius: 1.0  # 适度降低，OctoPlanner已处理全局障碍
+        cost_scaling_factor: 15.0
       
       always_send_full_costmap: true
 

@@ -233,11 +233,11 @@ local_costmap:
           max_obstacle_height: 100.0
           min_obstacle_height: -100.0
           clearing: true
-          marking: false
+          marking: true
           data_type: "LaserScan"
           raytrace_max_range: 15.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 0.0
+          obstacle_max_range: 15.0
           obstacle_min_range: 0.0
       
       
@@ -262,7 +262,7 @@ local_costmap:
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
         # 点云保留时间（s），0=仅用最新帧
-        observation_persistence: 0.0
+        observation_persistence: 0.2
         # 点云缓冲队列长度
         cloud_buffer_size: 5
         # 是否发布坡度可视化点云

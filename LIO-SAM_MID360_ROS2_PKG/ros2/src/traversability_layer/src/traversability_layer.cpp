@@ -40,7 +40,7 @@ void TraversabilityLayer::onInitialize()
   declareParameter("slope_cost_scale", rclcpp::ParameterValue(5.0));
   declareParameter("height_cost_scale", rclcpp::ParameterValue(10.0));
   declareParameter("lethal_cost_threshold", rclcpp::ParameterValue(254.0));
-  declareParameter("observation_persistence", rclcpp::ParameterValue(5.0));
+  declareParameter("observation_persistence", rclcpp::ParameterValue(50));
   declareParameter("cloud_buffer_size", rclcpp::ParameterValue(5));
   declareParameter("publish_slope_map", rclcpp::ParameterValue(false));
   declareParameter("cell_resolution", rclcpp::ParameterValue(0.0));
@@ -53,6 +53,9 @@ void TraversabilityLayer::onInitialize()
   declareParameter("min_interp_neighbors", rclcpp::ParameterValue(2));
   declareParameter("obstacle_ratio_threshold", rclcpp::ParameterValue(0.5));
   declareParameter("obstacle_hit_threshold", rclcpp::ParameterValue(2));
+  declareParameter("skip_frames", rclcpp::ParameterValue(0));
+  declareParameter("persist_cost", rclcpp::ParameterValue(false));
+  declareParameter("trust_interpolated_ground", rclcpp::ParameterValue(true));
 
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".pointcloud_topic", pointcloud_topic_);
@@ -68,6 +71,10 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".height_cost_scale", height_cost_scale_);
   node->get_parameter(name_ + ".lethal_cost_threshold", lethal_cost_threshold_);
   node->get_parameter(name_ + ".observation_persistence", observation_persistence_);
+  observation_persistence_int_ = static_cast<int>(observation_persistence_);  // 次数制：整数值
+  node->get_parameter(name_ + ".skip_frames", skip_frames_);
+  node->get_parameter(name_ + ".persist_cost", persist_cost_);
+  node->get_parameter(name_ + ".trust_interpolated_ground", trust_interpolated_ground_);
   node->get_parameter(name_ + ".cloud_buffer_size", cloud_buffer_size_);
   node->get_parameter(name_ + ".publish_slope_map", publish_slope_map_);
   node->get_parameter(name_ + ".cell_resolution", cell_resolution_);
@@ -102,14 +109,17 @@ void TraversabilityLayer::onInitialize()
     "TraversabilityLayer(v3d): step_height=%.3f, max_slope=%.1fdeg, slope_start=%.1fdeg, "
     "topic=%s, sensor_frame=%s, base_frame=%s, cell_res=%.3f, voxel_z_res=%.3f, z_range=[%.1f,%.1f], "
     "ground_hit_thr=%d, free_space_thr=%d, free_space_win=%d, "
-    "interp_radius=%d, min_interp=%d, obstacle_ratio_thr=%.2f, obstacle_hit_thr=%d, num_threads=%d",
+    "interp_radius=%d, min_interp=%d, obstacle_ratio_thr=%.2f, obstacle_hit_thr=%d, num_threads=%d, "
+    "obs_persistence=%d(ticks), skip_frames=%d, persist_cost=%d, trust_interp=%d",
     step_height_threshold_, max_slope_traversable_ * 180.0 / M_PI,
     slope_cost_start_ * 180.0 / M_PI, pointcloud_topic_.c_str(),
     sensor_frame_.c_str(), base_frame_.c_str(),
     cell_resolution_, voxel_z_resolution_, min_obstacle_height_, max_obstacle_height_,
     ground_hit_threshold_, free_space_threshold_, free_space_window_,
     interp_search_radius_, min_interp_neighbors_,
-    obstacle_ratio_threshold_, obstacle_hit_threshold_, num_threads_);
+    obstacle_ratio_threshold_, obstacle_hit_threshold_, num_threads_,
+    observation_persistence_int_, skip_frames_,
+    static_cast<int>(persist_cost_), static_cast<int>(trust_interpolated_ground_));
 
   tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node->get_clock());
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
@@ -153,6 +163,11 @@ void TraversabilityLayer::matchSize()
   ground_size_x_ = static_cast<unsigned int>(std::ceil(2 * world_w / cell_resolution_));
   ground_size_y_ = static_cast<unsigned int>(std::ceil(2 * world_h / cell_resolution_));
   ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
+
+  // 永久 cost 记忆
+  if (persist_cost_) {
+    persistent_cost_map_.assign(ground_size_x_ * ground_size_y_, PersistentCostCell{});
+  }
 }
 
 void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
@@ -262,23 +277,34 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     "[TraversabilityLayer] After transform: %zu kept, %d filtered",
     transformed_cloud.size(), filtered_count);
 
-  // 按 odom 坐标更新 voxel grid，填充并衰减
+  // 按 odom 坐标更新 voxel grid（每帧都累积点云数据）
   updateVoxelGrid(transformed_cloud, sensor_pos);
-  
-  // 直接在缓存中计算 ground map 和 cost
-  decayVoxelGrid();
-  extractGroundInCache();
-  interpolateGround();
-  computeGroundSlope();
-  
+
+  // 跳帧逻辑：skip_frames > 0 时，仅每 N+1 帧执行一次完整计算
+  frame_counter_++;
+  bool do_compute = true;
+  if (skip_frames_ > 0) {
+    do_compute = (frame_counter_ % static_cast<uint16_t>(skip_frames_ + 1) == 1);
+  }
+
+  if (do_compute) {
+    // 次数制衰减
+    tickVoxelGrid();
+    // 在缓存中计算 ground map 和 cost
+    extractGroundInCache();
+    interpolateGround();
+    computeGroundSlope();
+    compute_counter_++;
+  }
+
   cloud_processed_++;
   cloud_updated_ = true;
 
   RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
-    "[TraversabilityLayer] Cloud: received=%u processed=%u frame_counter=%u pts=%zu",
+    "[TraversabilityLayer] Cloud: received=%u processed=%u frame=%u compute=%u pts=%zu do_compute=%d",
     cloud_received_, cloud_processed_, static_cast<unsigned int>(frame_counter_),
-    transformed_cloud.size());
+    compute_counter_, transformed_cloud.size(), static_cast<int>(do_compute));
 }
 
 void TraversabilityLayer::shiftVoxelGrid(int shift_x, int shift_y)
@@ -371,7 +397,7 @@ void TraversabilityLayer::updateVoxelGrid(
   unsigned int new_size_x = ground_size_x_;
   unsigned int new_size_y = ground_size_y_;
 
-  if (observation_persistence_ <= 0.0) {
+  if (observation_persistence_int_ <= 0) {
     voxel_grid_valid_ = false;
   }
 
@@ -418,6 +444,9 @@ void TraversabilityLayer::updateVoxelGrid(
     int shift_x = static_cast<int>(std::round((voxel_ox_ - cache_ox) / cell_resolution_));
     int shift_y = static_cast<int>(std::round((voxel_oy_ - cache_oy) / cell_resolution_));
     shiftVoxelGrid(shift_x, shift_y);
+    if (persist_cost_) {
+      shiftPersistentCostMap(shift_x, shift_y);
+    }
 
     voxel_ox_ = cache_ox;
     voxel_oy_ = cache_oy;
@@ -432,8 +461,6 @@ void TraversabilityLayer::updateVoxelGrid(
       expandVoxelGridZ(expanded_z_lo, expanded_z_hi);
     }
   }
-
-  frame_counter_++;
 
   double inv_cell_res = 1.0 / cell_resolution_;
   double inv_vz_res = 1.0 / voxel_z_resolution_;
@@ -540,47 +567,83 @@ void TraversabilityLayer::updateVoxelGrid(
 #pragma omp barrier
 
 #pragma omp for schedule(static)
-    for (int t = 0; t < n_threads; t++) {
-      for (const auto & entry : thread_buffers[t]) {
-        if (entry.is_hit) {
-          auto & v = voxel_grid_[entry.idx];
-          if (v.hit_count < 255) v.hit_count++;
-          v.last_update_frame = frame_counter_;
-        } else {
-          auto & v = voxel_grid_[entry.idx];
-          if (v.pass_count < 255) v.pass_count++;
-          v.last_update_frame = frame_counter_;
-        }
-      }
-    }
-  }
+	    for (int t = 0; t < n_threads; t++) {
+	      for (const auto & entry : thread_buffers[t]) {
+	        if (entry.is_hit) {
+	          auto & v = voxel_grid_[entry.idx];
+	          if (v.hit_count < 255) v.hit_count++;
+	          // 刷新剩余使用次数（取较大值，避免衰减中的体素被重置为更小值）
+	          uint16_t new_uses = static_cast<uint16_t>(observation_persistence_int_);
+	          if (new_uses > v.remaining_uses) v.remaining_uses = new_uses;
+	        } else {
+	          auto & v = voxel_grid_[entry.idx];
+	          if (v.pass_count < 255) v.pass_count++;
+	          uint16_t new_uses = static_cast<uint16_t>(observation_persistence_int_);
+	          if (new_uses > v.remaining_uses) v.remaining_uses = new_uses;
+	        }
+	      }
+	    }
+	  }
 }
 
-void TraversabilityLayer::decayVoxelGrid()
+void TraversabilityLayer::tickVoxelGrid()
 {
-  if (observation_persistence_ <= 0.0) {
+  if (observation_persistence_int_ <= 0) {
     return;
   }
 
-  uint16_t decay_frames = static_cast<uint16_t>(
-    observation_persistence_ * decay_interval_frames_);
-  if (decay_frames == 0) decay_frames = 1;
+  uint16_t half_life = static_cast<uint16_t>(observation_persistence_int_ / 2);
 
 #pragma omp parallel for schedule(static)
   for (int i = 0; i < static_cast<int>(voxel_grid_.size()); i++) {
     auto & v = voxel_grid_[i];
     if (v.hit_count == 0 && v.pass_count == 0) continue;
 
-    uint16_t age = frame_counter_ - v.last_update_frame;
-    if (age > decay_frames) {
+    if (v.remaining_uses > 0) {
+      v.remaining_uses--;
+    }
+
+    // 过期：清除数据
+    if (v.remaining_uses == 0) {
       v.hit_count = 0;
       v.pass_count = 0;
-      v.last_update_frame = 0;
-    } else if (age > decay_frames / 2) {
+    }
+    // 半衰期：数据减半
+    else if (v.remaining_uses <= half_life) {
       v.hit_count = v.hit_count >> 1;
       v.pass_count = v.pass_count >> 1;
     }
   }
+}
+
+void TraversabilityLayer::shiftPersistentCostMap(int shift_x, int shift_y)
+{
+  if (shift_x == 0 && shift_y == 0) return;
+
+  std::vector<PersistentCostCell> new_map(
+    ground_size_x_ * ground_size_y_, PersistentCostCell{});
+
+#pragma omp parallel for collapse(2) schedule(static)
+  for (int ny = 0; ny < static_cast<int>(ground_size_y_); ny++) {
+    for (int nx = 0; nx < static_cast<int>(ground_size_x_); nx++) {
+      int old_x = nx - shift_x;
+      int old_y = ny - shift_y;
+
+      if (old_x < 0 || old_x >= static_cast<int>(ground_size_x_) ||
+          old_y < 0 || old_y >= static_cast<int>(ground_size_y_))
+      {
+        continue;
+      }
+
+      size_t new_idx = static_cast<size_t>(ny) * ground_size_x_ +
+                       static_cast<size_t>(nx);
+      size_t old_idx = static_cast<size_t>(old_y) * ground_size_x_ +
+                       static_cast<size_t>(old_x);
+      new_map[new_idx] = persistent_cost_map_[old_idx];
+    }
+  }
+
+  persistent_cost_map_ = std::move(new_map);
 }
 
 void TraversabilityLayer::extractGroundInCache()
@@ -881,8 +944,14 @@ void TraversabilityLayer::computeGroundSlope()
 
 unsigned char TraversabilityLayer::computeCost(const GroundCell & cell) const
 {
-  if (!cell.has_ground || cell.is_interpolated) {
+  if (!cell.has_ground) {
     return nav2_costmap_2d::NO_INFORMATION;
+  }
+  if (cell.is_interpolated) {
+    if (!trust_interpolated_ground_) {
+      return nav2_costmap_2d::NO_INFORMATION;
+    }
+    return 1;  // 低代价，表示"可通行但置信度较低"，覆盖 obstacle_layer 误判
   }
 
   float obstacle_height = cell.max_obstacle_z - cell.ground_z;
@@ -1054,6 +1123,8 @@ void TraversabilityLayer::updateCosts(
   int cache_cy_max = std::min(static_cast<int>(ground_size_y_) - 1, 
                              costmap_start_y_in_cache + static_cast<int>(costmap_sy));
 
+  int cells_from_memory = 0;
+
   for (int cy = cache_cy_min; cy <= cache_cy_max; cy++) {
     for (int cx = cache_cx_min; cx <= cache_cx_max; cx++) {
       size_t idx = groundIndex(static_cast<unsigned int>(cx),
@@ -1062,6 +1133,35 @@ void TraversabilityLayer::updateCosts(
 
       if (!cell.has_ground) {
         ground_no_ground++;
+
+        // 永久 cost 记忆：无地面数据但有历史记忆 → 使用历史 cost
+        if (persist_cost_ &&
+            idx < persistent_cost_map_.size() &&
+            persistent_cost_map_[idx].cost != nav2_costmap_2d::NO_INFORMATION)
+        {
+          unsigned char mem_cost = persistent_cost_map_[idx].cost;
+          cells_from_memory++;
+
+          double cell_wx = voxel_ox_ + cx * cell_resolution_;
+          double cell_wy = voxel_oy_ + cy * cell_resolution_;
+
+          int mx_start = static_cast<int>(std::floor((cell_wx - master_grid.getOriginX()) * inv_costmap_res));
+          int my_start = static_cast<int>(std::floor((cell_wy - master_grid.getOriginY()) * inv_costmap_res));
+          int mx_end = static_cast<int>(std::floor((cell_wx + cell_resolution_ - master_grid.getOriginX() - 1e-6) * inv_costmap_res));
+          int my_end = static_cast<int>(std::floor((cell_wy + cell_resolution_ - master_grid.getOriginY() - 1e-6) * inv_costmap_res));
+
+          mx_end = std::min(mx_end, static_cast<int>(master_grid.getSizeInCellsX()) - 1);
+          my_end = std::min(my_end, static_cast<int>(master_grid.getSizeInCellsY()) - 1);
+
+          for (int my = my_start; my <= my_end; my++) {
+            for (int mx = mx_start; mx <= mx_end; mx++) {
+              if (mx < 0 || my < 0) continue;
+              unsigned int mit = static_cast<unsigned int>(my) * master_span +
+                                 static_cast<unsigned int>(mx);
+              master_array[mit] = mem_cost;
+            }
+          }
+        }
         continue;
       }
       ground_has_ground++;
@@ -1070,6 +1170,13 @@ void TraversabilityLayer::updateCosts(
 
       if (cost == nav2_costmap_2d::NO_INFORMATION) {
         continue;
+      }
+
+      // 永久 cost 记忆：更新非插值格子的历史 cost
+      if (persist_cost_ && !cell.is_interpolated &&
+          idx < persistent_cost_map_.size())
+      {
+        persistent_cost_map_[idx].cost = cost;
       }
 
       if (cost >= nav2_costmap_2d::LETHAL_OBSTACLE) {
@@ -1107,11 +1214,11 @@ void TraversabilityLayer::updateCosts(
   RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] updateCosts: cells_cost=%d lethal=%d "
-    "ground_ok=%d ground_empty=%d "
+    "ground_ok=%d ground_empty=%d from_memory=%d "
     "bounds=[%d,%d %d,%d] origin=[%.2f,%.2f] "
     "cmap=%dx%d@%.3f ground=%dx%d@%.3f voxel=%dx%dx%d vox_valid=%d",
     cells_with_cost, lethal_cells,
-    ground_has_ground, ground_no_ground,
+    ground_has_ground, ground_no_ground, cells_from_memory,
     min_i, min_j, max_i, max_j,
     ox, oy,
     costmap_sx, costmap_sy, costmap_res,
@@ -1182,7 +1289,11 @@ void TraversabilityLayer::reset()
   voxel_grid_.clear();
   voxel_grid_valid_ = false;
   frame_counter_ = 0;
+  compute_counter_ = 0;
   cloud_updated_ = false;
+  if (persist_cost_) {
+    persistent_cost_map_.assign(ground_size_x_ * ground_size_y_, PersistentCostCell{});
+  }
   nav2_costmap_2d::Costmap2D::resetMaps();
 }
 

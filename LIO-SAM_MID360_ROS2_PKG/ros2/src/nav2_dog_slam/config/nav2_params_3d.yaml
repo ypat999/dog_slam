@@ -222,7 +222,7 @@ local_costmap:
       # 障碍物层参数 - 禁用（使用可通行性层）
       obstacle_layer_local:
         plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: true
+        enabled: false
         observation_sources: scan
         combination_method: 1
         footprint_clearing_enabled: true
@@ -249,30 +249,43 @@ local_costmap:
         base_frame: base_footprint
         max_obstacle_height: 1.0
         min_obstacle_height: -1.0
-        
+
         # 坡度参数 - 适度放宽适应3D导航
         max_slope_traversable: 55.0  # 最大可通行坡度
         slope_cost_start: 40.0
         slope_cost_scale: 2.5
-        
+
         # 高度差参数
         step_height_threshold: 0.3  # 台阶高度阈值
         height_cost_start: 0.12
-        
+
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
-        # 点云保留时间（s），0=仅用最新帧
-        observation_persistence: 0.2
+        # 体素存活计算次数（次数制，0=仅最新帧）
+        observation_persistence: 5
         # 点云缓冲队列长度
         cloud_buffer_size: 5
         # 是否发布坡度可视化点云
         publish_slope_map: true
-        # 是否启用射线追踪清除
-        enable_raycast_clear: false
         # 可通行性分析网格分辨率（m）
         cell_resolution: 0.1
         # OpenMP 线程数，0=系统默认
         num_threads: 4
+
+        # 跳帧：每 N+1 帧取1帧计算cost，0=不跳帧
+        # 例: skip_frames=4 → 10hz点云进行2hz计算
+        skip_frames: 4
+
+        # 永久cost记忆开关：3D分析确认过的cost永久保留直到被新观测覆盖
+        persist_cost: true
+
+        # 信任插值地面：插值格子写入低代价(cost=1)而非NO_INFORMATION，
+        # 可覆盖obstacle_layer的2D scan误判
+        trust_interpolated_ground: true
+
+        # 插值参数
+        interp_search_radius: 5
+        min_interp_neighbors: 2
       
       
       # 膨胀层参数 - 适度增加膨胀半径

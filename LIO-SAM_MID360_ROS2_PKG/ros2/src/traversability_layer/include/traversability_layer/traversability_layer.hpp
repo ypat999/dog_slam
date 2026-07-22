@@ -32,7 +32,7 @@ struct VoxelData
 {
   uint8_t hit_count = 0;
   uint8_t pass_count = 0;
-  uint16_t last_update_frame = 0;
+  uint16_t remaining_uses = 0;  // 次数制衰减：剩余参与计算次数，0=过期
 };
 
 struct GroundCell
@@ -53,6 +53,11 @@ struct IncrementalRay
 {
   size_t hit_idx;
   std::vector<size_t> pass_indices;
+};
+
+struct PersistentCostCell
+{
+  unsigned char cost = 255;  // 255 = NO_INFORMATION = 从未观测
 };
 
 class TraversabilityLayer : public nav2_costmap_2d::CostmapLayer
@@ -83,7 +88,8 @@ private:
     const Point3D & sensor_pos);
   void shiftVoxelGrid(int shift_x, int shift_y);
   void expandVoxelGridZ(double new_z_lo, double new_z_hi);
-  void decayVoxelGrid();
+  void tickVoxelGrid();  // 次数制衰减（替代 decayVoxelGrid）
+  void shiftPersistentCostMap(int shift_x, int shift_y);
   void extractGroundInCache();
   void interpolateGround();
   void computeGroundSlope();
@@ -117,7 +123,8 @@ private:
   double slope_cost_scale_;
   double height_cost_scale_;
   double lethal_cost_threshold_;
-  double observation_persistence_;
+  double observation_persistence_;  // 次数制：int 参数通过 declareParameter 以 int 类型声明
+  int observation_persistence_int_;  // 次数制衰减次数（0=仅最新帧，>0=体素存留计算次数）
   int cloud_buffer_size_;
   bool enabled_;
   bool publish_slope_map_;
@@ -133,6 +140,11 @@ private:
   double obstacle_ratio_threshold_;
   int obstacle_hit_threshold_;
 
+  // 新增参数
+  int skip_frames_;                     // 跳帧：N帧取1帧计算cost，0=不跳帧
+  bool persist_cost_;                   // 永久cost记忆开关
+  bool trust_interpolated_ground_;      // 信任插值地面开关
+
   rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
   int perf_frame_count_ = 0;
   double perf_total_time_ = 0.0;
@@ -146,6 +158,7 @@ private:
   double voxel_oy_ = 0.0;  // 缓存网格左下角 y 坐标（odom 坐标系）
   bool voxel_grid_valid_ = false;
   uint16_t frame_counter_ = 0;
+  uint32_t compute_counter_ = 0;  // 计算帧计数（跳帧时 != frame_counter_）
   uint16_t decay_interval_frames_ = 10;
   uint32_t cloud_received_ = 0;
   uint32_t cloud_processed_ = 0;
@@ -153,6 +166,9 @@ private:
   std::vector<GroundCell> ground_map_;
   unsigned int ground_size_x_ = 0;  // 缓存网格 x 方向大小（costmap 2倍）
   unsigned int ground_size_y_ = 0;  // 缓存网格 y 方向大小（costmap 2倍）
+
+  // 永久 cost 记忆
+  std::vector<PersistentCostCell> persistent_cost_map_;
 
   unsigned int costmap_size_x_ = 0;  // costmap 原始 x 大小
   unsigned int costmap_size_y_ = 0;  // costmap 原始 y 大小

@@ -145,6 +145,7 @@ private:
   bool persist_cost_;                   // 永久cost记忆开关
   bool trust_interpolated_ground_;      // 信任插值地面开关
   bool enable_perf_log_;                // 性能统计开关
+  double transform_tolerance_;          // TF 查找容差（秒），应对 fast_tf 模式
 
   // 性能统计（每30秒输出各模块平均耗时）
   rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};

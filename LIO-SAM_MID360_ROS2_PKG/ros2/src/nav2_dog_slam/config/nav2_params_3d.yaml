@@ -37,7 +37,7 @@ controller_server:
     goal_checker:
       plugin: "nav2_controller::StoppedGoalChecker"
       xy_goal_tolerance: 0.4  # 适度放宽位置容差
-      yaw_goal_tolerance: 0.25  # 适度放宽角度容差
+      yaw_goal_tolerance: 0.1  # 适度放宽角度容差
       trans_stopped_velocity: 1.5
       rot_stopped_velocity: 1.5
       stateful: true
@@ -205,7 +205,7 @@ local_costmap:
       # 地图参数 - 适度增大窗口适应3D环境
       footprint: "[[-0.4, -0.2], [-0.4, 0.2], [0.2, 0.2], [0.2, -0.2]]"
       footprint_padding: 0.05
-      resolution: 0.05
+      resolution: 0.1
       rolling_window: true
       width: 10
       height: 10
@@ -249,6 +249,7 @@ local_costmap:
         base_frame: base_footprint
         max_obstacle_height: 1.0
         min_obstacle_height: -1.0
+        transform_tolerance: 0.5
 
         # 坡度参数 - 适度放宽适应3D导航
         max_slope_traversable: 55.0  # 最大可通行坡度
@@ -261,20 +262,21 @@ local_costmap:
 
         # 致命 cost 阈值
         lethal_cost_threshold: 254.0
-        # 体素存活计算次数（次数制，0=仅最新帧）
-        observation_persistence: 5
+       
         # 点云缓冲队列长度
-        cloud_buffer_size: 5
+        cloud_buffer_size: 10
         # 是否发布坡度可视化点云
         publish_slope_map: true
         # 可通行性分析网格分辨率（m）
         cell_resolution: 0.1
         # OpenMP 线程数，0=系统默认
-        num_threads: 4
+        num_threads: 2
 
         # 跳帧：每 N+1 帧取1帧计算cost，0=不跳帧
         # 例: skip_frames=4 → 10hz点云进行2hz计算
-        skip_frames: 4
+        skip_frames: 2
+         # 体素存活计算次数（次数制，0=仅最新帧）
+        observation_persistence: 5
 
         # 永久cost记忆开关：3D分析确认过的cost永久保留直到被新观测覆盖
         persist_cost: true
@@ -283,8 +285,11 @@ local_costmap:
         # 可覆盖obstacle_layer的2D scan误判
         trust_interpolated_ground: true
 
+        # 性能统计开关：每30秒输出各模块平均耗时
+        enable_perf_log: true
+
         # 插值参数
-        interp_search_radius: 5
+        interp_search_radius: 3
         min_interp_neighbors: 2
       
       

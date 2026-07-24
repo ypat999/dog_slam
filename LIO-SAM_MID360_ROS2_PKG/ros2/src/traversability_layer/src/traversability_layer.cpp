@@ -2,6 +2,7 @@
 #include "nav2_costmap_2d/cost_values.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <functional>
@@ -56,6 +57,7 @@ void TraversabilityLayer::onInitialize()
   declareParameter("skip_frames", rclcpp::ParameterValue(0));
   declareParameter("persist_cost", rclcpp::ParameterValue(false));
   declareParameter("trust_interpolated_ground", rclcpp::ParameterValue(true));
+  declareParameter("enable_perf_log", rclcpp::ParameterValue(false));
 
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".pointcloud_topic", pointcloud_topic_);
@@ -70,8 +72,7 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".slope_cost_scale", slope_cost_scale_);
   node->get_parameter(name_ + ".height_cost_scale", height_cost_scale_);
   node->get_parameter(name_ + ".lethal_cost_threshold", lethal_cost_threshold_);
-  node->get_parameter(name_ + ".observation_persistence", observation_persistence_);
-  observation_persistence_int_ = static_cast<int>(observation_persistence_);  // 次数制：整数值
+  node->get_parameter(name_ + ".observation_persistence", observation_persistence_int_);
   node->get_parameter(name_ + ".skip_frames", skip_frames_);
   node->get_parameter(name_ + ".persist_cost", persist_cost_);
   node->get_parameter(name_ + ".trust_interpolated_ground", trust_interpolated_ground_);
@@ -87,6 +88,7 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".min_interp_neighbors", min_interp_neighbors_);
   node->get_parameter(name_ + ".obstacle_ratio_threshold", obstacle_ratio_threshold_);
   node->get_parameter(name_ + ".obstacle_hit_threshold", obstacle_hit_threshold_);
+  node->get_parameter(name_ + ".enable_perf_log", enable_perf_log_);
 
   if (num_threads_ > 0) {
     omp_set_num_threads(num_threads_);
@@ -156,12 +158,25 @@ void TraversabilityLayer::matchSize()
   costmap_oy_ = master_grid->getOriginY();
   costmap_res_ = master_grid->getResolution();
 
-  double world_w = master_grid->getSizeInCellsX() * master_grid->getResolution();
-  double world_h = master_grid->getSizeInCellsY() * master_grid->getResolution();
+  // 安全边界：极速 2m/s，点云 10Hz
+  // 每 tick 最大位移 = 2/10 = 0.2m
+  // half_margin 需要覆盖 max(observation_persistence, skip_frames+1) ticks 的位移
+  double travel_per_tick = 2.0 / 10.0;
+  int max_ticks = std::max(observation_persistence_int_, skip_frames_ + 1);
+  int half_margin = static_cast<int>(std::ceil(max_ticks * travel_per_tick / cell_resolution_)) + 2;
+  half_margin_ = half_margin;
+  int margin_cells = 2 * half_margin;
 
-  // 创建 2 倍大小的缓存空间
-  ground_size_x_ = static_cast<unsigned int>(std::ceil(2 * world_w / cell_resolution_));
-  ground_size_y_ = static_cast<unsigned int>(std::ceil(2 * world_h / cell_resolution_));
+  ground_size_x_ = costmap_size_x_ + static_cast<unsigned int>(margin_cells);
+  ground_size_y_ = costmap_size_y_ + static_cast<unsigned int>(margin_cells);
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("traversability_layer"),
+    "[TraversabilityLayer] matchSize: costmap=%dx%d, cache=%dx%d, margin=%d cells (%.2fm per side)",
+    costmap_size_x_, costmap_size_y_,
+    ground_size_x_, ground_size_y_,
+    half_margin_, half_margin_ * cell_resolution_);
+
   ground_map_.assign(ground_size_x_ * ground_size_y_, GroundCell{});
 
   // 永久 cost 记忆
@@ -199,7 +214,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   geometry_msgs::msg::TransformStamped transform;
   try {
     transform = tf_buffer_->lookupTransform(
-      target_frame, source_frame, tf2::TimePointZero,
+      target_frame, source_frame, msg->header.stamp,
       tf2::durationFromSec(0.1));
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN_THROTTLE(
@@ -218,12 +233,20 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   sensor_global_z_ = tz;
 
   double base_z = tz;
+  double base_ox = tx, base_oy = ty;
+  double base_qx = 0.0, base_qy = 0.0, base_qz = 0.0, base_qw = 1.0;
   if (!base_frame_.empty()) {
     try {
       auto base_tf = tf_buffer_->lookupTransform(
-        target_frame, base_frame_, tf2::TimePointZero,
+        target_frame, base_frame_, msg->header.stamp,
         tf2::durationFromSec(0.1));
       base_z = base_tf.transform.translation.z;
+      base_ox = base_tf.transform.translation.x;
+      base_oy = base_tf.transform.translation.y;
+      base_qx = base_tf.transform.rotation.x;
+      base_qy = base_tf.transform.rotation.y;
+      base_qz = base_tf.transform.rotation.z;
+      base_qw = base_tf.transform.rotation.w;
     } catch (tf2::TransformException & ex) {
       RCLCPP_WARN_THROTTLE(
         rclcpp::get_logger("traversability_layer"), *clock, 2000,
@@ -252,6 +275,8 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   std::vector<Point3D> transformed_cloud;
   transformed_cloud.reserve(cloud->size());
 
+  auto perf_t0 = std::chrono::high_resolution_clock::now();
+
   int filtered_count = 0;
   for (const auto & pt : cloud->points) {
     if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
@@ -272,13 +297,86 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     transformed_cloud.push_back({x_global, y_global, z_global});
   }
 
+  auto perf_t1 = std::chrono::high_resolution_clock::now();
+
   RCLCPP_DEBUG_THROTTLE(
     rclcpp::get_logger("traversability_layer"), *clock, 2000,
     "[TraversabilityLayer] After transform: %zu kept, %d filtered",
     transformed_cloud.size(), filtered_count);
 
+  // 过滤掉落在机器人 footprint 内的点（激光打到机身）
+  {
+    std::vector<geometry_msgs::msg::Point> footprint = layered_costmap_->getFootprint();
+    if (footprint.size() >= 3) {
+      // 计算 base_footprint 在 odom 下的朝向
+      double cos_yaw = 1.0 - 2.0 * (base_qy * base_qy + base_qz * base_qz);
+      double sin_yaw = 2.0 * (base_qx * base_qy + base_qw * base_qz);
+
+      // 将 footprint 变换到 odom 坐标系，同时计算 AABB
+      std::vector<Point3D> fp_odom;
+      fp_odom.reserve(footprint.size());
+      double fp_min_x = std::numeric_limits<double>::max();
+      double fp_max_x = std::numeric_limits<double>::lowest();
+      double fp_min_y = std::numeric_limits<double>::max();
+      double fp_max_y = std::numeric_limits<double>::lowest();
+      for (const auto & pt : footprint) {
+        double xo = base_ox + static_cast<double>(pt.x) * cos_yaw -
+                              static_cast<double>(pt.y) * sin_yaw;
+        double yo = base_oy + static_cast<double>(pt.x) * sin_yaw +
+                              static_cast<double>(pt.y) * cos_yaw;
+        fp_odom.push_back({xo, yo, 0.0});
+        fp_min_x = std::min(fp_min_x, xo);
+        fp_max_x = std::max(fp_max_x, xo);
+        fp_min_y = std::min(fp_min_y, yo);
+        fp_max_y = std::max(fp_max_y, yo);
+      }
+
+      // 凸多边形点内判断（叉积同号法）
+      auto pointInConvexPolygon = [&fp_odom](double px, double py) -> bool {
+        int n = static_cast<int>(fp_odom.size());
+        bool sign_set = false;
+        bool ref_sign = false;
+        for (int i = 0; i < n; i++) {
+          int j = (i + 1) % n;
+          double cross =
+            (fp_odom[j].x - fp_odom[i].x) * (py - fp_odom[i].y) -
+            (fp_odom[j].y - fp_odom[i].y) * (px - fp_odom[i].x);
+          if (cross == 0.0) continue;
+          bool cur_sign = cross > 0;
+          if (!sign_set) {
+            ref_sign = cur_sign;
+            sign_set = true;
+          } else if (ref_sign != cur_sign) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      size_t before = transformed_cloud.size();
+      auto it = std::remove_if(transformed_cloud.begin(), transformed_cloud.end(),
+        [&](const Point3D & pt) {
+          // 先用 AABB 粗筛
+          if (pt.x < fp_min_x || pt.x > fp_max_x ||
+              pt.y < fp_min_y || pt.y > fp_max_y) {
+            return false;
+          }
+          return pointInConvexPolygon(pt.x, pt.y);
+        });
+      transformed_cloud.erase(it, transformed_cloud.end());
+      int fp_filtered = static_cast<int>(before - transformed_cloud.size());
+      filtered_count += fp_filtered;
+      if (fp_filtered > 0) {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("traversability_layer"),
+          "[TraversabilityLayer] Footprint filtered %d points", fp_filtered);
+      }
+    }
+  }
+
   // 按 odom 坐标更新 voxel grid（每帧都累积点云数据）
   updateVoxelGrid(transformed_cloud, sensor_pos);
+  auto perf_t2 = std::chrono::high_resolution_clock::now();
 
   // 跳帧逻辑：skip_frames > 0 时，仅每 N+1 帧执行一次完整计算
   frame_counter_++;
@@ -288,13 +386,39 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   }
 
   if (do_compute) {
-    // 次数制衰减
-    tickVoxelGrid();
-    // 在缓存中计算 ground map 和 cost
+    // 在缓存中计算 ground map 和 cost（先计算，再衰减）
     extractGroundInCache();
+    auto perf_t3 = std::chrono::high_resolution_clock::now();
     interpolateGround();
+    auto perf_t4 = std::chrono::high_resolution_clock::now();
     computeGroundSlope();
+    auto perf_t5 = std::chrono::high_resolution_clock::now();
+
+    // 累加各模块耗时
+    if (enable_perf_log_) {
+      perf_cloud_transform_ms_ += std::chrono::duration<double, std::milli>(perf_t1 - perf_t0).count();
+      perf_voxel_grid_ms_ += std::chrono::duration<double, std::milli>(perf_t2 - perf_t1).count();
+      perf_extract_ground_ms_ += std::chrono::duration<double, std::milli>(perf_t3 - perf_t2).count();
+      perf_interpolate_ms_ += std::chrono::duration<double, std::milli>(perf_t4 - perf_t3).count();
+      perf_slope_ms_ += std::chrono::duration<double, std::milli>(perf_t5 - perf_t4).count();
+      perf_frame_count_++;
+    }
     compute_counter_++;
+  }
+
+  // 每帧都衰减体素，不受跳帧影响
+  // observation_persistence 控制体素存活的实际点云到达帧数
+  if (enable_perf_log_) {
+    auto perf_tick_start = std::chrono::high_resolution_clock::now();
+    tickVoxelGrid();
+    auto perf_t6 = std::chrono::high_resolution_clock::now();
+    perf_tick_voxel_ms_ += std::chrono::duration<double, std::milli>(perf_t6 - perf_tick_start).count();
+    // 计算帧统计总耗时（从点云变换到 tick 结束的完整流水线）
+    if (do_compute) {
+      perf_total_ms_ += std::chrono::duration<double, std::milli>(perf_t6 - perf_t0).count();
+    }
+  } else {
+    tickVoxelGrid();
   }
 
   cloud_processed_++;
@@ -341,8 +465,34 @@ void TraversabilityLayer::shiftVoxelGrid(int shift_x, int shift_y)
   }
 
   voxel_grid_ = std::move(new_grid);
+
+  shiftGroundMap(shift_x, shift_y);
+
   voxel_ox_ -= shift_x * cell_resolution_;
   voxel_oy_ -= shift_y * cell_resolution_;
+}
+
+void TraversabilityLayer::shiftGroundMap(int shift_x, int shift_y)
+{
+  if (shift_x == 0 && shift_y == 0) return;
+
+  std::vector<GroundCell> new_ground(ground_size_x_ * ground_size_y_, GroundCell{});
+#pragma omp parallel for collapse(2) schedule(static)
+  for (int ny = 0; ny < static_cast<int>(ground_size_y_); ny++) {
+    for (int nx = 0; nx < static_cast<int>(ground_size_x_); nx++) {
+      int old_x = nx - shift_x;
+      int old_y = ny - shift_y;
+      if (old_x < 0 || old_x >= static_cast<int>(ground_size_x_) ||
+          old_y < 0 || old_y >= static_cast<int>(ground_size_y_))
+      {
+        continue;
+      }
+      size_t new_idx = static_cast<size_t>(ny) * ground_size_x_ + static_cast<size_t>(nx);
+      size_t old_idx = static_cast<size_t>(old_y) * ground_size_x_ + static_cast<size_t>(old_x);
+      new_ground[new_idx] = std::move(ground_map_[old_idx]);
+    }
+  }
+  ground_map_ = std::move(new_ground);
 }
 
 void TraversabilityLayer::expandVoxelGridZ(double new_z_lo, double new_z_hi)
@@ -397,6 +547,11 @@ void TraversabilityLayer::updateVoxelGrid(
   unsigned int new_size_x = ground_size_x_;
   unsigned int new_size_y = ground_size_y_;
 
+  // 在修改之前保存前一次状态，用于位移 persistent_cost_map_
+  bool prev_voxel_valid = voxel_grid_valid_;
+  double prev_voxel_ox = voxel_ox_;
+  double prev_voxel_oy = voxel_oy_;
+
   if (observation_persistence_int_ <= 0) {
     voxel_grid_valid_ = false;
   }
@@ -416,15 +571,19 @@ void TraversabilityLayer::updateVoxelGrid(
   double z_lo = std::min(z_min_world, cur_base_z + min_obstacle_height_) - voxel_z_resolution_;
   double z_hi = std::max(z_max_world, cur_base_z + max_obstacle_height_) + voxel_z_resolution_;
 
-  // 计算缓存区域的原点，以当前 costmap 为中心
-  // costmap 的原点是其左下角，我们计算 2 倍大区域的左下角
-  double costmap_width = costmap_size_x_ * costmap_res_;
-  double costmap_height = costmap_size_y_ * costmap_res_;
-  double cache_ox = costmap_ox_ - costmap_width / 2.0;
-  double cache_oy = costmap_oy_ - costmap_height / 2.0;
+  // 计算缓存区域的原点，以 costmap 为中心，两侧各 half_margin_ cells 安全边界
+  double cache_ox = costmap_ox_ - half_margin_ * cell_resolution_;
+  double cache_oy = costmap_oy_ - half_margin_ * cell_resolution_;
 
   if (!voxel_grid_valid_ ||
       new_size_x != voxel_size_x_ || new_size_y != voxel_size_y_) {
+    // 计算新旧 origin 的整 cell 偏移，用于移位 ground_map_ 和 persistent_cost_map_
+    int init_shift_x = 0, init_shift_y = 0;
+    if (prev_voxel_valid) {
+      init_shift_x = static_cast<int>(std::round((prev_voxel_ox - cache_ox) / cell_resolution_));
+      init_shift_y = static_cast<int>(std::round((prev_voxel_oy - cache_oy) / cell_resolution_));
+    }
+
     voxel_size_x_ = new_size_x;
     voxel_size_y_ = new_size_y;
     voxel_z_origin_ = z_lo;
@@ -439,18 +598,17 @@ void TraversabilityLayer::updateVoxelGrid(
                           static_cast<size_t>(voxel_size_z_);
     voxel_grid_.assign(total_voxels, VoxelData{});
     voxel_grid_valid_ = true;
-  } else {
-    // 如果缓存位置需要调整，进行移动
-    int shift_x = static_cast<int>(std::round((voxel_ox_ - cache_ox) / cell_resolution_));
-    int shift_y = static_cast<int>(std::round((voxel_oy_ - cache_oy) / cell_resolution_));
-    shiftVoxelGrid(shift_x, shift_y);
-    if (persist_cost_) {
-      shiftPersistentCostMap(shift_x, shift_y);
+
+    // 移位 ground_map_ 和 persistent_cost_map_，使其与新 voxel_ox_ 对齐
+    if (init_shift_x != 0 || init_shift_y != 0) {
+      shiftGroundMap(init_shift_x, init_shift_y);
+      if (persist_cost_) {
+        shiftPersistentCostMap(init_shift_x, init_shift_y);
+      }
     }
-
-    voxel_ox_ = cache_ox;
-    voxel_oy_ = cache_oy;
-
+  } else {
+    // 滚动窗口的移位现在由 updateBounds 统一管理
+    // 这里只需要检查 Z 轴扩展
     bool z_expand = false;
     if (z_lo < voxel_z_origin_ - voxel_z_resolution_ * 0.5) z_expand = true;
     if (z_hi > voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_ + voxel_z_resolution_ * 0.5) z_expand = true;
@@ -1050,6 +1208,37 @@ void TraversabilityLayer::updateBounds(
   unsigned int sx = master_grid->getSizeInCellsX();
   unsigned int sy = master_grid->getSizeInCellsY();
 
+  // 参考 ObstacleLayer：如果是滚动窗口，更新原点
+  bool rolling_window = layered_costmap_->isRolling();
+  if (rolling_window && voxel_grid_valid_) {
+    // 计算新的缓存原点（比 costmap 大，留出安全边界）
+    double cache_ox = robot_x - (costmap_size_x_ / 2.0 + half_margin_ * cell_resolution_);
+    double cache_oy = robot_y - (costmap_size_y_ / 2.0 + half_margin_ * cell_resolution_);
+
+    // 对齐到 cell 网格
+    int cell_ox = static_cast<int>(std::round((cache_ox - voxel_ox_) / cell_resolution_));
+    int cell_oy = static_cast<int>(std::round((cache_oy - voxel_oy_) / cell_resolution_));
+
+    if (cell_ox != 0 || cell_oy != 0) {
+      double new_voxel_ox = voxel_ox_ + cell_ox * cell_resolution_;
+      double new_voxel_oy = voxel_oy_ + cell_oy * cell_resolution_;
+
+      // 同步移位所有数据结构（确保原子性）
+      shiftVoxelGrid(cell_ox, cell_oy);
+      shiftGroundMap(cell_ox, cell_oy);
+      if (persist_cost_) {
+        shiftPersistentCostMap(cell_ox, cell_oy);
+      }
+
+      // 更新原点
+      voxel_ox_ = new_voxel_ox;
+      voxel_oy_ = new_voxel_oy;
+
+      // 同步更新底层 costmap（参考 ObstacleLayer）
+      updateOrigin(robot_x - getSizeInMetersX() / 2, robot_y - getSizeInMetersY() / 2);
+    }
+  }
+
   *min_x = std::min(*min_x, ox);
   *min_y = std::min(*min_y, oy);
   *max_x = std::max(*max_x, ox + sx * res);
@@ -1081,23 +1270,20 @@ void TraversabilityLayer::updateCosts(
   costmap_size_y_ = costmap_sy;
   costmap_res_ = costmap_res;
 
+  // 尺寸变化时重新初始化
   if (getSizeInCellsX() != costmap_sx || getSizeInCellsY() != costmap_sy ||
       std::abs(getResolution() - costmap_res) > 1e-6)
   {
     matchSize();
   }
-  else if (std::abs(getOriginX() - ox) > 1e-6 || std::abs(getOriginY() - oy) > 1e-6)
-  {
-    setDefaultValue(nav2_costmap_2d::NO_INFORMATION);
-    updateOrigin(ox, oy);
-  }
+
+  // 注意：滚动窗口的原点更新现在由 updateBounds 统一管理
+  // 这里不再需要调用 updateOrigin
 
   if (!voxel_grid_valid_) {
     resetMap(0, 0, getSizeInCellsX(), getSizeInCellsY());
     return;
   }
-
-  resetMap(0, 0, getSizeInCellsX(), getSizeInCellsY());
 
   int cells_with_cost = 0;
   int lethal_cells = 0;
@@ -1131,59 +1317,7 @@ void TraversabilityLayer::updateCosts(
                                static_cast<unsigned int>(cy));
       const auto & cell = ground_map_[idx];
 
-      if (!cell.has_ground) {
-        ground_no_ground++;
-
-        // 永久 cost 记忆：无地面数据但有历史记忆 → 使用历史 cost
-        if (persist_cost_ &&
-            idx < persistent_cost_map_.size() &&
-            persistent_cost_map_[idx].cost != nav2_costmap_2d::NO_INFORMATION)
-        {
-          unsigned char mem_cost = persistent_cost_map_[idx].cost;
-          cells_from_memory++;
-
-          double cell_wx = voxel_ox_ + cx * cell_resolution_;
-          double cell_wy = voxel_oy_ + cy * cell_resolution_;
-
-          int mx_start = static_cast<int>(std::floor((cell_wx - master_grid.getOriginX()) * inv_costmap_res));
-          int my_start = static_cast<int>(std::floor((cell_wy - master_grid.getOriginY()) * inv_costmap_res));
-          int mx_end = static_cast<int>(std::floor((cell_wx + cell_resolution_ - master_grid.getOriginX() - 1e-6) * inv_costmap_res));
-          int my_end = static_cast<int>(std::floor((cell_wy + cell_resolution_ - master_grid.getOriginY() - 1e-6) * inv_costmap_res));
-
-          mx_end = std::min(mx_end, static_cast<int>(master_grid.getSizeInCellsX()) - 1);
-          my_end = std::min(my_end, static_cast<int>(master_grid.getSizeInCellsY()) - 1);
-
-          for (int my = my_start; my <= my_end; my++) {
-            for (int mx = mx_start; mx <= mx_end; mx++) {
-              if (mx < 0 || my < 0) continue;
-              unsigned int mit = static_cast<unsigned int>(my) * master_span +
-                                 static_cast<unsigned int>(mx);
-              master_array[mit] = mem_cost;
-            }
-          }
-        }
-        continue;
-      }
-      ground_has_ground++;
-
-      unsigned char cost = computeCost(cell);
-
-      if (cost == nav2_costmap_2d::NO_INFORMATION) {
-        continue;
-      }
-
-      // 永久 cost 记忆：更新非插值格子的历史 cost
-      if (persist_cost_ && !cell.is_interpolated &&
-          idx < persistent_cost_map_.size())
-      {
-        persistent_cost_map_[idx].cost = cost;
-      }
-
-      if (cost >= nav2_costmap_2d::LETHAL_OBSTACLE) {
-        lethal_cells++;
-      }
-      cells_with_cost++;
-
+      // 计算缓存格子对应的 costmap 区域
       double cell_wx = voxel_ox_ + cx * cell_resolution_;
       double cell_wy = voxel_oy_ + cy * cell_resolution_;
 
@@ -1195,15 +1329,50 @@ void TraversabilityLayer::updateCosts(
       mx_end = std::min(mx_end, static_cast<int>(master_grid.getSizeInCellsX()) - 1);
       my_end = std::min(my_end, static_cast<int>(master_grid.getSizeInCellsY()) - 1);
 
-      for (int my = my_start; my <= my_end; my++) {
-        for (int mx = mx_start; mx <= mx_end; mx++) {
-          if (mx < 0 || my < 0) continue;
+      unsigned char cost_to_write = nav2_costmap_2d::NO_INFORMATION;
 
-          unsigned int mit = static_cast<unsigned int>(my) * master_span +
-                             static_cast<unsigned int>(mx);
-          // 无条件写入：traversability_layer 在其覆盖区域内为权威数据源，
-          // 可覆盖 obstacle_layer 误判为障碍但实际可通行的区域
-          master_array[mit] = cost;
+      if (cell.has_ground) {
+        ground_has_ground++;
+        unsigned char cost = computeCost(cell);
+
+        if (cost != nav2_costmap_2d::NO_INFORMATION) {
+          cost_to_write = cost;
+          cells_with_cost++;
+
+          if (cost >= nav2_costmap_2d::LETHAL_OBSTACLE) {
+            lethal_cells++;
+          }
+
+          // 永久 cost 记忆：更新非插值格子的历史 cost
+          if (persist_cost_ && !cell.is_interpolated &&
+              idx < persistent_cost_map_.size())
+          {
+            persistent_cost_map_[idx].cost = cost;
+          }
+        }
+      } else {
+        ground_no_ground++;
+
+        // 永久 cost 记忆：无地面数据但有历史记忆 → 使用历史 cost
+        if (persist_cost_ &&
+            idx < persistent_cost_map_.size() &&
+            persistent_cost_map_[idx].cost != nav2_costmap_2d::NO_INFORMATION)
+        {
+          cost_to_write = persistent_cost_map_[idx].cost;
+          cells_from_memory++;
+        }
+      }
+
+      // 写入 costmap（仅有效 cost 才写入）
+      // 无有效数据时跳过，保留 master_array 中的历史值（可能是上一帧的有效 cost 或其他层的数据）
+      if (cost_to_write != nav2_costmap_2d::NO_INFORMATION) {
+        for (int my = my_start; my <= my_end; my++) {
+          for (int mx = mx_start; mx <= mx_end; mx++) {
+            if (mx < 0 || my < 0) continue;
+            unsigned int mit = static_cast<unsigned int>(my) * master_span +
+                               static_cast<unsigned int>(mx);
+            master_array[mit] = cost_to_write;
+          }
         }
       }
     }
@@ -1226,25 +1395,60 @@ void TraversabilityLayer::updateCosts(
     voxel_size_x_, voxel_size_y_, voxel_size_z_,
     static_cast<int>(voxel_grid_valid_));
 
-  rclcpp::Time frame_end = clock->now();
-  double frame_ms = (frame_end - frame_start).seconds() * 1000.0;
-  perf_total_time_ += frame_ms;
-  perf_frame_count_++;
+  // 性能统计输出
+  if (enable_perf_log_) {
+    rclcpp::Time frame_end = clock->now();
+    double frame_ms = (frame_end - frame_start).seconds() * 1000.0;
+    perf_costmap_ms_ += frame_ms;
+    perf_cost_frame_count_++;
 
-  double elapsed = (frame_end - last_perf_log_).seconds();
-  if (elapsed >= 10.0) {
-    double avg_ms = perf_total_time_ / static_cast<double>(perf_frame_count_);
-    RCLCPP_DEBUG(
-      rclcpp::get_logger("traversability_layer"),
-      "[TraversabilityLayer] Perf: %d frames in %.1fs, avg=%.2fms, last=%.2fms, "
-      "cells_with_cost=%d, lethal=%d, voxel_grid=%.1fMB, frame=%u",
-      perf_frame_count_, elapsed, avg_ms, frame_ms,
-      cells_with_cost, lethal_cells,
-      static_cast<double>(voxel_grid_.size() * sizeof(VoxelData)) / (1024.0 * 1024.0),
-      static_cast<unsigned int>(frame_counter_));
-    perf_frame_count_ = 0;
-    perf_total_time_ = 0.0;
-    last_perf_log_ = frame_end;
+    double elapsed = (frame_end - last_perf_log_).seconds();
+    if (elapsed >= 30.0) {
+      double avg_costmap_ms = perf_costmap_ms_ / static_cast<double>(perf_cost_frame_count_);
+      RCLCPP_INFO(
+        rclcpp::get_logger("traversability_layer"),
+        "[TraversabilityLayer] ====== Perf Report (%.1fs) ======", elapsed);
+      if (perf_frame_count_ > 0) {
+        double avg_total = perf_total_ms_ / perf_frame_count_;
+        RCLCPP_INFO(
+          rclcpp::get_logger("traversability_layer"),
+          "[TraversabilityLayer]  cloud_transform: %.2fms (%d frames)  |  voxel_grid: %.2fms  |  "
+          "tick_voxel: %.2fms  |  extract_ground: %.2fms  |  interpolate: %.2fms  |  slope: %.2fms",
+          perf_cloud_transform_ms_ / perf_frame_count_, perf_frame_count_,
+          perf_voxel_grid_ms_ / perf_frame_count_,
+          perf_tick_voxel_ms_ / perf_frame_count_,
+          perf_extract_ground_ms_ / perf_frame_count_,
+          perf_interpolate_ms_ / perf_frame_count_,
+          perf_slope_ms_ / perf_frame_count_);
+        RCLCPP_INFO(
+          rclcpp::get_logger("traversability_layer"),
+          "[TraversabilityLayer]  >> avg_total=%.2fms/frame (total=%.1fms, frames=%d)",
+          avg_total, perf_total_ms_, perf_frame_count_);
+      }
+      RCLCPP_INFO(
+        rclcpp::get_logger("traversability_layer"),
+        "[TraversabilityLayer]  costmap_update: %.2fms (%d frames)  |  "
+        "voxel_grid=%.1fMB  |  frame=%u",
+        avg_costmap_ms, perf_cost_frame_count_,
+        static_cast<double>(voxel_grid_.size() * sizeof(VoxelData)) / (1024.0 * 1024.0),
+        static_cast<unsigned int>(frame_counter_));
+      RCLCPP_INFO(
+        rclcpp::get_logger("traversability_layer"),
+        "[TraversabilityLayer] =======================================");
+
+      // 重置所有性能计数器
+      perf_cloud_transform_ms_ = 0.0;
+      perf_voxel_grid_ms_ = 0.0;
+      perf_tick_voxel_ms_ = 0.0;
+      perf_extract_ground_ms_ = 0.0;
+      perf_interpolate_ms_ = 0.0;
+      perf_slope_ms_ = 0.0;
+      perf_costmap_ms_ = 0.0;
+      perf_total_ms_ = 0.0;
+      perf_frame_count_ = 0;
+      perf_cost_frame_count_ = 0;
+      last_perf_log_ = frame_end;
+    }
   }
 
   if (publish_slope_map_ && slope_pub_) {

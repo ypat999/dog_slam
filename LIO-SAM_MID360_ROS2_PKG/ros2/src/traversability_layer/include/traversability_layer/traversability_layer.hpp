@@ -87,6 +87,7 @@ private:
     const std::vector<Point3D> & transformed_pts,
     const Point3D & sensor_pos);
   void shiftVoxelGrid(int shift_x, int shift_y);
+  void shiftGroundMap(int shift_x, int shift_y);
   void expandVoxelGridZ(double new_z_lo, double new_z_hi);
   void tickVoxelGrid();  // 次数制衰减（替代 decayVoxelGrid）
   void shiftPersistentCostMap(int shift_x, int shift_y);
@@ -123,7 +124,6 @@ private:
   double slope_cost_scale_;
   double height_cost_scale_;
   double lethal_cost_threshold_;
-  double observation_persistence_;  // 次数制：int 参数通过 declareParameter 以 int 类型声明
   int observation_persistence_int_;  // 次数制衰减次数（0=仅最新帧，>0=体素存留计算次数）
   int cloud_buffer_size_;
   bool enabled_;
@@ -144,10 +144,20 @@ private:
   int skip_frames_;                     // 跳帧：N帧取1帧计算cost，0=不跳帧
   bool persist_cost_;                   // 永久cost记忆开关
   bool trust_interpolated_ground_;      // 信任插值地面开关
+  bool enable_perf_log_;                // 性能统计开关
 
+  // 性能统计（每30秒输出各模块平均耗时）
   rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
-  int perf_frame_count_ = 0;
-  double perf_total_time_ = 0.0;
+  int perf_frame_count_ = 0;              // 点云回调帧数（仅计算帧）
+  int perf_cost_frame_count_ = 0;         // updateCosts帧数
+  double perf_cloud_transform_ms_ = 0.0;  // 点云坐标变换+滤波
+  double perf_voxel_grid_ms_ = 0.0;       // 体素更新（updateVoxelGrid）
+  double perf_tick_voxel_ms_ = 0.0;       // 体素衰减（tickVoxelGrid）
+  double perf_extract_ground_ms_ = 0.0;   // 地面提取（extractGroundInCache）
+  double perf_interpolate_ms_ = 0.0;      // 地面插值（interpolateGround）
+  double perf_slope_ms_ = 0.0;            // 坡度计算（computeGroundSlope）
+  double perf_costmap_ms_ = 0.0;          // 代价图更新（updateCosts）
+  double perf_total_ms_ = 0.0;            // 完整流水线总耗时（仅计算帧）
 
   std::vector<VoxelData> voxel_grid_;
   unsigned int voxel_size_x_ = 0;
@@ -164,8 +174,9 @@ private:
   uint32_t cloud_processed_ = 0;
 
   std::vector<GroundCell> ground_map_;
-  unsigned int ground_size_x_ = 0;  // 缓存网格 x 方向大小（costmap 2倍）
-  unsigned int ground_size_y_ = 0;  // 缓存网格 y 方向大小（costmap 2倍）
+  unsigned int ground_size_x_ = 0;  // 缓存网格 = costmap + 安全边界
+  unsigned int ground_size_y_ = 0;
+  int half_margin_ = 0;             // 半边界 cells，用于缓存居中计算
 
   // 永久 cost 记忆
   std::vector<PersistentCostCell> persistent_cost_map_;

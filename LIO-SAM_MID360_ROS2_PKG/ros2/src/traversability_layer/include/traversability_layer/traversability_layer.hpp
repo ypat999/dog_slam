@@ -89,6 +89,7 @@ private:
   void shiftVoxelGrid(int shift_x, int shift_y);
   void shiftGroundMap(int shift_x, int shift_y);
   void expandVoxelGridZ(double new_z_lo, double new_z_hi);
+  void shrinkVoxelGridZ(double new_z_lo, double new_z_hi);  // 缩小Z范围，防止长期膨胀
   void tickVoxelGrid();  // 次数制衰减（替代 decayVoxelGrid）
   void shiftPersistentCostMap(int shift_x, int shift_y);
   void extractGroundInCache();
@@ -164,6 +165,7 @@ private:
   double perf_total_ms_ = 0.0;            // 完整流水线总耗时（仅计算帧）
 
   std::vector<VoxelData> voxel_grid_;
+  std::vector<VoxelData> voxel_grid_backbuffer_;  // shift用双缓冲，避免频繁分配
   unsigned int voxel_size_x_ = 0;
   unsigned int voxel_size_y_ = 0;
   unsigned int voxel_size_z_ = 0;
@@ -178,12 +180,14 @@ private:
   uint32_t cloud_processed_ = 0;
 
   std::vector<GroundCell> ground_map_;
+  std::vector<GroundCell> ground_map_backbuffer_;  // shift用双缓冲，避免频繁分配
   unsigned int ground_size_x_ = 0;  // 缓存网格 = costmap + 安全边界
   unsigned int ground_size_y_ = 0;
   int half_margin_ = 0;             // 半边界 cells，用于缓存居中计算
 
   // 永久 cost 记忆
   std::vector<PersistentCostCell> persistent_cost_map_;
+  std::vector<PersistentCostCell> persistent_cost_backbuffer_;  // shift用双缓冲
 
   unsigned int costmap_size_x_ = 0;  // costmap 原始 x 大小
   unsigned int costmap_size_y_ = 0;  // costmap 原始 y 大小

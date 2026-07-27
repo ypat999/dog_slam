@@ -393,15 +393,20 @@ LIO-SAM_MID360_ROS2_PKG/
 
 ### 三维导航系统（OctoPlanner3D）
 
-系统集成了基于OctoMap的三维可通行性导航系统 `OctoPlanner3D-ROS2`，支持三维地形规划：
+系统集成了独立的 [OctoPlanner3D-ROS2](https://github.com/ypat999/OctoPlanner3D-ROS2) 子模块（原为symlink），提供基于OctoMap的三维可通行性导航能力：
 
 - **三维可通行性分析**：基于OctoMap体素化分析三维地形可通行性
-- **智能路径规划**：A*算法搜索三维可通行路径，避免楼梯、陡坡等不可通行区域
-- **Nav2集成**：通过Action适配器集成到Nav2导航栈，无缝替换planner_server
+- **智能路径规划**：A*算法搜索三维可通行路径（支持方向一致性/对角线跨越惩罚），避免楼梯、陡坡等不可通行区域
+- **路径平滑**：两阶段梯度下降（纯Laplace平滑 + cost微调），cost场补全优化
+- **占据缓存加速**：逐格查询、粗叶子展开、重层扫描提速
+- **Nav2深度集成**：通过`OctoPlannerGlobalPlanner`插件直接作为planner_server后端，移除独立adapter
+- **3D专用行为树**：独立BT XML（`nav2_bt_navigator_3d.xml`），移除global_costmap引用
+- **独立参数文件**：`nav2_params_3d.yaml`统一管理所有OctoPlanner和3D导航参数
+- **3D Web控制界面**：支持三维地图显示和导航控制
 - **双模式运行**：
   - **导航模式**：`initialpose` + `goal_pose`（Nav2执行）
   - **测试模式**：`clicked_point`（路径可视化，不影响导航）
-- **多主机适配**：通过global_config自动适配不同主机的PCD地图路径
+- **配置统一管理**：input_pcd路径由`global_config`自动适配不同主机
 - **Namespace支持**：支持多机器人场景的namespace隔离
 
 #### 3D导航启动方式
@@ -441,6 +446,7 @@ ros2 topic pub /goal_pose geometry_msgs/msg/PoseStamped \
 
 ## 最新更新
 
+- **2026-07-15**: OctoPlanner3D独立子模块化（原symlink），A*方向一致性/对角线惩罚，两阶段梯度下降路径平滑，占据缓存优化提速；激光定位双阈值（初始0.5/持续0.02）；Super-LIO时间戳统一修复PGO错位、fitness score优化；SC-PGO小狗参数优化；3D专用BT XML和nav2_params_3d.yaml；3D Web控制界面；OctoPlanner配置统一到global_config；pointcloud_to_laserscan namespace修复
 - **2026-07-08**: 集成OctoPlanner3D三维导航系统，支持三维可通行性规划和Nav2集成
 - **2026-05-27**: 可通行检测优化随机器人移动；TF加入namespace支持多机器人隔离
 - **2026-05-26**: 适配中狗Livox MID360雷达配置；导航使用本体雷达；多配置2种全局/局部planner
@@ -507,8 +513,10 @@ ros2 node list
    ```bash
    # 检查Action接口
    ros2 action list | grep compute_path_to_pose
-   # 检查octoplanner_nav2_adapter状态
-   ros2 node list | grep octoplanner_adapter
+   # 检查planner_server状态
+   ros2 node list | grep planner_server
+   # 检查octo_planner节点
+   ros2 node list | grep octo_planner
    ```
 
 ## 后续规划
@@ -522,8 +530,11 @@ ros2 node list
 - Loop closure 优化
 
 ### 导航方向
+- **OctoPlanner3D 路径平滑优化**（已完成）：两阶段梯度下降、cost场补全
+- **OctoPlanner3D 性能优化**（已完成）：占据缓存加速、粗叶子展开、重层扫描提速
+- **3D 导航集成优化**（已完成）：独立子模块、3D BT XML、nav2_params_3d.yaml、3D Web界面
+- **激光定位增强**（已完成）：双阈值定位（初始宽松/持续严格）、全帧质量检查
 - **OctoPlanner3D 稳定性验证**：集成测试、异常处理、实际环境验证
-- **OctoPlanner3D 性能优化**：规划时间<1秒、动态分辨率调整、路径分段规划
 - **OctoPlanner3D 参数调优**：robot_radius、voxel分辨率、可通行性阈值、A*启发函数权重
 - **3D vs 2D对比验证**：坡地、楼梯、复杂环境对比测试
 - 可通行区域检测完善（楼梯检测、坡度分析）

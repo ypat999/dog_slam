@@ -274,7 +274,7 @@ local_costmap:
 
         # 跳帧：每 N+1 帧取1帧计算cost，0=不跳帧
         # 例: skip_frames=4 → 10hz点云进行2hz计算
-        skip_frames: 2
+        skip_frames: 1
          # 体素存活计算次数（次数制，0=仅最新帧）
         observation_persistence: 5
 
@@ -284,6 +284,12 @@ local_costmap:
         # 信任插值地面：插值格子写入低代价(cost=1)而非NO_INFORMATION，
         # 可覆盖obstacle_layer的2D scan误判
         trust_interpolated_ground: true
+
+        # 地面填充半径(m)：机器人周围此半径内无地面数据的cell填充为机器人当前站立足底高度
+        # 消除雷达近距离盲区导致的地面断层，填充的cell标记为interpolated
+        # 高度来源：优先使用范围内最近的真实地面高度；找不到则用 base_footprint.z - ground_fill_height
+        ground_fill_radius: 0.5
+        ground_fill_height: 0.5   # base_footprint到地面的高度偏移(m)，仅fallback时使用
 
         # 性能统计开关：每30秒输出各模块平均耗时
         enable_perf_log: true
@@ -395,6 +401,9 @@ behavior_server:
     footprint_topic: "/local_costmap/published_footprint"
     cycle_frequency: 20.0
     robot_base_frame: "base_footprint"
+    local_frame: "odom"
+    global_frame: "map"
+    transform_tolerance: 0.5
     simulate_ahead_time: 0.0
     
     collision_checker:

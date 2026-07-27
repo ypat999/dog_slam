@@ -188,6 +188,8 @@ def generate_launch_description():
                     'map_frame': [ns, '/map'], 
                     'odom_frame': [ns, '/odom'],
                     'base_frame': [ns, '/base_link'],
+                    'local_frame': [ns, '/odom'],
+                    'global_frame': [ns, '/map'],
                     'topic': [ns, '/scan']
                 },
                 convert_types=True),
@@ -665,7 +667,7 @@ def generate_launch_description():
     # ============================================
     
     # 1. 基础节点（所有模式都需要）
-    unified_nodes.append(pointcloud_to_laserscan_node)
+    # unified_nodes.append(pointcloud_to_laserscan_node)
     
     # 2. Web相关节点（所有模式都需要）
     web_actions.append(web_script_process)

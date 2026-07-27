@@ -92,6 +92,7 @@ private:
   void tickVoxelGrid();  // 次数制衰减（替代 decayVoxelGrid）
   void shiftPersistentCostMap(int shift_x, int shift_y);
   void extractGroundInCache();
+  void fillGroundNearRobot();  // 填充机器人周围地面，补偿雷达盲区
   void interpolateGround();
   void computeGroundSlope();
   unsigned char computeCost(const GroundCell & cell) const;
@@ -146,6 +147,8 @@ private:
   bool trust_interpolated_ground_;      // 信任插值地面开关
   bool enable_perf_log_;                // 性能统计开关
   double transform_tolerance_;          // TF 查找容差（秒），应对 fast_tf 模式
+  double ground_fill_radius_;           // 地面填充半径（m）：机器人周围填充地面补偿盲区
+  double ground_fill_height_;           // base_footprint 到地面的高度偏移（m），fallback用
 
   // 性能统计（每30秒输出各模块平均耗时）
   rclcpp::Time last_perf_log_{0, 0, RCL_ROS_TIME};
@@ -191,6 +194,8 @@ private:
   double sensor_global_x_ = 0.0;
   double sensor_global_y_ = 0.0;
   double sensor_global_z_ = 0.0;
+  double base_global_x_ = 0.0;
+  double base_global_y_ = 0.0;
   double base_global_z_ = 0.0;
   bool cloud_updated_ = false;
 

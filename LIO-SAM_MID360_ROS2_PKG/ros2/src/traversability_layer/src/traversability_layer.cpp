@@ -59,6 +59,8 @@ void TraversabilityLayer::onInitialize()
   declareParameter("trust_interpolated_ground", rclcpp::ParameterValue(true));
   declareParameter("enable_perf_log", rclcpp::ParameterValue(false));
   declareParameter("transform_tolerance", rclcpp::ParameterValue(0.3));
+  declareParameter("ground_fill_radius", rclcpp::ParameterValue(0.5));
+  declareParameter("ground_fill_height", rclcpp::ParameterValue(0.3));
 
   node->get_parameter(name_ + ".enabled", enabled_);
   node->get_parameter(name_ + ".pointcloud_topic", pointcloud_topic_);
@@ -91,6 +93,8 @@ void TraversabilityLayer::onInitialize()
   node->get_parameter(name_ + ".obstacle_hit_threshold", obstacle_hit_threshold_);
   node->get_parameter(name_ + ".enable_perf_log", enable_perf_log_);
   node->get_parameter(name_ + ".transform_tolerance", transform_tolerance_);
+  node->get_parameter(name_ + ".ground_fill_radius", ground_fill_radius_);
+  node->get_parameter(name_ + ".ground_fill_height", ground_fill_height_);
 
   if (num_threads_ > 0) {
     omp_set_num_threads(num_threads_);
@@ -289,6 +293,8 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
       }
     }
   }
+  base_global_x_ = base_ox;
+  base_global_y_ = base_oy;
   base_global_z_ = base_z;
 
   double qx = transform.transform.rotation.x;
@@ -423,6 +429,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   if (do_compute) {
     // 在缓存中计算 ground map 和 cost（先计算，再衰减）
     extractGroundInCache();
+    fillGroundNearRobot();  // 填充机器人周围地面，消除盲区断层
     auto perf_t3 = std::chrono::high_resolution_clock::now();
     interpolateGround();
     auto perf_t4 = std::chrono::high_resolution_clock::now();
@@ -761,14 +768,13 @@ void TraversabilityLayer::updateVoxelGrid(
 	        if (entry.is_hit) {
 	          auto & v = voxel_grid_[entry.idx];
 	          if (v.hit_count < 255) v.hit_count++;
-	          // 刷新剩余使用次数（取较大值，避免衰减中的体素被重置为更小值）
+	          // 仅 hit 点刷新生命周期，pass-through 不刷新
+	          // 否则障碍物离开后，射线穿过原区域会不断刷新，导致数据永不衰减
 	          uint16_t new_uses = static_cast<uint16_t>(observation_persistence_int_);
 	          if (new_uses > v.remaining_uses) v.remaining_uses = new_uses;
 	        } else {
 	          auto & v = voxel_grid_[entry.idx];
 	          if (v.pass_count < 255) v.pass_count++;
-	          uint16_t new_uses = static_cast<uint16_t>(observation_persistence_int_);
-	          if (new_uses > v.remaining_uses) v.remaining_uses = new_uses;
 	        }
 	      }
 	    }
@@ -980,6 +986,71 @@ void TraversabilityLayer::extractGroundInCache()
     "obs_ratio_nonzero=%d, voxel_ox=%.3f, voxel_oy=%.3f",
     total_scanned, ground_found, obs_ratio_nonzero,
     voxel_ox_, voxel_oy_);
+}
+
+void TraversabilityLayer::fillGroundNearRobot()
+{
+  if (ground_fill_radius_ <= 0.0) return;
+
+  double inv_cr = 1.0 / cell_resolution_;
+  double fill_r2 = ground_fill_radius_ * ground_fill_radius_;
+  double robot_cx_w = base_global_x_ - voxel_ox_;
+  double robot_cy_w = base_global_y_ - voxel_oy_;
+
+  int cx_start = std::max(0, static_cast<int>(std::floor((robot_cx_w - ground_fill_radius_) * inv_cr)));
+  int cy_start = std::max(0, static_cast<int>(std::floor((robot_cy_w - ground_fill_radius_) * inv_cr)));
+  int cx_end = std::min(static_cast<int>(ground_size_x_) - 1,
+                        static_cast<int>(std::ceil((robot_cx_w + ground_fill_radius_) * inv_cr)));
+  int cy_end = std::min(static_cast<int>(ground_size_y_) - 1,
+                        static_cast<int>(std::ceil((robot_cy_w + ground_fill_radius_) * inv_cr)));
+
+  // 先找填充范围内最近的真实地面高度（非 interpolated）
+  float ref_ground_z = 0.0f;
+  bool found_ref = false;
+  double best_dist2 = fill_r2;
+  for (int cy = cy_start; cy <= cy_end && !found_ref; cy++) {
+    for (int cx = cx_start; cx <= cx_end; cx++) {
+      double cell_cx = (cx + 0.5) * cell_resolution_;
+      double cell_cy = (cy + 0.5) * cell_resolution_;
+      double d2 = (cell_cx - robot_cx_w) * (cell_cx - robot_cx_w) +
+                  (cell_cy - robot_cy_w) * (cell_cy - robot_cy_w);
+      if (d2 > fill_r2) continue;
+
+      const auto & cell = ground_map_[groundIndex(
+        static_cast<unsigned int>(cx), static_cast<unsigned int>(cy))];
+      if (cell.has_ground && !cell.is_interpolated && d2 < best_dist2) {
+        ref_ground_z = cell.ground_z;
+        best_dist2 = d2;
+        found_ref = true;
+      }
+    }
+  }
+
+  // Fallback: base_footprint 高度减去机身到地面的偏移
+  if (!found_ref) {
+    ref_ground_z = static_cast<float>(base_global_z_ - ground_fill_height_);
+  }
+
+  // 填充范围内无地面数据的 cell
+  int filled = 0;
+  for (int cy = cy_start; cy <= cy_end; cy++) {
+    for (int cx = cx_start; cx <= cx_end; cx++) {
+      double cell_cx = (cx + 0.5) * cell_resolution_;
+      double cell_cy = (cy + 0.5) * cell_resolution_;
+      double d2 = (cell_cx - robot_cx_w) * (cell_cx - robot_cx_w) +
+                  (cell_cy - robot_cy_w) * (cell_cy - robot_cy_w);
+      if (d2 > fill_r2) continue;
+
+      size_t idx = groundIndex(static_cast<unsigned int>(cx), static_cast<unsigned int>(cy));
+      auto & cell = ground_map_[idx];
+      if (!cell.has_ground) {
+        cell.has_ground = true;
+        cell.ground_z = ref_ground_z;
+        cell.is_interpolated = true;
+        filled++;
+      }
+    }
+  }
 }
 
 void TraversabilityLayer::interpolateGround()
@@ -1427,7 +1498,7 @@ void TraversabilityLayer::updateCosts(
     perf_cost_frame_count_++;
 
     double elapsed = (frame_end - last_perf_log_).seconds();
-    if (elapsed >= 30.0) {
+    if (elapsed >= 120.0) {
       double avg_costmap_ms = perf_costmap_ms_ / static_cast<double>(perf_cost_frame_count_);
       RCLCPP_INFO(
         rclcpp::get_logger("traversability_layer"),

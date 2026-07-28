@@ -291,7 +291,7 @@ local_costmap:
         ground_fill_radius: 0.5
         ground_fill_height: 0.5   # base_footprint到地面的高度偏移(m)，仅fallback时使用
 
-        # 性能统计开关：每30秒输出各模块平均耗时
+        # 性能统计开关：每120秒输出各模块平均耗时
         enable_perf_log: true
 
         # 插值参数

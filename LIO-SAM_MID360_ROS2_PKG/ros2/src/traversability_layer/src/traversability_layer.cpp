@@ -193,9 +193,9 @@ void TraversabilityLayer::matchSize()
 
 void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  // 阶段1: TF查找 + 点云变换 + footprint过滤（不持锁，避免阻塞updateCosts）
+  // TF buffer 是线程安全的，footprint 是只读的
   static auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-  cloud_received_++;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*msg, *cloud);
@@ -218,44 +218,28 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   }
 
   geometry_msgs::msg::TransformStamped transform;
-  bool using_latest_tf = false;
 
-  // 策略1：优先使用点云时间戳（解决漂移问题）
-  // 使用 transform_tolerance 参数，给 TF 树足够缓冲时间（应对 fast_tf 模式）
+  // 使用点云时间戳查询TF，避免2m/s下的位置漂移
+  // 不再fallback到TimePointZero：fallback会使用最新TF导致0.2m位置偏移
   try {
     transform = tf_buffer_->lookupTransform(
       target_frame, source_frame, msg->header.stamp,
       tf2::durationFromSec(transform_tolerance_));
   } catch (tf2::TransformException & ex) {
-    // 策略2：如果点云时间戳失败，使用最新 TF（导致数据跟着机器人跑！）
-    static int fallback_count = 0;
-    fallback_count++;
+    static int tf_fail_count = 0;
+    tf_fail_count++;
     RCLCPP_WARN_THROTTLE(
       rclcpp::get_logger("traversability_layer"), *clock, 2000,
-      "[TraversabilityLayer] TF at cloud timestamp failed (%.3fs old, #%d fallbacks), "
-      "using latest TF: %s",
+      "[TraversabilityLayer] TF at cloud timestamp failed (%.3fs old, #%d failures), "
+      "dropping frame: %s",
       (clock->now().seconds() - msg->header.stamp.sec - msg->header.stamp.nanosec * 1e-9),
-      fallback_count, ex.what());
-    try {
-      transform = tf_buffer_->lookupTransform(
-        target_frame, source_frame, tf2::TimePointZero,
-        tf2::durationFromSec(0.1));
-      using_latest_tf = true;
-    } catch (tf2::TransformException & ex2) {
-      RCLCPP_ERROR_THROTTLE(
-        rclcpp::get_logger("traversability_layer"), *clock, 2000,
-        "[TraversabilityLayer] Both TF lookups failed: %s", ex2.what());
-      return;
-    }
+      tf_fail_count, ex.what());
+    return;
   }
 
   double tx = transform.transform.translation.x;
   double ty = transform.transform.translation.y;
   double tz = transform.transform.translation.z;
-
-  sensor_global_x_ = tx;
-  sensor_global_y_ = ty;
-  sensor_global_z_ = tz;
 
   double base_z = tz;
   double base_ox = tx, base_oy = ty;
@@ -263,6 +247,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
   if (!base_frame_.empty()) {
     try {
       // 同样使用 transform_tolerance_ 参数，应对 fast_tf 模式
+      // 不再 fallback 到 TimePointZero，避免 base_frame 也漂移
       auto base_tf = tf_buffer_->lookupTransform(
         target_frame, base_frame_, msg->header.stamp,
         tf2::durationFromSec(transform_tolerance_));
@@ -274,28 +259,11 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
       base_qz = base_tf.transform.rotation.z;
       base_qw = base_tf.transform.rotation.w;
     } catch (tf2::TransformException & ex) {
-      // Fallback: 使用最新 TF
-      try {
-        auto base_tf = tf_buffer_->lookupTransform(
-          target_frame, base_frame_, tf2::TimePointZero,
-          tf2::durationFromSec(0.1));
-        base_z = base_tf.transform.translation.z;
-        base_ox = base_tf.transform.translation.x;
-        base_oy = base_tf.transform.translation.y;
-        base_qx = base_tf.transform.rotation.x;
-        base_qy = base_tf.transform.rotation.y;
-        base_qz = base_tf.transform.rotation.z;
-        base_qw = base_tf.transform.rotation.w;
-      } catch (tf2::TransformException & ex2) {
-        RCLCPP_WARN_THROTTLE(
-          rclcpp::get_logger("traversability_layer"), *clock, 5000,
-          "[TraversabilityLayer] Base TF failed, using sensor pose: %s", ex2.what());
-      }
+      RCLCPP_WARN_THROTTLE(
+        rclcpp::get_logger("traversability_layer"), *clock, 5000,
+        "[TraversabilityLayer] Base TF failed, using sensor pose: %s", ex.what());
     }
   }
-  base_global_x_ = base_ox;
-  base_global_y_ = base_oy;
-  base_global_z_ = base_z;
 
   double qx = transform.transform.rotation.x;
   double qy = transform.transform.rotation.y;
@@ -329,7 +297,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     double y_global = r10 * pt.x + r11 * pt.y + r12 * pt.z + ty;
     double z_global = r20 * pt.x + r21 * pt.y + r22 * pt.z + tz;
 
-    double z_base_relative = z_global - base_global_z_;
+    double z_base_relative = z_global - base_z;
     if (z_base_relative > max_obstacle_height_ || z_base_relative < min_obstacle_height_) {
       filtered_count++;
       continue;
@@ -346,6 +314,7 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     transformed_cloud.size(), filtered_count);
 
   // 过滤掉落在机器人 footprint 内的点（激光打到机身）
+  // footprint 在初始化时设置，运行时只读
   {
     std::vector<geometry_msgs::msg::Point> footprint = layered_costmap_->getFootprint();
     if (footprint.size() >= 3) {
@@ -415,6 +384,18 @@ void TraversabilityLayer::pointCloudCallback(const sensor_msgs::msg::PointCloud2
     }
   }
 
+  // 阶段2: 数据更新 + 计算（持锁，保护共享数据）
+  std::lock_guard<std::mutex> lock(mutex_);
+  cloud_received_++;
+
+  // 更新成员变量供后续模块使用
+  sensor_global_x_ = tx;
+  sensor_global_y_ = ty;
+  sensor_global_z_ = tz;
+  base_global_x_ = base_ox;
+  base_global_y_ = base_oy;
+  base_global_z_ = base_z;
+
   // 按 odom 坐标更新 voxel grid（每帧都累积点云数据）
   updateVoxelGrid(transformed_cloud, sensor_pos);
   auto perf_t2 = std::chrono::high_resolution_clock::now();
@@ -477,10 +458,15 @@ void TraversabilityLayer::shiftVoxelGrid(int shift_x, int shift_y)
 {
   if (shift_x == 0 && shift_y == 0) return;
 
-  std::vector<VoxelData> new_grid(
-    static_cast<size_t>(voxel_size_x_) *
-    static_cast<size_t>(voxel_size_y_) *
-    static_cast<size_t>(voxel_size_z_), VoxelData{});
+  // 使用 backbuffer 避免每次 shift 重新分配大块内存
+  size_t total_voxels = static_cast<size_t>(voxel_size_x_) *
+                        static_cast<size_t>(voxel_size_y_) *
+                        static_cast<size_t>(voxel_size_z_);
+  if (voxel_grid_backbuffer_.size() != total_voxels) {
+    voxel_grid_backbuffer_.assign(total_voxels, VoxelData{});
+  } else {
+    std::fill(voxel_grid_backbuffer_.begin(), voxel_grid_backbuffer_.end(), VoxelData{});
+  }
 
 #pragma omp parallel for collapse(2) schedule(static)
   for (int ny = 0; ny < static_cast<int>(voxel_size_y_); ny++) {
@@ -501,19 +487,26 @@ void TraversabilityLayer::shiftVoxelGrid(int shift_x, int shift_y)
         size_t old_idx = voxelIndex(
           static_cast<unsigned int>(old_x),
           static_cast<unsigned int>(old_y), iz);
-        new_grid[new_idx] = voxel_grid_[old_idx];
+        voxel_grid_backbuffer_[new_idx] = voxel_grid_[old_idx];
       }
     }
   }
 
-  voxel_grid_ = std::move(new_grid);
+  voxel_grid_.swap(voxel_grid_backbuffer_);
 }
 
 void TraversabilityLayer::shiftGroundMap(int shift_x, int shift_y)
 {
   if (shift_x == 0 && shift_y == 0) return;
 
-  std::vector<GroundCell> new_ground(ground_size_x_ * ground_size_y_, GroundCell{});
+  // 使用 backbuffer 避免每次 shift 重新分配大块内存
+  size_t total_cells = ground_size_x_ * ground_size_y_;
+  if (ground_map_backbuffer_.size() != total_cells) {
+    ground_map_backbuffer_.assign(total_cells, GroundCell{});
+  } else {
+    std::fill(ground_map_backbuffer_.begin(), ground_map_backbuffer_.end(), GroundCell{});
+  }
+
 #pragma omp parallel for collapse(2) schedule(static)
   for (int ny = 0; ny < static_cast<int>(ground_size_y_); ny++) {
     for (int nx = 0; nx < static_cast<int>(ground_size_x_); nx++) {
@@ -526,10 +519,10 @@ void TraversabilityLayer::shiftGroundMap(int shift_x, int shift_y)
       }
       size_t new_idx = static_cast<size_t>(ny) * ground_size_x_ + static_cast<size_t>(nx);
       size_t old_idx = static_cast<size_t>(old_y) * ground_size_x_ + static_cast<size_t>(old_x);
-      new_ground[new_idx] = std::move(ground_map_[old_idx]);
+      ground_map_backbuffer_[new_idx] = std::move(ground_map_[old_idx]);
     }
   }
-  ground_map_ = std::move(new_ground);
+  ground_map_.swap(ground_map_backbuffer_);
 }
 
 void TraversabilityLayer::expandVoxelGridZ(double new_z_lo, double new_z_hi)
@@ -575,6 +568,63 @@ void TraversabilityLayer::expandVoxelGridZ(double new_z_lo, double new_z_hi)
   voxel_grid_ = std::move(new_grid);
   voxel_z_origin_ = new_z_lo;
   voxel_size_z_ = new_size_z;
+}
+
+void TraversabilityLayer::shrinkVoxelGridZ(double new_z_lo, double new_z_hi)
+{
+  unsigned int new_size_z = static_cast<unsigned int>(
+    std::ceil((new_z_hi - new_z_lo) / voxel_z_resolution_));
+  if (new_size_z < 1) new_size_z = 1;
+
+  // 新范围已包含在当前范围内才执行收缩
+  if (new_z_lo < voxel_z_origin_ - voxel_z_resolution_ * 0.5 ||
+      new_z_hi > voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_ + voxel_z_resolution_ * 0.5)
+  {
+    return;
+  }
+
+  int z_offset = static_cast<int>(
+    std::round((voxel_z_origin_ - new_z_lo) / voxel_z_resolution_));
+
+  // 使用 backbuffer 避免重新分配
+  size_t total_voxels = static_cast<size_t>(voxel_size_x_) *
+                        static_cast<size_t>(voxel_size_y_) *
+                        static_cast<size_t>(new_size_z);
+  if (voxel_grid_backbuffer_.size() != total_voxels) {
+    voxel_grid_backbuffer_.assign(total_voxels, VoxelData{});
+  } else {
+    std::fill(voxel_grid_backbuffer_.begin(), voxel_grid_backbuffer_.end(), VoxelData{});
+  }
+
+#pragma omp parallel for collapse(2) schedule(static)
+  for (int y = 0; y < static_cast<int>(voxel_size_y_); y++) {
+    for (int x = 0; x < static_cast<int>(voxel_size_x_); x++) {
+      for (unsigned int old_iz = 0; old_iz < voxel_size_z_; old_iz++) {
+        int new_iz = static_cast<int>(old_iz) + z_offset;
+        if (new_iz < 0 || new_iz >= static_cast<int>(new_size_z)) continue;
+
+        size_t old_idx = voxelIndex(
+          static_cast<unsigned int>(x),
+          static_cast<unsigned int>(y), old_iz);
+        size_t new_idx = static_cast<size_t>(new_iz) *
+          static_cast<size_t>(voxel_size_x_) *
+          static_cast<size_t>(voxel_size_y_) +
+          static_cast<size_t>(y) * static_cast<size_t>(voxel_size_x_) +
+          static_cast<size_t>(x);
+        voxel_grid_backbuffer_[new_idx] = voxel_grid_[old_idx];
+      }
+    }
+  }
+
+  voxel_grid_.swap(voxel_grid_backbuffer_);
+  voxel_z_origin_ = new_z_lo;
+  voxel_size_z_ = new_size_z;
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("traversability_layer"),
+    "[TraversabilityLayer] shrinkVoxelGridZ: z_range=[%.2f,%.2f] -> [%.2f,%.2f], size_z=%u",
+    voxel_z_origin_, voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_,
+    new_z_lo, new_z_hi, new_size_z);
 }
 
 void TraversabilityLayer::updateVoxelGrid(
@@ -646,7 +696,7 @@ void TraversabilityLayer::updateVoxelGrid(
     }
   } else {
     // 滚动窗口的移位现在由 updateBounds 统一管理
-    // 这里只需要检查 Z 轴扩展
+    // 这里只需要检查 Z 轴扩展或收缩
     bool z_expand = false;
     if (z_lo < voxel_z_origin_ - voxel_z_resolution_ * 0.5) z_expand = true;
     if (z_hi > voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_ + voxel_z_resolution_ * 0.5) z_expand = true;
@@ -655,6 +705,15 @@ void TraversabilityLayer::updateVoxelGrid(
       double expanded_z_lo = std::min(z_lo, voxel_z_origin_);
       double expanded_z_hi = std::max(z_hi, voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_);
       expandVoxelGridZ(expanded_z_lo, expanded_z_hi);
+    } else {
+      // Z 轴收缩：当当前 z 范围远大于实际需要时（>2倍），缩小防止长期膨胀
+      // 场景：机器狗上下楼梯后回到平地，z 范围应回缩
+      double current_z_hi = voxel_z_origin_ + voxel_size_z_ * voxel_z_resolution_;
+      double current_range = current_z_hi - voxel_z_origin_;
+      double desired_range = z_hi - z_lo;
+      if (current_range > desired_range * 2.0 && desired_range > 0.0) {
+        shrinkVoxelGridZ(z_lo, z_hi);
+      }
     }
   }
 
@@ -815,8 +874,14 @@ void TraversabilityLayer::shiftPersistentCostMap(int shift_x, int shift_y)
 {
   if (shift_x == 0 && shift_y == 0) return;
 
-  std::vector<PersistentCostCell> new_map(
-    ground_size_x_ * ground_size_y_, PersistentCostCell{});
+  // 使用 backbuffer 避免每次 shift 重新分配大块内存
+  size_t total_cells = ground_size_x_ * ground_size_y_;
+  if (persistent_cost_backbuffer_.size() != total_cells) {
+    persistent_cost_backbuffer_.assign(total_cells, PersistentCostCell{});
+  } else {
+    std::fill(persistent_cost_backbuffer_.begin(), persistent_cost_backbuffer_.end(),
+              PersistentCostCell{});
+  }
 
 #pragma omp parallel for collapse(2) schedule(static)
   for (int ny = 0; ny < static_cast<int>(ground_size_y_); ny++) {
@@ -834,11 +899,11 @@ void TraversabilityLayer::shiftPersistentCostMap(int shift_x, int shift_y)
                        static_cast<size_t>(nx);
       size_t old_idx = static_cast<size_t>(old_y) * ground_size_x_ +
                        static_cast<size_t>(old_x);
-      new_map[new_idx] = persistent_cost_map_[old_idx];
+      persistent_cost_backbuffer_[new_idx] = persistent_cost_map_[old_idx];
     }
   }
 
-  persistent_cost_map_ = std::move(new_map);
+  persistent_cost_map_.swap(persistent_cost_backbuffer_);
 }
 
 void TraversabilityLayer::extractGroundInCache()

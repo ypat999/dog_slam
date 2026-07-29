@@ -629,6 +629,7 @@ def generate_launch_description():
             ("clicked_point", "/clicked_point"),
             ("test_path", ns_test_path_topic),
         ],
+        prefix=['taskset -c 0,1,2,3,5,6'],
     )
 
     # SC-PGO参数文件（统一ROS2参数格式）
@@ -650,7 +651,7 @@ def generate_launch_description():
             ("tf", "/tf"),
             ("tf_static", "/tf_static"),
         ],
-        prefix=['taskset -c 6'],
+        prefix=['taskset -c 5,6'],
     )
     
 

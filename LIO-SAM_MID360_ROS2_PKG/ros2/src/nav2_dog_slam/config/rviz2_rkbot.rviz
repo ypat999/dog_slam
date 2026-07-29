@@ -6,20 +6,18 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /Grid1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /Path1
         - /PointCloud2_front1/Topic1
-        - /PointCloud2_rear1/Topic1
         - /LaserScan1/Topic1
-        - /Map1/Topic1
-        - /Map2/Topic1
-        - /Map3/Topic1
-        - /LaserScan3/Topic1
-        - /PointCloud21/Topic1
-        - /PointCloud22/Topic1
-        - /PointCloud23/Topic1
-      Splitter Ratio: 0.40294116735458374
+        - /map1/Topic1
+        - /global_costmap1/Topic1
+        - /scan1/Topic1
+        - /slope_map1
+        - /slope_map1/Topic1
+        - /cost_map_cloud1/Topic1
+      Splitter Ratio: 0.6294117569923401
     Tree Height: 636
   - Class: rviz_common/Selection
     Name: Selection
@@ -43,7 +41,7 @@ Visualization Manager:
   Class: ""
   Displays:
     - Alpha: 0.5
-      Cell Size: 10
+      Cell Size: 1
       Class: rviz_default_plugins/Grid
       Color: 160; 160; 164
       Enabled: true
@@ -83,7 +81,7 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: true
+      Show Names: false
       Tree:
         rkbot/map:
           rkbot/odom:
@@ -185,10 +183,10 @@ Visualization Manager:
       Enabled: false
       Invert Rainbow: false
       Max Color: 38; 162; 105
-      Max Intensity: 255
+      Max Intensity: 157
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2_rear
+      Name: /rkbot/lio/body/cloud
       Position Transformer: XYZ
       Selectable: false
       Size (Pixels): 3
@@ -200,7 +198,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /rkbot/lio/cloud_world
+        Value: /rkbot/lio/body/cloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
@@ -284,12 +282,12 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: false
-    - Alpha: 0.699999988079071
+    - Alpha: 0.10000000149011612
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
       Enabled: true
-      Name: Map
+      Name: map
       Topic:
         Depth: 5
         Durability Policy: Transient Local
@@ -328,7 +326,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
-      Name: PoseWithCovariance
+      Name: amcl_pose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
@@ -340,12 +338,12 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /rkbot/amcl_pose
       Value: true
-    - Alpha: 0.699999988079071
+    - Alpha: 0.20000000298023224
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
       Enabled: true
-      Name: Map
+      Name: local_costmap
       Topic:
         Depth: 5
         Durability Policy: Transient Local
@@ -365,8 +363,8 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: costmap
       Draw Behind: false
-      Enabled: true
-      Name: Map
+      Enabled: false
+      Name: global_costmap
       Topic:
         Depth: 5
         Durability Policy: Transient Local
@@ -381,7 +379,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /rkbot/global_costmap/costmap_updates
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 1
       Class: rviz_default_plugins/Polygon
       Color: 25; 255; 0
@@ -412,9 +410,9 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: false
+      Enabled: true
       Keep: 100
-      Name: Odometry
+      Name: /lio/robo/odom
       Position Tolerance: 0.10000000149011612
       Shape:
         Alpha: 1
@@ -433,7 +431,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /lio/robo/odom
-      Value: false
+      Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.10000000149011612
@@ -442,7 +440,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
-      Name: Pose
+      Name: goal_pose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
@@ -466,13 +464,13 @@ Visualization Manager:
       Color: 255; 0; 0
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 0
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: LaserScan
+      Name: scan
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -487,7 +485,7 @@ Visualization Manager:
         Value: /rkbot/scan
       Use Fixed Frame: true
       Use rainbow: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -500,15 +498,15 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
-      Max Color: 255; 255; 255
+      Max Color: 192; 97; 203
       Max Intensity: 1
-      Min Color: 0; 0; 0
+      Min Color: 153; 193; 241
       Min Intensity: 0
-      Name: PointCloud2
+      Name: slope_map
       Position Transformer: XYZ
-      Selectable: true
+      Selectable: false
       Size (Pixels): 3
       Size (m): 0.10000000149011612
       Style: Boxes
@@ -520,29 +518,8 @@ Visualization Manager:
         Reliability Policy: Best Effort
         Value: /rkbot/local_costmap/slope_map
       Use Fixed Frame: true
-      Use rainbow: true
-      Value: false
-    - Alpha: 0.699999988079071
-      Class: rviz_default_plugins/Map
-      Color Scheme: costmap
-      Draw Behind: false
-      Enabled: false
-      Name: Map
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /rkbot_test/local_costmap/costmap
-      Update Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /rkbot_test/local_costmap/costmap_updates
-      Use Timestamp: false
-      Value: false
+      Use rainbow: false
+      Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Range
@@ -594,7 +571,7 @@ Visualization Manager:
       Enabled: true
       Head Length: 0.30000001192092896
       Head Radius: 0.10000000149011612
-      Name: PoseWithCovariance
+      Name: initialpose
       Shaft Length: 1
       Shaft Radius: 0.05000000074505806
       Shape: Arrow
@@ -608,7 +585,7 @@ Visualization Manager:
       Value: true
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Name: MarkerArray
+      Name: loop_match_markers
       Namespaces:
         {}
       Topic:
@@ -628,7 +605,7 @@ Visualization Manager:
       Length: 0.30000001192092896
       Line Style: Lines
       Line Width: 0.029999999329447746
-      Name: Path
+      Name: odom_keyframe_path
       Offset:
         X: 0
         Y: 0
@@ -656,7 +633,7 @@ Visualization Manager:
       Length: 0.30000001192092896
       Line Style: Lines
       Line Width: 0.029999999329447746
-      Name: Path
+      Name: optimized_path
       Offset:
         X: 0
         Y: 0
@@ -684,7 +661,7 @@ Visualization Manager:
       Length: 0.30000001192092896
       Line Style: Lines
       Line Width: 0.029999999329447746
-      Name: Path
+      Name: lio/path
       Offset:
         X: 0
         Y: 0
@@ -714,13 +691,13 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 166
+      Max Intensity: 1
       Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: PointCloud2
+      Min Intensity: 1
+      Name: occupied_map_cloud
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -732,29 +709,29 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/aft_pgo_map
+        Value: /rkbot/occupied_map_cloud
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
-    - Alpha: 1
+      Value: false
+    - Alpha: 0.30000001192092896
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 60.14065933227539
-        Min Value: -7.536766529083252
+        Max Value: 3.234253168106079
+        Min Value: -1.1082117557525635
         Value: true
       Axis: Z
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
-      Color Transformer: AxisColor
+      Color Transformer: Intensity
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 255
+      Max Intensity: 0.8414834141731262
       Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: PointCloud2
+      Min Intensity: 0.02452351339161396
+      Name: cost_map_cloud
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
@@ -766,10 +743,10 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /rkbot/initial_map
+        Value: /rkbot/cost_map_cloud
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
@@ -780,7 +757,7 @@ Visualization Manager:
       Length: 0.30000001192092896
       Line Style: Billboards
       Line Width: 0.30000001192092896
-      Name: Path
+      Name: test_path
       Offset:
         X: 0
         Y: 0
@@ -844,25 +821,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 136.65895080566406
+      Distance: 11.586005210876465
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 70.8597412109375
-        Y: -41.123687744140625
-        Z: -19.378658294677734
+        X: 0.4472491443157196
+        Y: 0.7239624261856079
+        Z: -1.6953513622283936
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.4697964191436768
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.645956039428711
+      Yaw: 1.508286952972412
     Saved: ~
 Window Geometry:
   Displays:

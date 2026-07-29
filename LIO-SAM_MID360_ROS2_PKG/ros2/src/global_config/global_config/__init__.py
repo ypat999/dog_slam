@@ -75,11 +75,11 @@ config_by_machine = {
         
         # RK3588主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/1f_down10.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
         # RK3588主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
+        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/1f_down10.pcd',
     },
     'RK3588ZG': {
         # RK3588主机配置 - 全局配置

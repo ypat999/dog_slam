@@ -14,6 +14,94 @@
 - **多Planner配置**: 支持多种全局/局部路径规划器切换
 - **Gazebo Garden仿真**: 支持Gazebo Garden GPU加速仿真，提供多种仿真环境
 
+## 技术优势
+
+相对于市面上的开源 / 商业导航系统，本系统在二维和三维两个层面具有以下差异化技术优势。
+
+### 一、三维导航层面（核心差异化）
+
+#### 1. OctoPlanner3D —— 真正的三维可通行性规划
+市面 3D 导航普遍只是「2D costmap + Octomap 障碍层」，仍在平面内规划。本系统集成基于 OctoMap 体素的 A\* 三维路径搜索，支持楼梯、坡地等高程变化路径：
+
+- A\* 搜索中引入**方向一致性 + 对角线跨越惩罚**，减少阶跃折角
+- **两阶段梯度下降平滑**：先 Laplace 平滑，再 cost 微调，z 梯度禁用避免路径下沉
+- **cost 场补全 + 梯度优化**替代逐次碰撞检查，规划时间显著下降
+- 占据缓存改逐格查询 + 粗叶子展开 + 重层扫描提速
+- A\* 失败时清空 `planner_results_`，杜绝 stale path
+- 终点方向修正 + 路径时效性 bug 修复
+
+#### 2. Nav2 风格指数衰减 cost 场 —— 大膨胀半径下仍可穿越窄通道
+- 指数衰减 cost 场支持大膨胀半径 + 窄通道可规划（市面 costmap_common_params 的痛点）
+- `preblocked` 列扫描范围缩小至 `support_depth`，修复 2m 窄通道规划失败
+- cost intensity 可视化 + 蓝色路径测试模式（不影响真实导航）
+
+#### 3. 纯三维可通行性 costmap 插件（traversability_layer）
+非普通障碍层，而是基于三维点云的：
+
+- 地形坡度检测：识别不可通行陡坡
+- 楼梯检测：支持机器人楼梯攀爬导航（市面 Nav2 插件几乎没有）
+- 三维通行性分析：障碍物高度、密度综合判断
+- **永久 cost 记忆 + 信任插值地面 + 次数制衰减**：对动态遮挡、雷达盲区更鲁棒
+- costmap origin 驱动的滚动窗口 + backbuffer 双缓冲 + mutex 分离，多线程安全
+- 跳帧机制降低 CPU 占用
+
+#### 4. 3D 专用行为树 + Action 适配器无缝集成 Nav2
+- 3D 专用 BT XML（移除 global_costmap 引用）
+- ComputePathThroughPoses action + 时序修复
+- 2D / 3D 导航共用 Nav2 行为树、生命周期、恢复行为，无需替换整个导航栈
+
+### 二、二维导航层面
+
+#### 1. 多 SLAM 算法统一热切换
+通过 `lio_nav2_unified.launch.py` 统一入口 + `SLAM_ALGORITHM` 环境变量，在 **FAST-LIO2 / Point-LIO / Super-LIO / LIO-SAM** 之间无感切换，且都基于 Livox MID360 三维雷达，相比传统 2D 激光 SLAM 信息密度高一个量级。
+
+#### 2. 原生多机器人 Namespace 隔离（Topic / Frame / TF 三层）
+商业多机器人方案常依赖独立 master 或 bridge。本系统做到：
+
+- Topic namespace 隔离（`/scan` → `/rkbot/scan`）
+- Frame namespace 隔离（`map` → `rkbot/map`）
+- TF 话题 namespace 隔离，规避多机 TF 冲突
+- 同机即可启动多套导航实例，开源 Nav2 默认不提供
+
+#### 3. SC-PGO 姿态图优化
+商业 2D 导航几乎不做姿态图优化，本系统借鉴 SC-LIO 思路：
+
+- **双重距离判断回环检测**（原始 odom + PGO 优化后），降低误闭环
+- 建图流程加入**动态物体去除**
+- GICP 候选限 5 个，保证实时性
+- 在线 / 离线双模式 + 多线程稳定性
+
+#### 4. 定位退化方向检测（lidar_localization_ros2）
+传统 NDT/ICP 定位只看总 fitness，本系统可发现「总分明但单轴漂」的退化场景：
+
+- **per-axis fitness score 阈值检查**，识别走廊 / 长直走廊等退化方向
+- per-axis 归一化，量纲与 PCL `getFitnessScore()` 一致
+- `min_localization_interval` 防止定位失败后 CPU 空转
+- 用配置阈值替代 `DBL_MAX` 硬编码，异常值（如 fitness=685110）正确拒绝
+- 定位失败时更新 odom 参考点，避免 CPU 空转死循环
+
+### 三、整体系统层面优势
+
+| 维度 | 市面典型方案 | 本系统 |
+|------|------------|--------|
+| 雷达 | 2D LiDAR 或机械式 3D | Livox MID360 非重复扫描，性价比高 |
+| 多机部署 | 商业多机调度软件 | ns 原生隔离，开源可复现 |
+| SLAM | 单一算法 | 4 算法统一接口热切换 |
+| 闭环优化 | 无或简单 | SC-PGO 双重距离判断 + 动态物去除 |
+| 定位退化 | 无检测 | per-axis fitness 退化方向检测 |
+| 3D 路径规划 | 2D + 高程 | 真 3D A\* + 楼梯/坡度通行性 |
+| costmap | Obstacle/Voxel | 永久记忆 + 信任插值 + 三维通行性 |
+| 行为树 | 默认 BT | 2D / 3D 专用 BT XML |
+| 仿真 | Gazebo Classic | Gazebo Garden GPU 加速 |
+| Web 控制 | 闭源 HMI | rosbridge + HTML 控制台 |
+| 硬件适配 | 通用 | 中狗双雷达 / RK3588 大小核 / Orin 多主机配置 |
+
+### 四、核心差异化优势总结
+
+1. **三维可通行性真 3D 规划**（OctoPlanner3D + traversability_layer）：可在楼梯、坡地等高程变化环境做路径规划，市面开源 Nav2 几乎没有，商业方案多为闭源。
+2. **定位退化方向检测 + SC-PGO 双重闭环**：长走廊、规则厂房、大场景建图导航的鲁棒性显著优于纯 LIO + AMCL 方案。
+3. **多 SLAM 算法统一接口 + 多机 namespace 原生支持**：同一套代码覆盖从研究到多机部署，避免商业方案的算法锁定。
+
 ## 系统要求
 
 - **操作系统**: Ubuntu 22.04
@@ -441,6 +529,7 @@ ros2 topic pub /goal_pose geometry_msgs/msg/PoseStamped \
 
 ## 最新更新
 
+- **2026-07-27**: README 新增「技术优势」章节，突出 2D/3D 双层导航差异化能力；traversability_layer 优化 TF 漂移、backbuffer 双缓冲、mutex 分离、Z 轴收缩
 - **2026-07-08**: 集成OctoPlanner3D三维导航系统，支持三维可通行性规划和Nav2集成
 - **2026-05-27**: 可通行检测优化随机器人移动；TF加入namespace支持多机器人隔离
 - **2026-05-26**: 适配中狗Livox MID360雷达配置；导航使用本体雷达；多配置2种全局/局部planner

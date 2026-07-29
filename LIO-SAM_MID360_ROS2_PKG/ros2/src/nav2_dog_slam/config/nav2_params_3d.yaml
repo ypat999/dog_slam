@@ -11,7 +11,7 @@
 # =============================================================================
 controller_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     controller_frequency: 20.0
     failure_tolerance: 3.0
@@ -173,7 +173,7 @@ controller_server:
 # =============================================================================
 velocity_smoother:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP" 
@@ -195,7 +195,7 @@ velocity_smoother:
 local_costmap:
   local_costmap:
     ros__parameters:
-      use_sim_time: true
+      use_sim_time: false
       update_frequency: 10.0
       publish_frequency: 10.0
       global_frame: odom  # 使用odom（局部规划）
@@ -313,7 +313,7 @@ local_costmap:
 # =============================================================================
 lifecycle_manager:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     autostart: true
     node_names: ['controller_server', 'behavior_server', 'bt_navigator', 'velocity_smoother']
     bond_timeout_ms: 10000
@@ -323,7 +323,7 @@ lifecycle_manager:
 # =============================================================================
 bt_navigator:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     global_frame: map
     robot_base_frame: base_footprint
     bt_loop_duration: 100
@@ -331,7 +331,7 @@ bt_navigator:
     wait_for_service_timeout: 10
     
     # 行为树配置 - OctoPlanner适配器提供ComputePathToPose接口
-    default_nav_to_pose_bt_xml: "/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml"
+    default_nav_to_pose_bt_xml: "/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml"
     default_nav_through_poses_bt_xml: ""  # 禁用：3D 导航不使用 navigate_through_poses
     
     # Groot监控
@@ -395,7 +395,7 @@ bt_navigator:
 # =============================================================================
 behavior_server:
   ros__parameters:
-    use_sim_time: true
+    use_sim_time: false
     
     behavior_plugins: ["spin", "backup", "drive_on_heading", "wait"]
     footprint_topic: "/local_costmap/published_footprint"

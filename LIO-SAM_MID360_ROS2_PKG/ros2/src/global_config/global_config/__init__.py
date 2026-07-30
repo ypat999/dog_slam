@@ -221,11 +221,11 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
+        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
         # DESKTOP-ypat主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
+        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
     },
     'ywj-B250-D3A': {
         # ywj-B250-D3A主机配置 - 全局配置

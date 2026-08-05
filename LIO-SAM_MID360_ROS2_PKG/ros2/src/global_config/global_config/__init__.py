@@ -75,11 +75,14 @@ config_by_machine = {
         
         # RK3588主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/1f_down10.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
-        # RK3588主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/1f_down10.pcd',
+        # RK3588主机配置 - 地图文件
+        # 'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+        # 'POINT_CLOUD_MAP_PATH': '/home/ztl/slam_data/3d_map/1f_down10.pcd',
+
+        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map_10f.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ztl/slam_data/3d_map/10f_down9.pcd',
     },
     'RK3588ZG': {
         # RK3588主机配置 - 全局配置
@@ -95,7 +98,6 @@ config_by_machine = {
         
         # RK3588ZG主机配置 - Nav2
         'NAV2_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/',
-        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
         'NAV2_DEFAULT_WEB_SCRIPT_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/web/run_web.sh',
         'NAV2_DEFAULT_BT_XML_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery.xml',
         'NAV2_DEFAULT_BT_XML_3D_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/nav2_dog_slam/config/navigate_to_pose_w_replanning_and_recovery_3d.xml',
@@ -124,11 +126,11 @@ config_by_machine = {
         
         # RK3588ZG主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/pcd/octomap_zg.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
-        # RK3588ZG主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
+        # RK3588ZG主机配置 - 地图文件
+        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     },
     'DESKTOP-4LS1SSN': {
         # DESKTOP-4LS1SSN主机配置 - 全局配置
@@ -170,13 +172,13 @@ config_by_machine = {
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
         
-        # DESKTOP-4LS1SSN主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
-        
-        # DESKTOP-ypat主机配置 - OctoPlanner3D
+        # DESKTOP-4LS1SSN主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # DESKTOP-4LS1SSN主机配置 - 地图文件
+        'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ywj/slam_data/3d_map/3dmap.pcd',
     },
     'DESKTOP-ypat': {
         # DESKTOP-ypat主机配置 - 全局配置
@@ -221,11 +223,11 @@ config_by_machine = {
         
         # DESKTOP-ypat主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
-        # DESKTOP-ypat主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
+        # DESKTOP-ypat主机配置 - 地图文件
+        'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
     },
     'ywj-B250-D3A': {
         # ywj-B250-D3A主机配置 - 全局配置
@@ -269,13 +271,13 @@ config_by_machine = {
         #SC-PGO
         'SC_PGO_SAVE_DIRECTORY': '/home/ywj/save_data/',
         
-        # ywj-B250-D3A主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
-        
-        # DESKTOP-ypat主机配置 - OctoPlanner3D
+        # ywj-B250-D3A主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
+        
+        # ywj-B250-D3A主机配置 - 地图文件
+        'NAV2_DEFAULT_MAP_FILE': "/home/ywj/slam_data/grid_map/map.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ywj/slam_data/3d_map/1f_down10.pcd',
     },
     'orin-nx': {
         # orin-nx主机配置 - 全局配置
@@ -319,11 +321,11 @@ config_by_machine = {
         
         # orin-nx主机配置 - OctoPlanner3D
         'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-        'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
         'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
         
-        # orin-nx主机配置 - Lidar Localization
-        'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
+        # orin-nx主机配置 - 地图文件
+        'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+        'POINT_CLOUD_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     }
 }
 
@@ -372,11 +374,11 @@ default_config = {
     
     # OctoPlanner3D 默认配置
     'OCTOPLANNER_BASE_CODE_PATH': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/',
-    'OCTOPLANNER_PCD_FILE_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
     'OCTOPLANNER_PARAMS_FILE': '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml',
     
-    # Lidar Localization 默认配置
-    'LOCALIZATION_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
+    # 地图文件默认配置
+    'NAV2_DEFAULT_MAP_FILE': "/home/ztl/slam_data/grid_map/map.yaml",
+    'POINT_CLOUD_MAP_PATH': '/home/ztl/slam_data/3d_map/3dmap.pcd',
 }
 
 # 根据当前主机名选择配置
@@ -432,11 +434,12 @@ SC_PGO_SAVE_DIRECTORY = selected_config['SC_PGO_SAVE_DIRECTORY']
 
 # ========== 导出OctoPlanner配置参数 ==========
 OCTOPLANNER_BASE_CODE_PATH = selected_config['OCTOPLANNER_BASE_CODE_PATH']
-OCTOPLANNER_PCD_FILE_PATH = selected_config['OCTOPLANNER_PCD_FILE_PATH']
+POINT_CLOUD_MAP_PATH = selected_config['POINT_CLOUD_MAP_PATH']
+OCTOPLANNER_PCD_FILE_PATH = POINT_CLOUD_MAP_PATH  # 兼容性：保持原有变量名
 OCTOPLANNER_PARAMS_FILE = selected_config['OCTOPLANNER_PARAMS_FILE']
 
 # ========== 导出Lidar Localization配置参数 ==========
-LOCALIZATION_MAP_PATH = selected_config['LOCALIZATION_MAP_PATH']
+LOCALIZATION_MAP_PATH = POINT_CLOUD_MAP_PATH  # 兼容性：保持原有变量名
 
 # ========== 坐标系名称配置 ==========
 MAP_FRAME = 'map'

@@ -37,7 +37,7 @@ try:
         DEFAULT_USE_SIM_TIME_STRING, MAP_FRAME, ODOM_FRAME, 
         BASE_LINK_FRAME, LIVOX_FRAME, SLAM_ALGORITHM,
         SC_PGO_SAVE_DIRECTORY,DEFAULT_NAMESPACE,
-        OCTOPLANNER_PCD_FILE_PATH, OCTOPLANNER_PARAMS_FILE,
+        POINT_CLOUD_MAP_PATH, OCTOPLANNER_PARAMS_FILE,
     )
 except Exception as e:
     print(f"导入global_config失败: {e}")
@@ -67,8 +67,8 @@ except Exception as e:
     SLAM_ALGORITHM = 'super_lio'  # 默认算法
     SC_PGO_SAVE_DIRECTORY = '/home/ztl/save_data/'
     DEFAULT_NAMESPACE = ''
-    OCTOPLANNER_PCD_FILE_PATH = '/home/ywj/slam_data/pcd/octomap.pcd'  # 默认PCD路径
-    OCTOPLANNER_PARAMS_FILE = '/home/ywj/git/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml'  # 默认参数文件路径
+    POINT_CLOUD_MAP_PATH = '/home/ztl/slam_data/3d_map/3dmap.pcd'  # 默认PCD路径
+    OCTOPLANNER_PARAMS_FILE = '/home/ztl/dog_slam/LIO-SAM_MID360_ROS2_PKG/ros2/src/OctoPlanner3D-ROS2/config/params.yaml'  # 默认参数文件路径
 
 # 获取当前launch文件所在目录
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -616,7 +616,7 @@ def generate_launch_description():
         parameters=[
             OCTOPLANNER_PARAMS_FILE,
             {
-                "input_pcd": OCTOPLANNER_PCD_FILE_PATH,
+                "input_pcd": POINT_CLOUD_MAP_PATH,
                 "frame_id": ns_map_frame,
                 "robot_base_frame": ns_base_footprint_frame,
                 "map_frame": ns_map_frame,

@@ -104,6 +104,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
+# Install interactive goal pose marker script as executable
+install(
+  PROGRAMS scripts/goal_pose_interactive_marker.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install web interface files
 install(
   DIRECTORY web

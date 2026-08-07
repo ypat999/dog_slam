@@ -632,6 +632,45 @@ def generate_launch_description():
         prefix=['taskset -c 0,1,2,3,5,6'],
     )
 
+    # 交互式三维定位坐标 marker -> lidar_localization_ros2 (/initialpose, PoseWithCovarianceStamped)
+    # 在 RViz 中拖拽绿色箭头即可更新 lidar_localization 的定位坐标
+    goal_pose_marker_localization = Node(
+        package='nav2_dog_slam',
+        executable='goal_pose_interactive_marker.py',
+        name='goal_pose_marker_localization',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'frame_id': ns_map_frame,
+            'output_topic': '/initialpose',
+            'output_type': 'pose',
+            'marker_name': 'goal_marker_localization',
+            'initial_x': 0.0,
+            'initial_y': 0.0,
+            'initial_z': 1.0,
+        }],
+    )
+
+    # 交互式三维目标点 marker -> /goal_pose (PoseStamped)
+    # 链路：/goal_pose 由 bt_navigator 订阅并转为 NavigateToPose action，
+    #       bt_navigator 再通过 ComputePathToPose action 调用 OctoPlanner3D 规划
+    goal_pose_marker_octo_planner = Node(
+        package='nav2_dog_slam',
+        executable='goal_pose_interactive_marker.py',
+        name='goal_pose_marker_octo_planner',
+        output='screen',
+        parameters=[{
+            'use_sim_time': use_sim_time,
+            'frame_id': ns_map_frame,
+            'output_topic': '/goal_pose',
+            'output_type': 'pose_stamped',
+            'marker_name': 'goal_marker_octo_planner',
+            'initial_x': 2.0,
+            'initial_y': 0.0,
+            'initial_z': 1.0,
+        }],
+    )
+
     # SC-PGO参数文件（统一ROS2参数格式）
     sc_pgo_config_file = PathJoinSubstitution([
         get_package_share_directory('sc_pgo_ros2'), 'config', 'btc_config.yaml'
@@ -758,6 +797,10 @@ def generate_launch_description():
                 actions=[navigation_include]
             )
         )
+
+        # 交互式三维 marker（定位坐标 + 目标点）
+        nav2_actions.append(goal_pose_marker_localization)
+        nav2_actions.append(goal_pose_marker_octo_planner)
 
     # 建图模式：不加载localization和planner
     

@@ -92,14 +92,14 @@ LIO_TOPIC_CONFIGS = {
         'map_frame': 'map'
     },
     'super_lio': {
-        'pointcloud_topic': 'lio/body/cloud',
+        'pointcloud_topic': 'lio/cloud_body',
         'odom_topic': 'lio/odom',
         'octomap_topic': 'lio/cloud_world',
         'target_frame': 'base_footprint',
         'map_frame': 'map'
     },
     'super_lio_zg': {
-        'pointcloud_topic': 'lio/body/cloud',
+        'pointcloud_topic': 'lio/cloud_body',
         'odom_topic': 'lio/odom',
         'octomap_topic': 'lio/cloud_world',
         'target_frame': 'base_link',
@@ -132,7 +132,7 @@ def generate_launch_description():
     ns_base_footprint_frame = PythonExpression(["'base_footprint' if '", ns, "' == '' else str('", ns, "/base_footprint')"])
     ns_base_link_frame = PythonExpression(["'base_link' if '", ns, "' == '' else str('", ns, "/base_link')"])
     ns_scan_topic = PythonExpression(["'/scan' if '", ns, "' == '' else str('/", ns, "/scan')"])
-    ns_pointcloud_topic = PythonExpression(["'/lio/body/cloud' if '", ns, "' == '' else str('/", ns, "/lio/body/cloud')"])
+    ns_pointcloud_topic = PythonExpression(["'/lio/cloud_body' if '", ns, "' == '' else str('/", ns, "/lio/cloud_body')"])
     ns_map_topic = PythonExpression(["'/map' if '", ns, "' == '' else str('/", ns, "/map')"])
     
     # 定义启动参数

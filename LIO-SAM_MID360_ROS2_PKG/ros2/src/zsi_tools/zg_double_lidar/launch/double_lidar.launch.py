@@ -95,7 +95,7 @@ def generate_launch_description():
             ('lio/robo/odom', 'front_lidar/robo/odom'),
             ('lio/path', 'front_lidar/path'),
             ('lio/cloud_world', 'front_lidar/cloud_world'),
-            ('lio/body/cloud', 'front_lidar/body/cloud'),
+            ('lio/cloud_body', 'front_lidar/cloud_body'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
         ]
@@ -124,7 +124,7 @@ def generate_launch_description():
             # ('lio/robo/odom', 'rear_lidar/robo/odom'),
             # ('lio/path', 'rear_lidar/path'),
             # ('lio/cloud_world', 'rear_lidar/cloud_world'),
-            # ('lio/body/cloud', 'rear_lidar/body/cloud'),
+            # ('lio/cloud_body', 'rear_lidar/cloud_body'),
             ('/tf', '/tf'),
             ('/tf_static', '/tf_static'),
         ]

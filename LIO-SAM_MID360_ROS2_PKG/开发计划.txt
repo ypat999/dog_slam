@@ -108,7 +108,7 @@ publish_slope_map false 是否发布坡度可视化点云
 
 离线方案有两种：
 
-方案 做法 优缺点 A 在 SuperLIO 保存时 直接输出 SC-PGO 兼容格式 （Scans/ 目录 + KITTI 位姿），跑完 SuperLIO 后单独跑 SC-PGO 的图优化 最灵活，解耦，但需改 SuperLIO 的输出逻辑 B 用 ROS bag 录制 /lio/odom + /lio/body/cloud ，事后回放给 SC-PGO 在线处理 不用改代码，但多了录制/回放步骤
+方案 做法 优缺点 A 在 SuperLIO 保存时 直接输出 SC-PGO 兼容格式 （Scans/ 目录 + KITTI 位姿），跑完 SuperLIO 后单独跑 SC-PGO 的图优化 最灵活，解耦，但需改 SuperLIO 的输出逻辑 B 用 ROS bag 录制 /lio/odom + /lio/cloud_body ，事后回放给 SC-PGO 在线处理 不用改代码，但多了录制/回放步骤
 
 需要我实现方案 A（从 SuperLIO 直接输出 SC-PGO 兼容格式）吗？
 

@@ -62,7 +62,7 @@ struct GroundCell
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
-| `pointcloud_topic` | `/lio/body/cloud` | 点云输入话题 |
+| `pointcloud_topic` | `/lio/cloud_body` | 点云输入话题 |
 | `sensor_frame` | `""` (自动) | 传感器坐标系 |
 | `voxel_z_resolution` | 0.1m | 体素Z轴分辨率 |
 | `voxel_z_min` | -1.0m | 体素Z轴最小值 |
@@ -96,7 +96,7 @@ local_costmap:
     traversability_layer:
       plugin: "traversability_layer::TraversabilityLayer"
       enabled: true
-      pointcloud_topic: "/lio/body/cloud"
+      pointcloud_topic: "/lio/cloud_body"
       voxel_z_resolution: 0.1
       voxel_z_min: -1.0
       voxel_z_max: 3.0

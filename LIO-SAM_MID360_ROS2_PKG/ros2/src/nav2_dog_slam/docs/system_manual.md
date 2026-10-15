@@ -32,7 +32,7 @@
 
 | 算法 | 点云话题 | 里程计话题 | 说明 |
 |------|---------|-----------|------|
-| Super-LIO | `/lio/body/cloud` | `/lio/odom` | 默认算法，综合性能最优 |
+| Super-LIO | `/lio/cloud_body` | `/lio/odom` | 默认算法，综合性能最优 |
 | Fast-LIO | `/cloud_registered_body` | `/Odometry` | 轻量级，适合资源受限场景 |
 | LIO-SAM | `/lio_sam/mapping/cloud_registered_raw` | `/lio_sam/mapping/odometry` | 带回环检测 |
 | Point-LIO | `/cloud_registered_body` | `/Odometry` | 高鲁棒性 |
@@ -157,7 +157,7 @@ MID360 雷达 + IMU
        │
    Super-LIO
        │
-       ├── /lio/body/cloud ──→ pointcloud_to_laserscan ──→ /scan
+       ├── /lio/cloud_body ──→ pointcloud_to_laserscan ──→ /scan
        │                                                      │
        │                                              slam_toolbox
        │                                                      │
@@ -267,7 +267,7 @@ MID360 雷达 + IMU                         GPS 模块
 
 | 话题 | 消息类型 | 方向 | 说明 |
 |------|---------|------|------|
-| `/lio/body/cloud` | PointCloud2 | Super-LIO → | 机体坐标系下的点云 |
+| `/lio/cloud_body` | PointCloud2 | Super-LIO → | 机体坐标系下的点云 |
 | `/lio/odom` | Odometry | Super-LIO → | 里程计 |
 | `/scan` | LaserScan | → AMCL/slam_toolbox | 2D 激光扫描 |
 | `/map` | OccupancyGrid | map_server/slam_toolbox → | 栅格地图 |

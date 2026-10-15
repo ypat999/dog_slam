@@ -186,7 +186,7 @@ Visualization Manager:
       Max Intensity: 157
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: /rkbot/lio/body/cloud
+      Name: /rkbot/lio/cloud_body
       Position Transformer: XYZ
       Selectable: false
       Size (Pixels): 3
@@ -198,7 +198,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /rkbot/lio/body/cloud
+        Value: /rkbot/lio/cloud_body
       Use Fixed Frame: true
       Use rainbow: true
       Value: false

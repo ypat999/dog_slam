@@ -29,7 +29,7 @@ void TraversabilityLayer::onInitialize()
   }
 
   declareParameter("enabled", rclcpp::ParameterValue(true));
-  declareParameter("pointcloud_topic", rclcpp::ParameterValue(std::string("/lio/body/cloud")));
+  declareParameter("pointcloud_topic", rclcpp::ParameterValue(std::string("/lio/cloud_body")));
   declareParameter("sensor_frame", rclcpp::ParameterValue(std::string("")));
   declareParameter("base_frame", rclcpp::ParameterValue(std::string("base_footprint")));
   declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
